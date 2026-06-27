@@ -313,6 +313,17 @@ RSpec.describe 'rush vs dash (differential)' do
     'set -e; if x=$(false); then echo t; else echo e; fi',
     'set -e; x=$(true) y=$(false); echo unreached',
     'set -e; v=$(false) || echo recovered; echo after',
+    # break and continue are successful builtins: they leave $? at 0, both after
+    # the loop and (for continue) in the next iteration's body. A loop that exits
+    # normally still reports its last body status.
+    'for i in 1; do false; break; done; echo $?',
+    'for i in 1 2; do false; continue; done; echo $?',
+    'for i in 1 2; do echo "rc=$?"; false; continue; done; echo end=$?',
+    'while true; do false; break; done; echo $?',
+    'until false; do false; break; done; echo $?',
+    'for i in 1; do for j in 1; do false; break 2; done; done; echo $?',
+    'i=0; while [ $i -lt 2 ]; do i=$((i+1)); false; continue; done; echo $?',
+    'for i in 1 2; do false; done; echo $?',
     # incremental execution: complete commands run (and flush) before a later
     # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
     # fires the EXIT trap with $?=2 (which may override the exit code via exit)
