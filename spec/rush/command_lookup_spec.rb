@@ -34,4 +34,20 @@ RSpec.describe Rush::CommandLookup do
     system.register('tool', executable: true)
     expect(lookup.find('tool')).to eq([:file, 'tool'])
   end
+
+  it 'classifies an alias, returning its value, outranking a function or builtin' do
+    state.aliases.define('ll', 'ls -l')
+    state.functions.define('ll', Rush::AST::SimpleCommand.new([], [], []))
+    expect(lookup.find('ll')).to eq([:alias, 'ls -l'])
+  end
+
+  it 'lets a reserved word outrank an alias of the same name' do
+    state.aliases.define('if', 'echo')
+    expect(lookup.find('if')).to eq([:keyword, 'if'])
+  end
+
+  it 'describes an alias as "is an alias for value"' do
+    state.aliases.define('ll', 'ls -l')
+    expect(lookup.describe('ll')).to eq('ll is an alias for ls -l')
+  end
 end

@@ -31,6 +31,12 @@ module Rush
 
       def expects_command? = @command_position && !@expect_filename
 
+      # A command word here is a real command name, so alias substitution applies:
+      # the normal mode and a case arm's command list. The for-header and case
+      # subject/pattern modes do not expand aliases, even when a newline resets
+      # command position.
+      def command_mode? = @mode == :normal || @mode == :case_body
+
       def for_name? = @mode == :for_name
       def for_in? = @mode == :for_in
       def case_subject? = @mode == :case_subject

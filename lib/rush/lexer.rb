@@ -7,6 +7,7 @@ require_relative 'lexer/substitution_reader'
 require_relative 'lexer/word_scanner'
 require_relative 'lexer/heredoc_body'
 require_relative 'lexer/token_classifier'
+require_relative 'lexer/alias_expander'
 
 module Rush
   # StringScanner pump that yields [symbol, value] pairs for racc. It skips
@@ -19,28 +20,45 @@ module Rush
     IO_NUMBER = /\d+(?=[<>])/
     HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
-    def initialize(source, interactive: false)
+    def initialize(source, interactive: false, aliases: nil)
       @scanner = StringScanner.new(source)
-      @state = LexState.new
-      @awaiting = nil
-      @heredocs = []
+      @aliases = AliasExpander.new(aliases)
       @interactive = interactive
+      init_state
     end
 
     def location = @scanner.charpos
 
     def next_token
-      skip_insignificant
+      drain
       return [false, false] if @scanner.eos?
 
-      emit(scan_token)
+      token = scan_token
+      token ? emit(token) : next_token
     end
 
     private
 
+    def init_state
+      @state = LexState.new
+      @awaiting = nil
+      @heredocs = []
+    end
+
     def emit(token)
       @state.advance(token.first)
+      @aliases.spend
       token
+    end
+
+    # Skip blanks and comments; when the current frame is an exhausted alias
+    # replacement, restore the input beneath it and keep skipping.
+    def drain
+      skip_insignificant
+      return unless @scanner.eos? && @aliases.nested?
+
+      @scanner = @aliases.pop
+      drain
     end
 
     def skip_insignificant
@@ -69,10 +87,29 @@ module Rush
       [symbol, matched]
     end
 
+    # Classify the word, then (only a plain WORD, never a reserved word or a
+    # here-document delimiter) splice its alias replacement in its place; a splice
+    # returns nil so next_token re-reads from the new frame.
     def word
-      token = TokenClassifier.new(WordScanner.new(@scanner).scan, @state).call
-      @awaiting ? delimiter(token.last) : token
+      scanned = WordScanner.new(@scanner).scan
+      token = TokenClassifier.new(scanned, @state).call
+      value = alias_for(token, scanned)
+      value ? splice(value) : finish(token)
     end
+
+    def alias_for(token, word)
+      return nil if @awaiting || token.first != :WORD || !@state.command_mode?
+
+      @aliases.expand(word, @state.expects_command?)
+    end
+
+    def splice(value)
+      @aliases.push(@scanner)
+      @scanner = StringScanner.new(value)
+      nil
+    end
+
+    def finish(token) = @awaiting ? delimiter(token.last) : token
 
     def delimiter(word)
       holder = HereDoc.new(delimiter: word.segments.map(&:value).join,

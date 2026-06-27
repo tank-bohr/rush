@@ -24,4 +24,10 @@ RSpec.describe Rush::Builtins::Type do
     expect(run('nope_zzz').exitstatus).to eq(127)
     expect(system.stdout.string).to eq("nope_zzz: not found\n")
   end
+
+  it 'reports an alias as an alias for its value' do
+    state.aliases.define('ll', 'ls -l')
+    expect(run('ll')).to be_success
+    expect(system.stdout.string).to eq("ll is an alias for ls -l\n")
+  end
 end

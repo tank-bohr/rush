@@ -103,4 +103,23 @@ RSpec.describe Rush::CLI do
   it 'lets the EXIT trap override the exit code after a syntax error' do
     expect(run(['-c', "trap 'exit 9' EXIT\necho one\nbad )"], FakeSystemCalls.new)).to eq(9)
   end
+
+  it 'expands an alias defined by an earlier line' do
+    system = FakeSystemCalls.new
+    run(['-c', "alias g=echo\ng hello"], system)
+    expect(system.stdout.string).to eq("hello\n")
+  end
+
+  it 'does not expand an alias defined on the same line' do
+    external = instance_double(Rush::External, call: Rush::Status.failure(127))
+    allow(Rush::External).to receive(:new).and_return(external)
+    expect(run(['-c', 'alias g=echo; g hello'], FakeSystemCalls.new)).to eq(127)
+    expect(Rush::External).to have_received(:new).with(anything, %w[g hello], anything, anything)
+  end
+
+  it 'bakes an alias into a function body parsed after the definition' do
+    system = FakeSystemCalls.new
+    run(['-c', "alias g=echo\nf() { g fromfunc; }\nf"], system)
+    expect(system.stdout.string).to eq("fromfunc\n")
+  end
 end

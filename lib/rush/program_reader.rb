@@ -10,8 +10,9 @@ module Rush
   # input a pending buffer gets one final, non-interactive parse so an
   # unterminated here-document still runs with the body so far, exactly like dash.
   class ProgramReader
-    def initialize(&next_line)
+    def initialize(aliases: nil, &next_line)
       @next_line = next_line
+      @aliases = aliases
     end
 
     # The next complete program, or :eof. Raises ParseError on a real syntax
@@ -35,7 +36,7 @@ module Rush
     end
 
     def attempt(source)
-      Parser.new(Lexer.new(source, interactive: true)).parse
+      Parser.new(Lexer.new(source, interactive: true, aliases: @aliases)).parse
     rescue IncompleteInput
       :more
     end
@@ -43,7 +44,7 @@ module Rush
     def finish
       return :eof if @buffer.empty?
 
-      Parser.new(Lexer.new(@buffer, interactive: false)).parse
+      Parser.new(Lexer.new(@buffer, interactive: false, aliases: @aliases)).parse
     end
   end
 end

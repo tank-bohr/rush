@@ -328,7 +328,69 @@ RSpec.describe 'rush vs dash (differential)' do
     "trap 'echo rc=$?' EXIT\ntrue\nbad )",
     "trap 'echo bye' EXIT\nreadonly x=1\nx=2\necho after",
     "trap 'echo rc=$?' EXIT\nset -u\necho \"$missing\"\necho after",
-    "trap 'exit 9' EXIT\necho one\nbad )"
+    "trap 'exit 9' EXIT\necho one\nbad )",
+    # alias substitution happens at lex time and only affects *later* lines, so a
+    # command-position name on a subsequent line is replaced by its value: a plain
+    # command, a recursion-guarded self-reference, a nested chain, injected
+    # reserved words, the trailing-<blank> argument chain, and never a quoted name,
+    # a reserved word, an argument, or a case subject/pattern. Only stdout + exit
+    # status are compared, so "not found" diagnostics on stderr are moot.
+    "alias g=echo\ng hi",
+    "alias g=echo\ng a b c",
+    'alias g=echo; g hi',
+    "alias echo='echo X'\necho hi",
+    "alias a=echo\nalias b=a\nb two",
+    "alias l='for i in 1 2'\nl\ndo echo $i; done",
+    "alias first='echo '\nalias second=SECOND\nfirst second",
+    "alias a='echo '\nalias b=hello\nalias c=world\na b c",
+    "alias a='echo '\nalias b='B '\nalias c=CCC\na b c",
+    "alias a='echo '\nalias b=hello\nalias hello=W\na b",
+    "alias if=echo\nif hi",
+    "alias x=echo\n\\x hi",
+    "alias a=AAA\necho a",
+    "alias a='echo '\nalias if=BAD\na if",
+    "alias e=\ne echo hi",
+    "alias p='echo hi | cat'\np",
+    "alias greet='echo hello;'\ngreet world",
+    "alias x=echo\ntrue && x A",
+    "alias x=echo\nfalse | x B",
+    "alias p=echo\ncase x in\n x) p ok;;\nesac",
+    "alias r=BAD\ncase r in\n r) echo m;;\nesac",
+    "alias p=echo\nfor n in 1 2; do p $n; done",
+    "alias p=echo\nif true; then p hi; fi",
+    "alias p=echo\n{ p hi; }",
+    "alias p=echo\n( p hi )",
+    "alias x=echo\ncommand x hi; echo rc=$?",
+    # alias / unalias as builtins: listing (single-quoted name=value), querying,
+    # removal, and type/command reporting. Multi-alias listings are sorted through
+    # `sort` because rush sorts but dash lists in hash order.
+    "alias ll=ls\nalias",
+    "alias ll='ls -l'\nalias ll",
+    "alias x=\"it's\"\nalias x",
+    'alias',
+    'alias nope; echo rc=$?',
+    "alias a=1\nalias a=2\nalias a",
+    "alias a=b=c\nalias a",
+    "alias a=1\nalias b=2\nalias | sort",
+    "alias a=1\nalias b=2\nunalias a\nalias",
+    "alias a=1\nunalias -a\nalias",
+    'unalias nope; echo rc=$?',
+    'unalias; echo rc=$?',
+    "alias ll='ls -l'\ntype ll",
+    "alias ll='ls -l'\ncommand -v ll",
+    "alias ll='ls -l'\ncommand -V ll",
+    'type alias',
+    # re-lexed input (eval, command substitution, a trap action) expands a
+    # pre-existing alias, since the alias table is consulted wherever shell input
+    # is tokenized. (An alias *defined inside* an eval string or sourced file does
+    # not affect later lines of that same construct: rush parses each as one unit
+    # where dash reads them incrementally — tracked as a future incremental-eval
+    # slice. Command substitution parses as one unit in dash too, so it agrees.)
+    "alias g=echo\neval 'g hi'",
+    "alias g=echo\neval g hi",
+    "alias g=echo\necho \"$(g hi)\"",
+    "alias g=echo\nx=$(g hi); echo $x",
+    "alias g=echo\ntrap 'g bye' EXIT\necho body"
   ].freeze
 
   corpus.each do |snippet|
@@ -365,6 +427,15 @@ RSpec.describe 'rush vs dash (differential)' do
       file.write("greet() { echo \"hi $1\"; }\nVALUE=42\n")
       file.flush
       source = ". #{file.path}; greet world; echo $VALUE"
+      expect(rush(source)).to eq(dash(source))
+    end
+  end
+
+  it 'expands a pre-existing alias inside a sourced file like dash' do
+    Tempfile.create(['rush_alias', '.sh']) do |file|
+      file.write("g infile\n")
+      file.flush
+      source = "alias g=echo\n. #{file.path}"
       expect(rush(source)).to eq(dash(source))
     end
   end

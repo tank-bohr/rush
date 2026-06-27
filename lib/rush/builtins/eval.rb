@@ -16,7 +16,7 @@ module Rush
 
       private
 
-      def parse(text) = Parser.new(Lexer.new(text)).parse
+      def parse(text) = Parser.new(Lexer.new(text, aliases: executor.state.aliases)).parse
 
       def report(message)
         stderr.puts("rush: eval: #{message}")

@@ -18,15 +18,17 @@ module Rush
     def describe(name)
       kind, detail = find(name)
       return nil unless kind
+      return "#{name} is an alias for #{detail}" if kind == :alias
 
       "#{name} is #{kind == :file ? detail : LABELS.fetch(kind)}"
     end
 
-    # [kind, detail] where kind is :keyword/:function/:special/:builtin/:file,
-    # or nil when the name resolves to nothing.
+    # [kind, detail] where kind is :alias/:keyword/:function/:special/:builtin/
+    # :file (detail is the alias value or external path), or nil for an unknown
+    # name. An alias outranks a function/builtin but not a reserved word.
     def find(name)
       kind = kind_of(name)
-      return [kind, name] if kind
+      return [kind, kind == :alias ? @executor.state.aliases.value(name) : name] if kind
 
       path = path_of(name)
       path && [:file, path]
@@ -36,6 +38,7 @@ module Rush
 
     def kind_of(name)
       return :keyword if KEYWORDS.include?(name)
+      return :alias if @executor.state.aliases.key?(name)
       return :function if @executor.state.functions.key?(name)
       return :special if SPECIAL.include?(name)
 

@@ -44,4 +44,16 @@ RSpec.describe Rush::Builtins::Command do
   it 'returns success when given no name to run' do
     expect(run).to be_success
   end
+
+  it "prints an alias as alias 'name=value' for -v" do
+    state.aliases.define('ll', 'ls -l')
+    run('-v', 'll')
+    expect(system.stdout.string).to eq("alias 'll=ls -l'\n")
+  end
+
+  it 'describes an alias verbosely with -V' do
+    state.aliases.define('ll', 'ls -l')
+    run('-V', 'll')
+    expect(system.stdout.string).to eq("ll is an alias for ls -l\n")
+  end
 end

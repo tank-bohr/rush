@@ -19,10 +19,12 @@ module Rush
 
       def source(path)
         text = executor.system.read_file(path)
-        executor.with_io(@io) { executor.run(Parser.new(Lexer.new(text)).parse) }
+        executor.with_io(@io) { executor.run(parse(text)) }
       rescue ParseError => e
         report(e.message)
       end
+
+      def parse(text) = Parser.new(Lexer.new(text, aliases: executor.state.aliases)).parse
 
       def usage
         stderr.puts('rush: .: filename argument required')

@@ -20,8 +20,15 @@ module Rush
         kind, detail = name && CommandLookup.new(executor).find(name)
         return failure(127) unless kind
 
-        stdout.puts(kind == :file ? detail : name)
+        stdout.puts(terse(kind, name, detail))
         success
+      end
+
+      def terse(kind, name, detail)
+        return detail if kind == :file
+        return "alias '#{"#{name}=#{detail}".gsub("'", %q('"'"'))}'" if kind == :alias
+
+        name
       end
 
       def verbose(name)

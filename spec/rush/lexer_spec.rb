@@ -157,4 +157,67 @@ RSpec.describe Rush::Lexer do
     lexer.next_token
     expect(lexer.location).to be >= 2
   end
+
+  describe 'alias substitution' do
+    def table(defs)
+      Rush::AliasTable.new.tap { |t| defs.each { |name, value| t.define(name.to_s, value) } }
+    end
+
+    def lex(source, **defs)
+      lexer = described_class.new(source, aliases: table(defs))
+      [].tap { |out| loop { (token = lexer.next_token) == [false, false] ? break : out << token } }
+    end
+
+    def words(source, **defs)
+      lex(source, **defs).map { |sym, val| sym == :WORD ? val.literal_text : sym }
+    end
+
+    it 'replaces a command-position alias with its value' do
+      expect(words('x hi', x: 'echo')).to eq(%w[echo hi])
+    end
+
+    it 'leaves a name in argument position unexpanded' do
+      expect(words('echo x', x: 'BAD')).to eq(%w[echo x])
+    end
+
+    it 'does nothing without an alias table' do
+      expect(described_class.new('x', aliases: nil).next_token.last.literal_text).to eq('x')
+    end
+
+    it 'does not re-expand an alias within its own replacement' do
+      expect(words('echo hi', echo: 'echo X')).to eq(%w[echo X hi])
+    end
+
+    it 'chains nested aliases until the result is not an alias' do
+      expect(words('b two', a: 'echo', b: 'a')).to eq(%w[echo two])
+    end
+
+    it 'injects reserved words from a replacement' do
+      expect(lex('l', l: 'for i in 1 2').map(&:first)).to eq(%i[For NAME In WORD WORD])
+    end
+
+    it 'does not expand a reserved word that is also an alias name' do
+      expect(lex('if x', if: 'echo').map(&:first)).to eq(%i[If WORD])
+    end
+
+    it 'does not expand a quoted name' do
+      expect(words("'x' hi", x: 'echo')).to eq(%w[x hi])
+    end
+
+    it 'checks the next word when a replacement ends in a blank' do
+      expect(words('first second', first: 'echo ', second: 'SECOND')).to eq(%w[echo SECOND])
+    end
+
+    it 'stops the trailing-blank chain at a value without a blank' do
+      expect(words('a b c', a: 'echo ', b: 'hello', c: 'world')).to eq(%w[echo hello c])
+    end
+
+    it 'does not expand a case subject or pattern' do
+      expect(words("case r in\n r) echo m;;\nesac", r: 'BAD')).to include('r').twice
+    end
+
+    it 'expands a command in a case arm body' do
+      expect(words("case x in\n x) p ok;;\nesac", p: 'echo')).to include('echo')
+    end
+  end
 end

@@ -56,7 +56,7 @@ module Rush
         # :nocov:
       end
 
-      def parse = Parser.new(Lexer.new(@source)).parse
+      def parse = Parser.new(Lexer.new(@source, aliases: @executor.state.aliases)).parse
     end
   end
 end

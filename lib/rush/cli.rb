@@ -31,7 +31,7 @@ module Rush
 
     def run_commands
       queue = source.each_line.to_a
-      reader = ProgramReader.new { queue.shift }
+      reader = ProgramReader.new(aliases: executor.state.aliases) { queue.shift }
       loop { break unless continue?(reader) }
       executor.state.last_status.exitstatus
     end

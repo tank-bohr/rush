@@ -123,7 +123,7 @@ module Rush
     end
 
     def fire(action)
-      run(Parser.new(Lexer.new(action)).parse)
+      run(Parser.new(Lexer.new(action, aliases: state.aliases)).parse)
     rescue ParseError, ExpansionError, ReadonlyError, LoopControl, ReturnSignal
       nil
     end
