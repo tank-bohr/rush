@@ -2,48 +2,25 @@
 
 module Rush
   module Expansion
-    # Splits a word's expanded parts into fields on IFS. Each part is [text,
-    # splittable, break_before]; only splittable parts (results of unquoted
-    # expansion) are split, and a part flagged break_before starts a new field
-    # unconditionally (how "$@" keeps its parameters separate). A field is kept
-    # if it is non-empty or has a literal/quoted part, so empty unquoted
-    # expansions vanish while "" survives. Slice 2c implements the default
-    # whitespace IFS (runs collapse, empties drop); the full non-whitespace
-    # three-case behaviour arrives in Phase 2.
+    # Entry point for IFS field splitting: it classifies IFS into its whitespace
+    # and non-whitespace delimiter sets and hands the parts to IfsScanner, which
+    # applies the three POSIX cases. Unset IFS means the default whitespace set
+    # (<space><tab><newline>); a null IFS (the empty string) leaves both sets
+    # empty, so no character delimits and only quoting/breaks form fields.
     class FieldSplitter
-      DEFAULT_IFS = " \t\n"
+      WHITESPACE = " \t\n"
 
       def initialize(ifs)
-        @ifs = ifs || DEFAULT_IFS
+        @chars = (ifs || WHITESPACE).chars.uniq
       end
 
-      def split(parts)
-        fields = [[+'', false]]
-        parts.each { |text, splittable, brk| add(fields, text, splittable, brk) }
-        fields.select { |text, real| real || !text.empty? }.map(&:first)
-      end
+      def split(parts) = IfsScanner.new(whitespace, others).run(parts)
 
       private
 
-      def add(fields, text, splittable, brk)
-        fields << [+'', false] if brk
-        splittable ? split_part(fields, text) : keep(fields, text)
-      end
+      def whitespace = @chars.select { |char| WHITESPACE.include?(char) }
 
-      def keep(fields, text)
-        fields.last[0] << text
-        fields.last[1] = true
-      end
-
-      def split_part(fields, text)
-        tokens = text.split(pattern, -1)
-        return if tokens.empty? # empty unquoted expansion contributes no field
-
-        fields.last[0] << tokens.first
-        tokens.drop(1).each { |token| fields << [token, false] }
-      end
-
-      def pattern = @ifs.empty? ? /(?!)/ : /(?:#{Regexp.union(@ifs.chars.uniq).source})+/
+      def others = @chars.reject { |char| WHITESPACE.include?(char) }
     end
   end
 end

@@ -71,4 +71,24 @@ RSpec.describe Rush::Expansion::Pipeline do
       expect(pipeline.expand(at(true))).to eq([])
     end
   end
+
+  describe '$* expansion' do
+    let(:state) { Rush::ShellState.new(environment: Rush::Environment.new('IFS' => ':')) }
+    let(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state)) }
+
+    def star(quoted)
+      ref = Rush::AST::ParamRef.simple('*')
+      [Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: quoted)])]
+    end
+
+    it 'keeps each positional parameter a separate field when unquoted' do
+      state.positional = ['a b', 'c']
+      expect(pipeline.expand(star(false))).to eq(['a b', 'c'])
+    end
+
+    it 'joins the positional parameters with the first IFS character when quoted' do
+      state.positional = %w[a b c]
+      expect(pipeline.expand(star(true))).to eq(['a:b:c'])
+    end
+  end
 end

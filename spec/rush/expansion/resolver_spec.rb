@@ -28,4 +28,14 @@ RSpec.describe Rush::Expansion::Resolver do
   it 'returns placeholders for the deferred special parameters' do
     expect([resolver.resolve('-'), resolver.resolve('!')]).to eq(['', nil])
   end
+
+  it 'joins $* with the first IFS character' do
+    state.environment.assign('IFS', ':-')
+    expect(resolver.resolve('*')).to eq('a:b:c')
+  end
+
+  it 'joins $* with no separator when IFS is null' do
+    state.environment.assign('IFS', '')
+    expect(resolver.resolve('*')).to eq('abc')
+  end
 end

@@ -133,7 +133,29 @@ RSpec.describe 'rush vs dash (differential)' do
     'set -e; if ( false; echo more ); then echo t; else echo f; fi',
     'set -e; if true; then ( false; echo more ); fi; echo after',
     'set -e; echo "X$(false; echo hi)Y"; echo done',
-    'set -e; (exit 7); echo after'
+    'set -e; (exit 7); echo after',
+    'IFS=:; v="a::b"; set -- $v; echo $#',
+    'IFS=:; v=":a:b:"; set -- $v; printf "<%s>" "$@"; echo',
+    'IFS=:; v="a:"; set -- $v; echo $#',
+    'IFS=:; v="a::"; set -- $v; echo $#',
+    'IFS=:; v="::"; set -- $v; echo $#',
+    'IFS=:; v=":"; set -- $v; echo $#',
+    'IFS=:; v=""; set -- $v; echo $#',
+    'IFS=" :"; v="a  :  b"; set -- $v; printf "<%s>" "$@"; echo',
+    'IFS=" :"; v=":x:"; set -- $v; printf "<%s>" "$@"; echo',
+    'IFS=" :"; v="  a  "; set -- $v; printf "<%s>" "$@"; echo',
+    'a="x:"; b=":y"; IFS=:; set -- $a$b; echo $#',
+    'a="x"; b="y"; IFS=:; set -- $a$b; echo "$#:$1"',
+    'IFS=" "; v="  hi   there  "; set -- $v; echo $#',
+    'IFS=":"; v="a:b"; set -- p$v"q"; printf "<%s>" "$@"; echo',
+    'IFS=" "; v="  x  "; set -- "pre"$v; printf "<%s>" "$@"; echo',
+    'IFS=; set -- a b c; printf "[%s]" "$*"; echo',
+    'unset IFS; set -- a b c; printf "[%s]" "$*"; echo',
+    'IFS=-; set -- a b c; printf "[%s]" "$*"; echo',
+    'IFS=:; set -- "a b" c; set -- $*; echo $#',
+    'IFS=""; set -- a b c; set -- $*; echo $#',
+    'IFS=" "; set -- "p q" r; set -- $*; echo $#',
+    'IFS=:; set -- a b c; X=$*; echo "[$X]"'
   ].freeze
 
   corpus.each do |snippet|

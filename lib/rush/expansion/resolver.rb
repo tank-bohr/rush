@@ -35,7 +35,12 @@ module Rush
 
       def shell_name = state.name
 
-      def positional_all = state.positional.join(' ')
+      def positional_all = state.positional.join(separator)
+
+      def separator
+        ifs = state.environment.get('IFS')
+        ifs.nil? ? ' ' : ifs[0].to_s
+      end
 
       def options = ''
 

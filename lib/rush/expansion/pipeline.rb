@@ -29,7 +29,11 @@ module Rush
         [[scalar_segment(segment), splittable?(segment), false]]
       end
 
-      def splat?(segment) = segment.kind == :param && segment.value.name == '@' && segment.value.op.nil?
+      def splat?(segment)
+        return false unless segment.kind == :param && segment.value.op.nil?
+
+        segment.value.name == '@' || (segment.value.name == '*' && !segment.quoted)
+      end
 
       def splat_parts(segment)
         split = !segment.quoted
