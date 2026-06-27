@@ -45,6 +45,16 @@ RSpec.describe Rush::Lexer do
     expect(symbols('echo X=1')).to eq(%i[WORD WORD])
   end
 
+  it 'keeps quoted segments in an assignment value' do
+    symbol, value = described_class.new('x="a b"').next_token
+    expect(symbol).to eq(:ASSIGNMENT_WORD)
+    expect(value.value.literal_text).to eq('a b')
+  end
+
+  it 'does not treat a quoted name as an assignment' do
+    expect(symbols('"x"=1')).to eq([:WORD])
+  end
+
   it 'signals end of input with [false, false]' do
     expect(described_class.new('').next_token).to eq([false, false])
   end

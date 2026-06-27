@@ -28,4 +28,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(code).to eq(0)
     expect(system.files['/tmp/out'].string).to eq("saved\n")
   end
+
+  it 'removes quotes and keeps quoted blanks within one argument' do
+    expect(run('echo "hello   world"').first).to eq("hello   world\n")
+    expect(run("echo 'a;b'").first).to eq("a;b\n")
+    expect(run('echo a"b c"d').first).to eq("ab cd\n")
+  end
 end

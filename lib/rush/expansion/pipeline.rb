@@ -2,20 +2,24 @@
 
 module Rush
   module Expansion
-    # Orchestrates the ordered POSIX word expansion. Slice 1 performs literal
-    # expansion (one field per word, no splitting). Tilde, parameter, command and
-    # arithmetic expansion, field splitting, globbing and quote removal arrive in
-    # later slices, each a collaborator behind these two entry points.
+    # Orchestrates the ordered POSIX word expansion. With quoting in place a word
+    # expands to one field formed by concatenating its segment values (quotes are
+    # already removed by the scanner). Parameter, command and arithmetic
+    # expansion plus field splitting and globbing arrive in later slices.
     class Pipeline
       def initialize(executor)
         @executor = executor
       end
 
       # Argv expansion: each word becomes one field (no field splitting yet).
-      def expand(words) = words.map(&:literal_text)
+      def expand(words) = words.map { |word| expand_word(word) }
 
-      # Assignment RHS / redirection target: a single word, no field splitting.
-      def expand_value(word) = word.literal_text
+      # Assignment RHS / redirection target: a single concatenated field.
+      def expand_value(word) = expand_word(word)
+
+      private
+
+      def expand_word(word) = word.segments.map(&:value).join
     end
   end
 end
