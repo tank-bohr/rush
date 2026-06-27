@@ -5,6 +5,12 @@ module Rush
     # Base for builtins. Subclasses implement #call returning a Status. Streams
     # come from the per-command IoTable so redirections apply to builtins too.
     class Base
+      # A non-negative decimal integer (optionally signed +, surrounding blanks);
+      # the accepted form of an exit/return operand. dash parses it into a C int,
+      # so a value past INT_MAX overflows and is rejected like a non-numeric one.
+      NUMERIC_OPERAND = /\A\s*\+?\d+\s*\z/
+      INT_MAX = 2_147_483_647
+
       def initialize(executor, argv, io)
         @executor = executor
         @argv = argv
@@ -26,6 +32,16 @@ module Rush
       def success = Status.success
 
       def failure(code = 1) = Status.failure(code)
+
+      # Parse an exit-code operand for a special builtin (exit/return). dash
+      # rejects a non-numeric, negative or out-of-range value with a
+      # special-builtin error (which aborts a non-interactive shell).
+      def numeric_operand(text)
+        value = text.to_i
+        return value if text.match?(NUMERIC_OPERAND) && value <= INT_MAX
+
+        raise BuiltinError, "#{argv.first}: Illegal number: #{text}"
+      end
     end
   end
 end

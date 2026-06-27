@@ -15,4 +15,13 @@ RSpec.describe Rush::Builtins::Return do
     expect { described_class.new(executor, %w[return], io).call }
       .to raise_error(Rush::ReturnSignal) { |signal| expect(signal.code).to eq(7) }
   end
+
+  it 'accepts a signed operand with surrounding blanks' do
+    expect { described_class.new(executor, ['return', ' +5 '], io).call }
+      .to raise_error(Rush::ReturnSignal) { |signal| expect(signal.code).to eq(5) }
+  end
+
+  it 'raises a BuiltinError for a non-numeric operand' do
+    expect { described_class.new(executor, %w[return abc], io).call }.to raise_error(Rush::BuiltinError)
+  end
 end

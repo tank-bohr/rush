@@ -58,6 +58,12 @@ RSpec.describe Rush::CLI do
     expect(system.stdout.string).to eq("bye\n")
   end
 
+  it 'aborts with status 2 on a non-numeric return operand, still firing the EXIT trap' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "trap 'echo bye' EXIT; return abc; echo after"], system)).to eq(2)
+    expect(system.stdout.string).to eq("bye\n")
+  end
+
   it 'reports a readonly violation on stderr and returns 2' do
     system = FakeSystemCalls.new
     expect(run(['-c', 'readonly x=1; x=2'], system)).to eq(2)

@@ -16,4 +16,9 @@ RSpec.describe Rush::Builtins::Exit do
     expect { described_class.new(executor, %w[exit], io).call }
       .to raise_error(Rush::ExitSignal) { |signal| expect(signal.code).to eq(7) }
   end
+
+  it 'raises a BuiltinError for a negative or non-numeric operand' do
+    expect { described_class.new(executor, %w[exit -1], io).call }.to raise_error(Rush::BuiltinError)
+    expect { described_class.new(executor, %w[exit abc], io).call }.to raise_error(Rush::BuiltinError)
+  end
 end

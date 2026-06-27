@@ -22,6 +22,11 @@ module Rush
   # aborts the script (or just the subshell) with exit status 2.
   class ReadonlyError < Error; end
 
+  # A special builtin used incorrectly (e.g. a non-numeric operand to
+  # exit/return). POSIX 2.8.1: such an error aborts a non-interactive shell with
+  # status 2; interactively it is reported and the shell carries on.
+  class BuiltinError < Error; end
+
   # Control-flow signal: `exit` unwinds to the top level carrying a status code.
   class ExitSignal < Error
     attr_reader :code

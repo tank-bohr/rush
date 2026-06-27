@@ -359,6 +359,20 @@ RSpec.describe 'rush vs dash (differential)' do
     'x=$(return 5); echo $?',
     'echo "[$(return 5; echo body)]"',
     'f() { return 3; }; f; echo after=$?',
+    # exit/return reject an invalid numeric operand (empty, negative, non-decimal)
+    # as a special-builtin error: a non-interactive shell aborts with status 2,
+    # firing the EXIT trap; a valid operand (codes <=255 here) is accepted.
+    'return abc; echo after',
+    'f() { return abc; echo in; }; f; echo after=$?',
+    'exit xy; echo after',
+    'echo a; exit 1z; echo b',
+    'f() { return -1; }; f; echo a=$?',
+    'exit 0x10',
+    "trap 'echo bye' EXIT; return abc",
+    '( exit abc ); echo sub=$?',
+    'f() { return +5; }; f; echo a=$?',
+    'f() { return 007; }; f; echo a=$?',
+    'exit 1 2; echo after',
     # incremental execution: complete commands run (and flush) before a later
     # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
     # fires the EXIT trap with $?=2 (which may override the exit code via exit)

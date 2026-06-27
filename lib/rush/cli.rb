@@ -25,7 +25,7 @@ module Rush
       terminate(run_commands)
     rescue ExitSignal => e
       terminate(e.code)
-    rescue ParseError, ExpansionError, ReadonlyError => e
+    rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
       abort_with(e)
     end
 

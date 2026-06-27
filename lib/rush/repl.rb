@@ -60,7 +60,7 @@ module Rush
       @executor.run(program)
     rescue ReturnSignal
       nil
-    rescue ExpansionError, ReadonlyError => e
+    rescue ExpansionError, ReadonlyError, BuiltinError => e
       report(e)
     end
 
