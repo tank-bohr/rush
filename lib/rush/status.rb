@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 module Rush
-  # Immutable result of running a command: a POSIX exit status (0-255).
+  # Immutable result of running a command. $? can hold a value wider than a byte:
+  # dash keeps `return 300` as 300 in-process, and only wraps to 0-255 at a real
+  # process boundary (exit!/the shell's own exit, where the OS truncates). The
+  # operand is validated non-negative and <= INT_MAX before reaching here.
   class Status
     attr_reader :exitstatus
 
-    # POSIX exit codes wrap modulo 256 (so `exit 300` yields 44, `exit -1` 255).
-    def initialize(exitstatus) = @exitstatus = exitstatus % 256
+    def initialize(exitstatus) = @exitstatus = exitstatus
 
     def success? = exitstatus.zero?
 

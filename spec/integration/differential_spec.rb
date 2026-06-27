@@ -389,6 +389,14 @@ RSpec.describe 'rush vs dash (differential)' do
     'f() { return +5; }; f; echo a=$?',
     'f() { return 007; }; f; echo a=$?',
     'exit 1 2; echo after',
+    # a valid exit code wider than a byte stays wide in $? (in-process); it wraps
+    # to 0-255 only at a real process boundary (the shell's own exit, a subshell).
+    'f() { return 300; }; f; echo $?',
+    'g() { return 1000; }; g; echo "rc=$?"; true; echo $?',
+    'f() { return 256; }; f; echo $?',
+    'exit 300',
+    '( exit 300 ); echo $?',
+    'set -e; f() { return 300; }; f; echo no',
     # incremental execution: complete commands run (and flush) before a later
     # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
     # fires the EXIT trap with $?=2 (which may override the exit code via exit)

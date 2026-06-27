@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Status do
-  it 'wraps exit codes modulo 256' do
-    expect(described_class.new(300).exitstatus).to eq(44)
-    expect(described_class.new(-1).exitstatus).to eq(255)
+  it 'keeps the raw exit status (the wrap to 0-255 happens at the process boundary)' do
+    expect(described_class.new(300).exitstatus).to eq(300)
+    expect(described_class.new(7).exitstatus).to eq(7)
   end
 
   it 'reports success only for a zero status' do
