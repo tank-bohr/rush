@@ -1,0 +1,2 @@
+lib/rush/parser.rb linguist-generated=true
+grammar/shell.y.output linguist-generated=true

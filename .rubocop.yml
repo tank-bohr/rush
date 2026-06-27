@@ -1,0 +1,72 @@
+plugins:
+  - rubocop-performance
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.4
+  NewCops: enable
+  SuggestExtensions: false
+  Include:
+    - '**/*.rb'
+    - '**/*.rake'
+    - '**/*.gemspec'
+    - '**/Rakefile'
+    - 'exe/rush'
+  Exclude:
+    - 'lib/rush/parser.rb'
+    - 'vendor/**/*'
+    - 'tmp/**/*'
+    - 'pkg/**/*'
+
+# Sandi Metz limits enforced as code style (mirrors the sandi_meter thresholds
+# so the gate holds even if the unmaintained gem breaks on Ruby 4.0).
+Metrics/MethodLength:
+  Max: 5
+  CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
+Metrics/ClassLength:
+  Max: 100
+  CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
+Metrics/ModuleLength:
+  Max: 100
+  CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+
+Metrics/ParameterLists:
+  Max: 4
+  CountKeywordArgs: true
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'
+    - '*.gemspec'
+    - 'Rakefile'
+    - 'tasks/**/*.rake'
+
+Metrics/AbcSize:
+  Max: 17
+
+# Documentation is provided by clear naming + the architecture doc, not per-class comments.
+Style/Documentation:
+  Enabled: false
+
+# The plan keeps development dependencies declared in the gemspec (single source
+# of truth), so do not force them into the Gemfile.
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+
+# Endless methods keep the one-line OS-port wrappers within the 5-line method limit.
+Style/EndlessMethod:
+  EnforcedStyle: allow_single_line
+
+Naming/MethodParameterName:
+  AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's']
+
+RSpec/ExampleLength:
+  Max: 12
+
+RSpec/MultipleExpectations:
+  Max: 6
+
+RSpec/NestedGroups:
+  Max: 5

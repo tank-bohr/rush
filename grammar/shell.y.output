@@ -1,0 +1,209 @@
+
+
+-------- Grammar --------
+
+rule 1 program: seps_opt
+rule 2 program: seps_opt commands seps_opt
+rule 3 commands: command
+rule 4 commands: commands seps command
+rule 5 command: words
+rule 6 words: WORD
+rule 7 words: words WORD
+rule 8 seps_opt: 
+rule 9 seps_opt: seps
+rule 10 seps: sep
+rule 11 seps: seps sep
+rule 12 sep: ";"
+rule 13 sep: NEWLINE
+
+------- Symbols -------
+
+**Nonterminals, with rules where they appear
+
+  $start (5)
+    on right: 
+    on left : 
+  program (6)
+    on right: 
+    on left : 1 2
+  seps_opt (7)
+    on right: 1 2
+    on left : 8 9
+  commands (8)
+    on right: 2 4
+    on left : 3 4
+  command (9)
+    on right: 3 4
+    on left : 5
+  seps (10)
+    on right: 4 9 11
+    on left : 10 11
+  words (11)
+    on right: 5 7
+    on left : 6 7
+  sep (12)
+    on right: 10 11
+    on left : 12 13
+
+**Terminals, with rules where they appear
+
+  $end (0) 
+  error (1) 
+  WORD (2) 6 7
+  NEWLINE (3) 13
+  ";" (4) 12
+
+--------- State ---------
+
+state 0
+
+
+  NEWLINE       shift, and go to state 6
+  ";"           shift, and go to state 5
+  $default      reduce using rule 8 (seps_opt)
+
+  program       go to state 1
+  seps_opt      go to state 2
+  seps          go to state 3
+  sep           go to state 4
+
+state 1
+
+
+  $end          shift, and go to state 7
+
+
+state 2
+
+   1) program : seps_opt _
+   2) program : seps_opt _ commands seps_opt
+
+  WORD          shift, and go to state 11
+  $default      reduce using rule 1 (program)
+
+  commands      go to state 8
+  command       go to state 9
+  words         go to state 10
+
+state 3
+
+   9) seps_opt : seps _
+  11) seps : seps _ sep
+
+  NEWLINE       shift, and go to state 6
+  ";"           shift, and go to state 5
+  $default      reduce using rule 9 (seps_opt)
+
+  sep           go to state 12
+
+state 4
+
+  10) seps : sep _
+
+  $default      reduce using rule 10 (seps)
+
+
+state 5
+
+  12) sep : ";" _
+
+  $default      reduce using rule 12 (sep)
+
+
+state 6
+
+  13) sep : NEWLINE _
+
+  $default      reduce using rule 13 (sep)
+
+
+state 7
+
+
+  $end          shift, and go to state 13
+
+
+state 8
+
+   2) program : seps_opt commands _ seps_opt
+   4) commands : commands _ seps command
+
+  NEWLINE       shift, and go to state 6
+  ";"           shift, and go to state 5
+  $default      reduce using rule 8 (seps_opt)
+
+  seps_opt      go to state 14
+  seps          go to state 15
+  sep           go to state 4
+
+state 9
+
+   3) commands : command _
+
+  $default      reduce using rule 3 (commands)
+
+
+state 10
+
+   5) command : words _
+   7) words : words _ WORD
+
+  WORD          shift, and go to state 16
+  $default      reduce using rule 5 (command)
+
+
+state 11
+
+   6) words : WORD _
+
+  $default      reduce using rule 6 (words)
+
+
+state 12
+
+  11) seps : seps sep _
+
+  $default      reduce using rule 11 (seps)
+
+
+state 13
+
+
+  $default      accept
+
+
+state 14
+
+   2) program : seps_opt commands seps_opt _
+
+  $default      reduce using rule 2 (program)
+
+
+state 15
+
+   4) commands : commands seps _ command
+   9) seps_opt : seps _
+  11) seps : seps _ sep
+
+  WORD          shift, and go to state 11
+  NEWLINE       shift, and go to state 6
+  ";"           shift, and go to state 5
+  $default      reduce using rule 9 (seps_opt)
+
+  command       go to state 17
+  words         go to state 10
+  sep           go to state 12
+
+state 16
+
+   7) words : words WORD _
+
+  $default      reduce using rule 7 (words)
+
+
+state 17
+
+   4) commands : commands seps command _
+
+  $default      reduce using rule 4 (commands)
+

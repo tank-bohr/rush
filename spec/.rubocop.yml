@@ -1,0 +1,22 @@
+inherit_from: ../.rubocop.yml
+
+# Specs legitimately need longer setup than production code, so the strict Sandi
+# Metz limits (enforced on lib/ + exe/ by the `metrics` task) are relaxed here.
+Metrics/MethodLength:
+  Max: 15
+
+Metrics/AbcSize:
+  Max: 25
+
+Metrics/ClassLength:
+  Max: 250
+
+RSpec/DescribeClass:
+  Exclude:
+    - 'integration/**/*'
+
+RSpec/ExampleLength:
+  Max: 15
+
+RSpec/MultipleExpectations:
+  Max: 8
