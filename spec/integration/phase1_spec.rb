@@ -86,4 +86,12 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('f() { return 3; }; f; echo $?').first).to eq("3\n")
     expect(run('count() { echo $#; }; count a b c').first).to eq("3\n")
   end
+
+  it 'evaluates conditionals with the test builtin and its [ alias' do
+    expect(run('[ -n nonempty ] && echo yes').first).to eq("yes\n")
+    expect(run('[ "$x" = "" ] && echo empty').first).to eq("empty\n")
+    expect(run('test 3 -lt 5 && echo less').first).to eq("less\n")
+    expect(run('if [ 2 -gt 1 ]; then echo big; fi').first).to eq("big\n")
+    expect(run('[ bad arg here ]; echo $?').first).to eq("2\n")
+  end
 end

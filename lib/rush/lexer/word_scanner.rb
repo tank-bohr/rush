@@ -54,6 +54,7 @@ module Rush
 
       def double_quote
         @scanner.getch
+        push('', quoted: true) if @scanner.peek(1) == '"' # "" yields one empty field
         double_step until end_double?
         raise ParseError, 'unterminated double quote' if @scanner.eos?
 
@@ -64,13 +65,11 @@ module Rush
 
       def double_step
         char = @scanner.peek(1)
-        return double_dollar if char == '$'
+        return read_dollar(quoted: true) if char == '$'
         return double_escape if char == '\\'
 
         push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
       end
-
-      def double_dollar = read_dollar(quoted: true)
 
       def double_escape
         @scanner.getch

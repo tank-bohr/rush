@@ -20,6 +20,11 @@ RSpec.describe Rush::Lexer::WordScanner do
     expect(field('"a b"')).to eq('a b')
   end
 
+  it 'keeps empty double quotes as one empty quoted segment' do
+    segments = scan('""').first.segments
+    expect(segments.map { |s| [s.value, s.quoted] }).to eq([['', true]])
+  end
+
   it 'unescapes a backslash-escaped space, keeping the word intact' do
     expect(field('a\\ b')).to eq('a b')
   end

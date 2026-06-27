@@ -49,6 +49,8 @@ require_relative 'rush/builtins/cd'
 require_relative 'rush/builtins/break_'
 require_relative 'rush/builtins/continue_'
 require_relative 'rush/builtins/return_'
+require_relative 'rush/builtins/test_expr'
+require_relative 'rush/builtins/test_'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'
