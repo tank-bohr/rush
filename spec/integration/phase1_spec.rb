@@ -100,4 +100,12 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('set a b c; shift 2; echo "$1 $#"').first).to eq("c 1\n")
     expect(run('set -- x; echo "$# $1"').first).to eq("1 x\n")
   end
+
+  it 'expands "$@" to one field per parameter and "$*" to a joined field' do
+    expect(run('set a b c; for x in "$@"; do echo "[$x]"; done').first).to eq("[a]\n[b]\n[c]\n")
+    expect(run('set "a b" c; for x in "$@"; do echo "[$x]"; done').first).to eq("[a b]\n[c]\n")
+    expect(run('set --; for x in "$@"; do echo no; done; echo done').first).to eq("done\n")
+    expect(run('set a b c; echo "$*"').first).to eq("a b c\n")
+    expect(run('set a b c; echo "pre$@post"').first).to eq("prea b cpost\n")
+  end
 end

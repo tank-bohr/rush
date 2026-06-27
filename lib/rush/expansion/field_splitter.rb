@@ -3,11 +3,13 @@
 module Rush
   module Expansion
     # Splits a word's expanded parts into fields on IFS. Each part is [text,
-    # splittable]; only splittable parts (results of unquoted expansion) are
-    # split. A field is kept if it is non-empty or has a literal/quoted part, so
-    # empty unquoted expansions vanish while "" survives. Slice 2c implements the
-    # default whitespace IFS (runs collapse, empties drop); the full non-
-    # whitespace three-case behaviour arrives in Phase 2.
+    # splittable, break_before]; only splittable parts (results of unquoted
+    # expansion) are split, and a part flagged break_before starts a new field
+    # unconditionally (how "$@" keeps its parameters separate). A field is kept
+    # if it is non-empty or has a literal/quoted part, so empty unquoted
+    # expansions vanish while "" survives. Slice 2c implements the default
+    # whitespace IFS (runs collapse, empties drop); the full non-whitespace
+    # three-case behaviour arrives in Phase 2.
     class FieldSplitter
       DEFAULT_IFS = " \t\n"
 
@@ -17,13 +19,14 @@ module Rush
 
       def split(parts)
         fields = [[+'', false]]
-        parts.each { |text, splittable| add(fields, text, splittable) }
+        parts.each { |text, splittable, brk| add(fields, text, splittable, brk) }
         fields.select { |text, real| real || !text.empty? }.map(&:first)
       end
 
       private
 
-      def add(fields, text, splittable)
+      def add(fields, text, splittable, brk)
+        fields << [+'', false] if brk
         splittable ? split_part(fields, text) : keep(fields, text)
       end
 

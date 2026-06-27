@@ -19,6 +19,10 @@ RSpec.describe Rush::Expansion::FieldSplitter do
     expect(split([['x', false], ['1 2', true], ['y', false]])).to eq(%w[x1 2y])
   end
 
+  it 'starts a new field for a break-flagged part, keeping empties' do
+    expect(split([['a', false], ['', false, true], ['b', false, true]])).to eq(['a', '', 'b'])
+  end
+
   it 'keeps an empty quoted field but drops an empty unquoted expansion' do
     expect([split([['', false]]), split([['', true]])]).to eq([[''], []])
   end

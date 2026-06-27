@@ -48,7 +48,15 @@ RSpec.describe 'rush vs dash (differential)' do
     'set a b c; shift 2; echo "$1 $#"',
     'set -- x y; echo "$# $1 $2"',
     'set --; echo "[$#]"',
-    'set a b c; shift 0; echo $#'
+    'set a b c; shift 0; echo $#',
+    'set a b c; for x in "$@"; do echo "[$x]"; done',
+    'set "a b" c; for x in "$@"; do echo "[$x]"; done',
+    'set --; for x in "$@"; do echo no; done; echo done',
+    'set a b c; for x in $@; do echo "[$x]"; done',
+    'set a b c; echo "$*"',
+    'set a b c; echo "pre$@post"',
+    'set one; echo "x$@y"',
+    'set --; echo "z$@w"'
   ].freeze
 
   corpus.each do |snippet|

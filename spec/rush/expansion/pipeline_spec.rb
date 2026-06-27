@@ -46,4 +46,29 @@ RSpec.describe Rush::Expansion::Pipeline do
     quoted = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: true)])
     expect([pipeline.expand([unquoted]), pipeline.expand([quoted])]).to eq([%w[a b], ['a b']])
   end
+
+  describe '"$@" splat expansion' do
+    subject(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state)) }
+
+    let(:state) { Rush::ShellState.new }
+
+    def at(quoted)
+      ref = Rush::AST::ParamRef.simple('@')
+      [Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: quoted)])]
+    end
+
+    it 'yields one field per positional parameter when quoted, preserving spaces' do
+      state.positional = ['a b', 'c']
+      expect(pipeline.expand(at(true))).to eq(['a b', 'c'])
+    end
+
+    it 'field-splits each parameter when unquoted' do
+      state.positional = ['a b', 'c']
+      expect(pipeline.expand(at(false))).to eq(%w[a b c])
+    end
+
+    it 'yields no fields when there are no positional parameters' do
+      expect(pipeline.expand(at(true))).to eq([])
+    end
+  end
 end
