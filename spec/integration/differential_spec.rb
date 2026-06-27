@@ -59,7 +59,12 @@ RSpec.describe 'rush vs dash (differential)' do
     'set --; echo "z$@w"',
     'export X=hi; printenv X',
     'X=local; printenv X; echo "rc=$?"',
-    'export X=hi; unset X; printenv X; echo "rc=$?"'
+    'export X=hi; unset X; printenv X; echo "rc=$?"',
+    'eval echo one two',
+    'eval "echo hi; x=1"; echo $x',
+    'x=5; eval "echo \$x"',
+    'eval "for i in 1 2 3; do echo \$i; done"',
+    'eval exit 3; echo after'
   ].freeze
 
   corpus.each do |snippet|

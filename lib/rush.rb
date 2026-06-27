@@ -55,6 +55,7 @@ require_relative 'rush/builtins/set'
 require_relative 'rush/builtins/shift'
 require_relative 'rush/builtins/export'
 require_relative 'rush/builtins/unset'
+require_relative 'rush/builtins/eval'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'

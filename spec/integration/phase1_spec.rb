@@ -113,4 +113,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('export X=hi; echo $X').first).to eq("hi\n")
     expect(run('Y=keep; unset Y; echo "[$Y]"').first).to eq("[]\n")
   end
+
+  it 'evaluates a string as shell input in the current shell' do
+    expect(run('eval "echo hi; X=1"; echo $X').first).to eq("hi\n1\n")
+    expect(run('for i in a b c; do eval break; done; echo done').first).to eq("done\n")
+    expect(run('eval exit 5')[1]).to eq(5)
+  end
 end
