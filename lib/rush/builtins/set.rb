@@ -5,9 +5,9 @@ module Rush
     # `set [-/+ options] [--] [arg ...]` — toggle shell options (-x/+x style) and,
     # when operands follow (or after `--`), replace the positional parameters. With
     # no operands the parameters are left unchanged; an unknown option flag is
-    # ignored. errexit (-e) is recognised but honoured in a later slice.
+    # ignored. Supported options: -e (errexit), -u (nounset), -x (xtrace).
     class Set < Base
-      OPTIONS = { 'u' => :nounset, 'x' => :xtrace }.freeze
+      OPTIONS = { 'e' => :errexit, 'u' => :nounset, 'x' => :xtrace }.freeze
 
       def call
         rest = strip_options(operands)

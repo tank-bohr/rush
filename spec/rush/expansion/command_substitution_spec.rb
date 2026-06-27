@@ -19,5 +19,12 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
       described_class.new(executor, 'echo captured').capture(write)
       expect(write.string).to eq("captured\n")
     end
+
+    it 'ends the substitution on a set -e failure without exiting the parent' do
+      state.set_option(:errexit, true)
+      write = StringIO.new
+      described_class.new(executor, 'false; echo nope').capture(write)
+      expect([write.string, state.last_status.exitstatus]).to eq(['', 1])
+    end
   end
 end

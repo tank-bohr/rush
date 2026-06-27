@@ -32,13 +32,41 @@ module Rush
       @io = previous
     end
 
+    # Run a block in a "tested" context (errexit suppressed): the condition of
+    # if/while/until, the non-final part of an && / || list, a negated pipeline,
+    # and an async (&) command. `untested` is the inverse — command substitution
+    # starts a fresh errexit context regardless of the caller's. Both restore on
+    # exit, so the flag follows the call tree.
+    def tested(&) = scoped_tested(true, &)
+
+    def untested(&) = scoped_tested(false, &)
+
+    # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
+    # outside a tested context aborts the shell with that status.
+    def exit_on_error(status)
+      raise ExitSignal, status.exitstatus if abort_on?(status)
+
+      status
+    end
+
     private
 
     def setup
       @redirections = Redirection.default_registry
       @expander = Expansion::Pipeline.new(self)
       @io = IoTable.standard(@system)
+      @tested = false
       @state.pwd ||= @system.pwd
     end
+
+    def scoped_tested(value)
+      previous = @tested
+      @tested = value
+      yield
+    ensure
+      @tested = previous
+    end
+
+    def abort_on?(status) = @state.option?(:errexit) && !@tested && !status.success?
   end
 end

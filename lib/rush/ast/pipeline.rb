@@ -14,9 +14,12 @@ module Rush
         @negate = negate
       end
 
+      # A negated pipeline (`! cmd`) is exempt from errexit and runs its stages in
+      # a tested context; otherwise the leaf status is the errexit check point.
       def execute(executor)
-        status = run_stages(executor)
-        negate ? invert(status) : status
+        return invert(executor.tested { run_stages(executor) }) if negate
+
+        executor.exit_on_error(run_stages(executor))
       end
 
       private

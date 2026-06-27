@@ -37,6 +37,13 @@ RSpec.describe Rush::Builtins::Set do
     expect(state.option?(:nounset)).to be(false)
   end
 
+  it 'enables and disables errexit with -e and +e' do
+    run('-e')
+    expect(state.option?(:errexit)).to be(true)
+    run('+e')
+    expect(state.option?(:errexit)).to be(false)
+  end
+
   it 'combines option flags with positional parameters after --' do
     run('-ux', '--', 'a', 'b')
     expect([state.option?(:nounset), state.option?(:xtrace), state.positional]).to eq([true, true, %w[a b]])

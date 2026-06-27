@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::AST::Pipeline do
-  let(:executor) { instance_double(Rush::Executor) }
+  # A real executor (errexit off) so the real #tested / #exit_on_error run; only
+  # #run is stubbed to feed canned stage statuses.
+  let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new) }
 
   it 'runs a single command in-process' do
     allow(executor).to receive(:run).with(:cmd).and_return(Rush::Status.new(5))

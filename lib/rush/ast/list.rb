@@ -18,7 +18,16 @@ module Rush
       end
 
       def execute(executor)
-        entries.reduce(Status.success) { |_, entry| executor.run(entry.and_or) }
+        entries.reduce(Status.success) { |_, entry| run_entry(executor, entry) }
+      end
+
+      private
+
+      # An async (&) command is exempt from errexit, so it runs in a tested context.
+      def run_entry(executor, entry)
+        return executor.tested { executor.run(entry.and_or) } if entry.async
+
+        executor.run(entry.and_or)
       end
     end
   end

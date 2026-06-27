@@ -16,10 +16,15 @@ module Rush
       end
 
       def execute(executor)
-        return executor.run(consequent) if executor.run(condition).success?
+        return executor.run(consequent) if condition_met?(executor)
 
         alternative ? executor.run(alternative) : Status.success
       end
+
+      private
+
+      # The condition runs in a tested context so a failing test never trips errexit.
+      def condition_met?(executor) = executor.tested { executor.run(condition) }.success?
     end
   end
 end

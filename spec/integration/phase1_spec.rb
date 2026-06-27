@@ -172,4 +172,21 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     _out, _code, system = run('set -x; echo hi')
     expect(system.stderr.string).to include('+ echo hi')
   end
+
+  it 'exits the shell on a failed command under set -e' do
+    out, code = run('set -e; false; echo after')
+    expect([out, code]).to eq(['', 1])
+    expect(run('set -e; if true; then false; fi; echo after')[1]).to eq(1)
+    expect(run('set -e; f() { false; echo no; }; f; echo after')[1]).to eq(1)
+    expect(run('set -e; for i in 1 2; do false; done; echo after')[1]).to eq(1)
+    expect(run('set -e; true && false; echo after')[1]).to eq(1)
+  end
+
+  it 'suppresses set -e in conditions, non-final and-or, negation and async' do
+    expect(run('set -e; if false; then echo a; fi; echo after').first).to eq("after\n")
+    expect(run('set -e; false && echo skip; echo after').first).to eq("after\n")
+    expect(run('set -e; ! false; echo after').first).to eq("after\n")
+    expect(run('set -e; false & echo after').first).to eq("after\n")
+    expect(run('set -e; set +e; false; echo after').first).to eq("after\n")
+  end
 end

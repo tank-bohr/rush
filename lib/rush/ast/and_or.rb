@@ -14,8 +14,10 @@ module Rush
         @right = right
       end
 
+      # The left side is non-final, so it runs in a tested context (errexit
+      # suppressed); only the final command's status reaches the errexit check.
       def execute(executor)
-        status = executor.run(left)
+        status = executor.tested { executor.run(left) }
         run_right?(status) ? executor.run(right) : status
       end
 

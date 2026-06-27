@@ -25,7 +25,7 @@ module Rush
     private
 
     def proceed?
-      met = @executor.run(@condition).success?
+      met = @executor.tested { @executor.run(@condition) }.success?
       @sense == :while ? met : !met
     end
 

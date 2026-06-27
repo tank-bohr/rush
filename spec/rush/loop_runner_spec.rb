@@ -1,10 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::LoopRunner do
-  let(:executor) { instance_double(Rush::Executor) }
+  # A real executor (errexit off) runs the real #tested condition wrapper; #run is stubbed.
+  let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: state) }
   let(:state) { Rush::ShellState.new }
-
-  before { allow(executor).to receive(:state).and_return(state) }
 
   def run(sense) = described_class.new(executor, :cond, :body, sense).call
   def condition(*statuses) = allow(executor).to receive(:run).with(:cond).and_return(*statuses)

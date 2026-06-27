@@ -20,10 +20,18 @@ module Rush
       end
 
       def capture(write)
-        @executor.with_io(@executor.io.with(1, write)) { @executor.run(parse) }
+        @executor.with_io(@executor.io.with(1, write)) { run_isolated }
       end
 
       private
+
+      # The body runs in a fresh errexit context (a subshell): a `set -e` failure
+      # ends only this substitution, leaving its status for the enclosing command.
+      def run_isolated
+        @executor.untested { @executor.run(parse) }
+      rescue ExitSignal => e
+        @executor.state.last_status = Status.new(e.code)
+      end
 
       def read_output(read, pid)
         output = read.read

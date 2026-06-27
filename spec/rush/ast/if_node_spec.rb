@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::AST::If do
-  let(:executor) { instance_double(Rush::Executor) }
+  # A real executor (errexit off) runs the real #tested condition wrapper; #run is stubbed.
+  let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new) }
 
   it 'runs the consequent when the condition succeeds' do
     allow(executor).to receive(:run).with(:cond).and_return(Rush::Status.success)

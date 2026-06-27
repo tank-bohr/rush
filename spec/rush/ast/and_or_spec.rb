@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::AST::AndOr do
-  let(:executor) { instance_double(Rush::Executor) }
+  # A real executor (errexit off) runs the real #tested wrapper; #run is stubbed.
+  let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new) }
   let(:ok) { Rush::Status.success }
   let(:bad) { Rush::Status.failure }
 
