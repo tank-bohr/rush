@@ -5,7 +5,9 @@
 # process-spawning paths are exercised separately with doubles. Nothing here
 # touches the real OS.
 class FakeSystemCalls
-  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills
+  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed
+
+  UNTRAPPABLE = %w[KILL STOP].freeze
 
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
                     executable: false, symlink: false }.freeze
@@ -20,14 +22,20 @@ class FakeSystemCalls
     @homes = homes
     @globs = globs
     @dead_pids = dead_pids
+    setup_registries
+  end
+  # rubocop:enable Metrics/ParameterLists
+
+  def setup_registries
     @kills = []
+    @traps_installed = []
+    @trap_blocks = {}
     @files = {}
     @chdirs = []
     @chdir_error = nil
     @nodes = {}
     @contents = {}
   end
-  # rubocop:enable Metrics/ParameterLists
 
   # Configured matches for a pattern; unconfigured patterns match nothing, so
   # ordinary words pass through as literals (mirroring no-match behaviour).
@@ -44,6 +52,17 @@ class FakeSystemCalls
 
     @kills << [signal, pid]
   end
+
+  # Records the installed disposition and keeps the handler block so specs can
+  # invoke it; KILL/STOP raise like the real OS to exercise the keep-anyway path.
+  def trap_signal(name, command, &block)
+    raise Errno::EINVAL if UNTRAPPABLE.include?(name)
+
+    @traps_installed << [name, command]
+    @trap_blocks[name] = block
+  end
+
+  def trap_block(name) = @trap_blocks[name]
 
   def home_dir(name) = @homes[name]
 

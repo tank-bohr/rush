@@ -24,6 +24,11 @@ module Rush
     # the target exists. Real signal delivery cannot run under the test harness.
     # :nocov:
     def kill(signal, pid) = Process.kill(signal, pid)
+
+    # Install a signal disposition for `trap`: a command string ('IGNORE' /
+    # 'DEFAULT') or, when nil, the block to run when the signal arrives. Mutating
+    # the process's real signal handlers cannot run under the test harness.
+    def trap_signal(name, command, &block) = Signal.trap(name, command || block)
     # :nocov:
 
     def pipe = IO.pipe

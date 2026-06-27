@@ -37,7 +37,7 @@ module Rush
       end
 
       def change(name, action)
-        reset?(action) ? traps.clear(name) : traps.set(name, action)
+        reset?(action) ? executor.reset_trap(name) : executor.set_trap(name, action)
       end
 
       def reset?(action) = action.nil? || action == '-'

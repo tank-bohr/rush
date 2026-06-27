@@ -261,7 +261,17 @@ RSpec.describe 'rush vs dash (differential)' do
     'kill 2>/dev/null; echo rc=$?',
     'kill -TERM $$; echo after',
     'kill -15 $$; echo after',
-    'type kill'
+    'type kill',
+    # trap + kill: a delivered signal runs the action, then execution continues;
+    # ignore swallows it, reset restores the default (which terminates).
+    "trap 'echo caught' TERM; kill -TERM $$; echo after",
+    "trap '' TERM; kill -TERM $$; echo after",
+    "trap 'echo caught; exit 5' TERM; kill -TERM $$; echo after",
+    "true; trap 'false' TERM; kill -TERM $$; echo $?",
+    "trap 'echo x' TERM; trap - TERM; kill -TERM $$; echo after",
+    "trap 'echo gotint' INT; kill -INT $$; echo after",
+    "trap 'echo bye' EXIT; trap 'echo caught' TERM; kill -TERM $$; echo after",
+    "n=0; trap 'n=1' TERM; kill -TERM $$; echo n=$n"
   ].freeze
 
   corpus.each do |snippet|

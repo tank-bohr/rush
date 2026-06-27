@@ -65,4 +65,33 @@ RSpec.describe Rush::Builtins::Trap do
   it 'succeeds and prints nothing when listing an empty trap table' do
     expect([run.exitstatus, system.stdout.string]).to eq([0, ''])
   end
+
+  it 'installs a handler disposition for a real signal' do
+    run('echo hi', 'INT')
+    expect(system.traps_installed).to eq([['INT', nil]])
+  end
+
+  it 'installs IGNORE for an ignored signal and DEFAULT on reset' do
+    run('', 'INT')
+    run('-', 'INT')
+    expect(system.traps_installed).to eq([%w[INT IGNORE], %w[INT DEFAULT]])
+  end
+
+  it 'does not install an OS handler for the EXIT pseudo-signal' do
+    run('bye', 'EXIT')
+    run('-', 'EXIT')
+    expect(system.traps_installed).to be_empty
+  end
+
+  it 'keeps a trap on an untrappable signal that cannot be installed' do
+    run('echo x', 'KILL')
+    expect(traps.action('KILL')).to eq('echo x')
+  end
+
+  it 'runs the action and restores $? when the signal is delivered' do
+    state.last_status = Rush::Status.failure(7)
+    run('echo caught', 'TERM')
+    system.trap_block('TERM').call
+    expect([system.stdout.string, state.last_status.exitstatus]).to eq(["caught\n", 7])
+  end
 end
