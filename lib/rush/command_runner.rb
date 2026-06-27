@@ -57,14 +57,16 @@ module Rush
 
     def command_env
       @command.assignments.each_with_object(@executor.state.environment.exported) do |assignment, env|
-        env[assignment.name] = value(assignment.value)
+        env[assignment.name] = assigned(assignment.value)
       end
     end
 
     def persist(assignment)
-      @executor.state.environment.assign(assignment.name, value(assignment.value))
+      @executor.state.environment.assign(assignment.name, assigned(assignment.value))
     end
 
     def value(word) = @executor.expander.expand_value(word)
+
+    def assigned(word) = @executor.expander.expand_value(word, tilde: :assignment)
   end
 end

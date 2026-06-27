@@ -63,6 +63,12 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect([output, code]).to eq(["a\n", 2])
   end
 
+  it 'expands a leading tilde in arguments and after colons in assignments' do
+    system = FakeSystemCalls.new(homes: { 'bob' => '/home/bob' })
+    code = Rush::CLI.run(['-c', 'HOME=/h; P=~/bin:~bob; echo ~/x "$P"'], system: system)
+    expect([system.stdout.string, code]).to eq(["/h/x /h/bin:/home/bob\n", 0])
+  end
+
   it 'field-splits unquoted expansions but keeps quoted ones intact' do
     expect(run('x="a   b   c"; echo $x').first).to eq("a b c\n")
     expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")

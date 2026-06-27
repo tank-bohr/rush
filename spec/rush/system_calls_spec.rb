@@ -85,4 +85,10 @@ RSpec.describe Rush::SystemCalls do
     allow($stdin).to receive_messages(gets: "line\n", tty?: true)
     expect([system.read_line, system.tty?]).to eq(["line\n", true])
   end
+
+  it 'looks up a user home directory, returning nil for an unknown user' do
+    allow(Etc).to receive(:getpwnam).with('bob').and_return(instance_double(Etc::Passwd, dir: '/home/bob'))
+    allow(Etc).to receive(:getpwnam).with('ghost').and_raise(ArgumentError)
+    expect([system.home_dir('bob'), system.home_dir('ghost')]).to eq(['/home/bob', nil])
+  end
 end

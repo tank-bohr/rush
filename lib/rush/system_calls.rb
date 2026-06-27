@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'etc'
 require 'tempfile'
 
 module Rush
@@ -85,5 +86,13 @@ module Rush
     def read_line = stdin.gets
 
     def tty? = stdin.tty?
+
+    # Home directory of a named user for ~user tilde expansion, or nil if there
+    # is no such user.
+    def home_dir(name)
+      Etc.getpwnam(name).dir
+    rescue ArgumentError
+      nil
+    end
   end
 end

@@ -187,7 +187,16 @@ RSpec.describe 'rush vs dash (differential)' do
     'a=3; echo $((a += a += 1)); echo $a',
     'i=0; while [ $i -lt 3 ]; do i=$((i+1)); done; echo $i',
     'echo $((5=3))',
-    'echo $((x=))'
+    'echo $((x=))',
+    'echo ~',
+    'echo ~/foo',
+    'echo a~ ~~ x~/y',
+    'echo "~" "~/a"',
+    'echo ~root ~root/bin',
+    'echo ~nosuchuser_zzz',
+    'P=~/a:~root:b; echo "$P"',
+    'echo ${u:-~}',
+    'echo $((~5)) $((~0))'
   ].freeze
 
   corpus.each do |snippet|

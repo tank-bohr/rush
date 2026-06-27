@@ -10,12 +10,13 @@ class FakeSystemCalls
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
                     executable: false, symlink: false }.freeze
 
-  def initialize(stdin: '', pwd: '/home/test', tty: false)
+  def initialize(stdin: '', pwd: '/home/test', tty: false, homes: {})
     @stdin = StringIO.new(stdin)
     @stdout = StringIO.new
     @stderr = StringIO.new
     @pwd = pwd
     @tty = tty
+    @homes = homes
     @files = {}
     @chdirs = []
     @chdir_error = nil
@@ -26,6 +27,8 @@ class FakeSystemCalls
   def read_line = @stdin.gets
 
   def tty? = @tty
+
+  def home_dir(name) = @homes[name]
 
   # Register an in-memory node for the file-test predicates below.
   def register(path, **attrs) = @nodes[path] = NODE_DEFAULTS.merge(attrs)

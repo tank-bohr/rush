@@ -17,11 +17,21 @@ module Rush
       def expand(words) = words.flat_map { |word| FieldSplitter.new(ifs).split(parts(word)) }
 
       # Assignment RHS / redirection target / operator word: one field, no split.
-      def expand_value(word) = word.segments.map { |segment| scalar_segment(segment) }.join
+      # Tilde expands at the leading position by default; assignment context also
+      # expands after colons, and arithmetic opts out (~ is bitwise not there).
+      def expand_value(word, tilde: :leading)
+        tilde_expand(word.segments, tilde).map { |segment| scalar_segment(segment) }.join
+      end
 
       private
 
-      def parts(word) = word.segments.flat_map { |segment| field_parts(segment) }
+      def parts(word) = tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
+
+      def tilde_expand(segments, mode)
+        return segments if mode == :none
+
+        TildeExpander.new(@executor).expand(segments, assignment: mode == :assignment)
+      end
 
       def field_parts(segment)
         return splat_parts(segment) if splat?(segment)

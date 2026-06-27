@@ -17,7 +17,7 @@ module Rush
 
       private
 
-      def expanded = @executor.expander.expand_value(scanned)
+      def expanded = @executor.expander.expand_value(scanned, tilde: :none)
 
       def scanned = Lexer::WordScanner.new(StringScanner.new(@source), whole: true).scan
     end
