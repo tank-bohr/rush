@@ -35,4 +35,12 @@ RSpec.describe Rush::Expansion::ReadSplitter do
   it 'splits on a custom IFS character' do
     expect(split('a:b:c', 2, ':')).to eq(['a', 'b:c'])
   end
+
+  it 'generates empty fields for adjacent or leading non-whitespace delimiters' do
+    expect([split('x::z', 3, ':'), split(':x:', 3, ':')]).to eq([['x', '', 'z'], ['', 'x', '']])
+  end
+
+  it 'treats whitespace adjacent to a non-whitespace delimiter as one separator' do
+    expect(split('a :  b : c', 3, ' :')).to eq(%w[a b c])
+  end
 end

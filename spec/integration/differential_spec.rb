@@ -225,7 +225,12 @@ RSpec.describe 'rush vs dash (differential)' do
     ['read a b; echo "[$a][$b]"', "only\n"],
     ['read x; echo "rc=$?"', ''],
     ['read first rest; echo "$rest"', "one two three\n"],
-    ['while read l; do echo "got $l"; done', "p\nq\n"]
+    ['while read l; do echo "got $l"; done', "p\nq\n"],
+    ['IFS=:; read a b c; echo "[$a][$b][$c]"', "x:y:z\n"],
+    ['IFS=:; read a b; echo "[$a][$b]"', "x:y:z\n"],
+    ['IFS=:; read a b c; echo "[$a][$b][$c]"', "x::z\n"],
+    ['IFS=:; read a b c; echo "[$a][$b][$c]"', ":x:\n"],
+    ['IFS=" :"; read x y z; echo "[$x][$y][$z]"', "a :  b : c\n"]
   ].freeze
 
   read_corpus.each do |source, input|
