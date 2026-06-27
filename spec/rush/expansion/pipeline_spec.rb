@@ -3,8 +3,8 @@
 RSpec.describe Rush::Expansion::Pipeline do
   let(:segment) { Rush::AST::WordSegment }
 
-  describe 'literal expansion (no executor needed)' do
-    subject(:pipeline) { described_class.new(:executor) }
+  describe 'literal expansion' do
+    subject(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new)) }
 
     it 'expands each word to one field' do
       words = [Rush::AST::Word.literal('a'), Rush::AST::Word.literal('b')]
@@ -36,5 +36,14 @@ RSpec.describe Rush::Expansion::Pipeline do
     allow(Rush::Expansion::CommandSubstitution).to receive(:new).and_return(sub)
     word = Rush::AST::Word.new([segment.new(kind: :command, value: 'echo x', quoted: false)])
     expect(described_class.new(executor).expand([word])).to eq(['OUT'])
+  end
+
+  it 'field-splits an unquoted parameter but not a quoted one' do
+    state = Rush::ShellState.new(environment: Rush::Environment.new('X' => 'a b'))
+    pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state))
+    ref = Rush::AST::ParamRef.simple('X')
+    unquoted = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: false)])
+    quoted = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: true)])
+    expect([pipeline.expand([unquoted]), pipeline.expand([quoted])]).to eq([%w[a b], ['a b']])
   end
 end

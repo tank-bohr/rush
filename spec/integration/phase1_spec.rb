@@ -46,4 +46,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(output).to eq('')
     expect(code).not_to eq(0)
   end
+
+  it 'field-splits unquoted expansions but keeps quoted ones intact' do
+    expect(run('x="a   b   c"; echo $x').first).to eq("a b c\n")
+    expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")
+    expect(run('e=; echo "[$e]"').first).to eq("[]\n")
+  end
 end

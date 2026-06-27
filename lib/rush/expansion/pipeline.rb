@@ -2,24 +2,29 @@
 
 module Rush
   module Expansion
-    # Orchestrates the ordered POSIX word expansion. A word expands to one field
-    # formed by concatenating its expanded segments: literal segments contribute
-    # their (quote-removed) value, :param segments are parameter-expanded. Field
-    # splitting, command substitution and globbing arrive in later slices.
+    # Orchestrates the ordered POSIX word expansion. Each word's segments are
+    # expanded (literal -> value, :param -> parameter expansion, :command ->
+    # command substitution), then unquoted results undergo field splitting on
+    # IFS. Pathname expansion (globbing) and quote removal beyond the scanner's
+    # arrive in later slices.
     class Pipeline
       def initialize(executor)
         @executor = executor
       end
 
-      # Argv expansion: each word becomes one field (no field splitting yet).
-      def expand(words) = words.map { |word| expand_word(word) }
+      # Argv expansion: expand each word, then split unquoted results into fields.
+      def expand(words) = words.flat_map { |word| FieldSplitter.new(ifs).split(parts(word)) }
 
-      # Assignment RHS / redirection target / operator word: a single field.
-      def expand_value(word) = expand_word(word)
+      # Assignment RHS / redirection target / operator word: a single field, no split.
+      def expand_value(word) = word.segments.map { |segment| expand_segment(segment) }.join
 
       private
 
-      def expand_word(word) = word.segments.map { |segment| expand_segment(segment) }.join
+      def parts(word) = word.segments.map { |segment| [expand_segment(segment), splittable?(segment)] }
+
+      def splittable?(segment) = segment.kind != :literal && !segment.quoted
+
+      def ifs = @executor.state.environment.get('IFS')
 
       def expand_segment(segment)
         case segment.kind
