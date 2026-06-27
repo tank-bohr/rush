@@ -37,5 +37,10 @@ RSpec.describe Rush::Builtins::Break do
       expect(run).to be_success
       expect(state.last_status).to be_success
     end
+
+    it 'still validates the level operand (a bad one aborts even with no loop)' do
+      expect { run('abc') }.to raise_error(Rush::BuiltinError)
+      expect { run('0') }.to raise_error(Rush::BuiltinError)
+    end
   end
 end

@@ -349,6 +349,15 @@ RSpec.describe 'rush vs dash (differential)' do
     'for i in 1 2; do for j in a; do continue 2; done; echo inner; done; echo done',
     'for i in 1 2 3; do for j in a b; do echo $i$j; continue 2; done; done',
     "for i in 1 2 3; do eval 'break'; echo no; done; echo done",
+    # break/continue validate their level operand (a positive integer) even with
+    # no enclosing loop: a non-numeric, zero or out-of-range value is a
+    # special-builtin error that aborts a non-interactive shell with 2.
+    'break abc; echo after',
+    'for i in 1; do break 0; done; echo after',
+    'for i in 1; do continue xy; done; echo after',
+    'for i in 1; do break -1; done; echo after',
+    "trap 'echo bye' EXIT; continue abc",
+    'for i in 1 2; do for j in a; do break +2; done; echo in; done; echo $?',
     # a return not caught by a function or dot script acts like exit with that
     # code (non-interactive): at the top level it exits the shell (firing the
     # EXIT trap), in a subshell or command substitution it ends only that.

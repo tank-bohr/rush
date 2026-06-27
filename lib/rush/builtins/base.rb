@@ -33,12 +33,13 @@ module Rush
 
       def failure(code = 1) = Status.failure(code)
 
-      # Parse an exit-code operand for a special builtin (exit/return). dash
-      # rejects a non-numeric, negative or out-of-range value with a
+      # Parse a numeric operand for a special builtin: an exit code for
+      # exit/return (min 0), or a loop level for break/continue (min 1). dash
+      # rejects a non-numeric, too-small or out-of-range value with a
       # special-builtin error (which aborts a non-interactive shell).
-      def numeric_operand(text)
+      def numeric_operand(text, min: 0)
         value = text.to_i
-        return value if text.match?(NUMERIC_OPERAND) && value <= INT_MAX
+        return value if text.match?(NUMERIC_OPERAND) && value.between?(min, INT_MAX)
 
         raise BuiltinError, "#{argv.first}: Illegal number: #{text}"
       end
