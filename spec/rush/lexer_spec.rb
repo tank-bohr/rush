@@ -79,6 +79,23 @@ RSpec.describe Rush::Lexer do
     expect(symbols('while x; do y; done')).to eq([:While, :WORD, ';', :Do, :WORD, ';', :Done])
   end
 
+  it 'recognizes the for header: NAME then in then the word list' do
+    expect(symbols('for i in a; do x; done'))
+      .to eq([:For, :NAME, :In, :WORD, ';', :Do, :WORD, ';', :Done])
+  end
+
+  it 'recognizes a for header with no in clause' do
+    expect(symbols('for i; do x; done')).to eq([:For, :NAME, ';', :Do, :WORD, ';', :Done])
+  end
+
+  it 'falls back to WORD for a non-in/do word in the for header' do
+    expect(symbols('for i x')).to eq(%i[For NAME WORD])
+  end
+
+  it 'does not treat a quoted word as the for in/do keyword' do
+    expect(symbols("for i 'in'")).to eq(%i[For NAME WORD])
+  end
+
   it 'signals end of input with [false, false]' do
     expect(described_class.new('').next_token).to eq([false, false])
   end

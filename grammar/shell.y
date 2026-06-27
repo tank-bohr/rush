@@ -13,6 +13,7 @@ token AND_IF OR_IF
 token DGREAT LESSGREAT CLOBBER
 token If Then Else Elif Fi Lbrace Rbrace Bang
 token While Until Do Done
+token For In NAME
 
 start program
 
@@ -64,6 +65,7 @@ rule
     | if_clause                                   { result = val[0] }
     | while_clause                                { result = val[0] }
     | until_clause                                { result = val[0] }
+    | for_clause                                  { result = val[0] }
     ;
 
   brace_group
@@ -80,6 +82,27 @@ rule
 
   do_group
     : Do compound_list Done                       { result = val[1] }
+    ;
+
+  for_clause
+    : For name do_group                                      { result = make_for(val[1], nil, val[2]) }
+    | For name sequential_sep do_group                       { result = make_for(val[1], nil, val[3]) }
+    | For name linebreak In sequential_sep do_group          { result = make_for(val[1], [], val[5]) }
+    | For name linebreak In wordlist sequential_sep do_group { result = make_for(val[1], val[4], val[6]) }
+    ;
+
+  name
+    : NAME                                        { result = val[0].literal_text }
+    ;
+
+  wordlist
+    : WORD                                        { result = [val[0]] }
+    | wordlist WORD                               { result = val[0] << val[1] }
+    ;
+
+  sequential_sep
+    : ';' linebreak
+    | newline_list
     ;
 
   if_clause

@@ -25,4 +25,9 @@ RSpec.describe 'rush real subprocess' do
   it 'substitutes command output and strips trailing newlines' do
     expect(run('echo "[$(echo hi)]"')).to eq(["[hi]\n", 0])
   end
+
+  it 'runs a for loop with a conditional continue (external test)' do
+    expect(run('for i in a b c; do if [ "$i" = b ]; then continue; fi; echo $i; done').first)
+      .to eq("a\nc\n")
+  end
 end

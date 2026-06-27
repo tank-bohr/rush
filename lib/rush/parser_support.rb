@@ -48,6 +48,8 @@ module Rush
 
     def make_until(condition, body) = AST::Until.new(condition, body)
 
+    def make_for(name, words, body) = AST::For.new(name, words, body)
+
     def make_simple_command(prefix, word, suffix)
       parts = prefix + [word].compact + suffix
       AST::SimpleCommand.new(parts.grep(AST::Assignment), parts.grep(AST::Word), parts.grep(AST::Redirect))

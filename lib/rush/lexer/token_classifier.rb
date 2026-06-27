@@ -10,9 +10,10 @@ module Rush
       NAME = /\A([a-zA-Z_]\w*)=/
       RESERVED = {
         'if' => :If, 'then' => :Then, 'else' => :Else, 'elif' => :Elif, 'fi' => :Fi,
-        'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done,
+        'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done, 'for' => :For,
         '{' => :Lbrace, '}' => :Rbrace, '!' => :Bang
       }.freeze
+      FOR_IN = { 'in' => :In, 'do' => :Do }.freeze
 
       def initialize(word, state)
         @word = word
@@ -20,6 +21,18 @@ module Rush
       end
 
       def call
+        for_token || classify
+      end
+
+      private
+
+      def for_token
+        return [:NAME, @word] if @state.for_name?
+
+        [for_header, @word] if @state.for_in? && for_header
+      end
+
+      def classify
         keyword = reserved
         return [keyword, @word] if keyword
 
@@ -27,7 +40,7 @@ module Rush
         name ? assignment_token(name) : [:WORD, @word]
       end
 
-      private
+      def for_header = plain? ? FOR_IN[text] : nil
 
       def reserved
         RESERVED[text] if @state.expects_command? && plain?

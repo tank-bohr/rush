@@ -41,6 +41,12 @@ RSpec.describe Rush::ParserSupport do
     expect(first_command('until true; do :; done')).to be_a(Rush::AST::Until)
   end
 
+  it 'parses for loops with and without an in clause' do
+    with_in = first_command('for i in a b; do :; done')
+    expect([with_in.name, with_in.words.size]).to eq(['i', 2])
+    expect(first_command('for i; do :; done').words).to be_nil
+  end
+
   it 'raises a ParseError naming a word value' do
     expect { parser.on_error(0, Rush::AST::Word.literal('oops'), []) }
       .to raise_error(Rush::ParseError, /oops/)

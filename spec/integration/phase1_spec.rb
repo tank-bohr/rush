@@ -69,4 +69,9 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('echo a; while true; do echo once; break; done; echo b').first).to eq("a\nonce\nb\n")
     expect(run('until true; do echo never; done; echo z').first).to eq("z\n")
   end
+
+  it 'runs for loops over a word list, splitting unquoted expansions' do
+    expect(run('for i in 1 2 3; do echo $i; done').first).to eq("1\n2\n3\n")
+    expect(run('s="x y"; for w in $s; do echo $w; done').first).to eq("x\ny\n")
+  end
 end
