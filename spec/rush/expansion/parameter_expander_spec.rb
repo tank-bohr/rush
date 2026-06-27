@@ -57,6 +57,19 @@ RSpec.describe Rush::Expansion::ParameterExpander do
     expect(expand('Z', op: ':-', arg: '$Y')).to eq('deep')
   end
 
+  describe 'nounset (set -u)' do
+    before { state.set_option(:nounset, true) }
+
+    it 'raises for an unset name or positional' do
+      expect { expand('missing') }.to raise_error(Rush::ExpansionError, /not set/)
+    end
+
+    it 'allows a set value, a default form and special parameters' do
+      env.assign('S', 'v')
+      expect([expand('S'), expand('Z', op: ':-', arg: 'd'), expand('@'), expand('!')]).to eq(['v', 'd', '', ''])
+    end
+  end
+
   describe 'length and pattern-removal forms' do
     it 'returns the length of the value (zero when unset)' do
       env.assign('X', 'abcdef')

@@ -16,12 +16,18 @@ module Rush
       initialize_runtime
     end
 
+    # Shell options set by `set -o`-style flags (:nounset, :xtrace, ...).
+    def set_option(name, enabled) = enabled ? @options.add(name) : @options.delete(name)
+
+    def option?(name) = @options.include?(name)
+
     private
 
     def initialize_runtime
       @last_status = Status.success
       @positional = []
       @functions = FunctionTable.new
+      @options = Set.new
     end
   end
 end

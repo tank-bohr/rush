@@ -14,10 +14,17 @@ module Rush
 
     def call
       argv = @executor.expander.expand(@command.words)
-      argv.empty? ? run_bare : run_command(argv)
+      return run_bare if argv.empty?
+
+      trace(argv)
+      run_command(argv)
     end
 
     private
+
+    def trace(argv)
+      @executor.io.get(2).puts("+ #{argv.join(' ')}") if @executor.state.option?(:xtrace)
+    end
 
     def run_bare
       build_io # opens/truncates redirect targets for their side effects

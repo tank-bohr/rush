@@ -29,4 +29,22 @@ RSpec.describe Rush::Builtins::Set do
     expect(run).to be_success
     expect(state.positional).to eq(%w[keep])
   end
+
+  it 'toggles a shell option with - and +' do
+    run('-u')
+    expect(state.option?(:nounset)).to be(true)
+    run('+u')
+    expect(state.option?(:nounset)).to be(false)
+  end
+
+  it 'combines option flags with positional parameters after --' do
+    run('-ux', '--', 'a', 'b')
+    expect([state.option?(:nounset), state.option?(:xtrace), state.positional]).to eq([true, true, %w[a b]])
+  end
+
+  it 'treats a multi-character non-option as a positional and ignores unknown flags' do
+    run('foo', 'bar')
+    expect(state.positional).to eq(%w[foo bar])
+    expect(run('-q')).to be_success
+  end
 end

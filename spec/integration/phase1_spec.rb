@@ -165,4 +165,11 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('x=hello; echo ${#x}').first).to eq("5\n")
     expect(run('f=a.b.c; echo "${f#*.} ${f##*.} ${f%.*} ${f%%.*}"').first).to eq("b.c c a.b a\n")
   end
+
+  it 'honours set -u (nounset) and set -x (xtrace)' do
+    expect(run('set -u; echo $missing')[1]).to eq(2)
+    expect(run('set -u; x=ok; echo $x').first).to eq("ok\n")
+    _out, _code, system = run('set -x; echo hi')
+    expect(system.stderr.string).to include('+ echo hi')
+  end
 end

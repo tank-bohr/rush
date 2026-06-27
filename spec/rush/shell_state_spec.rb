@@ -14,4 +14,12 @@ RSpec.describe Rush::ShellState do
     expect(state.environment).to be(env)
     expect(state.name).to eq('sh')
   end
+
+  it 'toggles and reports shell options' do
+    state = described_class.new
+    state.set_option(:nounset, true)
+    expect(state.option?(:nounset)).to be(true)
+    state.set_option(:nounset, false)
+    expect(state.option?(:nounset)).to be(false)
+  end
 end

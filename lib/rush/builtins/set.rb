@@ -2,19 +2,48 @@
 
 module Rush
   module Builtins
-    # `set [--] [arg ...]` — replace the positional parameters with the operands;
-    # a leading `--` ends option processing. With no operands they are left
-    # unchanged. Option flags (-e, -x) and bare `set`'s variable listing arrive
-    # in a later slice.
+    # `set [-/+ options] [--] [arg ...]` — toggle shell options (-x/+x style) and,
+    # when operands follow (or after `--`), replace the positional parameters. With
+    # no operands the parameters are left unchanged; an unknown option flag is
+    # ignored. errexit (-e) is recognised but honoured in a later slice.
     class Set < Base
+      OPTIONS = { 'u' => :nounset, 'x' => :xtrace }.freeze
+
       def call
-        executor.state.positional = chosen unless operands.empty?
+        rest = strip_options(operands)
+        executor.state.positional = rest unless rest.nil?
         success
       end
 
       private
 
-      def chosen = operands.first == '--' ? operands.drop(1) : operands
+      def strip_options(args)
+        return nil if args.empty?
+
+        positionals(args, consume_options(args))
+      end
+
+      def consume_options(args)
+        flags = args.take_while { |flag| option?(flag) }
+        flags.each { |flag| apply(flag) }
+        flags.size
+      end
+
+      def positionals(args, index)
+        return nil if index == args.size
+
+        args[index] == '--' ? args[(index + 1)..] : args[index..]
+      end
+
+      def option?(flag) = flag.is_a?(String) && flag.length > 1 && flag != '--' && '-+'.include?(flag[0])
+
+      def apply(flag)
+        flag[1..].each_char { |char| toggle(flag[0], char) }
+      end
+
+      def toggle(sign, char)
+        OPTIONS[char] && executor.state.set_option(OPTIONS[char], sign == '-')
+      end
     end
   end
 end

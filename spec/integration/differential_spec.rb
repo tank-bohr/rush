@@ -101,7 +101,12 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo ${#missing}',
     'f=foo.tar.gz; echo "${f#*.}|${f##*.}|${f%.*}|${f%%.*}"',
     'p=/usr/local/bin; echo "${p##*/} ${p%/*}"',
-    'x=abc; echo "${x#xyz}|${x#*}|${x##*}"'
+    'x=abc; echo "${x#xyz}|${x#*}|${x##*}"',
+    'set -u; x=ok; echo "$x"',
+    'set -u; echo "${y:-fallback}"',
+    'set -u; set a b; echo "$1$2"',
+    'set -u; echo "$missing"; echo after',
+    'set -u; echo "$1"; echo after'
   ].freeze
 
   corpus.each do |snippet|

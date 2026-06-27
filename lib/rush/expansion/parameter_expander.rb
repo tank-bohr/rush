@@ -19,10 +19,18 @@ module Rush
       end
 
       def expand
-        return value.to_s unless @ref.op
+        return plain unless @ref.op
         return send(SPECIAL.fetch(@ref.op)) if SPECIAL.key?(@ref.op)
 
         Parameter::FORMS.fetch(@ref.op[-1]).call(self)
+      end
+
+      # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is
+      # an error (special parameters like $@ are exempt).
+      def plain
+        raise(ExpansionError, "#{@ref.name}: parameter not set") if value.nil? && unbound?
+
+        value.to_s
       end
 
       def value = Resolver.new(@executor).resolve(@ref.name)
@@ -45,6 +53,8 @@ module Rush
       def length = value.to_s.length.to_s
 
       def strip = PatternRemoval.new(@executor.system, @ref.op, value.to_s, arg).call
+
+      def unbound? = @executor.state.option?(:nounset) && @ref.name.match?(/\A([a-zA-Z_]\w*|[1-9]\d*)\z/)
 
       def colon? = @ref.op.start_with?(':')
 

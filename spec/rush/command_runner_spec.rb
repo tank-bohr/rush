@@ -38,4 +38,10 @@ RSpec.describe Rush::CommandRunner do
     state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success
   end
+
+  it 'traces the command to stderr under xtrace' do
+    state.set_option(:xtrace, true)
+    run(simple(words: [word('true')]))
+    expect(system.stderr.string).to eq("+ true\n")
+  end
 end
