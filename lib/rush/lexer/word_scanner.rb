@@ -10,7 +10,7 @@ module Rush
       TERMINATOR = /[ \t\n;&|<>()]/
       LITERAL_RUN = /[^'"\\$` \t\n;&|<>()]+/
       WHOLE_LITERAL = /[^'"\\$`]+/ # operator-word mode: only quotes / $ / ` are special
-      DOUBLE_LITERAL = /[^"$\\]+/
+      DOUBLE_LITERAL = /[^"$\\`]+/
       DOUBLE_SPECIAL = ['"', '\\', '$', '`'].freeze
       SIMPLE_PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
       DISPATCH = {
@@ -66,6 +66,7 @@ module Rush
       def double_step
         char = @scanner.peek(1)
         return read_dollar(quoted: true) if char == '$'
+        return read_backtick(quoted: true) if char == '`'
         return double_escape if char == '\\'
 
         push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
@@ -97,9 +98,11 @@ module Rush
         add(:arith, SubstitutionReader.new(@scanner).arithmetic, quoted)
       end
 
-      def backtick
+      def backtick = read_backtick(quoted: false)
+
+      def read_backtick(quoted:)
         @scanner.getch # `
-        add(:command, SubstitutionReader.new(@scanner).backticks, false)
+        add(:command, SubstitutionReader.new(@scanner).backticks, quoted)
       end
 
       def read_param_ref

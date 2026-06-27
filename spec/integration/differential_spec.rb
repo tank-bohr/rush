@@ -271,7 +271,13 @@ RSpec.describe 'rush vs dash (differential)' do
     "trap 'echo x' TERM; trap - TERM; kill -TERM $$; echo after",
     "trap 'echo gotint' INT; kill -INT $$; echo after",
     "trap 'echo bye' EXIT; trap 'echo caught' TERM; kill -TERM $$; echo after",
-    "n=0; trap 'n=1' TERM; kill -TERM $$; echo n=$n"
+    "n=0; trap 'n=1' TERM; kill -TERM $$; echo n=$n",
+    # backtick command substitution is active inside double quotes
+    'echo "X`echo hi`Y"',
+    'echo "a `echo b c` d"',
+    'v="`echo a` `echo b`"; echo "$v"',
+    'echo "nested `echo X`Y`echo Z`"',
+    'echo "lit \`not sub\` done"'
   ].freeze
 
   corpus.each do |snippet|

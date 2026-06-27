@@ -113,4 +113,9 @@ RSpec.describe Rush::Lexer::WordScanner do
     segment = scan('"$(echo hi)"').first.segments.first
     expect([segment.kind, segment.quoted]).to eq([:command, true])
   end
+
+  it 'keeps a backtick substitution inside double quotes, marked quoted' do
+    segment = scan('"`date`"').first.segments.first
+    expect([segment.kind, segment.value, segment.quoted]).to eq([:command, 'date', true])
+  end
 end
