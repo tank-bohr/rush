@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 module Rush
-  # A simple interactive read-eval-print loop. Each turn reads a line, appends
-  # continuation lines until the buffer parses (IncompleteInput means "type
-  # more", shown with PS2), then runs it against one persistent ShellState so
-  # variables and functions survive across lines. Prompts go to stderr; `exit`
-  # and end-of-input (Ctrl-D) end the loop; parse and expansion errors are
-  # reported without ending the session. Line editing/history, PS1/PS2
-  # customisation and job control are deferred to Phase 4.
+  # A simple interactive read-eval-print loop over the shared ProgramReader: each
+  # turn reads a complete command (continuation lines prompted with PS2) and runs
+  # it against one persistent ShellState, so variables and functions survive
+  # across lines. Prompts go to stderr; `exit` and end-of-input (Ctrl-D) end the
+  # loop; parse and expansion errors are reported without ending the session.
+  # Line editing/history, PS1/PS2 customisation and job control are deferred to
+  # Phase 4.
   class Repl
     PS1 = '$ '
     PS2 = '> '
@@ -15,6 +15,7 @@ module Rush
     def initialize(system)
       @system = system
       @executor = Executor.new(system: system, state: ShellState.new)
+      @reader = ProgramReader.new { |continuation| prompt_line(continuation) }
     end
 
     def run
@@ -34,42 +35,25 @@ module Rush
     def terminate(code) = @executor.run_exit_trap(code)
 
     def continue?
-      program = read_complete
+      program = read_program
       return false if program == :eof
 
-      run_program(program)
+      run_program(program) unless program == :error
       true
     end
 
-    def read_complete
-      @buffer = +''
-      loop do
-        result = read_more
-        return result if result
-      end
-    end
-
-    # One read step: a parsed program or :eof to return, or nil to keep reading
-    # (the line left a construct unfinished, or only reported an error).
-    def read_more
-      line = prompt_line
-      return :eof if line.nil?
-
-      result = attempt(@buffer << line)
-      result unless result == :more
-    end
-
-    def prompt_line
-      @system.stderr.print(@buffer.empty? ? PS1 : PS2)
-      @system.read_line
-    end
-
-    def attempt(source)
-      Parser.new(Lexer.new(source, interactive: true)).parse
-    rescue IncompleteInput
-      :more
+    # A real syntax error reports and resumes the session; the next turn starts
+    # fresh at PS1 (the reader discards the broken buffer per next_program call).
+    def read_program
+      @reader.next_program
     rescue ParseError => e
-      recover(e)
+      report(e)
+      :error
+    end
+
+    def prompt_line(continuation)
+      @system.stderr.print(continuation ? PS2 : PS1)
+      @system.read_line
     end
 
     def run_program(program)
@@ -78,14 +62,6 @@ module Rush
       nil
     rescue ExpansionError, ReadonlyError => e
       report(e)
-    end
-
-    # A real syntax error: report it and discard the buffered input so the next
-    # turn starts fresh at PS1 rather than re-parsing the broken line.
-    def recover(error)
-      report(error)
-      @buffer = +''
-      :more
     end
 
     def report(error) = @system.stderr.puts("rush: #{error.message}")

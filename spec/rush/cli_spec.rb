@@ -75,4 +75,32 @@ RSpec.describe Rush::CLI do
   it 'defaults to the real system calls when none is injected' do
     expect(described_class.run(['-c', ':'])).to eq(0)
   end
+
+  it 'runs commands before a later syntax error, then aborts with 2' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "echo one\nbad )\necho two"], system)).to eq(2)
+    expect(system.stdout.string).to eq("one\n")
+  end
+
+  it 'preserves $? across a blank line between commands' do
+    system = FakeSystemCalls.new
+    run(['-c', "false\n\necho $?"], system)
+    expect(system.stdout.string).to eq("1\n")
+  end
+
+  it 'fires the EXIT trap on a syntax error, with $? set to 2' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "trap 'echo rc=$?' EXIT\ntrue\nbad )"], system)).to eq(2)
+    expect(system.stdout.string).to eq("rc=2\n")
+  end
+
+  it 'fires the EXIT trap on a readonly violation' do
+    system = FakeSystemCalls.new
+    run(['-c', "trap 'echo bye' EXIT\nreadonly x=1\nx=2"], system)
+    expect(system.stdout.string).to eq("bye\n")
+  end
+
+  it 'lets the EXIT trap override the exit code after a syntax error' do
+    expect(run(['-c', "trap 'exit 9' EXIT\necho one\nbad )"], FakeSystemCalls.new)).to eq(9)
+  end
 end

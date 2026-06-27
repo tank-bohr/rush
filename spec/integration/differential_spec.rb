@@ -312,7 +312,23 @@ RSpec.describe 'rush vs dash (differential)' do
     'set -e; x=$(true); echo reached',
     'set -e; if x=$(false); then echo t; else echo e; fi',
     'set -e; x=$(true) y=$(false); echo unreached',
-    'set -e; v=$(false) || echo recovered; echo after'
+    'set -e; v=$(false) || echo recovered; echo after',
+    # incremental execution: complete commands run (and flush) before a later
+    # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
+    # fires the EXIT trap with $?=2 (which may override the exit code via exit)
+    "echo one\nbad )\necho two",
+    'echo a; bad )',
+    "false\n\necho $?",
+    "false\n# a comment\necho $?",
+    "greet() { echo \"hi $1\"; }\ngreet world",
+    "x=1\necho $x\nx=2\necho $x",
+    "set -e\nfalse\necho nope",
+    "cat <<EOF\nbody line",
+    "trap 'echo bye' EXIT\necho one\nbad )",
+    "trap 'echo rc=$?' EXIT\ntrue\nbad )",
+    "trap 'echo bye' EXIT\nreadonly x=1\nx=2\necho after",
+    "trap 'echo rc=$?' EXIT\nset -u\necho \"$missing\"\necho after",
+    "trap 'exit 9' EXIT\necho one\nbad )"
   ].freeze
 
   corpus.each do |snippet|

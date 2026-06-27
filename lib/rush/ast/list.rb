@@ -6,9 +6,11 @@ module Rush
     ListEntry = Data.define(:and_or, :async)
 
     # A `;` / `&` / newline-separated list of and-or lists and the program root.
-    # Runs each entry in order; the list's status is the last entry's (0 when
-    # empty). Async (`&`) execution lands with the fork slice; for now it is
-    # parsed and recorded but executed synchronously.
+    # Runs each entry in order; the list's status is the last entry's. An empty
+    # list (a blank or comment-only line, which is its own program under
+    # command-by-command reading) preserves $?, like dash. Async (`&`) execution
+    # lands with the fork slice; for now it is parsed and recorded but run
+    # synchronously.
     class List < Node
       attr_reader :entries
 
@@ -18,7 +20,7 @@ module Rush
       end
 
       def execute(executor)
-        entries.reduce(Status.success) { |_, entry| run_entry(executor, entry) }
+        entries.reduce(executor.state.last_status) { |_, entry| run_entry(executor, entry) }
       end
 
       private
