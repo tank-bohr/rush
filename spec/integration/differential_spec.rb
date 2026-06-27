@@ -96,7 +96,12 @@ RSpec.describe 'rush vs dash (differential)' do
     '(readonly x=1; x=2); echo after',
     '(echo ${X:?bad}); echo after',
     'exec echo replaced; echo after',
-    'exec no-such-cmd-rush-xyz; echo after'
+    'exec no-such-cmd-rush-xyz; echo after',
+    'x=hello; echo ${#x}',
+    'echo ${#missing}',
+    'f=foo.tar.gz; echo "${f#*.}|${f##*.}|${f%.*}|${f%%.*}"',
+    'p=/usr/local/bin; echo "${p##*/} ${p%/*}"',
+    'x=abc; echo "${x#xyz}|${x#*}|${x##*}"'
   ].freeze
 
   corpus.each do |snippet|

@@ -56,4 +56,17 @@ RSpec.describe Rush::Expansion::ParameterExpander do
     env.assign('Y', 'deep')
     expect(expand('Z', op: ':-', arg: '$Y')).to eq('deep')
   end
+
+  describe 'length and pattern-removal forms' do
+    it 'returns the length of the value (zero when unset)' do
+      env.assign('X', 'abcdef')
+      expect([expand('X', op: '#len'), expand('Z', op: '#len')]).to eq(%w[6 0])
+    end
+
+    it 'removes matching prefixes and suffixes, smallest and largest' do
+      env.assign('F', 'foo.tar.gz')
+      expect([expand('F', op: '#', arg: '*.'), expand('F', op: '##', arg: '*.')]).to eq(['tar.gz', 'gz'])
+      expect([expand('F', op: '%', arg: '.*'), expand('F', op: '%%', arg: '.*')]).to eq(['foo.tar', 'foo'])
+    end
+  end
 end

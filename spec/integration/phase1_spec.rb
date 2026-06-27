@@ -160,4 +160,9 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(code).to eq(0)
     expect(system.files['/log'].string).to eq("one\ntwo\n")
   end
+
+  it 'computes parameter length and strips prefixes and suffixes' do
+    expect(run('x=hello; echo ${#x}').first).to eq("5\n")
+    expect(run('f=a.b.c; echo "${f#*.} ${f##*.} ${f%.*} ${f%%.*}"').first).to eq("b.c c a.b a\n")
+  end
 end

@@ -9,6 +9,10 @@ module Rush
     # ${x:-$y} works) by re-scanning it into a Word and running it back through
     # the expansion pipeline.
     class ParameterExpander
+      # Operators handled here rather than by the FORMS lambdas: the ${#p} length
+      # and the # ## % %% pattern-removal forms.
+      SPECIAL = { '#len' => :length, '#' => :strip, '##' => :strip, '%' => :strip, '%%' => :strip }.freeze
+
       def initialize(executor, ref)
         @executor = executor
         @ref = ref
@@ -16,6 +20,7 @@ module Rush
 
       def expand
         return value.to_s unless @ref.op
+        return send(SPECIAL.fetch(@ref.op)) if SPECIAL.key?(@ref.op)
 
         Parameter::FORMS.fetch(@ref.op[-1]).call(self)
       end
@@ -36,6 +41,10 @@ module Rush
       def raise_unset = raise(ExpansionError, "#{@ref.name}: #{message}")
 
       private
+
+      def length = value.to_s.length.to_s
+
+      def strip = PatternRemoval.new(@executor.system, @ref.op, value.to_s, arg).call
 
       def colon? = @ref.op.start_with?(':')
 
