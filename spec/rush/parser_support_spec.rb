@@ -27,6 +27,15 @@ RSpec.describe Rush::ParserSupport do
     expect(first_command('cat 2> err').redirects.first.io_number).to eq(2)
   end
 
+  it 'parses an if clause and a brace group' do
+    expect(first_command('if true; then echo hi; fi')).to be_a(Rush::AST::If)
+    expect(first_command('{ echo hi; }')).to be_a(Rush::AST::BraceGroup)
+  end
+
+  it 'parses a negated pipeline' do
+    expect(parse('! false').entries.first.and_or.negate).to be(true)
+  end
+
   it 'raises a ParseError naming a word value' do
     expect { parser.on_error(0, Rush::AST::Word.literal('oops'), []) }
       .to raise_error(Rush::ParseError, /oops/)

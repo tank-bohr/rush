@@ -1,16 +1,17 @@
 # rush — POSIX sh grammar (Racc), transcribed from POSIX.1-2017 §2.10.2.
 #
-# Phase 1 Slice 1: lists / and_or / pipelines / simple commands with
-# assignments and file redirections. Here-documents, reserved words and compound
-# commands (if/while/until/for/case, subshell, brace group, functions) arrive in
-# later slices with the context-sensitive lexer (POSIX Grammar Rules 1,3-9).
-# Action bodies are one-liners calling factory methods in Rush::ParserSupport.
+# Phase 1: lists / and_or / pipelines (with ! negation) / simple commands with
+# assignments and file redirections / multi-stage pipes, plus the `if` compound
+# command and brace groups. for/while/until/case, subshells and functions arrive
+# in later slices. Action bodies are one-liners calling Rush::ParserSupport
+# factories; the grammar currently compiles with zero conflicts.
 
 class Rush::Parser
 
 token WORD ASSIGNMENT_WORD IO_NUMBER NEWLINE
 token AND_IF OR_IF
 token DGREAT LESSGREAT CLOBBER
+token If Then Else Elif Fi Lbrace Rbrace Bang
 
 start program
 
@@ -43,7 +44,8 @@ rule
     ;
 
   pipeline
-    : pipe_sequence                               { result = make_pipeline(val[0]) }
+    : pipe_sequence                               { result = make_pipeline(val[0], false) }
+    | Bang pipe_sequence                          { result = make_pipeline(val[1], true) }
     ;
 
   pipe_sequence
@@ -53,6 +55,42 @@ rule
 
   command
     : simple_command                              { result = val[0] }
+    | compound_command                            { result = val[0] }
+    ;
+
+  compound_command
+    : brace_group                                 { result = val[0] }
+    | if_clause                                   { result = val[0] }
+    ;
+
+  brace_group
+    : Lbrace compound_list Rbrace                 { result = make_brace_group(val[1]) }
+    ;
+
+  if_clause
+    : If compound_list Then compound_list else_part Fi { result = make_if(val[1], val[3], val[4]) }
+    | If compound_list Then compound_list Fi           { result = make_if(val[1], val[3], nil) }
+    ;
+
+  else_part
+    : Elif compound_list Then compound_list                { result = make_if(val[1], val[3], nil) }
+    | Elif compound_list Then compound_list else_part      { result = make_if(val[1], val[3], val[4]) }
+    | Else compound_list                                   { result = val[1] }
+    ;
+
+  compound_list
+    : linebreak term                              { result = make_list(val[1]) }
+    | linebreak term separator                    { result = make_list(terminate_list(val[1], val[2])) }
+    ;
+
+  term
+    : term separator and_or                       { result = append_and_or(val[0], val[1], val[2]) }
+    | and_or                                      { result = [pending_entry(val[0])] }
+    ;
+
+  separator
+    : separator_op linebreak                      { result = val[0] }
+    | newline_list                                { result = ';' }
     ;
 
   simple_command
@@ -90,7 +128,6 @@ rule
     | IO_NUMBER io_file                           { result = with_io_number(val[1], val[0]) }
     ;
 
-  # Dup/close redirections (<&, >&, N>&-) arrive with the fd-management slice.
   io_file
     : '<' filename                                { result = make_redirect(:in, val[1]) }
     | '>' filename                                { result = make_redirect(:out, val[1]) }

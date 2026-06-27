@@ -55,6 +55,26 @@ RSpec.describe Rush::Lexer do
     expect(symbols('"x"=1')).to eq([:WORD])
   end
 
+  it 'recognizes reserved words only in command position' do
+    expect(symbols('if x; then y; fi')).to eq([:If, :WORD, ';', :Then, :WORD, ';', :Fi])
+  end
+
+  it 'treats a reserved word as a plain WORD in argument position' do
+    expect(symbols('echo if then')).to eq(%i[WORD WORD WORD])
+  end
+
+  it 'does not treat a quoted reserved word as reserved' do
+    expect(symbols("'if'")).to eq([:WORD])
+  end
+
+  it 'does not treat a redirection target as a reserved word' do
+    expect(symbols('echo > if')).to eq([:WORD, '>', :WORD])
+  end
+
+  it 'recognizes brace-group tokens and the bang' do
+    expect(symbols('! { echo; }')).to eq([:Bang, :Lbrace, :WORD, ';', :Rbrace])
+  end
+
   it 'signals end of input with [false, false]' do
     expect(described_class.new('').next_token).to eq([false, false])
   end

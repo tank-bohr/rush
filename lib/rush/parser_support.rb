@@ -38,7 +38,11 @@ module Rush
 
     def make_and_or(left, op, right) = AST::AndOr.new(left, op, right)
 
-    def make_pipeline(commands) = AST::Pipeline.new(commands)
+    def make_pipeline(commands, negate) = AST::Pipeline.new(commands, negate)
+
+    def make_if(condition, consequent, alternative) = AST::If.new(condition, consequent, alternative)
+
+    def make_brace_group(body) = AST::BraceGroup.new(body)
 
     def make_simple_command(prefix, word, suffix)
       parts = prefix + [word].compact + suffix

@@ -52,4 +52,15 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")
     expect(run('e=; echo "[$e]"').first).to eq("[]\n")
   end
+
+  it 'runs if/elif/else and brace groups' do
+    expect(run('if true; then echo yes; fi').first).to eq("yes\n")
+    expect(run('if false; then echo a; elif true; then echo b; else echo c; fi').first).to eq("b\n")
+    expect(run('{ echo one; echo two; }').first).to eq("one\ntwo\n")
+  end
+
+  it 'negates a pipeline status with !' do
+    expect(run('! false')[1]).to eq(0)
+    expect(run('! true')[1]).to eq(1)
+  end
 end

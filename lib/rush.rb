@@ -18,6 +18,8 @@ require_relative 'rush/ast/simple_command'
 require_relative 'rush/ast/pipeline'
 require_relative 'rush/ast/and_or'
 require_relative 'rush/ast/list'
+require_relative 'rush/ast/brace_group'
+require_relative 'rush/ast/if_node'
 
 require_relative 'rush/redirection/file_redirect'
 require_relative 'rush/redirection/registry'
