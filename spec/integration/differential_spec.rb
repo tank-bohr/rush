@@ -86,7 +86,10 @@ RSpec.describe 'rush vs dash (differential)' do
     "cat <<EOF\nplain line one\nplain line two\nEOF",
     "cat <<-END\n\t\ttabbed body\n\tEND",
     "cat <<'Q'\nliteral $x and `cmd` stay\nQ",
-    "wc -l <<EOF\na\nb\nc\nEOF"
+    "wc -l <<EOF\na\nb\nc\nEOF",
+    "v=42; cat <<EOF\nvalue is $v\nEOF",
+    "cat <<EOF\nsub: $(echo deep)\nEOF",
+    "x=1; cat <<EOF\nescaped \\$x literal\nEOF"
   ].freeze
 
   corpus.each do |snippet|

@@ -5,6 +5,7 @@ require_relative 'lexer/operator_table'
 require_relative 'lexer/lex_state'
 require_relative 'lexer/substitution_reader'
 require_relative 'lexer/word_scanner'
+require_relative 'lexer/heredoc_body'
 require_relative 'lexer/token_classifier'
 
 module Rush
@@ -88,7 +89,7 @@ module Rush
       [:NEWLINE, "\n"]
     end
 
-    def read_heredoc(holder) = build_body(gather(holder, +''))
+    def read_heredoc(holder) = build_body(holder, gather(holder, +''))
 
     def gather(holder, out)
       line = heredoc_line(holder)
@@ -108,7 +109,14 @@ module Rush
 
     def strip_tabs(holder, line) = holder.strip ? line.sub(/\A\t+/, '') : line
 
-    # Literal body for now; expansion of unquoted here-docs arrives in 6f.
-    def build_body(text) = AST::Word.new([AST::WordSegment.new(kind: :literal, value: text, quoted: false)])
+    # A quoted delimiter (<<'EOF') makes the body literal; an unquoted one is
+    # parsed for expansion ($var, $(...), `...`), applied later at execution.
+    def build_body(holder, text)
+      return literal_word(text) if holder.quoted
+
+      HeredocBody.new(text).scan
+    end
+
+    def literal_word(text) = AST::Word.new([AST::WordSegment.new(kind: :literal, value: text, quoted: false)])
   end
 end

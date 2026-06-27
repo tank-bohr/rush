@@ -136,6 +136,11 @@ RSpec.describe Rush::Lexer do
     it 'reads an unterminated here-document to the end of input' do
       expect(tokens("cat <<EOF\nonly\n")[2].last.body.literal_text).to eq("only\n")
     end
+
+    it 'parses an unquoted body for later expansion' do
+      holder = tokens("cat <<EOF\nhi $name\nEOF\n")[2].last
+      expect(holder.body.segments.map(&:kind)).to eq(%i[literal param literal])
+    end
   end
 
   it 'signals end of input with [false, false]' do

@@ -143,4 +143,9 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run("read a b <<EOF\none two three\nEOF\necho \"$a|$b\"").first).to eq("one|two three\n")
     expect(run("read x <<-EOF\n\t\tindented\n\tEOF\necho \"[$x]\"").first).to eq("[indented]\n")
   end
+
+  it 'expands an unquoted here-document body but not a quoted one' do
+    expect(run("name=world\nread x <<EOF\nhi $name\nEOF\necho \"[$x]\"").first).to eq("[hi world]\n")
+    expect(run("read x <<'EOF'\nliteral $y\nEOF\necho \"[$x]\"").first).to eq("[literal $y]\n")
+  end
 end
