@@ -18,6 +18,12 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  it 'creates a pipe and reports the process id' do
+    allow(IO).to receive(:pipe).and_return(%i[r w])
+    allow(Process).to receive(:pid).and_return(321)
+    expect([system.pipe, system.pid]).to eq([%i[r w], 321])
+  end
+
   it 'delegates directory operations' do
     allow(Dir).to receive(:chdir).with('/x')
     allow(Dir).to receive(:pwd).and_return('/here')

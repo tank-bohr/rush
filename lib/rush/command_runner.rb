@@ -6,9 +6,10 @@ module Rush
   # a builtin / external. Temporary-vs-persistent assignment scoping for special
   # builtins is refined in Phase 2.
   class CommandRunner
-    def initialize(executor, command)
+    def initialize(executor, command, base_io = executor.io)
       @executor = executor
       @command = command
+      @base_io = base_io
     end
 
     def call
@@ -33,7 +34,7 @@ module Rush
     end
 
     def build_io
-      @command.redirects.reduce(@executor.io) { |io, redirect| apply(io, redirect) }
+      @command.redirects.reduce(@base_io) { |io, redirect| apply(io, redirect) }
     end
 
     def apply(io, redirect)

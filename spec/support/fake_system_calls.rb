@@ -21,6 +21,14 @@ class FakeSystemCalls
 
   def open_file(path, _mode) = (@files[path] = StringIO.new)
 
+  # Pipeline plumbing: present so specs can stub them (verify_partial_doubles);
+  # the defaults are unused because the orchestration tests override them.
+  def pipe = [StringIO.new, StringIO.new]
+
+  def fork(&) = nil
+
+  def waitpid2(pid) = [pid, nil]
+
   def chdir(path)
     raise @chdir_error if @chdir_error
 

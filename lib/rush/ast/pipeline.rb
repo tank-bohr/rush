@@ -2,9 +2,9 @@
 
 module Rush
   module AST
-    # A pipeline of one or more commands. A single command runs in-process so
-    # builtins affect the shell; multi-stage pipelines (forking every stage via
-    # PipelineRunner) arrive with the fork slice.
+    # A pipeline of one or more commands. A single command runs in-process (so
+    # builtins affect the shell); a multi-stage pipeline forks each stage via
+    # PipelineRunner.
     class Pipeline < Node
       attr_reader :commands
 
@@ -13,7 +13,11 @@ module Rush
         @commands = commands
       end
 
-      def execute(executor) = executor.run(commands.first)
+      def execute(executor)
+        return executor.run(commands.first) if commands.one?
+
+        PipelineRunner.new(executor, commands).call
+      end
     end
   end
 end

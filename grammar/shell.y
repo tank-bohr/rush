@@ -42,15 +42,13 @@ rule
     | and_or OR_IF linebreak pipeline             { result = make_and_or(val[0], :or, val[3]) }
     ;
 
-  # Multi-stage pipelines (the `pipe_sequence '|' ...` production) and the
-  # PipelineRunner that forks their stages arrive in the fork slice; for now a
-  # pipeline is a single command.
   pipeline
     : pipe_sequence                               { result = make_pipeline(val[0]) }
     ;
 
   pipe_sequence
     : command                                     { result = [val[0]] }
+    | pipe_sequence '|' linebreak command         { result = val[0] << val[3] }
     ;
 
   command

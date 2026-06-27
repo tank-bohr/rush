@@ -13,6 +13,17 @@ module Rush
 
     def pid = Process.pid
 
+    def pipe = IO.pipe
+
+    # fork/exit! replace or split the process and so cannot run in-process under
+    # the test harness; the child-side logic they drive is extracted into pure
+    # methods that ARE tested, and real behaviour is covered by subprocess specs.
+    # :nocov:
+    def fork(&) = Process.fork(&)
+
+    def exit!(code) = Process.exit!(code)
+    # :nocov:
+
     def chdir(path) = Dir.chdir(path)
 
     def pwd = Dir.pwd

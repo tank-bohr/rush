@@ -13,7 +13,7 @@ module Rush
     end
 
     def call
-      _pid, status = system.waitpid2(system.spawn(@env, @argv, @io.to_spawn_options))
+      _pid, status = system.waitpid2(system.spawn(@env, @argv, spawn_options))
       Status.of(status)
     rescue Errno::ENOENT, Errno::EACCES => e
       error_status(e)
@@ -22,6 +22,9 @@ module Rush
     private
 
     def system = @executor.system
+
+    # close_others closes inherited fds >= 3 (e.g. pipeline pipe ends) in the child.
+    def spawn_options = @io.to_spawn_options.merge(close_others: true)
 
     def error_status(error)
       code = error.is_a?(Errno::EACCES) ? 126 : 127

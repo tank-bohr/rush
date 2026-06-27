@@ -40,6 +40,7 @@ require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'
 require_relative 'rush/command_runner'
+require_relative 'rush/pipeline_runner'
 require_relative 'rush/executor'
 
 require_relative 'rush/lexer'
