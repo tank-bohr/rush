@@ -45,11 +45,11 @@ module Rush
       def ifs = @executor.state.environment.get('IFS')
 
       def scalar_segment(segment)
-        case segment.kind
-        when :literal then segment.value
-        when :param then ParameterExpander.new(@executor, segment.value).expand
-        else CommandSubstitution.new(@executor, segment.value).call
-        end
+        return segment.value if segment.kind == :literal
+        return ParameterExpander.new(@executor, segment.value).expand if segment.kind == :param
+        return ArithmeticExpander.new(@executor, segment.value).expand if segment.kind == :arith
+
+        CommandSubstitution.new(@executor, segment.value).call
       end
     end
   end

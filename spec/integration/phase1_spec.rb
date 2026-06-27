@@ -53,6 +53,16 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(code).not_to eq(0)
   end
 
+  it 'evaluates arithmetic expansion with variables and precedence' do
+    expect(run('x=5; echo $((x + 2 * 3))').first).to eq("11\n")
+    expect(run('echo $(( (1 + 2) * 4 ))').first).to eq("12\n")
+  end
+
+  it 'aborts with status 2 when arithmetic divides by zero' do
+    output, code = run('echo a; echo $((1/0)); echo b')
+    expect([output, code]).to eq(["a\n", 2])
+  end
+
   it 'field-splits unquoted expansions but keeps quoted ones intact' do
     expect(run('x="a   b   c"; echo $x').first).to eq("a b c\n")
     expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")

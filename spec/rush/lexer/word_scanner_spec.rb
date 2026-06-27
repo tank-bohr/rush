@@ -94,6 +94,16 @@ RSpec.describe Rush::Lexer::WordScanner do
     expect([segment.kind, segment.value]).to eq([:command, 'echo hi'])
   end
 
+  it 'produces an :arith segment for $((...)), keeping balanced inner parens' do
+    segment = scan('$(( (1+2) * 3 ))').first.segments.first
+    expect([segment.kind, segment.value]).to eq([:arith, ' (1+2) * 3 '])
+  end
+
+  it 'treats $( ( as command substitution, not arithmetic' do
+    segment = scan('$( (echo hi) )').first.segments.first
+    expect([segment.kind, segment.value]).to eq([:command, ' (echo hi) '])
+  end
+
   it 'produces a :command segment for a backtick substitution' do
     segment = scan('`date`').first.segments.first
     expect([segment.kind, segment.value]).to eq([:command, 'date'])

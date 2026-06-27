@@ -20,4 +20,17 @@ RSpec.describe Rush::Lexer::SubstitutionReader do
   it 'raises on an unterminated backtick' do
     expect { reader('echo no close').backticks }.to raise_error(Rush::ParseError, /unterminated/)
   end
+
+  it 'reads an arithmetic body up to the matching )) with balanced inner parens' do
+    scanner = StringScanner.new('(1+2) * 3)) rest')
+    expect([described_class.new(scanner).arithmetic, scanner.rest]).to eq(['(1+2) * 3', ' rest'])
+  end
+
+  it 'raises IncompleteInput on an unterminated arithmetic body' do
+    expect { reader('1 + 2').arithmetic }.to raise_error(Rush::IncompleteInput)
+  end
+
+  it 'raises a ParseError when the arithmetic body is malformed' do
+    expect { reader('1 + 2) x').arithmetic }.to raise_error(Rush::ParseError, /malformed/)
+  end
 end

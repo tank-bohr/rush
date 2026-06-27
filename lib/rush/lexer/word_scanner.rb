@@ -80,20 +80,26 @@ module Rush
 
       def read_dollar(quoted:)
         @scanner.getch
-        return command_sub(quoted) if @scanner.peek(1) == '('
+        return dollar_paren(quoted) if @scanner.peek(1) == '('
 
         ref = read_param_ref
-        ref ? push_param(ref, quoted: quoted) : push_literal('$', quoted)
+        return add(:param, ref, quoted) if ref
+
+        quoted ? push('$', quoted: true) : (@literal << '$')
       end
 
-      def command_sub(quoted)
-        @scanner.getch # (
-        push_command(SubstitutionReader.new(@scanner).parens, quoted: quoted)
+      # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
+      def dollar_paren(quoted)
+        @scanner.getch # opening (
+        return add(:command, SubstitutionReader.new(@scanner).parens, quoted) unless @scanner.peek(1) == '('
+
+        @scanner.getch # second (
+        add(:arith, SubstitutionReader.new(@scanner).arithmetic, quoted)
       end
 
       def backtick
         @scanner.getch # `
-        push_command(SubstitutionReader.new(@scanner).backticks, quoted: false)
+        add(:command, SubstitutionReader.new(@scanner).backticks, false)
       end
 
       def read_param_ref
@@ -117,23 +123,11 @@ module Rush
         push(char, quoted: true) unless char.nil? || char == "\n"
       end
 
-      def push(value, quoted:)
-        flush
-        @segments << AST::WordSegment.new(kind: :literal, value: value, quoted: quoted)
-      end
+      def push(value, quoted:) = add(:literal, value, quoted)
 
-      def push_param(ref, quoted:)
+      def add(kind, value, quoted)
         flush
-        @segments << AST::WordSegment.new(kind: :param, value: ref, quoted: quoted)
-      end
-
-      def push_command(source, quoted:)
-        flush
-        @segments << AST::WordSegment.new(kind: :command, value: source, quoted: quoted)
-      end
-
-      def push_literal(text, quoted)
-        quoted ? push(text, quoted: true) : (@literal << text)
+        @segments << AST::WordSegment.new(kind: kind, value: value, quoted: quoted)
       end
 
       def flush

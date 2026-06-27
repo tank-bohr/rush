@@ -22,7 +22,38 @@ module Rush
         body
       end
 
+      # Read the body of $(( ... )) after the leading `((`, up to the matching
+      # `))`, allowing balanced inner parentheses.
+      def arithmetic
+        @depth = 0
+        collect(+'')
+      end
+
       private
+
+      def collect(body)
+        char = arith_char
+        return body if char.nil?
+
+        collect(body << char)
+      end
+
+      def arith_char
+        raise IncompleteInput, 'unterminated $((' if @scanner.eos?
+
+        char = @scanner.getch
+        return arith_close if char == ')'
+
+        @depth += 1 if char == '('
+        char
+      end
+
+      def arith_close
+        return ')'.tap { @depth -= 1 } unless @depth.zero?
+        raise(ParseError, 'arithmetic: malformed') unless @scanner.scan(')')
+
+        nil
+      end
 
       def paren_char
         raise IncompleteInput, 'unterminated $(' if @scanner.eos?
