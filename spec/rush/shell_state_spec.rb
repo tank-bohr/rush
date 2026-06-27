@@ -22,4 +22,21 @@ RSpec.describe Rush::ShellState do
     state.set_option(:nounset, false)
     expect(state.option?(:nounset)).to be(false)
   end
+
+  it 'tracks loop nesting depth for break/continue' do
+    state = described_class.new
+    expect(state.in_loop?).to be(false)
+    state.enter_loop
+    state.enter_loop
+    expect([state.loop_depth, state.in_loop?]).to eq([2, true])
+    state.leave_loop
+    expect(state.loop_depth).to eq(1)
+  end
+
+  it 'resets the loop depth across a function/subshell boundary, then restores it' do
+    state = described_class.new
+    state.enter_loop
+    inner = state.without_loops { state.loop_depth }
+    expect([inner, state.loop_depth]).to eq([0, 1])
+  end
 end

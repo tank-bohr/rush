@@ -46,12 +46,10 @@ module Rush
 
     # A `return` not caught by a function or dot script acts like `exit` with
     # that code in a non-interactive shell (POSIX): re-raise as ExitSignal so it
-    # settles the status and fires the EXIT trap. A stray break/continue with no
-    # enclosing loop is still swallowed (a later slice makes it a true no-op).
+    # settles the status and fires the EXIT trap. A stray break/continue no longer
+    # reaches here — with no enclosing loop the builtin is a no-op.
     def execute(program)
       executor.run(program)
-    rescue LoopControl
-      nil
     rescue ReturnSignal => e
       raise ExitSignal, e.code
     end

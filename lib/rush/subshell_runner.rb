@@ -36,7 +36,10 @@ module Rush
     end
 
     # exit, and a `return` not caught by a function/dot, both end the subshell
-    # with their code; a stray break/continue is a no-op (keeps the last status).
+    # with their code. A subshell inherits the loop scope (it is lexically inside
+    # the loop), so a break/continue targeting a loop in the parent unwinds to
+    # here and ends the subshell — the parent loop, a separate process, is
+    # untouched. (With no enclosing loop the builtin no-ops and never raises.)
     def exit_like?(error) = error.is_a?(ExitSignal) || error.is_a?(ReturnSignal)
 
     def report_fatal(error)

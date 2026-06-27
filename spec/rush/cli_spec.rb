@@ -36,8 +36,10 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', ''], FakeSystemCalls.new)).to eq(0)
   end
 
-  it 'treats break outside a loop as a no-op' do
-    expect(run(['-c', 'break'], FakeSystemCalls.new)).to eq(0)
+  it 'treats break outside a loop as a no-op, running the rest of the line' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', 'break; echo after'], system)).to eq(0)
+    expect(system.stdout.string).to eq("after\n")
   end
 
   it 'makes an uncaught return act like exit with that code' do

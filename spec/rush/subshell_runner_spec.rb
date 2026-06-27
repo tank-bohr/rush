@@ -30,9 +30,15 @@ RSpec.describe Rush::SubshellRunner do
       expect(described_class.new(executor, body('exit 3')).run_body.exitstatus).to eq(3)
     end
 
-    it 'treats a stray break or continue as a no-op, keeping the last status' do
+    it 'treats a stray break or continue (no enclosing loop) as a no-op' do
       expect(described_class.new(executor, body('break')).run_body).to be_a(Rush::Status)
       expect(described_class.new(executor, body('continue')).run_body).to be_a(Rush::Status)
+    end
+
+    it 'ends the subshell when a break targets a loop in the enclosing parent' do
+      state.enter_loop # the subshell is lexically inside a parent loop
+      result = described_class.new(executor, body("break\necho unreached")).run_body
+      expect([result.exitstatus, system.stdout.string]).to eq([0, ''])
     end
 
     it 'ends the subshell with the code when an uncaught return runs' do

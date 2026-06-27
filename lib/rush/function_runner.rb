@@ -12,9 +12,11 @@ module Rush
       @args = args
     end
 
+    # A function body is a fresh loop scope: without_loops resets the depth so a
+    # break/continue inside it cannot reach a loop in the caller (POSIX 2.9.5).
     def call
       @executor.state.begin_scope
-      with_args { invoke }
+      @executor.state.without_loops { with_args { invoke } }
     ensure
       @executor.state.end_scope
     end

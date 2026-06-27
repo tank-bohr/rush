@@ -5,13 +5,19 @@ module Rush
     # `break [n]` — exit the n-th enclosing loop (default 1). break is a
     # successful builtin, so it sets $? to 0 before unwinding (POSIX): the status
     # is seen after the loop, and after a `continue` in the next iteration's body.
+    # With no enclosing loop it is a no-op; a level past the actual nesting is
+    # clamped, so `break 5` in two loops exits both (POSIX 2.9.5 "break").
     class Break < Base
       def call
         executor.state.last_status = success
-        raise BreakSignal, level
+        raise BreakSignal, clamped if executor.state.in_loop?
+
+        success
       end
 
       private
+
+      def clamped = [level, executor.state.loop_depth].min
 
       def level = operands.first ? operands.first.to_i : 1
     end

@@ -58,7 +58,7 @@ module Rush
 
     def run_program(program)
       @executor.run(program)
-    rescue LoopControl, ReturnSignal
+    rescue ReturnSignal
       nil
     rescue ExpansionError, ReadonlyError => e
       report(e)

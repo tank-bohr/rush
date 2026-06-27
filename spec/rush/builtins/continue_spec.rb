@@ -8,17 +8,35 @@ RSpec.describe Rush::Builtins::Continue do
 
   def run(*args) = described_class.new(executor, ['continue', *args], io).call
 
-  it 'raises a ContinueSignal with the default level of 1' do
-    expect { run }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(1) }
+  context 'when inside a loop' do
+    before { state.enter_loop }
+
+    it 'raises a ContinueSignal with the default level of 1' do
+      expect { run }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(1) }
+    end
+
+    it 'raises a ContinueSignal with the requested level' do
+      state.enter_loop
+      state.enter_loop
+      expect { run('3') }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(3) }
+    end
+
+    it 'clamps a level past the actual nesting to the loop depth' do
+      expect { run('9') }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(1) }
+    end
+
+    it 'sets $? to success before unwinding (continue is a successful builtin)' do
+      state.last_status = Rush::Status.new(1)
+      expect { run }.to raise_error(Rush::ContinueSignal)
+      expect(state.last_status).to be_success
+    end
   end
 
-  it 'raises a ContinueSignal with the requested level' do
-    expect { run('3') }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(3) }
-  end
-
-  it 'sets $? to success before unwinding (continue is a successful builtin)' do
-    state.last_status = Rush::Status.new(1)
-    expect { run }.to raise_error(Rush::ContinueSignal)
-    expect(state.last_status).to be_success
+  context 'with no enclosing loop' do
+    it 'is a no-op that succeeds without raising' do
+      state.last_status = Rush::Status.new(1)
+      expect(run).to be_success
+      expect(state.last_status).to be_success
+    end
   end
 end

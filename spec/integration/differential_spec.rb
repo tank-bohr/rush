@@ -324,6 +324,24 @@ RSpec.describe 'rush vs dash (differential)' do
     'for i in 1; do for j in 1; do false; break 2; done; done; echo $?',
     'i=0; while [ $i -lt 2 ]; do i=$((i+1)); false; continue; done; echo $?',
     'for i in 1 2; do false; done; echo $?',
+    # break/continue are lexically scoped to loops in the same execution
+    # environment: a stray one with no enclosing loop is a no-op (execution
+    # continues), a level past the nesting is clamped, and one inside a function
+    # cannot reach the caller's loop. eval/dot/group bodies run inline and keep
+    # the count, so break in them still exits the surrounding loop.
+    'break; echo after',
+    'continue; echo after',
+    'echo a; break; echo b',
+    'if true; then break; fi; echo after',
+    '{ break; echo in; }; echo out',
+    '( break; echo in ); echo out',
+    'f() { break; echo in; }; f; echo out',
+    'f() { break; echo in; }; for i in 1; do f; echo loop; done; echo out',
+    'f() { continue; }; for i in 1 2; do f; echo l$i; done; echo done',
+    'for i in 1; do for j in 1; do break 5; done; echo inner; done; echo $?',
+    'for i in 1 2; do for j in a; do continue 2; done; echo inner; done; echo done',
+    'for i in 1 2 3; do for j in a b; do echo $i$j; continue 2; done; done',
+    "for i in 1 2 3; do eval 'break'; echo no; done; echo done",
     # a return not caught by a function or dot script acts like exit with that
     # code (non-interactive): at the top level it exits the shell (firing the
     # EXIT trap), in a subshell or command substitution it ends only that.

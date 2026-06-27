@@ -14,15 +14,24 @@ module Rush
       @sense = sense
     end
 
+    # Bracket the loop so break/continue see the right nesting depth (see
+    # ShellState#enter_loop); leave_loop runs even when break unwinds.
     def call
+      @executor.state.enter_loop
+      run_loop
+    ensure
+      @executor.state.leave_loop
+    end
+
+    private
+
+    def run_loop
       status = Status.success
       status = iterate while proceed?
       status
     rescue BreakSignal => e
       unwind(e)
     end
-
-    private
 
     def proceed?
       met = @executor.tested { @executor.run(@condition) }.success?

@@ -41,8 +41,13 @@ RSpec.describe Rush::Repl do
     expect(code).to eq(1)
   end
 
-  it 'treats a loop-control signal outside a loop as a no-op' do
+  it 'treats a stray break outside a loop as a no-op' do
     out, = session("break\necho after\n")
+    expect(out).to eq("after\n")
+  end
+
+  it 'treats a top-level return as a no-op, keeping the session alive' do
+    out, = session("return 3\necho after\n")
     expect(out).to eq("after\n")
   end
 
