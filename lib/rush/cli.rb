@@ -20,12 +20,15 @@ module Rush
     def repl? = @argv.empty? && @system.tty?
 
     def run_source
-      execute(source)
+      terminate(execute)
     rescue ExitSignal => e
-      e.code
+      terminate(e.code)
     rescue ParseError, ExpansionError, ReadonlyError => e
       report_error(e)
     end
+
+    # Fire the EXIT trap once the program (or an `exit`) has settled on a status.
+    def terminate(code) = executor.run_exit_trap(code)
 
     def source
       return @argv[1].to_s if @argv.first == '-c'
@@ -33,13 +36,14 @@ module Rush
       @system.stdin.read
     end
 
-    def execute(text)
-      executor = Executor.new(system: @system, state: ShellState.new)
-      executor.run(parse(text))
+    def execute
+      executor.run(parse(source))
       executor.state.last_status.exitstatus
     rescue LoopControl, ReturnSignal
       executor.state.last_status.exitstatus # break/continue/return outside a loop/function
     end
+
+    def executor = @executor ||= Executor.new(system: @system, state: ShellState.new)
 
     def parse(text) = Parser.new(Lexer.new(text)).parse
 

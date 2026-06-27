@@ -223,7 +223,29 @@ RSpec.describe 'rush vs dash (differential)' do
     'command -V echo',
     'command -V set',
     'command -V if',
-    'command -V nosuch_zz; echo "rc=$?"'
+    'command -V nosuch_zz; echo "rc=$?"',
+    # trap: only stdout + exit status are compared, so the "bad trap" diagnostics
+    # and the not-found noise from a bare action at EXIT (both on stderr) are moot.
+    "trap 'echo bye' EXIT; echo body",
+    "trap 'echo bye' EXIT; echo body; exit 4",
+    "trap 'echo rc=$?' EXIT; false",
+    "trap 'echo t; exit 9' EXIT; exit 2",
+    "trap 'echo c' EXIT; if true; then exit 7; fi",
+    "trap 'echo a' EXIT; trap 'echo b' INT; trap; echo end",
+    "trap 'echo hi' INT TERM HUP; trap",
+    "trap '' INT; trap",
+    "trap 'echo e' EXIT; trap - EXIT; echo body",
+    "trap 'echo e' EXIT; trap EXIT; echo body",
+    "trap '' INT TERM; trap - INT; trap",
+    "trap 'x' int Term hUp; trap",
+    "trap 'echo z' 0; trap",
+    'trap x sigterm 2>/dev/null; echo rc=$?',
+    'trap x 99 2>/dev/null; echo rc=$?',
+    'trap x INT BADD TERM 2>/dev/null; trap',
+    'trap',
+    "x=5; trap 'echo $x' EXIT; x=9",
+    "trap 'echo done' EXIT; for i in 1 2 3; do echo $i; done",
+    "f() { trap 'echo ft' EXIT; }; f; echo after"
   ].freeze
 
   corpus.each do |snippet|

@@ -50,6 +50,28 @@ RSpec.describe Rush::CLI do
     expect(system.stderr.string).to include('read only')
   end
 
+  it 'fires the EXIT trap after the program completes' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "trap 'echo bye' EXIT; echo body"], system)).to eq(0)
+    expect(system.stdout.string).to eq("body\nbye\n")
+  end
+
+  it 'publishes the exiting status as $? inside the EXIT trap' do
+    system = FakeSystemCalls.new
+    run(['-c', "trap 'echo rc=$?' EXIT; false"], system)
+    expect(system.stdout.string).to eq("rc=1\n")
+  end
+
+  it 'lets the EXIT trap override the exit code by running exit' do
+    expect(run(['-c', "trap 'exit 9' EXIT; exit 2"], FakeSystemCalls.new)).to eq(9)
+  end
+
+  it 'ignores a syntax error in the EXIT trap action' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "trap 'fi' EXIT; echo body"], system)).to eq(0)
+    expect(system.stdout.string).to eq("body\n")
+  end
+
   it 'defaults to the real system calls when none is injected' do
     expect(described_class.run(['-c', ':'])).to eq(0)
   end

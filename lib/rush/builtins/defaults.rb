@@ -10,7 +10,7 @@ module Rush
       'test' => Test, '[' => Test, 'set' => Set, 'shift' => Shift,
       'export' => Export, 'unset' => Unset, 'eval' => Eval, 'read' => Read,
       'printf' => Printf, '.' => Dot, 'readonly' => Readonly, 'exec' => Exec,
-      'local' => Local, 'type' => Type, 'command' => Command
+      'local' => Local, 'type' => Type, 'command' => Command, 'trap' => Trap
     }.freeze
 
     def self.default_registry

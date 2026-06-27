@@ -18,13 +18,20 @@ module Rush
     end
 
     def run
-      loop { break unless continue? }
-      @executor.state.last_status.exitstatus
+      terminate(session)
     rescue ExitSignal => e
-      e.code
+      terminate(e.code)
     end
 
     private
+
+    def session
+      loop { break unless continue? }
+      @executor.state.last_status.exitstatus
+    end
+
+    # The EXIT trap fires as the session ends, on Ctrl-D or `exit` alike.
+    def terminate(code) = @executor.run_exit_trap(code)
 
     def continue?
       program = read_complete

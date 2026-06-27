@@ -22,6 +22,17 @@ module Rush
 
     def run_simple(command) = CommandRunner.new(self, command).call
 
+    # Run the EXIT trap (if any) as the shell terminates, returning the status
+    # the shell exits with: the given code, unless the trap itself runs `exit`.
+    # $? inside the trap is that same code (POSIX 2.14), so it is published first.
+    def run_exit_trap(code)
+      action = state.traps.action(Signals::EXIT)
+      return code unless action
+
+      state.last_status = Status.new(code)
+      fire_exit(action, code)
+    end
+
     # Run a block with a different base IoTable (command substitution / future
     # `exec`), restoring the previous one afterwards.
     def with_io(io)
@@ -68,5 +79,18 @@ module Rush
     end
 
     def abort_on?(status) = @state.option?(:errexit) && !@tested && !status.success?
+
+    def fire_exit(action, code)
+      fire(action)
+      code
+    rescue ExitSignal => e
+      e.code
+    end
+
+    def fire(action)
+      run(Parser.new(Lexer.new(action)).parse)
+    rescue ParseError, ExpansionError, ReadonlyError, LoopControl, ReturnSignal
+      nil
+    end
   end
 end

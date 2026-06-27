@@ -50,4 +50,14 @@ RSpec.describe Rush::Repl do
     out, err = session("set -u\necho $missing\necho after\n")
     expect([out, err.include?('missing')]).to eq(["after\n", true])
   end
+
+  it 'fires the EXIT trap when the session ends at end of input' do
+    out, = session("trap 'echo bye' EXIT\necho body\n")
+    expect(out).to eq("body\nbye\n")
+  end
+
+  it 'fires the EXIT trap when the session ends via exit' do
+    out, _, code = session("trap 'echo bye' EXIT\nexit 3\n")
+    expect([out, code]).to eq(["bye\n", 3])
+  end
 end
