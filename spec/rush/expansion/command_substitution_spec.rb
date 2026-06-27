@@ -35,5 +35,11 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
       described_class.new(executor, 'false; echo nope').capture(write)
       expect([write.string, state.last_status.exitstatus]).to eq(['', 1])
     end
+
+    it 'ends the substitution with the code when an uncaught return runs' do
+      write = StringIO.new
+      described_class.new(executor, 'return 5; echo nope').capture(write)
+      expect([write.string, state.last_status.exitstatus]).to eq(['', 5])
+    end
   end
 end

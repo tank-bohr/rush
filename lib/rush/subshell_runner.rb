@@ -16,10 +16,10 @@ module Rush
       Status.of(@executor.system.waitpid2(pid).last)
     end
 
-    # The subshell is a fresh top level: exit ends it with its code, a stray
-    # break/continue/return is a no-op, and a fatal error (readonly, ${x:?}, ...)
-    # aborts only the subshell — the parent shell carries on — without letting
-    # the exception escape the fork.
+    # The subshell is a fresh top level: exit (or an uncaught return) ends it
+    # with that code, a stray break/continue is a no-op, and a fatal error
+    # (readonly, ${x:?}, ...) aborts only the subshell — the parent shell carries
+    # on — without letting the exception escape the fork.
     def run_body
       @executor.run(@body)
     rescue Error => e
@@ -29,13 +29,15 @@ module Rush
     private
 
     def resolve(error)
-      return Status.new(error.code) if error.is_a?(ExitSignal)
-      return @executor.state.last_status if control?(error)
+      return Status.new(error.code) if exit_like?(error)
+      return @executor.state.last_status if error.is_a?(LoopControl)
 
       report_fatal(error)
     end
 
-    def control?(error) = error.is_a?(LoopControl) || error.is_a?(ReturnSignal)
+    # exit, and a `return` not caught by a function/dot, both end the subshell
+    # with their code; a stray break/continue is a no-op (keeps the last status).
+    def exit_like?(error) = error.is_a?(ExitSignal) || error.is_a?(ReturnSignal)
 
     def report_fatal(error)
       @executor.io.get(2).puts("rush: #{error.message}")

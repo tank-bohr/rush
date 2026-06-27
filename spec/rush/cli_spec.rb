@@ -40,8 +40,20 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', 'break'], FakeSystemCalls.new)).to eq(0)
   end
 
-  it 'treats return outside a function as a no-op' do
-    expect(run(['-c', 'return'], FakeSystemCalls.new)).to eq(0)
+  it 'makes an uncaught return act like exit with that code' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', 'return 3; echo after'], system)).to eq(3)
+    expect(system.stdout.string).to eq('')
+  end
+
+  it 'exits a bare top-level return with the last command status' do
+    expect(run(['-c', 'false; return'], FakeSystemCalls.new)).to eq(1)
+  end
+
+  it 'fires the EXIT trap when an uncaught return exits' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "trap 'echo bye' EXIT; return 3"], system)).to eq(3)
+    expect(system.stdout.string).to eq("bye\n")
   end
 
   it 'reports a readonly violation on stderr and returns 2' do

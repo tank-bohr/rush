@@ -27,9 +27,10 @@ module Rush
 
       # The body runs in a fresh errexit context (a subshell): a `set -e` failure
       # ends only this substitution, leaving its status for the enclosing command.
+      # exit, and an uncaught return, both end the substitution with their code.
       def run_isolated
         @executor.untested { @executor.run(parse) }
-      rescue ExitSignal => e
+      rescue ExitSignal, ReturnSignal => e
         @executor.state.last_status = Status.new(e.code)
       end
 

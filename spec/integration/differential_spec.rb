@@ -324,6 +324,23 @@ RSpec.describe 'rush vs dash (differential)' do
     'for i in 1; do for j in 1; do false; break 2; done; done; echo $?',
     'i=0; while [ $i -lt 2 ]; do i=$((i+1)); false; continue; done; echo $?',
     'for i in 1 2; do false; done; echo $?',
+    # a return not caught by a function or dot script acts like exit with that
+    # code (non-interactive): at the top level it exits the shell (firing the
+    # EXIT trap), in a subshell or command substitution it ends only that.
+    'return 3; echo after',
+    'echo a; return 5; echo b',
+    'x=5; return $x; echo after',
+    'for i in 1 2; do return 9; done; echo after',
+    '{ return 3; }; echo after',
+    'if true; then return 4; fi; echo after',
+    "eval 'return 3'; echo after",
+    'false; return; echo after',
+    "trap 'echo bye' EXIT; return 3",
+    "trap 'echo rc=$?' EXIT; false; return",
+    '( return 3 ); echo sub=$?',
+    'x=$(return 5); echo $?',
+    'echo "[$(return 5; echo body)]"',
+    'f() { return 3; }; f; echo after=$?',
     # incremental execution: complete commands run (and flush) before a later
     # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
     # fires the EXIT trap with $?=2 (which may override the exit code via exit)
