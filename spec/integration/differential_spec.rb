@@ -201,7 +201,11 @@ RSpec.describe 'rush vs dash (differential)' do
     'f() { local a b; a=1; b=2; echo "$a-$b"; }; f; echo "[$a][$b]"',
     'x=1; f() { local x=2; g; }; g() { echo $x; }; f',
     'n=5; f() { local n=$((n+1)); echo $n; }; f; echo $n',
-    'x=keep; f() { local x; echo "[$x]"; }; f; echo $x'
+    'x=keep; f() { local x; echo "[$x]"; }; f; echo $x',
+    'set -o errexit; false; echo after',
+    'set -o errexit; if true; then echo c; false; fi || echo rec; echo done',
+    'set +o errexit; false; echo after',
+    'set -o nounset; echo "${x:-ok}"; echo $undef; echo no'
   ].freeze
 
   corpus.each do |snippet|

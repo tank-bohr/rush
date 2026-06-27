@@ -54,4 +54,16 @@ RSpec.describe Rush::Builtins::Set do
     expect(state.positional).to eq(%w[foo bar])
     expect(run('-q')).to be_success
   end
+
+  it 'toggles an option by long name with -o and +o' do
+    run('-o', 'errexit')
+    expect(state.option?(:errexit)).to be(true)
+    run('+o', 'errexit')
+    expect(state.option?(:errexit)).to be(false)
+  end
+
+  it 'ignores an unknown long option name and keeps parsing operands' do
+    run('-o', 'bogus', 'x', 'y')
+    expect([state.option?(:errexit), state.positional]).to eq([false, %w[x y]])
+  end
 end
