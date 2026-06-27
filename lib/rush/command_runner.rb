@@ -32,14 +32,25 @@ module Rush
       Status.success
     end
 
+    # POSIX command search: special builtin, then function (so a function may
+    # override a regular builtin), then regular builtin, then PATH.
     def run_command(argv)
       io = build_io
-      builtin = @executor.builtins.fetch(argv.first)
-      return builtin.new(@executor, argv, io).call if builtin
-      return run_function(argv) if @executor.state.functions.key?(argv.first)
+      dispatch(argv, io)
+    end
+
+    def dispatch(argv, io)
+      name = argv.first
+      return builtin(argv, io) if special?(name)
+      return run_function(argv) if @executor.state.functions.key?(name)
+      return builtin(argv, io) if @executor.builtins.key?(name)
 
       External.new(@executor, argv, io, command_env).call
     end
+
+    def builtin(argv, io) = @executor.builtins.fetch(argv.first).new(@executor, argv, io).call
+
+    def special?(name) = CommandLookup::SPECIAL.include?(name) && @executor.builtins.key?(name)
 
     def run_function(argv)
       body = @executor.state.functions.fetch(argv.first)

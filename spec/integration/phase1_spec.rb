@@ -79,6 +79,11 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect([system.stdout.string, code]).to eq(["a.txt b.txt *.md\n", 0])
   end
 
+  it 'lets a function override a regular builtin but not a special one' do
+    expect(run('echo() { printf "F:%s\n" "$1"; }; echo hi; command echo raw').first).to eq("F:hi\nraw\n")
+    expect(run('export() { echo nope; }; export Z=1; echo "$Z"').first).to eq("1\n")
+  end
+
   it 'field-splits unquoted expansions but keeps quoted ones intact' do
     expect(run('x="a   b   c"; echo $x').first).to eq("a b c\n")
     expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")
