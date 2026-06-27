@@ -38,6 +38,12 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', 'return'], FakeSystemCalls.new)).to eq(0)
   end
 
+  it 'reports a readonly violation on stderr and returns 2' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', 'readonly x=1; x=2'], system)).to eq(2)
+    expect(system.stderr.string).to include('read only')
+  end
+
   it 'defaults to the real system calls when none is injected' do
     expect(described_class.run(['-c', ':'])).to eq(0)
   end

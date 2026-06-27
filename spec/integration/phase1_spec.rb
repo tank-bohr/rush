@@ -148,4 +148,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run("name=world\nread x <<EOF\nhi $name\nEOF\necho \"[$x]\"").first).to eq("[hi world]\n")
     expect(run("read x <<'EOF'\nliteral $y\nEOF\necho \"[$x]\"").first).to eq("[literal $y]\n")
   end
+
+  it 'enforces readonly variables, aborting the script on reassignment' do
+    expect(run('readonly C=5; echo $C').first).to eq("5\n")
+    out, code = run('readonly C=5; C=6; echo after')
+    expect([out, code]).to eq(['', 2])
+  end
 end

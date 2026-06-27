@@ -16,7 +16,7 @@ module Rush
       execute(source)
     rescue ExitSignal => e
       e.code
-    rescue ParseError, ExpansionError => e
+    rescue ParseError, ExpansionError, ReadonlyError => e
       report_error(e)
     end
 

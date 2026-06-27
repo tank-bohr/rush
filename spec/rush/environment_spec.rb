@@ -26,4 +26,17 @@ RSpec.describe Rush::Environment do
     env.unset('A')
     expect([env.get('A'), env.exported]).to eq([nil, {}])
   end
+
+  it 'rejects assigning to a read-only variable' do
+    env = described_class.new({})
+    env.assign('A', '1')
+    env.readonly('A')
+    expect { env.assign('A', '2') }.to raise_error(Rush::ReadonlyError, /read only/)
+  end
+
+  it 'rejects unsetting a read-only variable' do
+    env = described_class.new({})
+    env.readonly('A')
+    expect { env.unset('A') }.to raise_error(Rush::ReadonlyError)
+  end
 end

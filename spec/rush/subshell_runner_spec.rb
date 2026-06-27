@@ -30,8 +30,15 @@ RSpec.describe Rush::SubshellRunner do
       expect(described_class.new(executor, body('exit 3')).run_body.exitstatus).to eq(3)
     end
 
-    it 'treats a stray break as a no-op, keeping the last status' do
+    it 'treats a stray break or return as a no-op, keeping the last status' do
       expect(described_class.new(executor, body('break')).run_body).to be_a(Rush::Status)
+      expect(described_class.new(executor, body('return 2')).run_body).to be_a(Rush::Status)
+    end
+
+    it 'aborts the subshell on a fatal error without letting it escape the fork' do
+      result = described_class.new(executor, body('echo ${X:?bad}')).run_body
+      expect(result.exitstatus).to eq(2)
+      expect(system.stderr.string).to include('bad')
     end
   end
 end

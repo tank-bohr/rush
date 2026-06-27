@@ -16,17 +16,31 @@ module Rush
       Status.of(@executor.system.waitpid2(pid).last)
     end
 
-    # The subshell is a fresh top level: exit ends it with its code, and a stray
-    # break/continue/return is a no-op (as at the script top level).
+    # The subshell is a fresh top level: exit ends it with its code, a stray
+    # break/continue/return is a no-op, and a fatal error (readonly, ${x:?}, ...)
+    # aborts only the subshell — the parent shell carries on — without letting
+    # the exception escape the fork.
     def run_body
       @executor.run(@body)
-    rescue ExitSignal => e
-      Status.new(e.code)
-    rescue LoopControl, ReturnSignal
-      @executor.state.last_status
+    rescue Error => e
+      resolve(e)
     end
 
     private
+
+    def resolve(error)
+      return Status.new(error.code) if error.is_a?(ExitSignal)
+      return @executor.state.last_status if control?(error)
+
+      report_fatal(error)
+    end
+
+    def control?(error) = error.is_a?(LoopControl) || error.is_a?(ReturnSignal)
+
+    def report_fatal(error)
+      @executor.io.get(2).puts("rush: #{error.message}")
+      Status.failure(2)
+    end
 
     def spawn_child
       # :nocov:

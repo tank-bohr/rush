@@ -13,6 +13,10 @@ module Rush
   # Raised by the `test`/`[` builtin on a malformed expression (mapped to exit 2).
   class TestError < Error; end
 
+  # Raised when assigning to or unsetting a readonly variable; like dash, this
+  # aborts the script (or just the subshell) with exit status 2.
+  class ReadonlyError < Error; end
+
   # Control-flow signal: `exit` unwinds to the top level carrying a status code.
   class ExitSignal < Error
     attr_reader :code
