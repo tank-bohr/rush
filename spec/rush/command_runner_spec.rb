@@ -1,24 +1,36 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::CommandRunner do
-  let(:state) { Rush::ShellState.new }
-  let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: state) }
+  let(:system) { FakeSystemCalls.new }
+  let(:env) { Rush::Environment.new({}) }
+  let(:state) { Rush::ShellState.new(environment: env) }
+  let(:executor) { Rush::Executor.new(system: system, state: state) }
 
-  def run(words) = described_class.new(executor, Rush::AST::SimpleCommand.new(words)).call
+  def word(text) = Rush::AST::Word.literal(text)
+  def assignment(name, text) = Rush::AST::Assignment.new(name: name, value: word(text))
+  def simple(assignments: [], words: [], redirects: []) = Rush::AST::SimpleCommand.new(assignments, words, redirects)
+  def run(command) = described_class.new(executor, command).call
 
-  it 'returns the last status for a command that expands to nothing' do
-    state.last_status = Rush::Status.new(5)
-    expect(run([]).exitstatus).to eq(5)
+  it 'persists bare assignments and returns success' do
+    expect(run(simple(assignments: [assignment('X', '1')]))).to be_success
+    expect(env.get('X')).to eq('1')
   end
 
   it 'dispatches to a matching builtin' do
-    expect(run([Rush::AST::Word.literal('true')])).to be_success
+    expect(run(simple(words: [word('true')]))).to be_success
   end
 
-  it 'dispatches to an external program when no builtin matches' do
+  it 'dispatches to an external when no builtin matches, exporting prefix assignments' do
+    captured = nil
     external = instance_double(Rush::External, call: Rush::Status.success)
-    allow(Rush::External).to receive(:new).and_return(external)
-    expect(run([Rush::AST::Word.literal('ls')])).to be_success
-    expect(Rush::External).to have_received(:new)
+    allow(Rush::External).to receive(:new) { |*args| captured = args }.and_return(external)
+    run(simple(assignments: [assignment('X', '1')], words: [word('ls')]))
+    expect(captured[3]).to include('X' => '1')
+  end
+
+  it 'applies redirections into the command io table' do
+    redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f'), io_number: nil)
+    run(simple(words: [word('true')], redirects: [redirect]))
+    expect(system.files).to have_key('/f')
   end
 end

@@ -2,208 +2,722 @@
 
 -------- Grammar --------
 
-rule 1 program: seps_opt
-rule 2 program: seps_opt commands seps_opt
-rule 3 commands: command
-rule 4 commands: commands seps command
-rule 5 command: words
-rule 6 words: WORD
-rule 7 words: words WORD
-rule 8 seps_opt: 
-rule 9 seps_opt: seps
-rule 10 seps: sep
-rule 11 seps: seps sep
-rule 12 sep: ";"
-rule 13 sep: NEWLINE
+rule 1 program: linebreak
+rule 2 program: linebreak complete_commands linebreak
+rule 3 complete_commands: complete_command
+rule 4 complete_commands: complete_commands newline_list complete_command
+rule 5 complete_command: list separator_op
+rule 6 complete_command: list
+rule 7 list: list separator_op and_or
+rule 8 list: and_or
+rule 9 and_or: pipeline
+rule 10 and_or: and_or AND_IF linebreak pipeline
+rule 11 and_or: and_or OR_IF linebreak pipeline
+rule 12 pipeline: pipe_sequence
+rule 13 pipe_sequence: command
+rule 14 command: simple_command
+rule 15 simple_command: cmd_prefix cmd_word cmd_suffix
+rule 16 simple_command: cmd_prefix cmd_word
+rule 17 simple_command: cmd_prefix
+rule 18 simple_command: cmd_name cmd_suffix
+rule 19 simple_command: cmd_name
+rule 20 cmd_name: WORD
+rule 21 cmd_word: WORD
+rule 22 cmd_prefix: io_redirect
+rule 23 cmd_prefix: cmd_prefix io_redirect
+rule 24 cmd_prefix: ASSIGNMENT_WORD
+rule 25 cmd_prefix: cmd_prefix ASSIGNMENT_WORD
+rule 26 cmd_suffix: io_redirect
+rule 27 cmd_suffix: cmd_suffix io_redirect
+rule 28 cmd_suffix: WORD
+rule 29 cmd_suffix: cmd_suffix WORD
+rule 30 io_redirect: io_file
+rule 31 io_redirect: IO_NUMBER io_file
+rule 32 io_file: "<" filename
+rule 33 io_file: ">" filename
+rule 34 io_file: DGREAT filename
+rule 35 io_file: LESSGREAT filename
+rule 36 io_file: CLOBBER filename
+rule 37 filename: WORD
+rule 38 separator_op: "&"
+rule 39 separator_op: ";"
+rule 40 newline_list: NEWLINE
+rule 41 newline_list: newline_list NEWLINE
+rule 42 linebreak: newline_list
+rule 43 linebreak: 
 
 ------- Symbols -------
 
 **Nonterminals, with rules where they appear
 
-  $start (5)
+  $start (15)
     on right: 
     on left : 
-  program (6)
+  program (16)
     on right: 
     on left : 1 2
-  seps_opt (7)
-    on right: 1 2
-    on left : 8 9
-  commands (8)
+  linebreak (17)
+    on right: 1 2 10 11
+    on left : 42 43
+  complete_commands (18)
     on right: 2 4
     on left : 3 4
-  command (9)
+  complete_command (19)
     on right: 3 4
-    on left : 5
-  seps (10)
-    on right: 4 9 11
-    on left : 10 11
-  words (11)
+    on left : 5 6
+  newline_list (20)
+    on right: 4 41 42
+    on left : 40 41
+  list (21)
+    on right: 5 6 7
+    on left : 7 8
+  separator_op (22)
     on right: 5 7
-    on left : 6 7
-  sep (12)
-    on right: 10 11
-    on left : 12 13
+    on left : 38 39
+  and_or (23)
+    on right: 7 8 10 11
+    on left : 9 10 11
+  pipeline (24)
+    on right: 9 10 11
+    on left : 12
+  pipe_sequence (25)
+    on right: 12
+    on left : 13
+  command (26)
+    on right: 13
+    on left : 14
+  simple_command (27)
+    on right: 14
+    on left : 15 16 17 18 19
+  cmd_prefix (28)
+    on right: 15 16 17 23 25
+    on left : 22 23 24 25
+  cmd_word (29)
+    on right: 15 16
+    on left : 21
+  cmd_suffix (30)
+    on right: 15 18 27 29
+    on left : 26 27 28 29
+  cmd_name (31)
+    on right: 18 19
+    on left : 20
+  io_redirect (32)
+    on right: 22 23 26 27
+    on left : 30 31
+  io_file (33)
+    on right: 30 31
+    on left : 32 33 34 35 36
+  filename (34)
+    on right: 32 33 34 35 36
+    on left : 37
 
 **Terminals, with rules where they appear
 
   $end (0) 
   error (1) 
-  WORD (2) 6 7
-  NEWLINE (3) 13
-  ";" (4) 12
+  WORD (2) 20 21 28 29 37
+  ASSIGNMENT_WORD (3) 24 25
+  IO_NUMBER (4) 31
+  NEWLINE (5) 40 41
+  AND_IF (6) 10
+  OR_IF (7) 11
+  DGREAT (8) 34
+  LESSGREAT (9) 35
+  CLOBBER (10) 36
+  "<" (11) 32
+  ">" (12) 33
+  "&" (13) 38
+  ";" (14) 39
 
 --------- State ---------
 
 state 0
 
 
-  NEWLINE       shift, and go to state 6
-  ";"           shift, and go to state 5
-  $default      reduce using rule 8 (seps_opt)
+  NEWLINE       shift, and go to state 3
+  $default      reduce using rule 43 (linebreak)
 
   program       go to state 1
-  seps_opt      go to state 2
-  seps          go to state 3
-  sep           go to state 4
+  linebreak     go to state 2
+  newline_list  go to state 4
 
 state 1
 
 
-  $end          shift, and go to state 7
+  $end          shift, and go to state 5
 
 
 state 2
 
-   1) program : seps_opt _
-   2) program : seps_opt _ commands seps_opt
+   1) program : linebreak _
+   2) program : linebreak _ complete_commands linebreak
 
-  WORD          shift, and go to state 11
+  WORD          shift, and go to state 16
+  ASSIGNMENT_WORD  shift, and go to state 18
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
   $default      reduce using rule 1 (program)
 
-  commands      go to state 8
-  command       go to state 9
-  words         go to state 10
+  complete_commands  go to state 6
+  complete_command  go to state 7
+  list          go to state 8
+  and_or        go to state 9
+  pipeline      go to state 10
+  pipe_sequence  go to state 11
+  command       go to state 12
+  simple_command  go to state 13
+  cmd_prefix    go to state 14
+  cmd_name      go to state 15
+  io_redirect   go to state 17
+  io_file       go to state 19
 
 state 3
 
-   9) seps_opt : seps _
-  11) seps : seps _ sep
+  40) newline_list : NEWLINE _
 
-  NEWLINE       shift, and go to state 6
-  ";"           shift, and go to state 5
-  $default      reduce using rule 9 (seps_opt)
+  $default      reduce using rule 40 (newline_list)
 
-  sep           go to state 12
 
 state 4
 
-  10) seps : sep _
+  41) newline_list : newline_list _ NEWLINE
+  42) linebreak : newline_list _
 
-  $default      reduce using rule 10 (seps)
+  NEWLINE       shift, and go to state 26
+  $default      reduce using rule 42 (linebreak)
 
 
 state 5
 
-  12) sep : ";" _
 
-  $default      reduce using rule 12 (sep)
+  $end          shift, and go to state 27
 
 
 state 6
 
-  13) sep : NEWLINE _
+   2) program : linebreak complete_commands _ linebreak
+   4) complete_commands : complete_commands _ newline_list complete_command
 
-  $default      reduce using rule 13 (sep)
+  NEWLINE       shift, and go to state 3
+  $default      reduce using rule 43 (linebreak)
 
+  linebreak     go to state 28
+  newline_list  go to state 29
 
 state 7
 
+   3) complete_commands : complete_command _
 
-  $end          shift, and go to state 13
+  $default      reduce using rule 3 (complete_commands)
 
 
 state 8
 
-   2) program : seps_opt commands _ seps_opt
-   4) commands : commands _ seps command
+   5) complete_command : list _ separator_op
+   6) complete_command : list _
+   7) list : list _ separator_op and_or
 
-  NEWLINE       shift, and go to state 6
-  ";"           shift, and go to state 5
-  $default      reduce using rule 8 (seps_opt)
+  "&"           shift, and go to state 31
+  ";"           shift, and go to state 32
+  $default      reduce using rule 6 (complete_command)
 
-  seps_opt      go to state 14
-  seps          go to state 15
-  sep           go to state 4
+  separator_op  go to state 30
 
 state 9
 
-   3) commands : command _
+   8) list : and_or _
+  10) and_or : and_or _ AND_IF linebreak pipeline
+  11) and_or : and_or _ OR_IF linebreak pipeline
 
-  $default      reduce using rule 3 (commands)
+  AND_IF        shift, and go to state 33
+  OR_IF         shift, and go to state 34
+  $default      reduce using rule 8 (list)
 
 
 state 10
 
-   5) command : words _
-   7) words : words _ WORD
+   9) and_or : pipeline _
 
-  WORD          shift, and go to state 16
-  $default      reduce using rule 5 (command)
+  $default      reduce using rule 9 (and_or)
 
 
 state 11
 
-   6) words : WORD _
+  12) pipeline : pipe_sequence _
 
-  $default      reduce using rule 6 (words)
+  $default      reduce using rule 12 (pipeline)
 
 
 state 12
 
-  11) seps : seps sep _
+  13) pipe_sequence : command _
 
-  $default      reduce using rule 11 (seps)
+  $default      reduce using rule 13 (pipe_sequence)
 
 
 state 13
+
+  14) command : simple_command _
+
+  $default      reduce using rule 14 (command)
+
+
+state 14
+
+  15) simple_command : cmd_prefix _ cmd_word cmd_suffix
+  16) simple_command : cmd_prefix _ cmd_word
+  17) simple_command : cmd_prefix _
+  23) cmd_prefix : cmd_prefix _ io_redirect
+  25) cmd_prefix : cmd_prefix _ ASSIGNMENT_WORD
+
+  WORD          shift, and go to state 36
+  ASSIGNMENT_WORD  shift, and go to state 38
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 17 (simple_command)
+
+  cmd_word      go to state 35
+  io_redirect   go to state 37
+  io_file       go to state 19
+
+state 15
+
+  18) simple_command : cmd_name _ cmd_suffix
+  19) simple_command : cmd_name _
+
+  WORD          shift, and go to state 41
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 19 (simple_command)
+
+  cmd_suffix    go to state 39
+  io_redirect   go to state 40
+  io_file       go to state 19
+
+state 16
+
+  20) cmd_name : WORD _
+
+  $default      reduce using rule 20 (cmd_name)
+
+
+state 17
+
+  22) cmd_prefix : io_redirect _
+
+  $default      reduce using rule 22 (cmd_prefix)
+
+
+state 18
+
+  24) cmd_prefix : ASSIGNMENT_WORD _
+
+  $default      reduce using rule 24 (cmd_prefix)
+
+
+state 19
+
+  30) io_redirect : io_file _
+
+  $default      reduce using rule 30 (io_redirect)
+
+
+state 20
+
+  31) io_redirect : IO_NUMBER _ io_file
+
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+
+  io_file       go to state 42
+
+state 21
+
+  32) io_file : "<" _ filename
+
+  WORD          shift, and go to state 44
+
+  filename      go to state 43
+
+state 22
+
+  33) io_file : ">" _ filename
+
+  WORD          shift, and go to state 44
+
+  filename      go to state 45
+
+state 23
+
+  34) io_file : DGREAT _ filename
+
+  WORD          shift, and go to state 44
+
+  filename      go to state 46
+
+state 24
+
+  35) io_file : LESSGREAT _ filename
+
+  WORD          shift, and go to state 44
+
+  filename      go to state 47
+
+state 25
+
+  36) io_file : CLOBBER _ filename
+
+  WORD          shift, and go to state 44
+
+  filename      go to state 48
+
+state 26
+
+  41) newline_list : newline_list NEWLINE _
+
+  $default      reduce using rule 41 (newline_list)
+
+
+state 27
 
 
   $default      accept
 
 
-state 14
+state 28
 
-   2) program : seps_opt commands seps_opt _
+   2) program : linebreak complete_commands linebreak _
 
   $default      reduce using rule 2 (program)
 
 
-state 15
+state 29
 
-   4) commands : commands seps _ command
-   9) seps_opt : seps _
-  11) seps : seps _ sep
+   4) complete_commands : complete_commands newline_list _ complete_command
+  41) newline_list : newline_list _ NEWLINE
+  42) linebreak : newline_list _
 
-  WORD          shift, and go to state 11
-  NEWLINE       shift, and go to state 6
-  ";"           shift, and go to state 5
-  $default      reduce using rule 9 (seps_opt)
+  WORD          shift, and go to state 16
+  ASSIGNMENT_WORD  shift, and go to state 18
+  IO_NUMBER     shift, and go to state 20
+  NEWLINE       shift, and go to state 26
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 42 (linebreak)
 
-  command       go to state 17
-  words         go to state 10
-  sep           go to state 12
+  complete_command  go to state 49
+  list          go to state 8
+  and_or        go to state 9
+  pipeline      go to state 10
+  pipe_sequence  go to state 11
+  command       go to state 12
+  simple_command  go to state 13
+  cmd_prefix    go to state 14
+  cmd_name      go to state 15
+  io_redirect   go to state 17
+  io_file       go to state 19
 
-state 16
+state 30
 
-   7) words : words WORD _
+   5) complete_command : list separator_op _
+   7) list : list separator_op _ and_or
 
-  $default      reduce using rule 7 (words)
+  WORD          shift, and go to state 16
+  ASSIGNMENT_WORD  shift, and go to state 18
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 5 (complete_command)
+
+  and_or        go to state 50
+  pipeline      go to state 10
+  pipe_sequence  go to state 11
+  command       go to state 12
+  simple_command  go to state 13
+  cmd_prefix    go to state 14
+  cmd_name      go to state 15
+  io_redirect   go to state 17
+  io_file       go to state 19
+
+state 31
+
+  38) separator_op : "&" _
+
+  $default      reduce using rule 38 (separator_op)
 
 
-state 17
+state 32
 
-   4) commands : commands seps command _
+  39) separator_op : ";" _
 
-  $default      reduce using rule 4 (commands)
+  $default      reduce using rule 39 (separator_op)
+
+
+state 33
+
+  10) and_or : and_or AND_IF _ linebreak pipeline
+
+  NEWLINE       shift, and go to state 3
+  $default      reduce using rule 43 (linebreak)
+
+  linebreak     go to state 51
+  newline_list  go to state 4
+
+state 34
+
+  11) and_or : and_or OR_IF _ linebreak pipeline
+
+  NEWLINE       shift, and go to state 3
+  $default      reduce using rule 43 (linebreak)
+
+  linebreak     go to state 52
+  newline_list  go to state 4
+
+state 35
+
+  15) simple_command : cmd_prefix cmd_word _ cmd_suffix
+  16) simple_command : cmd_prefix cmd_word _
+
+  WORD          shift, and go to state 41
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 16 (simple_command)
+
+  cmd_suffix    go to state 53
+  io_redirect   go to state 40
+  io_file       go to state 19
+
+state 36
+
+  21) cmd_word : WORD _
+
+  $default      reduce using rule 21 (cmd_word)
+
+
+state 37
+
+  23) cmd_prefix : cmd_prefix io_redirect _
+
+  $default      reduce using rule 23 (cmd_prefix)
+
+
+state 38
+
+  25) cmd_prefix : cmd_prefix ASSIGNMENT_WORD _
+
+  $default      reduce using rule 25 (cmd_prefix)
+
+
+state 39
+
+  18) simple_command : cmd_name cmd_suffix _
+  27) cmd_suffix : cmd_suffix _ io_redirect
+  29) cmd_suffix : cmd_suffix _ WORD
+
+  WORD          shift, and go to state 55
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 18 (simple_command)
+
+  io_redirect   go to state 54
+  io_file       go to state 19
+
+state 40
+
+  26) cmd_suffix : io_redirect _
+
+  $default      reduce using rule 26 (cmd_suffix)
+
+
+state 41
+
+  28) cmd_suffix : WORD _
+
+  $default      reduce using rule 28 (cmd_suffix)
+
+
+state 42
+
+  31) io_redirect : IO_NUMBER io_file _
+
+  $default      reduce using rule 31 (io_redirect)
+
+
+state 43
+
+  32) io_file : "<" filename _
+
+  $default      reduce using rule 32 (io_file)
+
+
+state 44
+
+  37) filename : WORD _
+
+  $default      reduce using rule 37 (filename)
+
+
+state 45
+
+  33) io_file : ">" filename _
+
+  $default      reduce using rule 33 (io_file)
+
+
+state 46
+
+  34) io_file : DGREAT filename _
+
+  $default      reduce using rule 34 (io_file)
+
+
+state 47
+
+  35) io_file : LESSGREAT filename _
+
+  $default      reduce using rule 35 (io_file)
+
+
+state 48
+
+  36) io_file : CLOBBER filename _
+
+  $default      reduce using rule 36 (io_file)
+
+
+state 49
+
+   4) complete_commands : complete_commands newline_list complete_command _
+
+  $default      reduce using rule 4 (complete_commands)
+
+
+state 50
+
+   7) list : list separator_op and_or _
+  10) and_or : and_or _ AND_IF linebreak pipeline
+  11) and_or : and_or _ OR_IF linebreak pipeline
+
+  AND_IF        shift, and go to state 33
+  OR_IF         shift, and go to state 34
+  $default      reduce using rule 7 (list)
+
+
+state 51
+
+  10) and_or : and_or AND_IF linebreak _ pipeline
+
+  WORD          shift, and go to state 16
+  ASSIGNMENT_WORD  shift, and go to state 18
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+
+  pipeline      go to state 56
+  pipe_sequence  go to state 11
+  command       go to state 12
+  simple_command  go to state 13
+  cmd_prefix    go to state 14
+  cmd_name      go to state 15
+  io_redirect   go to state 17
+  io_file       go to state 19
+
+state 52
+
+  11) and_or : and_or OR_IF linebreak _ pipeline
+
+  WORD          shift, and go to state 16
+  ASSIGNMENT_WORD  shift, and go to state 18
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+
+  pipeline      go to state 57
+  pipe_sequence  go to state 11
+  command       go to state 12
+  simple_command  go to state 13
+  cmd_prefix    go to state 14
+  cmd_name      go to state 15
+  io_redirect   go to state 17
+  io_file       go to state 19
+
+state 53
+
+  15) simple_command : cmd_prefix cmd_word cmd_suffix _
+  27) cmd_suffix : cmd_suffix _ io_redirect
+  29) cmd_suffix : cmd_suffix _ WORD
+
+  WORD          shift, and go to state 55
+  IO_NUMBER     shift, and go to state 20
+  DGREAT        shift, and go to state 23
+  LESSGREAT     shift, and go to state 24
+  CLOBBER       shift, and go to state 25
+  "<"           shift, and go to state 21
+  ">"           shift, and go to state 22
+  $default      reduce using rule 15 (simple_command)
+
+  io_redirect   go to state 54
+  io_file       go to state 19
+
+state 54
+
+  27) cmd_suffix : cmd_suffix io_redirect _
+
+  $default      reduce using rule 27 (cmd_suffix)
+
+
+state 55
+
+  29) cmd_suffix : cmd_suffix WORD _
+
+  $default      reduce using rule 29 (cmd_suffix)
+
+
+state 56
+
+  10) and_or : and_or AND_IF linebreak pipeline _
+
+  $default      reduce using rule 10 (and_or)
+
+
+state 57
+
+  11) and_or : and_or OR_IF linebreak pipeline _
+
+  $default      reduce using rule 11 (and_or)
 

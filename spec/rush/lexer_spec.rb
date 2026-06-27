@@ -20,11 +20,29 @@ RSpec.describe Rush::Lexer do
   end
 
   it 'separates words, semicolons and newlines while skipping blanks' do
-    expect(symbols("a b;c\n")).to eq(%i[WORD WORD] + [';'] + %i[WORD NEWLINE])
+    expect(symbols("a b;c\nd")).to eq([:WORD, :WORD, ';', :WORD, :NEWLINE, :WORD])
   end
 
   it 'skips a comment to the end of the line' do
-    expect(symbols("a # comment\nb")).to eq(%i[WORD NEWLINE WORD])
+    expect(symbols('echo hi # trailing comment')).to eq(%i[WORD WORD])
+  end
+
+  it 'tokenizes operators with maximal munch' do
+    expect(symbols('a&&b||c|d')).to eq([:WORD, :AND_IF, :WORD, :OR_IF, :WORD, '|', :WORD])
+  end
+
+  it 'emits redirection operators and an IO_NUMBER before them' do
+    expect(symbols('cat 2>f >>g')).to eq([:WORD, :IO_NUMBER, '>', :WORD, :DGREAT, :WORD])
+  end
+
+  it 'recognizes an assignment word in command-prefix position' do
+    symbol, value = described_class.new('X=1').next_token
+    expect(symbol).to eq(:ASSIGNMENT_WORD)
+    expect([value.name, value.value.literal_text]).to eq(%w[X 1])
+  end
+
+  it 'treats name=value after the command word as a plain WORD' do
+    expect(symbols('echo X=1')).to eq(%i[WORD WORD])
   end
 
   it 'signals end of input with [false, false]' do

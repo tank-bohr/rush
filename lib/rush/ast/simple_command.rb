@@ -2,14 +2,16 @@
 
 module Rush
   module AST
-    # `cmd arg1 arg2` — a list of Words. Assignments and redirects are added in
-    # later phases; for now execution just expands the words and dispatches.
+    # `name=val ... cmd arg ... >file` — variable assignments, argv words and
+    # redirections (in source order within each group).
     class SimpleCommand < Node
-      attr_reader :words
+      attr_reader :assignments, :words, :redirects
 
-      def initialize(words)
+      def initialize(assignments, words, redirects)
         super()
+        @assignments = assignments
         @words = words
+        @redirects = redirects
       end
 
       def execute(executor) = executor.run_simple(self)

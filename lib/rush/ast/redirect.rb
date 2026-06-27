@@ -1,0 +1,10 @@
+# frozen_string_literal: true
+
+module Rush
+  module AST
+    # A redirection: a kind (:in/:out/:append/:dup_in/:dup_out/:readwrite/
+    # :clobber), an unexpanded target Word, and an optional explicit fd parsed
+    # from a leading IO_NUMBER (nil means the kind's default fd).
+    Redirect = Data.define(:kind, :target, :io_number)
+  end
+end

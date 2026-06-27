@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::External do
-  let(:system) { instance_double(Rush::SystemCalls, stderr: StringIO.new) }
-  let(:state) { Rush::ShellState.new(environment: Rush::Environment.new({})) }
-  let(:executor) { instance_double(Rush::Executor, system: system, state: state) }
+  let(:system) { instance_double(Rush::SystemCalls) }
+  let(:executor) { instance_double(Rush::Executor, system: system) }
+  let(:io) { Rush::IoTable.standard(FakeSystemCalls.new) }
 
-  def run(argv) = described_class.new(executor, argv).call
+  def run(argv) = described_class.new(executor, argv, io, {}).call
 
   it 'spawns the program and translates its exit status' do
     process_status = instance_double(Process::Status, exitstatus: 3, termsig: nil)
@@ -17,12 +17,12 @@ RSpec.describe Rush::External do
   it 'returns 127 and a message when the program is not found' do
     allow(system).to receive(:spawn).and_raise(Errno::ENOENT)
     expect(run(%w[nope]).exitstatus).to eq(127)
-    expect(system.stderr.string).to include('not found')
+    expect(io.get(2).string).to include('not found')
   end
 
   it 'returns 126 when the program is found but not executable' do
     allow(system).to receive(:spawn).and_raise(Errno::EACCES)
     expect(run(%w[adir]).exitstatus).to eq(126)
-    expect(system.stderr.string).to include('Permission denied')
+    expect(io.get(2).string).to include('Permission denied')
   end
 end

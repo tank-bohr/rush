@@ -2,10 +2,10 @@
 
 module Rush
   module Builtins
-    # The builtins available in Phase 0. Later phases extend this table.
+    # The builtins available in Slice 1. Later slices extend this table.
     DEFAULTS = {
       ':' => Colon, 'true' => True, 'false' => False,
-      'echo' => Echo, 'exit' => Exit
+      'echo' => Echo, 'exit' => Exit, 'pwd' => Pwd, 'cd' => Cd
     }.freeze
 
     def self.default_registry

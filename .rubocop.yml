@@ -60,7 +60,7 @@ Style/EndlessMethod:
   EnforcedStyle: allow_single_line
 
 Naming/MethodParameterName:
-  AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's']
+  AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's', 'op']
 
 RSpec/ExampleLength:
   Max: 12

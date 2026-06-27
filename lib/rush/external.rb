@@ -1,16 +1,19 @@
 # frozen_string_literal: true
 
 module Rush
-  # Runs an external program through the system port and translates the result:
-  # the OS exit/signal status, or POSIX 127 (not found) / 126 (not executable).
+  # Runs an external program through the system port with the command's env and
+  # IoTable, translating the result: the OS exit/signal status, or POSIX 127
+  # (not found) / 126 (not executable).
   class External
-    def initialize(executor, argv)
+    def initialize(executor, argv, io, env)
       @executor = executor
       @argv = argv
+      @io = io
+      @env = env
     end
 
     def call
-      _pid, status = system.waitpid2(system.spawn(env, @argv, {}))
+      _pid, status = system.waitpid2(system.spawn(@env, @argv, @io.to_spawn_options))
       Status.of(status)
     rescue Errno::ENOENT, Errno::EACCES => e
       error_status(e)
@@ -20,12 +23,10 @@ module Rush
 
     def system = @executor.system
 
-    def env = @executor.state.environment.exported
-
     def error_status(error)
       code = error.is_a?(Errno::EACCES) ? 126 : 127
       reason = code == 126 ? 'Permission denied' : 'not found'
-      system.stderr.puts("rush: #{@argv.first}: #{reason}")
+      @io.get(2).puts("rush: #{@argv.first}: #{reason}")
       Status.new(code)
     end
   end
