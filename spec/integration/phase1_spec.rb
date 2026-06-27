@@ -94,4 +94,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('if [ 2 -gt 1 ]; then echo big; fi').first).to eq("big\n")
     expect(run('[ bad arg here ]; echo $?').first).to eq("2\n")
   end
+
+  it 'sets and shifts the positional parameters' do
+    expect(run('set a b c; echo "$1 $3 $#"').first).to eq("a c 3\n")
+    expect(run('set a b c; shift 2; echo "$1 $#"').first).to eq("c 1\n")
+    expect(run('set -- x; echo "$# $1"').first).to eq("1 x\n")
+  end
 end

@@ -7,7 +7,7 @@ module Rush
       ':' => Colon, 'true' => True, 'false' => False,
       'echo' => Echo, 'exit' => Exit, 'pwd' => Pwd, 'cd' => Cd,
       'break' => Break, 'continue' => Continue, 'return' => Return,
-      'test' => Test, '[' => Test
+      'test' => Test, '[' => Test, 'set' => Set, 'shift' => Shift
     }.freeze
 
     def self.default_registry

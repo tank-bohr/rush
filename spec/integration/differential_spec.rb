@@ -42,7 +42,13 @@ RSpec.describe 'rush vs dash (differential)' do
     '[ -f /dev/null ]; echo $?',
     '[ -r /dev/null ] && echo y',
     '[ -s /dev/null ]; echo $?',
-    '[ -f /no/such/rush_xyz ]; echo $?'
+    '[ -f /no/such/rush_xyz ]; echo $?',
+    'set a b c; echo "$1 $2 $3 $#"',
+    'set a b c; shift; echo "$1 $#"',
+    'set a b c; shift 2; echo "$1 $#"',
+    'set -- x y; echo "$# $1 $2"',
+    'set --; echo "[$#]"',
+    'set a b c; shift 0; echo $#'
   ].freeze
 
   corpus.each do |snippet|

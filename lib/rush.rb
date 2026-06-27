@@ -51,6 +51,8 @@ require_relative 'rush/builtins/continue_'
 require_relative 'rush/builtins/return_'
 require_relative 'rush/builtins/test_expr'
 require_relative 'rush/builtins/test_'
+require_relative 'rush/builtins/set'
+require_relative 'rush/builtins/shift'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'
