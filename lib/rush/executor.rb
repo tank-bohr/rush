@@ -16,6 +16,10 @@ module Rush
 
     def run(node) = @state.last_status = node.execute(self)
 
+    # Permanently rebind the base IoTable (the `exec` redirection-only form),
+    # unlike with_io which restores afterwards.
+    def replace_io(table) = @io = table
+
     def run_simple(command) = CommandRunner.new(self, command).call
 
     # Run a block with a different base IoTable (command substitution / future

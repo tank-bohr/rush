@@ -18,6 +18,14 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  describe '#exec' do
+    it 'replaces the process via Process.exec using the [cmd, argv0] form' do
+      allow(Process).to receive(:exec)
+      system.exec({ 'A' => '1' }, %w[ls -l], { close_others: true })
+      expect(Process).to have_received(:exec).with({ 'A' => '1' }, %w[ls ls], '-l', { close_others: true })
+    end
+  end
+
   it 'creates a pipe and reports the process id' do
     allow(IO).to receive(:pipe).and_return(%i[r w])
     allow(Process).to receive(:pid).and_return(321)

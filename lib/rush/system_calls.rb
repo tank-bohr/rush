@@ -13,6 +13,10 @@ module Rush
 
     def waitpid2(pid) = Process.waitpid2(pid)
 
+    # Replace the current process image (the `exec` builtin); the [cmd, argv0]
+    # form forbids the shell path, like #spawn. Returns only if the exec fails.
+    def exec(env, argv, options) = Process.exec(env, [argv.first, argv.first], *argv.drop(1), options)
+
     def pid = Process.pid
 
     def pipe = IO.pipe

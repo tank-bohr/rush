@@ -54,6 +54,11 @@ class FakeSystemCalls
 
   def here_doc(body) = StringIO.new(body)
 
+  # Records an exec instead of replacing the process, so specs can assert it.
+  attr_reader :execed
+
+  def exec(env, argv, options) = (@execed = [env, argv, options])
+
   # Pipeline plumbing: present so specs can stub them (verify_partial_doubles);
   # the defaults are unused because the orchestration tests override them.
   def pipe = [StringIO.new, StringIO.new]

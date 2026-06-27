@@ -154,4 +154,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     out, code = run('readonly C=5; C=6; echo after')
     expect([out, code]).to eq(['', 2])
   end
+
+  it 'applies exec redirections permanently to the shell' do
+    _out, code, system = run('exec > /log; echo one; echo two')
+    expect(code).to eq(0)
+    expect(system.files['/log'].string).to eq("one\ntwo\n")
+  end
 end
