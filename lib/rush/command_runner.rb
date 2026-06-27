@@ -13,6 +13,7 @@ module Rush
     end
 
     def call
+      @executor.reset_cmd_sub_status
       argv = @executor.expander.expand(@command.words)
       return run_bare if argv.empty?
 
@@ -26,10 +27,13 @@ module Rush
       @executor.io.get(2).puts("+ #{argv.join(' ')}") if @executor.state.option?(:xtrace)
     end
 
+    # No command word: perform redirections then assignments (POSIX order), and
+    # take the status of the last command substitution either ran (Status.success
+    # when none did), as published via the executor's cmd-sub channel.
     def run_bare
       build_io # opens/truncates redirect targets for their side effects
       @command.assignments.each { |assignment| persist(assignment) }
-      Status.success
+      @executor.cmd_sub_status
     end
 
     # POSIX command search: special builtin, then function (so a function may

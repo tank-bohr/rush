@@ -11,9 +11,21 @@ RSpec.describe Rush::CommandRunner do
   def simple(assignments: [], words: [], redirects: []) = Rush::AST::SimpleCommand.new(assignments, words, redirects)
   def run(command) = described_class.new(executor, command).call
 
+  def program(source) = Rush::Parser.new(Rush::Lexer.new(source)).parse
+
   it 'persists bare assignments and returns success' do
     expect(run(simple(assignments: [assignment('X', '1')]))).to be_success
     expect(env.get('X')).to eq('1')
+  end
+
+  it 'takes the last command substitution status for a no-command-word command' do
+    system.wait_status = FakeSystemCalls::ChildStatus.new(4)
+    expect(executor.run(program('x=$(cmd)')).exitstatus).to eq(4)
+  end
+
+  it 'reports success for a substitution-free assignment despite a prior failure' do
+    state.last_status = Rush::Status.failure(9)
+    expect(executor.run(program('x=plain'))).to be_success
   end
 
   it 'dispatches to a matching builtin' do

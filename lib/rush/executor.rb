@@ -5,7 +5,7 @@ module Rush
   # state, with all OS access funneled through the injected SystemCalls port. The
   # base IoTable, builtin registry, redirection registry and expander hang off it.
   class Executor
-    attr_reader :system, :state, :builtins, :redirections, :expander, :io
+    attr_reader :system, :state, :builtins, :redirections, :expander, :io, :cmd_sub_status
 
     def initialize(system:, state:, builtins: Builtins.default_registry)
       @system = system
@@ -30,6 +30,16 @@ module Rush
 
     # Run a compound command with its redirects bound for the whole body.
     def run_redirected(command, redirects) = with_io(apply_redirects(redirects)) { run(command) }
+
+    # The exit status of the last command substitution performed while a simple
+    # command is being built. Reset to success at the start of each command so a
+    # no-command-word command (only assignments/redirections) reports 0 unless a
+    # substitution sets it (POSIX 2.9.1: such a command takes the status of the
+    # last command substitution). Kept off last_status so a later $? in the same
+    # command still sees the previous command's status, as dash does.
+    def reset_cmd_sub_status = @cmd_sub_status = Status.success
+
+    def record_cmd_sub_status(status) = @cmd_sub_status = status
 
     # Run the EXIT trap (if any) as the shell terminates, returning the status
     # the shell exits with: the given code, unless the trap itself runs `exit`.

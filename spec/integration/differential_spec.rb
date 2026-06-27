@@ -289,7 +289,30 @@ RSpec.describe 'rush vs dash (differential)' do
     'i=0; while [ $i -lt 3 ]; do echo $i; i=$((i+1)); done >/dev/null; echo w',
     'until false; do echo loop; break; done >/dev/null; echo u',
     '{ false; } >/dev/null; echo $?',
-    'if true; then echo y; else echo n; fi 2>/dev/null'
+    'if true; then echo y; else echo n; fi 2>/dev/null',
+    # a no-command-word command takes the last command substitution's status;
+    # with no substitution it is 0 (resets even after a prior failure), and a
+    # later $? in the same command still sees the previous command's status
+    'true; x=$(false); echo $?',
+    'false; x=$(true); echo $?',
+    'false; x=foo; echo $?',
+    'x=$(true)$(false); echo $?',
+    'x=$(false)$(true); echo $?',
+    'a=$(true) b=$(false); echo $?',
+    'true; $(false); echo $?',
+    'false; $(:); echo $?',
+    'true; x=$(exit 5); echo $?',
+    'x=$(true; false); echo $?',
+    'x=$(false) true; echo $?',
+    'false; echo "$(true)-$?"',
+    'y=$(x=$(false)); echo $?',
+    'export x=$(false); echo $?',
+    'x=pre$(false)post; echo $?',
+    'set -e; x=$(false); echo unreached',
+    'set -e; x=$(true); echo reached',
+    'set -e; if x=$(false); then echo t; else echo e; fi',
+    'set -e; x=$(true) y=$(false); echo unreached',
+    'set -e; v=$(false) || echo recovered; echo after'
   ].freeze
 
   corpus.each do |snippet|

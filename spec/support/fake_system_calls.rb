@@ -6,8 +6,15 @@
 # touches the real OS.
 class FakeSystemCalls
   attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed
+  attr_accessor :wait_status
 
   UNTRAPPABLE = %w[KILL STOP].freeze
+
+  # A Process::Status stand-in: fork is a no-op so no child truly runs, and a
+  # spec sets `wait_status` to control the status a command substitution sees.
+  ChildStatus = Struct.new(:exitstatus) do
+    def termsig = nil
+  end
 
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
                     executable: false, symlink: false }.freeze
@@ -35,6 +42,7 @@ class FakeSystemCalls
     @chdir_error = nil
     @nodes = {}
     @contents = {}
+    @wait_status = ChildStatus.new(0)
   end
 
   # Configured matches for a pattern; unconfigured patterns match nothing, so
@@ -109,7 +117,7 @@ class FakeSystemCalls
 
   def fork(&) = nil
 
-  def waitpid2(pid) = [pid, nil]
+  def waitpid2(pid) = [pid, @wait_status]
 
   def chdir(path)
     raise @chdir_error if @chdir_error
