@@ -15,6 +15,11 @@ module Rush
 
     def export(name) = @exported.add(name)
 
+    def unset(name)
+      @vars.delete(name)
+      @exported.delete(name)
+    end
+
     def exported = @vars.slice(*@exported)
   end
 end

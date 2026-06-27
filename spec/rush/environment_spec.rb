@@ -18,4 +18,12 @@ RSpec.describe Rush::Environment do
     env.export('A')
     expect(env.exported).to eq('A' => 'x')
   end
+
+  it 'unsets a variable and drops it from the exported set' do
+    env = described_class.new({})
+    env.assign('A', 'x')
+    env.export('A')
+    env.unset('A')
+    expect([env.get('A'), env.exported]).to eq([nil, {}])
+  end
 end

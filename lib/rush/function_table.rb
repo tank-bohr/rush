@@ -8,6 +8,8 @@ module Rush
 
     def define(name, body) = @functions[name] = body
 
+    def undefine(name) = @functions.delete(name)
+
     def fetch(name) = @functions[name]
 
     def key?(name) = @functions.key?(name)

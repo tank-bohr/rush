@@ -108,4 +108,9 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('set a b c; echo "$*"').first).to eq("a b c\n")
     expect(run('set a b c; echo "pre$@post"').first).to eq("prea b cpost\n")
   end
+
+  it 'exports and unsets variables' do
+    expect(run('export X=hi; echo $X').first).to eq("hi\n")
+    expect(run('Y=keep; unset Y; echo "[$Y]"').first).to eq("[]\n")
+  end
 end
