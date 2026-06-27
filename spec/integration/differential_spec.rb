@@ -82,7 +82,11 @@ RSpec.describe 'rush vs dash (differential)' do
     'printf "a\tb\nc\n"',
     'printf "%d\n" abc; echo "rc=$?"',
     'printf "no newline"',
-    'printf "%d-%s\n" 5'
+    'printf "%d-%s\n" 5',
+    "cat <<EOF\nplain line one\nplain line two\nEOF",
+    "cat <<-END\n\t\ttabbed body\n\tEND",
+    "cat <<'Q'\nliteral $x and `cmd` stay\nQ",
+    "wc -l <<EOF\na\nb\nc\nEOF"
   ].freeze
 
   corpus.each do |snippet|

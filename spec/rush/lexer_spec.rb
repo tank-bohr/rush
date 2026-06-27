@@ -106,6 +106,38 @@ RSpec.describe Rush::Lexer do
       .to eq([:Case, :WORD, :In, :WORD, ')', :WORD, :DSEMI, :Esac])
   end
 
+  describe 'here-documents' do
+    def tokens(source)
+      lexer = described_class.new(source)
+      out = []
+      loop { (token = lexer.next_token) == [false, false] ? break : out << token }
+      out
+    end
+
+    it 'tokenizes << and the delimiter, collecting the body at the newline' do
+      toks = tokens("cat <<EOF\nhello\nworld\nEOF\n")
+      holder = toks[2].last
+      expect(toks.map(&:first)).to eq(%i[WORD DLESS WORD NEWLINE])
+      expect([holder.delimiter, holder.quoted, holder.strip]).to eq(['EOF', false, false])
+      expect(holder.body.literal_text).to eq("hello\nworld\n")
+    end
+
+    it 'marks a quoted delimiter and strips leading tabs for <<-' do
+      holder = tokens("cat <<-'EOF'\n\t\tbody\n\tEOF\n")[2].last
+      expect([holder.delimiter, holder.quoted, holder.strip]).to eq(['EOF', true, true])
+      expect(holder.body.literal_text).to eq("body\n")
+    end
+
+    it 'collects multiple here-documents in order' do
+      toks = tokens("cat <<A <<B\nfirst\nA\nsecond\nB\n")
+      expect([toks[2].last.body.literal_text, toks[4].last.body.literal_text]).to eq(%W[first\n second\n])
+    end
+
+    it 'reads an unterminated here-document to the end of input' do
+      expect(tokens("cat <<EOF\nonly\n")[2].last.body.literal_text).to eq("only\n")
+    end
+  end
+
   it 'signals end of input with [false, false]' do
     expect(described_class.new('').next_token).to eq([false, false])
   end

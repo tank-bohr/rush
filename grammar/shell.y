@@ -10,7 +10,7 @@ class Rush::Parser
 
 token WORD ASSIGNMENT_WORD IO_NUMBER NEWLINE
 token AND_IF OR_IF
-token DGREAT LESSGREAT CLOBBER
+token DGREAT LESSGREAT CLOBBER DLESS DLESSDASH
 token If Then Else Elif Fi Lbrace Rbrace Bang
 token While Until Do Done
 token For In NAME
@@ -199,6 +199,15 @@ rule
   io_redirect
     : io_file                                     { result = val[0] }
     | IO_NUMBER io_file                           { result = with_io_number(val[1], val[0]) }
+    | io_here                                     { result = val[0] }
+    | IO_NUMBER io_here                           { result = with_io_number(val[1], val[0]) }
+    ;
+
+  # The WORD after DLESS is the here-doc delimiter; the lexer has replaced it
+  # with the HereDoc holder whose body it fills at the following newline.
+  io_here
+    : DLESS WORD                                  { result = make_heredoc(val[1]) }
+    | DLESSDASH WORD                              { result = make_heredoc(val[1]) }
     ;
 
   io_file

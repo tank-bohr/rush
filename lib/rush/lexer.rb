@@ -16,10 +16,13 @@ module Rush
     BLANK = /[ \t]+/
     COMMENT = /#[^\n]*/
     IO_NUMBER = /\d+(?=[<>])/
+    HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
     def initialize(source)
       @scanner = StringScanner.new(source)
       @state = LexState.new
+      @awaiting = nil
+      @heredocs = []
     end
 
     def location = @scanner.charpos
@@ -43,7 +46,7 @@ module Rush
     end
 
     def scan_token
-      return [:NEWLINE, "\n"] if @scanner.scan("\n")
+      return heredoc_newline if @scanner.scan("\n")
 
       io_number || operator || word
     end
@@ -55,11 +58,57 @@ module Rush
 
     def operator
       matched = @scanner.scan(OperatorTable::PATTERN)
-      matched && [OperatorTable::OPERATORS[matched], matched]
+      matched && operator_token(matched)
+    end
+
+    def operator_token(matched)
+      symbol = OperatorTable::OPERATORS[matched]
+      @awaiting = HEREDOC_OPS[symbol]
+      [symbol, matched]
     end
 
     def word
-      TokenClassifier.new(WordScanner.new(@scanner).scan, @state).call
+      token = TokenClassifier.new(WordScanner.new(@scanner).scan, @state).call
+      @awaiting ? delimiter(token.last) : token
     end
+
+    def delimiter(word)
+      holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
+                           quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip)
+      @awaiting = nil
+      @heredocs << holder
+      [:WORD, holder]
+    end
+
+    # On the newline that ends the command line, drain the pending here-docs:
+    # read each body from the lines that follow, in the order the `<<`s appeared.
+    def heredoc_newline
+      @heredocs.each { |holder| holder.body = read_heredoc(holder) }
+      @heredocs = []
+      [:NEWLINE, "\n"]
+    end
+
+    def read_heredoc(holder) = build_body(gather(holder, +''))
+
+    def gather(holder, out)
+      line = heredoc_line(holder)
+      return out if line.nil?
+
+      gather(holder, out << line)
+    end
+
+    def heredoc_line(holder)
+      line = @scanner.scan(/[^\n]*\n?/)
+      return nil if line.to_s.empty? || delimiter?(holder, line)
+
+      strip_tabs(holder, line)
+    end
+
+    def delimiter?(holder, line) = strip_tabs(holder, line).chomp == holder.delimiter
+
+    def strip_tabs(holder, line) = holder.strip ? line.sub(/\A\t+/, '') : line
+
+    # Literal body for now; expansion of unquoted here-docs arrives in 6f.
+    def build_body(text) = AST::Word.new([AST::WordSegment.new(kind: :literal, value: text, quoted: false)])
   end
 end

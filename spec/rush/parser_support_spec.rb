@@ -27,6 +27,11 @@ RSpec.describe Rush::ParserSupport do
     expect(first_command('cat 2> err').redirects.first.io_number).to eq(2)
   end
 
+  it 'parses a here-document redirect carrying the collected body' do
+    redirect = first_command("cat <<EOF\nhi there\nEOF\n").redirects.first
+    expect([redirect.kind, redirect.target.body.literal_text]).to eq([:heredoc, "hi there\n"])
+  end
+
   it 'parses an if clause and a brace group' do
     expect(first_command('if true; then echo hi; fi')).to be_a(Rush::AST::If)
     expect(first_command('{ echo hi; }')).to be_a(Rush::AST::BraceGroup)

@@ -52,6 +52,8 @@ class FakeSystemCalls
 
   def read_file(path) = @contents.fetch(path) { raise Errno::ENOENT, path }
 
+  def here_doc(body) = StringIO.new(body)
+
   # Pipeline plumbing: present so specs can stub them (verify_partial_doubles);
   # the defaults are unused because the orchestration tests override them.
   def pipe = [StringIO.new, StringIO.new]

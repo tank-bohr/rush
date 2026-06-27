@@ -8,6 +8,7 @@ require_relative 'rush/environment'
 require_relative 'rush/function_table'
 require_relative 'rush/shell_state'
 require_relative 'rush/io_table'
+require_relative 'rush/here_doc'
 
 require_relative 'rush/ast/node'
 require_relative 'rush/ast/word_segment'
@@ -29,6 +30,7 @@ require_relative 'rush/ast/case_node'
 require_relative 'rush/ast/function_def'
 
 require_relative 'rush/redirection/file_redirect'
+require_relative 'rush/redirection/here_doc_redirect'
 require_relative 'rush/redirection/registry'
 
 require_relative 'rush/expansion/resolver'

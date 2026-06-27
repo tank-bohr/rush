@@ -43,6 +43,14 @@ RSpec.describe Rush::SystemCalls do
     expect(system.read_file('/f')).to eq('body')
   end
 
+  it 'builds a here-document stream through a rewound tempfile' do
+    file = instance_double(Tempfile, write: nil, rewind: nil)
+    allow(Tempfile).to receive(:new).with('rush-heredoc').and_return(file)
+    expect(system.here_doc('body')).to be(file)
+    expect(file).to have_received(:write).with('body')
+    expect(file).to have_received(:rewind)
+  end
+
   it 'matches glob patterns with fnmatch' do
     expect([system.fnmatch('a*', 'abc'), system.fnmatch('a*', 'xyz')]).to eq([true, false])
   end

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'tempfile'
+
 module Rush
   # The sole impure class: every syscall rush makes is a thin wrapper here, so
   # specs inject a fake (spec/support/fake_system_calls.rb) and reach every
@@ -41,6 +43,15 @@ module Rush
     def open_file(path, mode) = File.open(path, mode)
 
     def read_file(path) = File.read(path)
+
+    # A readable stream carrying a here-document body (a real fd, via a tempfile,
+    # so spawned children can read it).
+    def here_doc(body)
+      Tempfile.new('rush-heredoc').tap do |file|
+        file.write(body)
+        file.rewind
+      end
+    end
 
     # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L).
     def exist?(path) = File.exist?(path)

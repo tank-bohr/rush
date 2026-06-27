@@ -8,8 +8,8 @@ module Rush
     # operators map to named tokens. Dup operators (<& >&) join in a later slice.
     module OperatorTable
       OPERATORS = {
-        '&&' => :AND_IF, '||' => :OR_IF, '>>' => :DGREAT, ';;' => :DSEMI,
-        '<>' => :LESSGREAT, '>|' => :CLOBBER,
+        '<<-' => :DLESSDASH, '&&' => :AND_IF, '||' => :OR_IF, '>>' => :DGREAT,
+        '<<' => :DLESS, ';;' => :DSEMI, '<>' => :LESSGREAT, '>|' => :CLOBBER,
         '<' => '<', '>' => '>', '|' => '|', '&' => '&', ';' => ';', '(' => '(', ')' => ')'
       }.freeze
 

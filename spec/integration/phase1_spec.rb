@@ -137,4 +137,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('printf "[%5s]\n" hi').first).to eq("[   hi]\n")
     expect(run('printf "%d+%d\t%x\n" 2 3 255').first).to eq("2+3\tff\n")
   end
+
+  it 'feeds a here-document to a command on stdin' do
+    expect(run("read x <<EOF\nhello\nEOF\necho \"[$x]\"").first).to eq("[hello]\n")
+    expect(run("read a b <<EOF\none two three\nEOF\necho \"$a|$b\"").first).to eq("one|two three\n")
+    expect(run("read x <<-EOF\n\t\tindented\n\tEOF\necho \"[$x]\"").first).to eq("[indented]\n")
+  end
 end

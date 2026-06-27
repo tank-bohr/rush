@@ -65,6 +65,8 @@ module Rush
 
     def make_redirect(kind, target) = AST::Redirect.new(kind: kind, target: target, io_number: nil)
 
+    def make_heredoc(holder) = AST::Redirect.new(kind: :heredoc, target: holder, io_number: nil)
+
     def with_io_number(redirect, number) = redirect.with(io_number: number)
   end
 end
