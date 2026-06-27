@@ -69,6 +69,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect([system.stdout.string, code]).to eq(["/h/x /h/bin:/home/bob\n", 0])
   end
 
+  it 'gives local variables function-scoped values that are restored on return' do
+    expect(run('x=g; f() { local x=in; echo $x; }; f; echo $x').first).to eq("in\ng\n")
+  end
+
   it 'field-splits unquoted expansions but keeps quoted ones intact' do
     expect(run('x="a   b   c"; echo $x').first).to eq("a b c\n")
     expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")

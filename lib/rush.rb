@@ -75,6 +75,7 @@ require_relative 'rush/builtins/printf_formatter'
 require_relative 'rush/builtins/printf'
 require_relative 'rush/builtins/dot'
 require_relative 'rush/builtins/exec'
+require_relative 'rush/builtins/local'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'

@@ -9,7 +9,8 @@ module Rush
       'break' => Break, 'continue' => Continue, 'return' => Return,
       'test' => Test, '[' => Test, 'set' => Set, 'shift' => Shift,
       'export' => Export, 'unset' => Unset, 'eval' => Eval, 'read' => Read,
-      'printf' => Printf, '.' => Dot, 'readonly' => Readonly, 'exec' => Exec
+      'printf' => Printf, '.' => Dot, 'readonly' => Readonly, 'exec' => Exec,
+      'local' => Local
     }.freeze
 
     def self.default_registry

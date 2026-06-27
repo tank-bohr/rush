@@ -196,7 +196,12 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo ~nosuchuser_zzz',
     'P=~/a:~root:b; echo "$P"',
     'echo ${u:-~}',
-    'echo $((~5)) $((~0))'
+    'echo $((~5)) $((~0))',
+    'x=g; f() { local x=in; echo $x; }; f; echo $x',
+    'f() { local a b; a=1; b=2; echo "$a-$b"; }; f; echo "[$a][$b]"',
+    'x=1; f() { local x=2; g; }; g() { echo $x; }; f',
+    'n=5; f() { local n=$((n+1)); echo $n; }; f; echo $n',
+    'x=keep; f() { local x; echo "[$x]"; }; f; echo $x'
   ].freeze
 
   corpus.each do |snippet|

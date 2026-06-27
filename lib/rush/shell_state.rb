@@ -21,13 +21,32 @@ module Rush
 
     def option?(name) = @options.include?(name)
 
+    # Dynamic `local` scope: a function call brackets its body with
+    # begin/end_scope; declare_local snapshots a variable so end_scope restores
+    # its prior value (or unsets it when it had none).
+    def begin_scope = @scopes.push({})
+
+    def end_scope = @scopes.pop.each { |name, value| restore(name, value) }
+
+    def in_function? = @scopes.any?
+
+    def declare_local(name)
+      frame = @scopes.last
+      frame[name] = @environment.get(name) unless frame.key?(name)
+    end
+
     private
+
+    def restore(name, value)
+      value.nil? ? @environment.unset(name) : @environment.assign(name, value)
+    end
 
     def initialize_runtime
       @last_status = Status.success
       @positional = []
       @functions = FunctionTable.new
       @options = Set.new
+      @scopes = []
     end
   end
 end
