@@ -19,6 +19,8 @@ class FakeSystemCalls
 
   def expand_path(path, base) = File.expand_path(path, base)
 
+  def fnmatch(pattern, str) = File.fnmatch(pattern, str, File::FNM_DOTMATCH)
+
   def open_file(path, _mode) = (@files[path] = StringIO.new)
 
   # Pipeline plumbing: present so specs can stub them (verify_partial_doubles);

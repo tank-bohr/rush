@@ -23,6 +23,7 @@ require_relative 'rush/ast/if_node'
 require_relative 'rush/ast/while_node'
 require_relative 'rush/ast/until_node'
 require_relative 'rush/ast/for_node'
+require_relative 'rush/ast/case_node'
 
 require_relative 'rush/redirection/file_redirect'
 require_relative 'rush/redirection/registry'

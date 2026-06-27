@@ -14,6 +14,7 @@ token DGREAT LESSGREAT CLOBBER
 token If Then Else Elif Fi Lbrace Rbrace Bang
 token While Until Do Done
 token For In NAME
+token Case Esac DSEMI
 
 start program
 
@@ -66,6 +67,7 @@ rule
     | while_clause                                { result = val[0] }
     | until_clause                                { result = val[0] }
     | for_clause                                  { result = val[0] }
+    | case_clause                                 { result = val[0] }
     ;
 
   brace_group
@@ -103,6 +105,26 @@ rule
   sequential_sep
     : ';' linebreak
     | newline_list
+    ;
+
+  case_clause
+    : Case WORD linebreak In linebreak case_list Esac   { result = make_case(val[1], val[5]) }
+    | Case WORD linebreak In linebreak Esac             { result = make_case(val[1], []) }
+    ;
+
+  case_list
+    : case_item                                   { result = [val[0]] }
+    | case_list case_item                         { result = val[0] << val[1] }
+    ;
+
+  case_item
+    : patterns ')' compound_list DSEMI linebreak  { result = make_case_item(val[0], val[2]) }
+    | patterns ')' linebreak DSEMI linebreak      { result = make_case_item(val[0], make_list([])) }
+    ;
+
+  patterns
+    : WORD                                        { result = [val[0]] }
+    | patterns '|' WORD                           { result = val[0] << val[2] }
     ;
 
   if_clause

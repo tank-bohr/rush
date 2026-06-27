@@ -74,4 +74,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('for i in 1 2 3; do echo $i; done').first).to eq("1\n2\n3\n")
     expect(run('s="x y"; for w in $s; do echo $w; done').first).to eq("x\ny\n")
   end
+
+  it 'runs case statements with glob and alternation patterns' do
+    expect(run('case hi in h*) echo glob;; *) echo no;; esac').first).to eq("glob\n")
+    expect(run('case b in a) echo a;; b|c) echo bc;; esac').first).to eq("bc\n")
+    expect(run('case z in a) echo a;; esac; echo done').first).to eq("done\n")
+  end
 end

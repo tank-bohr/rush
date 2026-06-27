@@ -8,9 +8,9 @@ module Rush
     # operators map to named tokens. Dup operators (<& >&) join in a later slice.
     module OperatorTable
       OPERATORS = {
-        '&&' => :AND_IF, '||' => :OR_IF, '>>' => :DGREAT,
+        '&&' => :AND_IF, '||' => :OR_IF, '>>' => :DGREAT, ';;' => :DSEMI,
         '<>' => :LESSGREAT, '>|' => :CLOBBER,
-        '<' => '<', '>' => '>', '|' => '|', '&' => '&', ';' => ';'
+        '<' => '<', '>' => '>', '|' => '|', '&' => '&', ';' => ';', '(' => '(', ')' => ')'
       }.freeze
 
       PATTERN = Regexp.union(OPERATORS.keys.sort_by { |op| -op.length }).freeze

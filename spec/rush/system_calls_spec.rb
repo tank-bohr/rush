@@ -38,6 +38,10 @@ RSpec.describe Rush::SystemCalls do
     expect(system.open_file('/f', 'w')).to eq(:io)
   end
 
+  it 'matches glob patterns with fnmatch' do
+    expect([system.fnmatch('a*', 'abc'), system.fnmatch('a*', 'xyz')]).to eq([true, false])
+  end
+
   it 'exposes the standard streams' do
     expect(system.stdin).to be($stdin)
     expect(system.stdout).to be($stdout)

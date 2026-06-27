@@ -7,8 +7,8 @@ module Rush
     # segments for $name / ${...}. Handles the three quoting forms; command
     # substitution and arithmetic arrive in later slices.
     class WordScanner
-      TERMINATOR = /[ \t\n;&|<>]/
-      LITERAL_RUN = /[^'"\\$` \t\n;&|<>]+/
+      TERMINATOR = /[ \t\n;&|<>()]/
+      LITERAL_RUN = /[^'"\\$` \t\n;&|<>()]+/
       WHOLE_LITERAL = /[^'"\\$`]+/ # operator-word mode: only quotes / $ / ` are special
       DOUBLE_LITERAL = /[^"$\\]+/
       DOUBLE_SPECIAL = ['"', '\\', '$', '`'].freeze

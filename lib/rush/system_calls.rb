@@ -30,6 +30,8 @@ module Rush
 
     def expand_path(path, base) = File.expand_path(path, base)
 
+    def fnmatch(pattern, str) = File.fnmatch(pattern, str, File::FNM_DOTMATCH)
+
     def open_file(path, mode) = File.open(path, mode)
 
     def stdin = $stdin

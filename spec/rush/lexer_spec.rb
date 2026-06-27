@@ -96,6 +96,16 @@ RSpec.describe Rush::Lexer do
     expect(symbols("for i 'in'")).to eq(%i[For NAME WORD])
   end
 
+  it 'recognizes the case header, alternation patterns and arm terminators' do
+    expect(symbols('case x in a|b) echo;; esac'))
+      .to eq([:Case, :WORD, :In, :WORD, '|', :WORD, ')', :WORD, :DSEMI, :Esac])
+  end
+
+  it 'treats a reserved word as a literal case pattern' do
+    expect(symbols('case x in if) echo;; esac'))
+      .to eq([:Case, :WORD, :In, :WORD, ')', :WORD, :DSEMI, :Esac])
+  end
+
   it 'signals end of input with [false, false]' do
     expect(described_class.new('').next_token).to eq([false, false])
   end

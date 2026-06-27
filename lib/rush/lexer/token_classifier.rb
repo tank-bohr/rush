@@ -10,7 +10,8 @@ module Rush
       NAME = /\A([a-zA-Z_]\w*)=/
       RESERVED = {
         'if' => :If, 'then' => :Then, 'else' => :Else, 'elif' => :Elif, 'fi' => :Fi,
-        'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done, 'for' => :For,
+        'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done,
+        'for' => :For, 'case' => :Case,
         '{' => :Lbrace, '}' => :Rbrace, '!' => :Bang
       }.freeze
       FOR_IN = { 'in' => :In, 'do' => :Do }.freeze
@@ -21,16 +22,29 @@ module Rush
       end
 
       def call
-        for_token || classify
+        state_token || classify
       end
 
       private
 
-      def for_token
-        return [:NAME, @word] if @state.for_name?
-
-        [for_header, @word] if @state.for_in? && for_header
+      def state_token
+        forced || header_token
       end
+
+      def forced
+        return [:NAME, @word] if @state.for_name?
+        return [arm_token, @word] if @state.case_arm?
+
+        [:WORD, @word] if @state.case_subject? || @state.case_pat?
+      end
+
+      def header_token
+        return [for_header, @word] if @state.for_in? && for_header
+
+        [:In, @word] if @state.case_in? && plain? && text == 'in'
+      end
+
+      def arm_token = plain? && text == 'esac' ? :Esac : :WORD
 
       def classify
         keyword = reserved

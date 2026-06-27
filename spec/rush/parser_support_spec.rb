@@ -47,6 +47,11 @@ RSpec.describe Rush::ParserSupport do
     expect(first_command('for i; do :; done').words).to be_nil
   end
 
+  it 'parses a case statement into arms' do
+    node = first_command('case x in a) :;; *) :;; esac')
+    expect([node.class, node.items.size]).to eq([Rush::AST::Case, 2])
+  end
+
   it 'raises a ParseError naming a word value' do
     expect { parser.on_error(0, Rush::AST::Word.literal('oops'), []) }
       .to raise_error(Rush::ParseError, /oops/)
