@@ -59,6 +59,14 @@ rule
   command
     : simple_command                              { result = val[0] }
     | compound_command                            { result = val[0] }
+    | function_definition                         { result = val[0] }
+    ;
+
+  # fname '(' ')' — cmd_name vs fname is resolved by the LALR lookahead on '('
+  # (no '(' follows a command name), keeping the lexer unchanged. The body is a
+  # compound command per POSIX Rule 9.
+  function_definition
+    : WORD '(' ')' linebreak compound_command     { result = make_function(val[0], val[4]) }
     ;
 
   compound_command

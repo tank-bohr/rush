@@ -52,6 +52,11 @@ RSpec.describe Rush::ParserSupport do
     expect([node.class, node.items.size]).to eq([Rush::AST::Case, 2])
   end
 
+  it 'parses a function definition' do
+    node = first_command('greet() { echo hi; }')
+    expect([node.class, node.name]).to eq([Rush::AST::FunctionDef, 'greet'])
+  end
+
   it 'raises a ParseError naming a word value' do
     expect { parser.on_error(0, Rush::AST::Word.literal('oops'), []) }
       .to raise_error(Rush::ParseError, /oops/)

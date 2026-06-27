@@ -32,8 +32,8 @@ module Rush
       executor = Executor.new(system: @system, state: ShellState.new)
       executor.run(parse(text))
       executor.state.last_status.exitstatus
-    rescue LoopControl
-      executor.state.last_status.exitstatus # break/continue outside a loop: no-op
+    rescue LoopControl, ReturnSignal
+      executor.state.last_status.exitstatus # break/continue/return outside a loop/function
     end
 
     def parse(text) = Parser.new(Lexer.new(text)).parse

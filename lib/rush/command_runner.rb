@@ -29,8 +29,14 @@ module Rush
       io = build_io
       builtin = @executor.builtins.fetch(argv.first)
       return builtin.new(@executor, argv, io).call if builtin
+      return run_function(argv) if @executor.state.functions.key?(argv.first)
 
       External.new(@executor, argv, io, command_env).call
+    end
+
+    def run_function(argv)
+      body = @executor.state.functions.fetch(argv.first)
+      FunctionRunner.new(@executor, body, argv.drop(1)).call
     end
 
     def build_io

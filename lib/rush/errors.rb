@@ -33,4 +33,14 @@ module Rush
 
   class BreakSignal < LoopControl; end
   class ContinueSignal < LoopControl; end
+
+  # Control-flow signal: `return` unwinds to the enclosing function call.
+  class ReturnSignal < Error
+    attr_reader :code
+
+    def initialize(code)
+      @code = code
+      super("return #{code}")
+    end
+  end
 end

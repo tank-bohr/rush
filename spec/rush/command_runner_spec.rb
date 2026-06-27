@@ -33,4 +33,9 @@ RSpec.describe Rush::CommandRunner do
     run(simple(words: [word('true')], redirects: [redirect]))
     expect(system.files).to have_key('/f')
   end
+
+  it 'dispatches to a defined function before falling through to an external' do
+    state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
+    expect(run(simple(words: [word('greet')]))).to be_success
+  end
 end

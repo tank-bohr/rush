@@ -34,6 +34,10 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', 'break'], FakeSystemCalls.new)).to eq(0)
   end
 
+  it 'treats return outside a function as a no-op' do
+    expect(run(['-c', 'return'], FakeSystemCalls.new)).to eq(0)
+  end
+
   it 'defaults to the real system calls when none is injected' do
     expect(described_class.run(['-c', ':'])).to eq(0)
   end

@@ -54,6 +54,8 @@ module Rush
 
     def make_case_item(patterns, body) = AST::CaseItem.new(patterns: patterns, body: body)
 
+    def make_function(word, body) = AST::FunctionDef.new(word.literal_text, body)
+
     def make_simple_command(prefix, word, suffix)
       parts = prefix + [word].compact + suffix
       AST::SimpleCommand.new(parts.grep(AST::Assignment), parts.grep(AST::Word), parts.grep(AST::Redirect))

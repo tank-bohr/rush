@@ -6,7 +6,7 @@ module Rush
     DEFAULTS = {
       ':' => Colon, 'true' => True, 'false' => False,
       'echo' => Echo, 'exit' => Exit, 'pwd' => Pwd, 'cd' => Cd,
-      'break' => Break, 'continue' => Continue
+      'break' => Break, 'continue' => Continue, 'return' => Return
     }.freeze
 
     def self.default_registry

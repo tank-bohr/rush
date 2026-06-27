@@ -80,4 +80,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('case b in a) echo a;; b|c) echo bc;; esac').first).to eq("bc\n")
     expect(run('case z in a) echo a;; esac; echo done').first).to eq("done\n")
   end
+
+  it 'defines and calls functions with arguments and return' do
+    expect(run('greet() { echo "hi $1"; }; greet world').first).to eq("hi world\n")
+    expect(run('f() { return 3; }; f; echo $?').first).to eq("3\n")
+    expect(run('count() { echo $#; }; count a b c').first).to eq("3\n")
+  end
 end
