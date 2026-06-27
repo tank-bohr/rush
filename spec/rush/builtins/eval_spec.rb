@@ -22,9 +22,8 @@ RSpec.describe Rush::Builtins::Eval do
     expect(state.environment.get('X')).to eq('set')
   end
 
-  it 'reports a syntax error with exit status 2' do
-    expect(run('if').exitstatus).to eq(2)
-    expect(system.stderr.string).to include('eval')
+  it 'raises a BuiltinError on a syntax error (a special builtin aborts the shell)' do
+    expect { run('if') }.to raise_error(Rush::BuiltinError, /eval/)
   end
 
   it 'propagates exit from the evaluated input' do
@@ -40,8 +39,8 @@ RSpec.describe Rush::Builtins::Eval do
     expect(system.stdout.string).to eq("hi\n")
   end
 
-  it 'runs the commands before a later syntax error, then reports status 2' do
-    expect(run("echo a\nbad )").exitstatus).to eq(2)
+  it 'runs the commands before a later syntax error, then aborts' do
+    expect { run("echo a\nbad )") }.to raise_error(Rush::BuiltinError)
     expect(system.stdout.string).to eq("a\n")
   end
 

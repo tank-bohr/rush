@@ -64,6 +64,12 @@ RSpec.describe Rush::CLI do
     expect(system.stdout.string).to eq("bye\n")
   end
 
+  it 'aborts with status 2 on an eval syntax error, after earlier commands run' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "eval 'echo a\nbad )'; echo after"], system)).to eq(2)
+    expect(system.stdout.string).to eq("a\n")
+  end
+
   it 'reports a readonly violation on stderr and returns 2' do
     system = FakeSystemCalls.new
     expect(run(['-c', 'readonly x=1; x=2'], system)).to eq(2)

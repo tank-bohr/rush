@@ -15,15 +15,13 @@ RSpec.describe Rush::Builtins::Dot do
     expect(state.functions.key?('greet')).to be(true)
   end
 
-  it 'reports a missing file' do
-    expect(run('/nope.sh')).not_to be_success
-    expect(system.stderr.string).to include('No such file or directory')
+  it 'aborts with a BuiltinError on a missing file (a special builtin aborts the shell)' do
+    expect { run('/nope.sh') }.to raise_error(Rush::BuiltinError, /No such file/)
   end
 
-  it 'reports a syntax error in the file' do
+  it 'aborts with a BuiltinError on a syntax error in the file' do
     system.provide_file('/bad.sh', 'if')
-    expect(run('/bad.sh').exitstatus).to eq(1)
-    expect(system.stderr.string).to include('.:')
+    expect { run('/bad.sh') }.to raise_error(Rush::BuiltinError)
   end
 
   it 'errors with exit status 2 when given no filename' do
@@ -42,9 +40,9 @@ RSpec.describe Rush::Builtins::Dot do
     expect(system.stdout.string).to eq("hi\n")
   end
 
-  it 'runs the commands before a later syntax error in the file' do
+  it 'runs the commands before a later syntax error in the file, then aborts' do
     system.provide_file('/m.sh', "echo a\nbad )\n")
-    run('/m.sh')
+    expect { run('/m.sh') }.to raise_error(Rush::BuiltinError)
     expect(system.stdout.string).to eq("a\n")
   end
 
