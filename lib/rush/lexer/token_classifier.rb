@@ -10,6 +10,7 @@ module Rush
       NAME = /\A([a-zA-Z_]\w*)=/
       RESERVED = {
         'if' => :If, 'then' => :Then, 'else' => :Else, 'elif' => :Elif, 'fi' => :Fi,
+        'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done,
         '{' => :Lbrace, '}' => :Rbrace, '!' => :Bang
       }.freeze
 

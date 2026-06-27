@@ -12,6 +12,7 @@ token WORD ASSIGNMENT_WORD IO_NUMBER NEWLINE
 token AND_IF OR_IF
 token DGREAT LESSGREAT CLOBBER
 token If Then Else Elif Fi Lbrace Rbrace Bang
+token While Until Do Done
 
 start program
 
@@ -61,10 +62,24 @@ rule
   compound_command
     : brace_group                                 { result = val[0] }
     | if_clause                                   { result = val[0] }
+    | while_clause                                { result = val[0] }
+    | until_clause                                { result = val[0] }
     ;
 
   brace_group
     : Lbrace compound_list Rbrace                 { result = make_brace_group(val[1]) }
+    ;
+
+  while_clause
+    : While compound_list do_group                { result = make_while(val[1], val[2]) }
+    ;
+
+  until_clause
+    : Until compound_list do_group                { result = make_until(val[1], val[2]) }
+    ;
+
+  do_group
+    : Do compound_list Done                       { result = val[1] }
     ;
 
   if_clause

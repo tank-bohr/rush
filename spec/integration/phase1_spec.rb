@@ -63,4 +63,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('! false')[1]).to eq(0)
     expect(run('! true')[1]).to eq(1)
   end
+
+  it 'runs while/until loops with break and continue' do
+    expect(run('while false; do echo x; done; echo after').first).to eq("after\n")
+    expect(run('echo a; while true; do echo once; break; done; echo b').first).to eq("a\nonce\nb\n")
+    expect(run('until true; do echo never; done; echo z').first).to eq("z\n")
+  end
 end

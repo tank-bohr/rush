@@ -36,6 +36,11 @@ RSpec.describe Rush::ParserSupport do
     expect(parse('! false').entries.first.and_or.negate).to be(true)
   end
 
+  it 'parses while and until loops' do
+    expect(first_command('while true; do :; done')).to be_a(Rush::AST::While)
+    expect(first_command('until true; do :; done')).to be_a(Rush::AST::Until)
+  end
+
   it 'raises a ParseError naming a word value' do
     expect { parser.on_error(0, Rush::AST::Word.literal('oops'), []) }
       .to raise_error(Rush::ParseError, /oops/)

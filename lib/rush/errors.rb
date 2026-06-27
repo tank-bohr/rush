@@ -19,4 +19,18 @@ module Rush
       super("exit #{code}")
     end
   end
+
+  # Loop control: `break`/`continue` unwind to the enclosing loop, carrying the
+  # number of loop levels to act on.
+  class LoopControl < Error
+    attr_reader :count
+
+    def initialize(count)
+      @count = count
+      super('loop control')
+    end
+  end
+
+  class BreakSignal < LoopControl; end
+  class ContinueSignal < LoopControl; end
 end

@@ -44,6 +44,10 @@ module Rush
 
     def make_brace_group(body) = AST::BraceGroup.new(body)
 
+    def make_while(condition, body) = AST::While.new(condition, body)
+
+    def make_until(condition, body) = AST::Until.new(condition, body)
+
     def make_simple_command(prefix, word, suffix)
       parts = prefix + [word].compact + suffix
       AST::SimpleCommand.new(parts.grep(AST::Assignment), parts.grep(AST::Word), parts.grep(AST::Redirect))

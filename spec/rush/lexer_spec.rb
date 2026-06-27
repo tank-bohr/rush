@@ -75,6 +75,10 @@ RSpec.describe Rush::Lexer do
     expect(symbols('! { echo; }')).to eq([:Bang, :Lbrace, :WORD, ';', :Rbrace])
   end
 
+  it 'recognizes the loop reserved words' do
+    expect(symbols('while x; do y; done')).to eq([:While, :WORD, ';', :Do, :WORD, ';', :Done])
+  end
+
   it 'signals end of input with [false, false]' do
     expect(described_class.new('').next_token).to eq([false, false])
   end
