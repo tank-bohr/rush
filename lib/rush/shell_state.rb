@@ -6,13 +6,14 @@ module Rush
   # The executor backfills pwd from the OS when the environment has no PWD.
   class ShellState
     attr_reader :environment
-    attr_accessor :last_status, :name, :pwd
+    attr_accessor :last_status, :name, :pwd, :positional
 
     def initialize(environment: Environment.new, name: 'rush')
       @environment = environment
       @last_status = Status.success
       @name = name
       @pwd = environment.get('PWD')
+      @positional = []
     end
   end
 end

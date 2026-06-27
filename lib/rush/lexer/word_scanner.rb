@@ -3,17 +3,23 @@
 module Rush
   class Lexer
     # Scans one word from the shared StringScanner into an AST::Word of typed
-    # segments, handling the three POSIX quoting forms (single quotes, double
-    # quotes, backslash). Quote characters are removed; each run records whether
-    # it was quoted. $-expansions and backticks are added in later slices.
+    # segments: literal runs (quote-removed, with a `quoted` flag) and :param
+    # segments for $name / ${...}. Handles the three quoting forms; command
+    # substitution and arithmetic arrive in later slices.
     class WordScanner
       TERMINATOR = /[ \t\n;&|<>]/
-      LITERAL_RUN = /[^'"\\ \t\n;&|<>]+/
+      LITERAL_RUN = /[^'"\\$ \t\n;&|<>]+/
+      WHOLE_LITERAL = /[^'"\\$]+/ # operator-word mode: only quotes / $ are special
+      DOUBLE_LITERAL = /[^"$\\]+/
       DOUBLE_SPECIAL = ['"', '\\', '$', '`'].freeze
-      DISPATCH = { "'" => :single_quote, '"' => :double_quote, '\\' => :escape }.freeze
+      SIMPLE_PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
+      DISPATCH = { "'" => :single_quote, '"' => :double_quote, '\\' => :escape, '$' => :dollar }.freeze
 
-      def initialize(scanner)
+      # whole: scan the entire input as one word's content (no blank/operator
+      # terminators) — used for already-delimited ${} operator words.
+      def initialize(scanner, whole: false)
         @scanner = scanner
+        @whole = whole
         @segments = []
         @literal = +''
       end
@@ -26,12 +32,14 @@ module Rush
 
       private
 
-      def ended? = @scanner.eos? || @scanner.peek(1).match?(TERMINATOR)
+      def ended? = @scanner.eos? || (!@whole && @scanner.peek(1).match?(TERMINATOR))
 
       def step
         handler = DISPATCH[@scanner.peek(1)]
-        handler ? send(handler) : (@literal << @scanner.scan(LITERAL_RUN))
+        handler ? send(handler) : (@literal << @scanner.scan(literal_pattern))
       end
+
+      def literal_pattern = @whole ? WHOLE_LITERAL : LITERAL_RUN
 
       def single_quote
         @scanner.getch
@@ -43,26 +51,52 @@ module Rush
 
       def double_quote
         @scanner.getch
-        push(read_double, quoted: true)
-      end
-
-      def read_double
-        content = +''
-        content << double_char until at_double_end?
+        double_step until end_double?
         raise ParseError, 'unterminated double quote' if @scanner.eos?
 
-        @scanner.getch.then { content }
+        @scanner.getch
       end
 
-      def at_double_end? = @scanner.eos? || @scanner.peek(1) == '"'
+      def end_double? = @scanner.eos? || @scanner.peek(1) == '"'
 
-      def double_char
-        @scanner.peek(1) == '\\' ? double_escape : @scanner.getch
+      def double_step
+        char = @scanner.peek(1)
+        return double_dollar if char == '$'
+        return double_escape if char == '\\'
+
+        push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
+      end
+
+      def double_dollar
+        @scanner.getch
+        ref = read_param_ref
+        ref ? push_param(ref, quoted: true) : push('$', quoted: true)
       end
 
       def double_escape
         @scanner.getch
-        DOUBLE_SPECIAL.include?(@scanner.peek(1)) ? @scanner.getch : "\\#{@scanner.getch}"
+        DOUBLE_SPECIAL.include?(@scanner.peek(1)) ? push(@scanner.getch, quoted: true) : push('\\', quoted: true)
+      end
+
+      def dollar
+        @scanner.getch
+        ref = read_param_ref
+        ref ? push_param(ref, quoted: false) : (@literal << '$')
+      end
+
+      def read_param_ref
+        return braced_ref if @scanner.peek(1) == '{'
+
+        name = @scanner.scan(SIMPLE_PARAM)
+        name && AST::ParamRef.simple(name)
+      end
+
+      def braced_ref
+        @scanner.getch
+        body = @scanner.scan(/[^}]*/)
+        raise ParseError, 'unterminated ${' unless @scanner.scan('}')
+
+        AST::ParamRef.parse(body)
       end
 
       def escape
@@ -74,6 +108,11 @@ module Rush
       def push(value, quoted:)
         flush
         @segments << AST::WordSegment.new(kind: :literal, value: value, quoted: quoted)
+      end
+
+      def push_param(ref, quoted:)
+        flush
+        @segments << AST::WordSegment.new(kind: :param, value: ref, quoted: quoted)
       end
 
       def flush

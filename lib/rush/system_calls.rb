@@ -11,6 +11,8 @@ module Rush
 
     def waitpid2(pid) = Process.waitpid2(pid)
 
+    def pid = Process.pid
+
     def chdir(path) = Dir.chdir(path)
 
     def pwd = Dir.pwd

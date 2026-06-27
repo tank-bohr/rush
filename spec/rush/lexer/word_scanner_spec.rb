@@ -50,4 +50,37 @@ RSpec.describe Rush::Lexer::WordScanner do
   it 'raises on an unterminated double quote' do
     expect { scan('"oops') }.to raise_error(Rush::ParseError, /double quote/)
   end
+
+  it 'produces a :param segment for $name' do
+    segment = scan('$foo').first.segments.first
+    expect([segment.kind, segment.value.name]).to eq([:param, 'foo'])
+  end
+
+  it 'recognizes special and single-digit positional parameters' do
+    names = ['$?', '$1'].map { |src| scan(src).first.segments.first.value.name }
+    expect(names).to eq(%w[? 1])
+  end
+
+  it 'parses a braced parameter with an operator' do
+    ref = scan('${x:-d}').first.segments.first.value
+    expect([ref.name, ref.op, ref.arg]).to eq(['x', ':-', 'd'])
+  end
+
+  it 'keeps a parameter inside double quotes, marked quoted' do
+    segment = scan('"$x"').first.segments.first
+    expect([segment.kind, segment.quoted]).to eq([:param, true])
+  end
+
+  it 'treats a lone $ as a literal, quoted or not' do
+    expect([field('$ '), field('"$ "')]).to eq(['$', '$ '])
+  end
+
+  it 'scans the whole operator word including blanks in whole mode' do
+    word = described_class.new(StringScanner.new('a b c'), whole: true).scan
+    expect(word.segments.map(&:value).join).to eq('a b c')
+  end
+
+  it 'raises on an unterminated braced parameter' do
+    expect { scan('${x') }.to raise_error(Rush::ParseError, /unterminated/)
+  end
 end

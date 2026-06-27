@@ -16,8 +16,8 @@ module Rush
       execute(source)
     rescue ExitSignal => e
       e.code
-    rescue ParseError => e
-      report_parse_error(e)
+    rescue ParseError, ExpansionError => e
+      report_error(e)
     end
 
     private
@@ -36,7 +36,7 @@ module Rush
 
     def parse(text) = Parser.new(Lexer.new(text)).parse
 
-    def report_parse_error(error)
+    def report_error(error)
       @system.stderr.puts("rush: #{error.message}")
       2
     end

@@ -34,4 +34,16 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run("echo 'a;b'").first).to eq("a;b\n")
     expect(run('echo a"b c"d').first).to eq("ab cd\n")
   end
+
+  it 'expands variables, defaults and special parameters' do
+    expect(run('x=5; echo "x=$x"').first).to eq("x=5\n")
+    expect(run('echo ${UNSET:-fallback}').first).to eq("fallback\n")
+    expect(run('true; echo $?').first).to eq("0\n")
+  end
+
+  it 'reports an error for an unset parameter with :? and exits non-zero' do
+    output, code = run('echo ${MISSING:?required}')
+    expect(output).to eq('')
+    expect(code).not_to eq(0)
+  end
 end
