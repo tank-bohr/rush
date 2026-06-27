@@ -29,6 +29,20 @@ RSpec.describe Rush::Builtins::Test do
     expect(system.stderr.string).to include('unary operator expected')
   end
 
+  it 'evaluates -e/-f/-d against the filesystem' do
+    system.register('/f', type: :file)
+    system.register('/d', type: :dir)
+    expect([test('-e', '/f'), test('-f', '/f'), test('-d', '/d')]).to all(be_success)
+    expect([test('-e', '/none'), test('-f', '/d'), test('-d', '/f')]).to all(satisfy { |s| !s.success? })
+  end
+
+  it 'evaluates -r/-w/-x/-s/-h file primaries' do
+    system.register('/f', readable: true, writable: false, executable: true, size: 0)
+    system.register('/link', symlink: true)
+    expect([test('-r', '/f'), test('-x', '/f'), test('-h', '/link'), test('-L', '/link')]).to all(be_success)
+    expect([test('-w', '/f'), test('-s', '/f')]).to all(satisfy { |s| !s.success? })
+  end
+
   it 'compares strings with = and !=' do
     expect([test('a', '=', 'a'), test('a', '!=', 'b')]).to all(be_success)
     expect([test('a', '=', 'b'), test('a', '!=', 'a')]).to all(satisfy { |s| !s.success? })

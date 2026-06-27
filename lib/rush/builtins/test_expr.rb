@@ -9,11 +9,17 @@ module Rush
     # malformed expression raises TestError, which the builtin maps to exit 2.
     class TestExpr
       SIZES = { 0 => :none?, 1 => :one?, 2 => :two?, 3 => :three?, 4 => :four? }.freeze
-      UNARY = { '-n' => :nonempty?, '-z' => :empty? }.freeze
+      STRING_UNARY = { '-n' => :nonempty?, '-z' => :empty? }.freeze
+      FILE_UNARY = { '-e' => :exist?, '-f' => :file?, '-d' => :directory?, '-r' => :readable?,
+                     '-w' => :writable?, '-x' => :executable?, '-s' => :file_nonempty?,
+                     '-h' => :symlink?, '-L' => :symlink? }.freeze
       STRING = { '=' => :==, '!=' => :!= }.freeze
       INTEGER = { '-eq' => :==, '-ne' => :!=, '-gt' => :>, '-ge' => :>=, '-lt' => :<, '-le' => :<= }.freeze
 
-      def initialize(args) = @args = args
+      def initialize(args, files)
+        @args = args
+        @files = files
+      end
 
       def true? = evaluate(@args)
 
@@ -51,9 +57,10 @@ module Rush
       def many(_args) = raise TestError, 'too many arguments'
 
       def unary(op, val)
-        raise TestError, "#{op}: unary operator expected" unless UNARY.key?(op)
+        return send(STRING_UNARY.fetch(op), val) if STRING_UNARY.key?(op)
+        return @files.public_send(FILE_UNARY.fetch(op), val) if FILE_UNARY.key?(op)
 
-        send(UNARY.fetch(op), val)
+        raise TestError, "#{op}: unary operator expected"
       end
 
       def nonempty?(val) = !val.empty?

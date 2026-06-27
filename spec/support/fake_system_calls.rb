@@ -7,6 +7,9 @@
 class FakeSystemCalls
   attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd
 
+  NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
+                    executable: false, symlink: false }.freeze
+
   def initialize(stdin: '', pwd: '/home/test')
     @stdin = StringIO.new(stdin)
     @stdout = StringIO.new
@@ -15,7 +18,27 @@ class FakeSystemCalls
     @files = {}
     @chdirs = []
     @chdir_error = nil
+    @nodes = {}
   end
+
+  # Register an in-memory node for the file-test predicates below.
+  def register(path, **attrs) = @nodes[path] = NODE_DEFAULTS.merge(attrs)
+
+  def exist?(path) = @nodes.key?(path)
+
+  def file?(path) = node(path, :type) == :file
+
+  def directory?(path) = node(path, :type) == :dir
+
+  def readable?(path) = node(path, :readable) == true
+
+  def writable?(path) = node(path, :writable) == true
+
+  def executable?(path) = node(path, :executable) == true
+
+  def file_nonempty?(path) = node(path, :size).to_i.positive?
+
+  def symlink?(path) = node(path, :symlink) == true
 
   def expand_path(path, base) = File.expand_path(path, base)
 
@@ -40,4 +63,8 @@ class FakeSystemCalls
   def fail_chdir_with(error)
     @chdir_error = error
   end
+
+  private
+
+  def node(path, key) = @nodes.fetch(path, {})[key]
 end

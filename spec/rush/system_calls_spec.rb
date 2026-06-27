@@ -42,6 +42,18 @@ RSpec.describe Rush::SystemCalls do
     expect([system.fnmatch('a*', 'abc'), system.fnmatch('a*', 'xyz')]).to eq([true, false])
   end
 
+  it 'delegates stat-style file tests to File' do
+    allow(File).to receive_messages(exist?: true, file?: true, directory?: true, symlink?: true, size?: 10)
+    expect([system.exist?('/f'), system.file?('/f'), system.directory?('/d'),
+            system.symlink?('/l'), system.file_nonempty?('/f')]).to all(be(true))
+  end
+
+  it 'delegates access file tests to File' do
+    allow(File).to receive_messages(readable?: true, writable?: false, executable?: true)
+    expect([system.readable?('/f'), system.executable?('/f')]).to all(be(true))
+    expect(system.writable?('/f')).to be(false)
+  end
+
   it 'exposes the standard streams' do
     expect(system.stdin).to be($stdin)
     expect(system.stdout).to be($stdout)

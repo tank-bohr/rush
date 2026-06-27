@@ -36,7 +36,13 @@ RSpec.describe 'rush vs dash (differential)' do
     '[ \( -n x \) ] && echo group',
     'x=5; [ "$x" -eq 5 ] && echo five',
     'test; echo $?',
-    'test a b c; echo $?'
+    'test a b c; echo $?',
+    '[ -d / ] && echo y',
+    '[ -e /dev/null ] && echo y',
+    '[ -f /dev/null ]; echo $?',
+    '[ -r /dev/null ] && echo y',
+    '[ -s /dev/null ]; echo $?',
+    '[ -f /no/such/rush_xyz ]; echo $?'
   ].freeze
 
   corpus.each do |snippet|

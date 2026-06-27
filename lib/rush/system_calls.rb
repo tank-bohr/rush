@@ -34,6 +34,23 @@ module Rush
 
     def open_file(path, mode) = File.open(path, mode)
 
+    # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L).
+    def exist?(path) = File.exist?(path)
+
+    def file?(path) = File.file?(path)
+
+    def directory?(path) = File.directory?(path)
+
+    def readable?(path) = File.readable?(path)
+
+    def writable?(path) = File.writable?(path)
+
+    def executable?(path) = File.executable?(path)
+
+    def file_nonempty?(path) = File.size?(path).to_i.positive?
+
+    def symlink?(path) = File.symlink?(path)
+
     def stdin = $stdin
 
     def stdout = $stdout

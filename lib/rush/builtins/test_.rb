@@ -23,7 +23,7 @@ module Rush
         ops[0...-1]
       end
 
-      def evaluate(ops) = TestExpr.new(ops).true? ? success : failure
+      def evaluate(ops) = TestExpr.new(ops, executor.system).true? ? success : failure
 
       def report(message)
         stderr.puts("rush: #{argv.first}: #{message}")
