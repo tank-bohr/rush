@@ -52,6 +52,11 @@ module Rush
       fire_exit(action, code)
     end
 
+    # The status a bare `exit` reports: while the EXIT trap runs, the status the
+    # shell is terminating with (POSIX), not the trap body's last $?; otherwise
+    # the last command's status.
+    def exiting_status = @exiting || state.last_status.exitstatus
+
     # Record a trap and (for real signals, not EXIT) install its disposition so a
     # delivered signal runs the action / is ignored / restores the default.
     def set_trap(name, action)
@@ -116,10 +121,19 @@ module Rush
     end
 
     def fire_exit(action, code)
-      fire(action)
+      with_exiting(code) { fire(action) }
       code
     rescue ExitSignal => e
       e.code
+    end
+
+    # Publish `code` as the status a bare `exit` in the action reports, cleared
+    # afterwards so a bare exit elsewhere falls back to the last command status.
+    def with_exiting(code)
+      @exiting = code
+      yield
+    ensure
+      @exiting = nil
     end
 
     def fire(action)

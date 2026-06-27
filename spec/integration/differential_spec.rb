@@ -230,6 +230,13 @@ RSpec.describe 'rush vs dash (differential)' do
     "trap 'echo bye' EXIT; echo body; exit 4",
     "trap 'echo rc=$?' EXIT; false",
     "trap 'echo t; exit 9' EXIT; exit 2",
+    # a bare `exit` in the EXIT trap exits with the shell's terminating status,
+    # not the trap body's last $?.
+    "trap 'echo T; exit' EXIT; (exit 3)",
+    "trap ':; exit' EXIT; false",
+    "false; trap 'echo s=$?; :; exit' EXIT; return 1",
+    "f() { (exit 0); exit 42; }; trap 'echo T; exit' EXIT; f",
+    "trap 'false; exit' EXIT; exit 127",
     "trap 'echo c' EXIT; if true; then exit 7; fi",
     "trap 'echo a' EXIT; trap 'echo b' INT; trap; echo end",
     "trap 'echo hi' INT TERM HUP; trap",

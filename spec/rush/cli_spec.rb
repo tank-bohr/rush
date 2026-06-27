@@ -92,6 +92,10 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', "trap 'exit 9' EXIT; exit 2"], FakeSystemCalls.new)).to eq(9)
   end
 
+  it 'makes a bare exit in the EXIT trap use the terminating status, not the trap $?' do
+    expect(run(['-c', "trap ':; exit' EXIT; false"], FakeSystemCalls.new)).to eq(1)
+  end
+
   it 'ignores a syntax error in the EXIT trap action' do
     system = FakeSystemCalls.new
     expect(run(['-c', "trap 'fi' EXIT; echo body"], system)).to eq(0)
