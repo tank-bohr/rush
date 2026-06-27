@@ -219,7 +219,11 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo() { echo no; }; command echo hi',
     'cd() { echo CDFUNC; }; cd /tmp; echo after',
     'true() { echo TF; }; true; echo "rc=$?"',
-    'greet() { echo "hi $1"; }; greet world'
+    'greet() { echo "hi $1"; }; greet world',
+    'command -V echo',
+    'command -V set',
+    'command -V if',
+    'command -V nosuch_zz; echo "rc=$?"'
   ].freeze
 
   corpus.each do |snippet|

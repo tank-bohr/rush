@@ -7,9 +7,19 @@ module Rush
   class CommandLookup
     KEYWORDS = %w[! { } case do done elif else esac fi for if in then until while].freeze
     SPECIAL = %w[: . break continue eval exec exit export readonly return set shift times trap unset].freeze
+    LABELS = { keyword: 'a shell keyword', function: 'a shell function',
+               special: 'a special shell builtin', builtin: 'a shell builtin' }.freeze
 
     def initialize(executor)
       @executor = executor
+    end
+
+    # The `type`/`command -V` description line for a name, or nil if unknown.
+    def describe(name)
+      kind, detail = find(name)
+      return nil unless kind
+
+      "#{name} is #{kind == :file ? detail : LABELS.fetch(kind)}"
     end
 
     # [kind, detail] where kind is :keyword/:function/:special/:builtin/:file,

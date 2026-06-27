@@ -9,6 +9,7 @@ module Rush
     class Command < Base
       def call
         return verify(operands[1]) if operands.first == '-v'
+        return verbose(operands[1]) if operands.first == '-V'
 
         run(operands)
       end
@@ -21,6 +22,12 @@ module Rush
 
         stdout.puts(kind == :file ? detail : name)
         success
+      end
+
+      def verbose(name)
+        line = name && CommandLookup.new(executor).describe(name)
+        stdout.puts(line || "#{name}: not found")
+        line ? success : failure(127)
       end
 
       def run(args)

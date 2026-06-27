@@ -19,6 +19,15 @@ RSpec.describe Rush::Builtins::Command do
     expect([run('-v', 'nope_zzz').exitstatus, run('-v').exitstatus]).to eq([127, 127])
   end
 
+  it 'describes a name verbosely with -V like type does' do
+    expect(run('-V', 'echo')).to be_success
+    expect(system.stdout.string).to eq("echo is a shell builtin\n")
+  end
+
+  it 'reports not found for -V of an unknown or missing name with status 127' do
+    expect([run('-V', 'nope_zzz').exitstatus, run('-V').exitstatus]).to eq([127, 127])
+  end
+
   it 'runs a builtin, bypassing a shadowing function' do
     state.functions.define('echo', Rush::AST::SimpleCommand.new([], [], []))
     run('echo', 'hi')
