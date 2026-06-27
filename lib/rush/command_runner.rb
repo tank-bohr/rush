@@ -57,14 +57,7 @@ module Rush
       FunctionRunner.new(@executor, body, argv.drop(1)).call
     end
 
-    def build_io
-      @command.redirects.reduce(@base_io) { |io, redirect| apply(io, redirect) }
-    end
-
-    def apply(io, redirect)
-      applier = @executor.redirections.fetch(redirect.kind)
-      applier.apply(redirect, value(redirect.target), io, @executor.system)
-    end
+    def build_io = @executor.apply_redirects(@command.redirects, @base_io)
 
     def command_env
       @command.assignments.each_with_object(@executor.state.environment.exported) do |assignment, env|
@@ -75,8 +68,6 @@ module Rush
     def persist(assignment)
       @executor.state.environment.assign(assignment.name, assigned(assignment.value))
     end
-
-    def value(word) = @executor.expander.expand_value(word)
 
     def assigned(word) = @executor.expander.expand_value(word, tilde: :assignment)
   end

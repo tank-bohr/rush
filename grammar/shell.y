@@ -59,7 +59,13 @@ rule
   command
     : simple_command                              { result = val[0] }
     | compound_command                            { result = val[0] }
+    | compound_command redirect_list              { result = make_redirected(val[0], val[1]) }
     | function_definition                         { result = val[0] }
+    ;
+
+  redirect_list
+    : io_redirect                                 { result = [val[0]] }
+    | redirect_list io_redirect                   { result = val[0] << val[1] }
     ;
 
   # fname '(' ')' — cmd_name vs fname is resolved by the LALR lookahead on '('

@@ -46,6 +46,12 @@ Metrics/BlockLength:
 Metrics/AbcSize:
   Max: 17
 
+# The differential corpus is a deliberately large table of shell snippets to
+# compare against dash; it grows one block per slice and is data, not logic.
+Metrics/CollectionLiteralLength:
+  Exclude:
+    - 'spec/**/*'
+
 # Documentation is provided by clear naming + the architecture doc, not per-class comments.
 Style/Documentation:
   Enabled: false

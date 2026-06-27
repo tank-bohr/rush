@@ -48,6 +48,8 @@ module Rush
 
     def make_subshell(body) = AST::Subshell.new(body)
 
+    def make_redirected(command, redirects) = AST::Redirected.new(command, redirects)
+
     def make_while(condition, body) = AST::While.new(condition, body)
 
     def make_until(condition, body) = AST::Until.new(condition, body)

@@ -277,7 +277,19 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo "a `echo b c` d"',
     'v="`echo a` `echo b`"; echo "$v"',
     'echo "nested `echo X`Y`echo Z`"',
-    'echo "lit \`not sub\` done"'
+    'echo "lit \`not sub\` done"',
+    # redirects on compound commands (output diverted to /dev/null is flush-safe,
+    # unlike reading a just-written file back within the same shell)
+    '{ echo hidden; } > /dev/null; echo shown',
+    'if true; then echo x; fi > /dev/null; echo done',
+    '{ echo keep; } 2>/dev/null',
+    'for i in 1 2; do echo $i; done > /dev/null; echo end',
+    '(echo sub) > /dev/null; echo o',
+    'case x in x) echo m;; esac >/dev/null; echo c',
+    'i=0; while [ $i -lt 3 ]; do echo $i; i=$((i+1)); done >/dev/null; echo w',
+    'until false; do echo loop; break; done >/dev/null; echo u',
+    '{ false; } >/dev/null; echo $?',
+    'if true; then echo y; else echo n; fi 2>/dev/null'
   ].freeze
 
   corpus.each do |snippet|
@@ -315,6 +327,21 @@ RSpec.describe 'rush vs dash (differential)' do
       file.flush
       source = ". #{file.path}; greet world; echo $VALUE"
       expect(rush(source)).to eq(dash(source))
+    end
+  end
+
+  def input_redirect_snippets
+    ['while read v; do echo "<$v>"; done < in', 'if read a; then echo "got $a"; fi < in',
+     '{ read p; read q; echo "$p-$q"; } < in', 'for w in one; do echo "$w"; done < in']
+  end
+
+  it 'feeds an input redirect into a compound command the same as dash' do
+    Dir.mktmpdir do |dir|
+      File.write(File.join(dir, 'in'), "x\ny\n")
+      input_redirect_snippets.each do |snippet|
+        source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
+      end
     end
   end
 

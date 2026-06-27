@@ -22,6 +22,15 @@ module Rush
 
     def run_simple(command) = CommandRunner.new(self, command).call
 
+    # Build an IoTable by applying redirects on top of a base (the current base
+    # IoTable by default); shared by simple commands and redirected compounds.
+    def apply_redirects(redirects, base = @io)
+      redirects.reduce(base) { |io, redirect| redirect_into(redirect, io) }
+    end
+
+    # Run a compound command with its redirects bound for the whole body.
+    def run_redirected(command, redirects) = with_io(apply_redirects(redirects)) { run(command) }
+
     # Run the EXIT trap (if any) as the shell terminates, returning the status
     # the shell exits with: the given code, unless the trap itself runs `exit`.
     # $? inside the trap is that same code (POSIX 2.14), so it is published first.
@@ -91,6 +100,10 @@ module Rush
     end
 
     def abort_on?(status) = @state.option?(:errexit) && !@tested && !status.success?
+
+    def redirect_into(redirect, io)
+      redirections.fetch(redirect.kind).apply(redirect, expander.expand_value(redirect.target), io, system)
+    end
 
     def fire_exit(action, code)
       fire(action)
