@@ -35,4 +35,27 @@ RSpec.describe Rush::Builtins::Dot do
     system.provide_file('/x.sh', 'exit 4')
     expect { run('/x.sh') }.to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(4) }
   end
+
+  it 'reads command by command, so an alias defined in the file affects a later line' do
+    system.provide_file('/a.sh', "alias g=echo\ng hi\n")
+    expect(run('/a.sh')).to be_success
+    expect(system.stdout.string).to eq("hi\n")
+  end
+
+  it 'runs the commands before a later syntax error in the file' do
+    system.provide_file('/m.sh', "echo a\nbad )\n")
+    run('/m.sh')
+    expect(system.stdout.string).to eq("a\n")
+  end
+
+  it 'bounds return to the dot script: it stops the file and becomes the . status' do
+    system.provide_file('/r.sh', "echo in\nreturn 4\necho no\n")
+    expect(run('/r.sh').exitstatus).to eq(4)
+    expect(system.stdout.string).to eq("in\n")
+  end
+
+  it 'propagates break to the caller (a loop outside the dot script)' do
+    system.provide_file('/b.sh', "break\n")
+    expect { run('/b.sh') }.to raise_error(Rush::LoopControl)
+  end
 end

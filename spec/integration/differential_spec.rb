@@ -382,15 +382,28 @@ RSpec.describe 'rush vs dash (differential)' do
     'type alias',
     # re-lexed input (eval, command substitution, a trap action) expands a
     # pre-existing alias, since the alias table is consulted wherever shell input
-    # is tokenized. (An alias *defined inside* an eval string or sourced file does
-    # not affect later lines of that same construct: rush parses each as one unit
-    # where dash reads them incrementally — tracked as a future incremental-eval
-    # slice. Command substitution parses as one unit in dash too, so it agrees.)
+    # is tokenized.
     "alias g=echo\neval 'g hi'",
     "alias g=echo\neval g hi",
     "alias g=echo\necho \"$(g hi)\"",
     "alias g=echo\nx=$(g hi); echo $x",
-    "alias g=echo\ntrap 'g bye' EXIT\necho body"
+    "alias g=echo\ntrap 'g bye' EXIT\necho body",
+    # eval reads command by command (SourceRunner), so an alias or function it
+    # defines shapes its own later lines, and a syntax error only stops what
+    # follows. The result starts at success (empty/comment-only input is 0) while
+    # $? stays live for the body; break/continue/return/exit all propagate out.
+    "eval 'alias e=echo\ne hi'",
+    "eval 'g() {\necho hi\n}\ng'",
+    "eval 'echo a\nbad )'",
+    "eval 'true\nfalse'; echo rc=$?",
+    "false; eval ''; echo rc=$?",
+    "false; eval '# c'; echo rc=$?",
+    "eval 'false\n\n# c'; echo rc=$?",
+    "false; eval 'echo $?'",
+    "for i in 1 2 3; do eval 'echo $i\nbreak'; echo after; done; echo done",
+    "for i in 1 2 3; do eval 'continue'; echo body $i; done; echo done",
+    "f() { eval 'echo in\nreturn 5'; echo no; }; f; echo rc=$?",
+    "eval 'echo a\nexit 7\necho b'; echo no"
   ].freeze
 
   corpus.each do |snippet|
@@ -437,6 +450,31 @@ RSpec.describe 'rush vs dash (differential)' do
       file.flush
       source = "alias g=echo\n. #{file.path}"
       expect(rush(source)).to eq(dash(source))
+    end
+  end
+
+  # A sourced file is read command by command too, so an alias it defines affects
+  # its own later lines, and `return` is bounded to the script (it becomes the
+  # `.` status, the caller continuing). A syntax error mid-file is verified for
+  # stdout in the unit spec, not here: dot reports it with exit 1, but in dash a
+  # special-builtin error aborts with 2 — a separate feature (its own slice).
+  dot_cases = {
+    'alias defined in file affects a later line' => ["alias g=echo\ng hi\n", '. %s'],
+    'return is bounded to the dot script' => ["echo in\nreturn 4\necho no\n",
+                                              'f() { . %s; echo after=$?; }; f; echo end=$?'],
+    'return at top level continues the caller' => ["echo in\nreturn 3\necho no\n", '. %s; echo end=$?'],
+    'break propagates to an enclosing loop' => ["echo $i\nbreak\n",
+                                                'for i in 1 2 3; do . %s; echo loop; done; echo done']
+  }
+
+  dot_cases.each do |label, (body, template)|
+    it "sources incrementally like dash: #{label}" do
+      Tempfile.create(['rush_dot', '.sh']) do |file|
+        file.write(body)
+        file.flush
+        source = format(template, file.path)
+        expect(rush(source)).to eq(dash(source))
+      end
     end
   end
 

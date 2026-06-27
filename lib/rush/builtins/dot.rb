@@ -3,9 +3,12 @@
 module Rush
   module Builtins
     # `. filename` — read the file and run it in the current shell, so its
-    # functions and variables persist. Redirections apply to the file's commands
-    # (executor.with_io) and exit/break/continue/return propagate to the caller.
-    # PATH search for an unqualified name arrives with a later slice.
+    # functions and variables persist. The file is read command by command
+    # (SourceRunner), so an alias or function it defines shapes its own later
+    # lines. Redirections apply to the file's commands (executor.with_io);
+    # exit/break/continue propagate to the caller, but `return` is bounded to the
+    # dot script — it stops the file and becomes the `.` command's status (POSIX
+    # 2.14), unlike eval. PATH search for an unqualified name arrives later.
     class Dot < Base
       def call
         return usage if operands.empty?
@@ -19,12 +22,16 @@ module Rush
 
       def source(path)
         text = executor.system.read_file(path)
-        executor.with_io(@io) { executor.run(parse(text)) }
+        executor.with_io(@io) { run_text(text) }
       rescue ParseError => e
         report(e.message)
       end
 
-      def parse(text) = Parser.new(Lexer.new(text, aliases: executor.state.aliases)).parse
+      def run_text(text)
+        SourceRunner.new(executor, text).run
+      rescue ReturnSignal => e
+        Status.new(e.code)
+      end
 
       def usage
         stderr.puts('rush: .: filename argument required')

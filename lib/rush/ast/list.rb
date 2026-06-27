@@ -23,6 +23,10 @@ module Rush
         entries.reduce(executor.state.last_status) { |_, entry| run_entry(executor, entry) }
       end
 
+      # A blank or comment-only program runs no command; SourceRunner skips it
+      # when tracking eval/dot's result status.
+      def empty? = entries.empty?
+
       private
 
       # An async (&) command is exempt from errexit, so it runs in a tested context.
