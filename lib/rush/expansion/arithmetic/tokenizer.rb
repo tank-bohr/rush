@@ -9,7 +9,11 @@ module Rush
       # :op), skipping blanks. Operators are listed longest-first so multi-byte
       # ones win over their prefixes; any other leftover character is an error.
       class Tokenizer
-        OPERATORS = %w[<< >> <= >= == != && || + - * / % < > & ^ | ~ ! ( ) ? :].freeze
+        OPERATORS = [
+          '<<=', '>>=',
+          '<<', '>>', '<=', '>=', '==', '!=', '&&', '||', '+=', '-=', '*=', '/=', '%=', '&=', '^=', '|=',
+          '+', '-', '*', '/', '%', '<', '>', '&', '^', '|', '~', '!', '(', ')', '?', ':', '='
+        ].freeze
         OPERATOR = Regexp.union(OPERATORS)
         NUMBER = /0[xX][0-9a-fA-F]+|\d+/
         NAME = /[A-Za-z_]\w*/

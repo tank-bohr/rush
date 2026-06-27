@@ -21,6 +21,11 @@ module Rush
       Cond = Data.define(:test, :truthy, :falsy) do
         def result(ctx) = test.result(ctx).zero? ? falsy.result(ctx) : truthy.result(ctx)
       end
+      # The right-hand side is evaluated before the target is read, so a nested
+      # assignment in the rhs (e.g. `a += a += 1`) takes effect first.
+      Assign = Data.define(:name, :op, :rhs) do
+        def result(ctx) = ctx.assign(name, op, rhs.result(ctx))
+      end
     end
   end
 end

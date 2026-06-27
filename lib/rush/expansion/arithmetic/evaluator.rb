@@ -20,6 +20,14 @@ module Rush
 
           Number.parse(value)
         end
+
+        # `name op= value`: for a compound operator, combine with the current
+        # value first (`+=` -> `+`); store the wrapped result and return it.
+        def assign(name, op, value)
+          result = op == '=' ? value : Number.binary(op[0..-2], resolve(name), value)
+          @executor.state.environment.assign(name, result.to_s)
+          result
+        end
       end
     end
   end

@@ -60,6 +60,27 @@ RSpec.describe Rush::Expansion::Arithmetic::Evaluator do
     end
   end
 
+  describe 'assignment' do
+    it 'assigns, returns and persists the value' do
+      expect([value('x = 7'), env.get('x')]).to eq([7, '7'])
+    end
+
+    it 'evaluates every compound assignment operator in sequence' do
+      env.assign('n', '12')
+      results = %w[n+=3 n-=1 n*=2 n/=4 n%=5 n<<=2 n>>=1 n&=6 n|=1 n^=3].map { |s| value(s) }
+      expect(results).to eq([15, 14, 28, 7, 2, 8, 4, 4, 5, 6])
+    end
+
+    it 'is right-associative and evaluates the rhs before reading the target' do
+      env.assign('a', '3')
+      expect([value('p = q = 4'), value('a += a += 1')]).to eq([4, 8])
+    end
+
+    it 'raises when the assignment target is not a name' do
+      expect { value('5 = 3') }.to raise_error(Rush::ExpansionError)
+    end
+  end
+
   describe 'errors' do
     it 'raises on division by zero' do
       expect { value('1/0') }.to raise_error(Rush::ExpansionError, /division/)

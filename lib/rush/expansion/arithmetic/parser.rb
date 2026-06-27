@@ -14,6 +14,7 @@ module Rush
           '<<' => 8, '>>' => 8, '+' => 9, '-' => 9, '*' => 10, '/' => 10, '%' => 10
         }.freeze
         UNARY = %w[+ - ! ~].freeze
+        ASSIGN = ['=', '+=', '-=', '*=', '/=', '%=', '<<=', '>>=', '&=', '^=', '|='].freeze
 
         def initialize(tokens)
           @tokens = tokens
@@ -21,18 +22,28 @@ module Rush
         end
 
         def parse
-          node = conditional
+          node = assignment
           oops unless @pos == @tokens.size
           node
         end
 
         private
 
+        # Assignment binds loosest and is right-associative; its target must be a
+        # bare name (an lvalue), so e.g. `5 = 3` is a syntax error.
+        def assignment
+          left = conditional
+          return left unless ASSIGN.include?(peek)
+
+          oops unless left.is_a?(Var)
+          Assign.new(left.name, advance, assignment)
+        end
+
         def conditional
           test = binary(1)
           return test unless accept?('?')
 
-          branch = conditional
+          branch = assignment
           expect(':')
           Cond.new(test, branch, conditional)
         end
@@ -71,7 +82,7 @@ module Rush
         end
 
         def grouped
-          node = conditional
+          node = assignment
           expect(')')
           node
         end

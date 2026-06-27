@@ -177,7 +177,17 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo a; echo $((1/0)); echo b',
     'x=abc; echo $((x+1))',
     'echo $((1+))',
-    'echo $((2**10))'
+    'echo $((2**10))',
+    'echo $((x=5)); echo "$x"',
+    'x=10; echo $((x+=2)) $((x-=3)) $((x*=2)) $((x/=4)) $((x%=4)); echo $x',
+    'x=1; echo $((x<<=4)) $((x>>=1)) $((x|=1)) $((x&=2)) $((x^=7))',
+    'echo $((a=b=3)); echo "$a $b"',
+    'echo $((y = 1 ? 2 : 3)); echo $y',
+    'x=5; echo $(( x>0 ? (x=100) : 0 )); echo $x',
+    'a=3; echo $((a += a += 1)); echo $a',
+    'i=0; while [ $i -lt 3 ]; do i=$((i+1)); done; echo $i',
+    'echo $((5=3))',
+    'echo $((x=))'
   ].freeze
 
   corpus.each do |snippet|
