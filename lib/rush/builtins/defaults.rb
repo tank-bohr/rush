@@ -8,7 +8,8 @@ module Rush
       'echo' => Echo, 'exit' => Exit, 'pwd' => Pwd, 'cd' => Cd,
       'break' => Break, 'continue' => Continue, 'return' => Return,
       'test' => Test, '[' => Test, 'set' => Set, 'shift' => Shift,
-      'export' => Export, 'unset' => Unset, 'eval' => Eval, 'read' => Read
+      'export' => Export, 'unset' => Unset, 'eval' => Eval, 'read' => Read,
+      'printf' => Printf
     }.freeze
 
     def self.default_registry

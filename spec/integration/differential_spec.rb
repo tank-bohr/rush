@@ -71,7 +71,17 @@ RSpec.describe 'rush vs dash (differential)' do
     '(false); echo $?',
     'x=1; (x=2; echo "$x"); echo "$x"',
     'x=1; (unset x); echo "[$x]"',
-    '(if true; then echo yes; fi)'
+    '(if true; then echo yes; fi)',
+    'printf "%s\n" hello',
+    'printf "%s=%s\n" a 1 b 2',
+    'printf "%s\n" a b c',
+    'printf "[%5s][%-5s]\n" hi hi',
+    'printf "%03d %d %x %X %o\n" 7 42 255 255 8',
+    'printf "%c%c\n" abc xyz',
+    'printf "a\tb\nc\n"',
+    'printf "%d\n" abc; echo "rc=$?"',
+    'printf "no newline"',
+    'printf "%d-%s\n" 5'
   ].freeze
 
   corpus.each do |snippet|

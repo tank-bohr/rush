@@ -59,6 +59,8 @@ require_relative 'rush/builtins/export'
 require_relative 'rush/builtins/unset'
 require_relative 'rush/builtins/eval'
 require_relative 'rush/builtins/read'
+require_relative 'rush/builtins/printf_formatter'
+require_relative 'rush/builtins/printf'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'

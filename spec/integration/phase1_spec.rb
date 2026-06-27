@@ -131,4 +131,10 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run_in('read a b; echo "[$a][$b]"', "only\n").first).to eq("[only][]\n")
     expect(run_in('while read line; do echo "got $line"; done', "p\nq\n").first).to eq("got p\ngot q\n")
   end
+
+  it 'formats with printf, processing escapes and cycling the format' do
+    expect(run('printf "%s=%s\n" a 1 b 2').first).to eq("a=1\nb=2\n")
+    expect(run('printf "[%5s]\n" hi').first).to eq("[   hi]\n")
+    expect(run('printf "%d+%d\t%x\n" 2 3 255').first).to eq("2+3\tff\n")
+  end
 end
