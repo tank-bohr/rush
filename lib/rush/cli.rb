@@ -2,8 +2,9 @@
 
 module Rush
   # Entry point: parse argv, build the executor, run the requested source and
-  # return the process exit code. Phase 0 supports `-c command` and stdin; a
-  # script-file argument, option flags and the REPL arrive in later phases.
+  # return the process exit code. Supports `-c command`, a batch program on
+  # stdin, and an interactive REPL when invoked with no arguments on a terminal.
+  # A script-file argument and option flags arrive in later phases.
   class CLI
     def self.run(argv, system: SystemCalls.new) = new(argv, system).run
 
@@ -12,15 +13,19 @@ module Rush
       @system = system
     end
 
-    def run
+    def run = repl? ? Repl.new(@system).run : run_source
+
+    private
+
+    def repl? = @argv.empty? && @system.tty?
+
+    def run_source
       execute(source)
     rescue ExitSignal => e
       e.code
     rescue ParseError, ExpansionError, ReadonlyError => e
       report_error(e)
     end
-
-    private
 
     def source
       return @argv[1].to_s if @argv.first == '-c'

@@ -79,5 +79,11 @@ module Rush
     def stdout = $stdout
 
     def stderr = $stderr
+
+    # Interactive-REPL support: read one line of input (nil at EOF) and report
+    # whether standard input is a terminal.
+    def read_line = stdin.gets
+
+    def tty? = stdin.tty?
   end
 end

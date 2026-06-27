@@ -137,6 +137,11 @@ RSpec.describe Rush::Lexer do
       expect(tokens("cat <<EOF\nonly\n")[2].last.body.literal_text).to eq("only\n")
     end
 
+    it 'signals incomplete input for an unterminated here-document when interactive' do
+      lexer = described_class.new("cat <<EOF\nbody\n", interactive: true)
+      expect { loop { break if lexer.next_token == [false, false] } }.to raise_error(Rush::IncompleteInput)
+    end
+
     it 'parses an unquoted body for later expansion' do
       holder = tokens("cat <<EOF\nhi $name\nEOF\n")[2].last
       expect(holder.body.segments.map(&:kind)).to eq(%i[literal param literal])

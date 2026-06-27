@@ -19,6 +19,12 @@ RSpec.describe Rush::CLI do
     expect(system.stdout.string).to eq("fromstdin\n")
   end
 
+  it 'starts an interactive REPL with no arguments on a terminal' do
+    system = FakeSystemCalls.new(stdin: "echo hi\n", tty: true)
+    expect(run([], system)).to eq(0)
+    expect(system.stdout.string).to eq("hi\n")
+  end
+
   it 'reports parse errors on stderr and returns 2' do
     system = FakeSystemCalls.new
     allow(Rush::Parser).to receive(:new).and_raise(Rush::ParseError, 'boom')

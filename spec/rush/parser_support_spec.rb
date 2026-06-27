@@ -74,4 +74,8 @@ RSpec.describe Rush::ParserSupport do
   it 'raises a ParseError naming an operator value' do
     expect { parser.on_error(0, ';', []) }.to raise_error(Rush::ParseError, /;/)
   end
+
+  it 'raises IncompleteInput when the input ends mid-construct' do
+    expect { parser.on_error(0, false, []) }.to raise_error(Rush::IncompleteInput)
+  end
 end

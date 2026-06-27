@@ -19,11 +19,12 @@ module Rush
     IO_NUMBER = /\d+(?=[<>])/
     HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
-    def initialize(source)
+    def initialize(source, interactive: false)
       @scanner = StringScanner.new(source)
       @state = LexState.new
       @awaiting = nil
       @heredocs = []
+      @interactive = interactive
     end
 
     def location = @scanner.charpos
@@ -100,6 +101,7 @@ module Rush
 
     def heredoc_line(holder)
       line = @scanner.scan(/[^\n]*\n?/)
+      raise IncompleteInput, 'unterminated here-document' if line.to_s.empty? && @interactive
       return nil if line.to_s.empty? || delimiter?(holder, line)
 
       strip_tabs(holder, line)

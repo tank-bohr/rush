@@ -47,7 +47,7 @@ module Rush
       def single_quote
         @scanner.getch
         content = @scanner.scan(/[^']*/)
-        raise ParseError, 'unterminated single quote' unless @scanner.scan("'")
+        raise IncompleteInput, 'unterminated single quote' unless @scanner.scan("'")
 
         push(content, quoted: true)
       end
@@ -56,7 +56,7 @@ module Rush
         @scanner.getch
         push('', quoted: true) if @scanner.peek(1) == '"' # "" yields one empty field
         double_step until end_double?
-        raise ParseError, 'unterminated double quote' if @scanner.eos?
+        raise IncompleteInput, 'unterminated double quote' if @scanner.eos?
 
         @scanner.getch
       end
@@ -106,7 +106,7 @@ module Rush
       def braced_ref
         @scanner.getch
         body = @scanner.scan(/[^}]*/)
-        raise ParseError, 'unterminated ${' unless @scanner.scan('}')
+        raise IncompleteInput, 'unterminated ${' unless @scanner.scan('}')
 
         AST::ParamRef.parse(body)
       end

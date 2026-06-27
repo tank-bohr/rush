@@ -80,4 +80,9 @@ RSpec.describe Rush::SystemCalls do
     expect(system.stdout).to be($stdout)
     expect(system.stderr).to be($stderr)
   end
+
+  it 'reads a line of input and reports terminal status via stdin' do
+    allow($stdin).to receive_messages(gets: "line\n", tty?: true)
+    expect([system.read_line, system.tty?]).to eq(["line\n", true])
+  end
 end

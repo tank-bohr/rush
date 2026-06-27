@@ -7,6 +7,11 @@ module Rush
   # Raised by the parser on a syntax error (carries a human-readable location).
   class ParseError < Error; end
 
+  # Parsing hit end of input mid-construct (an unfinished quote, compound
+  # command or here-document). A ParseError subclass, so batch callers still
+  # treat it as a syntax error; the REPL catches it to read another line.
+  class IncompleteInput < ParseError; end
+
   # Raised during word expansion (e.g. ${x:?msg}, bad substitution).
   class ExpansionError < Error; end
 

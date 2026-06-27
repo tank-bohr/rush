@@ -17,7 +17,7 @@ module Rush
 
       def backticks
         body = @scanner.scan(/[^`]*/)
-        raise ParseError, 'unterminated `' unless @scanner.scan('`')
+        raise IncompleteInput, 'unterminated `' unless @scanner.scan('`')
 
         body
       end
@@ -25,7 +25,7 @@ module Rush
       private
 
       def paren_char
-        raise ParseError, 'unterminated $(' if @scanner.eos?
+        raise IncompleteInput, 'unterminated $(' if @scanner.eos?
 
         char = @scanner.getch
         adjust(char)

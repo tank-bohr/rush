@@ -14,6 +14,8 @@ module Rush
     def next_token = @lexer.next_token
 
     def on_error(token_id, value, _stack)
+      raise IncompleteInput, 'unexpected end of input' if value == false
+
       near = value.respond_to?(:literal_text) ? value.literal_text : value
       raise ParseError, "syntax error at #{@lexer.location}: unexpected #{token_to_str(token_id)} `#{near}`"
     end
