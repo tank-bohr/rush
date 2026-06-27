@@ -82,6 +82,7 @@ require_relative 'rush/builtins/local'
 require_relative 'rush/builtins/type_'
 require_relative 'rush/builtins/command'
 require_relative 'rush/builtins/trap'
+require_relative 'rush/builtins/kill'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'

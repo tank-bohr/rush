@@ -245,7 +245,23 @@ RSpec.describe 'rush vs dash (differential)' do
     'trap',
     "x=5; trap 'echo $x' EXIT; x=9",
     "trap 'echo done' EXIT; for i in 1 2 3; do echo $i; done",
-    "f() { trap 'echo ft' EXIT; }; f; echo after"
+    "f() { trap 'echo ft' EXIT; }; f; echo after",
+    # kill: -0 probes existence; a self-directed signal terminates rush exactly
+    # as it does dash (Open3 reports a signalled exit as a nil status for both).
+    'kill -0 $$; echo rc=$?',
+    'kill -0 999999 2>/dev/null; echo rc=$?',
+    'kill -s 0 $$; echo rc=$?',
+    'kill -l 15',
+    'kill -l 9',
+    'kill -l 143',
+    'kill -l 130',
+    'kill -l 99 2>/dev/null; echo rc=$?',
+    'kill -l 0 2>/dev/null; echo rc=$?',
+    'kill -BADD $$ 2>/dev/null; echo rc=$?',
+    'kill 2>/dev/null; echo rc=$?',
+    'kill -TERM $$; echo after',
+    'kill -15 $$; echo after',
+    'type kill'
   ].freeze
 
   corpus.each do |snippet|

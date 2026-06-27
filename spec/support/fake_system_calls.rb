@@ -5,13 +5,13 @@
 # process-spawning paths are exercised separately with doubles. Nothing here
 # touches the real OS.
 class FakeSystemCalls
-  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd
+  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills
 
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
                     executable: false, symlink: false }.freeze
 
   # rubocop:disable Metrics/ParameterLists -- a test double accrues config knobs
-  def initialize(stdin: '', pwd: '/home/test', tty: false, homes: {}, globs: {})
+  def initialize(stdin: '', pwd: '/home/test', tty: false, homes: {}, globs: {}, dead_pids: [])
     @stdin = StringIO.new(stdin)
     @stdout = StringIO.new
     @stderr = StringIO.new
@@ -19,6 +19,8 @@ class FakeSystemCalls
     @tty = tty
     @homes = homes
     @globs = globs
+    @dead_pids = dead_pids
+    @kills = []
     @files = {}
     @chdirs = []
     @chdir_error = nil
@@ -34,6 +36,14 @@ class FakeSystemCalls
   def read_line = @stdin.gets
 
   def tty? = @tty
+
+  # Records the signal sent; a pid listed in dead_pids raises like a real kill
+  # to a missing process, so the builtin's failure path is exercised.
+  def kill(signal, pid)
+    raise Errno::ESRCH if @dead_pids.include?(pid)
+
+    @kills << [signal, pid]
+  end
 
   def home_dir(name) = @homes[name]
 

@@ -20,6 +20,12 @@ module Rush
 
     def pid = Process.pid
 
+    # Send a signal to a process (the `kill` builtin); signal 0 only probes that
+    # the target exists. Real signal delivery cannot run under the test harness.
+    # :nocov:
+    def kill(signal, pid) = Process.kill(signal, pid)
+    # :nocov:
+
     def pipe = IO.pipe
 
     # fork/exit! replace or split the process and so cannot run in-process under
