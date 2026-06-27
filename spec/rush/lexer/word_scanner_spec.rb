@@ -83,4 +83,19 @@ RSpec.describe Rush::Lexer::WordScanner do
   it 'raises on an unterminated braced parameter' do
     expect { scan('${x') }.to raise_error(Rush::ParseError, /unterminated/)
   end
+
+  it 'produces a :command segment for $(...)' do
+    segment = scan('$(echo hi)').first.segments.first
+    expect([segment.kind, segment.value]).to eq([:command, 'echo hi'])
+  end
+
+  it 'produces a :command segment for a backtick substitution' do
+    segment = scan('`date`').first.segments.first
+    expect([segment.kind, segment.value]).to eq([:command, 'date'])
+  end
+
+  it 'keeps a command substitution inside double quotes, marked quoted' do
+    segment = scan('"$(echo hi)"').first.segments.first
+    expect([segment.kind, segment.quoted]).to eq([:command, true])
+  end
 end

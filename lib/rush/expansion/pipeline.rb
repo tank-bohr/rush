@@ -22,9 +22,11 @@ module Rush
       def expand_word(word) = word.segments.map { |segment| expand_segment(segment) }.join
 
       def expand_segment(segment)
-        return segment.value if segment.kind == :literal
-
-        ParameterExpander.new(@executor, segment.value).expand
+        case segment.kind
+        when :literal then segment.value
+        when :param then ParameterExpander.new(@executor, segment.value).expand
+        else CommandSubstitution.new(@executor, segment.value).call
+        end
       end
     end
   end

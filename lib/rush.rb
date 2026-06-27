@@ -25,6 +25,7 @@ require_relative 'rush/redirection/registry'
 require_relative 'rush/expansion/resolver'
 require_relative 'rush/expansion/parameter_forms'
 require_relative 'rush/expansion/parameter_expander'
+require_relative 'rush/expansion/command_substitution'
 require_relative 'rush/expansion/pipeline'
 
 require_relative 'rush/builtins/base'

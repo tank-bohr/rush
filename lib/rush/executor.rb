@@ -18,6 +18,16 @@ module Rush
 
     def run_simple(command) = CommandRunner.new(self, command).call
 
+    # Run a block with a different base IoTable (command substitution / future
+    # `exec`), restoring the previous one afterwards.
+    def with_io(io)
+      previous = @io
+      @io = io
+      yield
+    ensure
+      @io = previous
+    end
+
     private
 
     def setup

@@ -8,12 +8,15 @@ module Rush
     # substitution and arithmetic arrive in later slices.
     class WordScanner
       TERMINATOR = /[ \t\n;&|<>]/
-      LITERAL_RUN = /[^'"\\$ \t\n;&|<>]+/
-      WHOLE_LITERAL = /[^'"\\$]+/ # operator-word mode: only quotes / $ are special
+      LITERAL_RUN = /[^'"\\$` \t\n;&|<>]+/
+      WHOLE_LITERAL = /[^'"\\$`]+/ # operator-word mode: only quotes / $ / ` are special
       DOUBLE_LITERAL = /[^"$\\]+/
       DOUBLE_SPECIAL = ['"', '\\', '$', '`'].freeze
       SIMPLE_PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
-      DISPATCH = { "'" => :single_quote, '"' => :double_quote, '\\' => :escape, '$' => :dollar }.freeze
+      DISPATCH = {
+        "'" => :single_quote, '"' => :double_quote, '\\' => :escape,
+        '$' => :dollar, '`' => :backtick
+      }.freeze
 
       # whole: scan the entire input as one word's content (no blank/operator
       # terminators) — used for already-delimited ${} operator words.
@@ -67,21 +70,31 @@ module Rush
         push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
       end
 
-      def double_dollar
-        @scanner.getch
-        ref = read_param_ref
-        ref ? push_param(ref, quoted: true) : push('$', quoted: true)
-      end
+      def double_dollar = read_dollar(quoted: true)
 
       def double_escape
         @scanner.getch
         DOUBLE_SPECIAL.include?(@scanner.peek(1)) ? push(@scanner.getch, quoted: true) : push('\\', quoted: true)
       end
 
-      def dollar
+      def dollar = read_dollar(quoted: false)
+
+      def read_dollar(quoted:)
         @scanner.getch
+        return command_sub(quoted) if @scanner.peek(1) == '('
+
         ref = read_param_ref
-        ref ? push_param(ref, quoted: false) : (@literal << '$')
+        ref ? push_param(ref, quoted: quoted) : push_literal('$', quoted)
+      end
+
+      def command_sub(quoted)
+        @scanner.getch # (
+        push_command(SubstitutionReader.new(@scanner).parens, quoted: quoted)
+      end
+
+      def backtick
+        @scanner.getch # `
+        push_command(SubstitutionReader.new(@scanner).backticks, quoted: false)
       end
 
       def read_param_ref
@@ -113,6 +126,15 @@ module Rush
       def push_param(ref, quoted:)
         flush
         @segments << AST::WordSegment.new(kind: :param, value: ref, quoted: quoted)
+      end
+
+      def push_command(source, quoted:)
+        flush
+        @segments << AST::WordSegment.new(kind: :command, value: source, quoted: quoted)
+      end
+
+      def push_literal(text, quoted)
+        quoted ? push(text, quoted: true) : (@literal << text)
       end
 
       def flush

@@ -3,6 +3,7 @@
 require 'strscan'
 require_relative 'lexer/operator_table'
 require_relative 'lexer/lex_state'
+require_relative 'lexer/substitution_reader'
 require_relative 'lexer/word_scanner'
 require_relative 'lexer/token_classifier'
 

@@ -21,4 +21,8 @@ RSpec.describe 'rush real subprocess' do
   it 'returns the exit status of the last pipeline stage' do
     expect([run('true | false')[1], run('false | true')[1]]).to eq([1, 0])
   end
+
+  it 'substitutes command output and strips trailing newlines' do
+    expect(run('echo "[$(echo hi)]"')).to eq(["[hi]\n", 0])
+  end
 end

@@ -29,4 +29,12 @@ RSpec.describe Rush::Expansion::Pipeline do
     word = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: false)])
     expect(described_class.new(executor).expand([word])).to eq(['v'])
   end
+
+  it 'runs a command substitution for a :command segment' do
+    executor = Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new)
+    sub = instance_double(Rush::Expansion::CommandSubstitution, call: 'OUT')
+    allow(Rush::Expansion::CommandSubstitution).to receive(:new).and_return(sub)
+    word = Rush::AST::Word.new([segment.new(kind: :command, value: 'echo x', quoted: false)])
+    expect(described_class.new(executor).expand([word])).to eq(['OUT'])
+  end
 end
