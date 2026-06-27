@@ -18,10 +18,16 @@ module Rush
     # fork/exit! replace or split the process and so cannot run in-process under
     # the test harness; the child-side logic they drive is extracted into pure
     # methods that ARE tested, and real behaviour is covered by subprocess specs.
+    # exit! flushes the standard streams first: $stdout is unbuffered only when a
+    # tty, so a forked child running a builtin would otherwise lose its output.
     # :nocov:
     def fork(&) = Process.fork(&)
 
-    def exit!(code) = Process.exit!(code)
+    def exit!(code)
+      stdout.flush
+      stderr.flush
+      Process.exit!(code)
+    end
     # :nocov:
 
     def chdir(path) = Dir.chdir(path)

@@ -9,7 +9,7 @@ module Rush
     class LexState
       REDIRECT_OPS = ['<', '>', :DGREAT, :LESSGREAT, :CLOBBER].freeze
       INTRODUCERS = [
-        :NEWLINE, ';', '&', '|', ')', :AND_IF, :OR_IF,
+        :NEWLINE, ';', '&', '|', '(', ')', :AND_IF, :OR_IF,
         :If, :Then, :Else, :Elif, :Lbrace, :Bang, :While, :Until, :Do, :DSEMI
       ].freeze
       NEUTRAL = %i[ASSIGNMENT_WORD IO_NUMBER].freeze

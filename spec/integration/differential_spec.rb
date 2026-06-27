@@ -64,7 +64,13 @@ RSpec.describe 'rush vs dash (differential)' do
     'eval "echo hi; x=1"; echo $x',
     'x=5; eval "echo \$x"',
     'eval "for i in 1 2 3; do echo \$i; done"',
-    'eval exit 3; echo after'
+    'eval exit 3; echo after',
+    '(echo a; echo b)',
+    '(exit 3); echo $?',
+    '(false); echo $?',
+    'x=1; (x=2; echo "$x"); echo "$x"',
+    'x=1; (unset x); echo "[$x]"',
+    '(if true; then echo yes; fi)'
   ].freeze
 
   corpus.each do |snippet|

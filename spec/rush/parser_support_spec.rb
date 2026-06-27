@@ -32,6 +32,10 @@ RSpec.describe Rush::ParserSupport do
     expect(first_command('{ echo hi; }')).to be_a(Rush::AST::BraceGroup)
   end
 
+  it 'parses a subshell' do
+    expect(first_command('(echo hi)')).to be_a(Rush::AST::Subshell)
+  end
+
   it 'parses a negated pipeline' do
     expect(parse('! false').entries.first.and_or.negate).to be(true)
   end

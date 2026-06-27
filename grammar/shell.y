@@ -1,9 +1,9 @@
 # rush — POSIX sh grammar (Racc), transcribed from POSIX.1-2017 §2.10.2.
 #
 # Phase 1: lists / and_or / pipelines (with ! negation) / simple commands with
-# assignments and file redirections / multi-stage pipes, plus the `if` compound
-# command and brace groups. for/while/until/case, subshells and functions arrive
-# in later slices. Action bodies are one-liners calling Rush::ParserSupport
+# assignments and file redirections / multi-stage pipes, the compound commands
+# (brace groups, subshells, if, while/until, for, case) and function
+# definitions. Action bodies are one-liners calling Rush::ParserSupport
 # factories; the grammar currently compiles with zero conflicts.
 
 class Rush::Parser
@@ -71,6 +71,7 @@ rule
 
   compound_command
     : brace_group                                 { result = val[0] }
+    | subshell                                    { result = val[0] }
     | if_clause                                   { result = val[0] }
     | while_clause                                { result = val[0] }
     | until_clause                                { result = val[0] }
@@ -80,6 +81,10 @@ rule
 
   brace_group
     : Lbrace compound_list Rbrace                 { result = make_brace_group(val[1]) }
+    ;
+
+  subshell
+    : '(' compound_list ')'                       { result = make_subshell(val[1]) }
     ;
 
   while_clause

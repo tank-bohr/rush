@@ -18,6 +18,10 @@ RSpec.describe 'rush real subprocess' do
     expect(run('echo hi | tr a-z A-Z | rev')).to eq(["IH\n", 0])
   end
 
+  it 'flushes a builtin in the last pipeline stage (forked child)' do
+    expect(run('true | echo piped')).to eq(["piped\n", 0])
+  end
+
   it 'returns the exit status of the last pipeline stage' do
     expect([run('true | false')[1], run('false | true')[1]]).to eq([1, 0])
   end
@@ -29,5 +33,10 @@ RSpec.describe 'rush real subprocess' do
   it 'runs a for loop with a conditional continue (external test)' do
     expect(run('for i in a b c; do if [ "$i" = b ]; then continue; fi; echo $i; done').first)
       .to eq("a\nc\n")
+  end
+
+  it 'runs a subshell, isolating variable changes and reporting its status' do
+    expect(run('x=1; (x=2; echo $x); echo $x')).to eq(["2\n1\n", 0])
+    expect(run('(exit 7); echo $?')).to eq(["7\n", 0])
   end
 end
