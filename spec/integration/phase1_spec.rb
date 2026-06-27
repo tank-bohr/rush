@@ -7,6 +7,12 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     [system.stdout.string, code, system]
   end
 
+  def run_in(source, input)
+    system = FakeSystemCalls.new(stdin: input)
+    code = Rush::CLI.run(['-c', source], system: system)
+    [system.stdout.string, code]
+  end
+
   it 'runs the null and boolean builtins, propagating the last status' do
     output, code = run(': ; true ; false')
     expect(output).to eq('')
@@ -118,5 +124,11 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('eval "echo hi; X=1"; echo $X').first).to eq("hi\n1\n")
     expect(run('for i in a b c; do eval break; done; echo done').first).to eq("done\n")
     expect(run('eval exit 5')[1]).to eq(5)
+  end
+
+  it 'reads stdin into variables, looping until end of file' do
+    expect(run_in('read a b c; echo "$a-$b-$c"', "x y z w\n").first).to eq("x-y-z w\n")
+    expect(run_in('read a b; echo "[$a][$b]"', "only\n").first).to eq("[only][]\n")
+    expect(run_in('while read line; do echo "got $line"; done', "p\nq\n").first).to eq("got p\ngot q\n")
   end
 end

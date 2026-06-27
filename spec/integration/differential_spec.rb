@@ -9,13 +9,14 @@ require 'open3'
 RSpec.describe 'rush vs dash (differential)' do
   def project_root = File.expand_path('../..', __dir__)
 
-  def rush(source)
-    out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source, chdir: project_root)
+  def rush(source, input = nil)
+    out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,
+                                       chdir: project_root, stdin_data: input.to_s)
     [out, status.exitstatus]
   end
 
-  def dash(source)
-    out, _err, status = Open3.capture3('dash', '-c', source)
+  def dash(source, input = nil)
+    out, _err, status = Open3.capture3('dash', '-c', source, stdin_data: input.to_s)
     [out, status.exitstatus]
   end
 
@@ -76,6 +77,24 @@ RSpec.describe 'rush vs dash (differential)' do
   corpus.each do |snippet|
     it "matches dash for: #{snippet}" do
       expect(rush(snippet)).to eq(dash(snippet))
+    end
+  end
+
+  # NB: snippets avoid backslashes in echo output — dash's echo expands XSI
+  # escapes (\t, \n, ...) while rush's echo defers that to Phase 2, so a
+  # backslash in the echoed value would diverge on echo, not on read. The -r vs
+  # non-r escape behaviour of read itself is covered by the unit spec.
+  read_corpus = [
+    ['read a b c; echo "$a-$b-$c"', "x y z w\n"],
+    ['read a b; echo "[$a][$b]"', "only\n"],
+    ['read x; echo "rc=$?"', ''],
+    ['read first rest; echo "$rest"', "one two three\n"],
+    ['while read l; do echo "got $l"; done', "p\nq\n"]
+  ].freeze
+
+  read_corpus.each do |source, input|
+    it "matches dash for: #{source} <- #{input.inspect}" do
+      expect(rush(source, input)).to eq(dash(source, input))
     end
   end
 end
