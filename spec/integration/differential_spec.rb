@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'open3'
+require 'tempfile'
 
 # Differential tests: each snippet must produce the same stdout and exit status
 # under rush as under dash, the POSIX oracle. Skipped when dash is unavailable.
@@ -105,6 +106,15 @@ RSpec.describe 'rush vs dash (differential)' do
   read_corpus.each do |source, input|
     it "matches dash for: #{source} <- #{input.inspect}" do
       expect(rush(source, input)).to eq(dash(source, input))
+    end
+  end
+
+  it 'sources a file the same as dash' do
+    Tempfile.create(['rush_src', '.sh']) do |file|
+      file.write("greet() { echo \"hi $1\"; }\nVALUE=42\n")
+      file.flush
+      source = ". #{file.path}; greet world; echo $VALUE"
+      expect(rush(source)).to eq(dash(source))
     end
   end
 end

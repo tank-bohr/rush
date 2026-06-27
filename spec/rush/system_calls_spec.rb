@@ -38,6 +38,11 @@ RSpec.describe Rush::SystemCalls do
     expect(system.open_file('/f', 'w')).to eq(:io)
   end
 
+  it 'reads a file through File.read' do
+    allow(File).to receive(:read).with('/f').and_return('body')
+    expect(system.read_file('/f')).to eq('body')
+  end
+
   it 'matches glob patterns with fnmatch' do
     expect([system.fnmatch('a*', 'abc'), system.fnmatch('a*', 'xyz')]).to eq([true, false])
   end

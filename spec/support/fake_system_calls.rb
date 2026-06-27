@@ -19,6 +19,7 @@ class FakeSystemCalls
     @chdirs = []
     @chdir_error = nil
     @nodes = {}
+    @contents = {}
   end
 
   # Register an in-memory node for the file-test predicates below.
@@ -45,6 +46,11 @@ class FakeSystemCalls
   def fnmatch(pattern, str) = File.fnmatch(pattern, str, File::FNM_DOTMATCH)
 
   def open_file(path, _mode) = (@files[path] = StringIO.new)
+
+  # Seed a readable file (for the `.` builtin); read_file raises if absent.
+  def provide_file(path, body) = @contents[path] = body
+
+  def read_file(path) = @contents.fetch(path) { raise Errno::ENOENT, path }
 
   # Pipeline plumbing: present so specs can stub them (verify_partial_doubles);
   # the defaults are unused because the orchestration tests override them.

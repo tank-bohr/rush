@@ -40,6 +40,8 @@ module Rush
 
     def open_file(path, mode) = File.open(path, mode)
 
+    def read_file(path) = File.read(path)
+
     # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L).
     def exist?(path) = File.exist?(path)
 
