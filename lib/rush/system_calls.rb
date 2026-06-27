@@ -45,6 +45,11 @@ module Rush
 
     def fnmatch(pattern, str) = File.fnmatch(pattern, str, File::FNM_DOTMATCH)
 
+    # Pathname expansion: sorted matches for a glob pattern (backslash escapes
+    # are honoured; a leading dot is matched only by an explicit dot). Empty
+    # when nothing matches.
+    def glob(pattern) = Dir.glob(pattern)
+
     def open_file(path, mode) = File.open(path, mode)
 
     def read_file(path) = File.read(path)

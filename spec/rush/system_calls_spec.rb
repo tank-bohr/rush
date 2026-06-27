@@ -91,4 +91,9 @@ RSpec.describe Rush::SystemCalls do
     allow(Etc).to receive(:getpwnam).with('ghost').and_raise(ArgumentError)
     expect([system.home_dir('bob'), system.home_dir('ghost')]).to eq(['/home/bob', nil])
   end
+
+  it 'expands a glob pattern through Dir.glob' do
+    allow(Dir).to receive(:glob).with('*.rb').and_return(['a.rb'])
+    expect(system.glob('*.rb')).to eq(['a.rb'])
+  end
 end

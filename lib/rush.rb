@@ -47,6 +47,7 @@ require_relative 'rush/expansion/arithmetic/evaluator'
 require_relative 'rush/expansion/arithmetic_expander'
 require_relative 'rush/expansion/ifs_scanner'
 require_relative 'rush/expansion/field_splitter'
+require_relative 'rush/expansion/glob_expander'
 require_relative 'rush/expansion/read_splitter'
 require_relative 'rush/expansion/pipeline'
 

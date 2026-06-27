@@ -8,8 +8,8 @@ module Rush
     # unchanged; an unknown option is ignored. Options: -e/errexit, -u/nounset,
     # -x/xtrace.
     class Set < Base
-      OPTIONS = { 'e' => :errexit, 'u' => :nounset, 'x' => :xtrace }.freeze
-      LONG = { 'errexit' => :errexit, 'nounset' => :nounset, 'xtrace' => :xtrace }.freeze
+      OPTIONS = { 'e' => :errexit, 'u' => :nounset, 'x' => :xtrace, 'f' => :noglob }.freeze
+      LONG = { 'errexit' => :errexit, 'nounset' => :nounset, 'xtrace' => :xtrace, 'noglob' => :noglob }.freeze
 
       def call
         rest = strip_options(operands)

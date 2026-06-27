@@ -4,17 +4,18 @@ module Rush
   module Expansion
     # Orchestrates the ordered POSIX word expansion. Each segment expands to one
     # or more parts ([text, splittable, break_before]); unquoted results undergo
-    # IFS field splitting. The one multi-field case is "$@"/$@, which yields one
-    # part per positional parameter with a forced field break between them ($*
-    # always joins to a scalar, so it needs no special handling). Pathname
-    # expansion (globbing) arrives in a later phase.
+    # IFS field splitting and then pathname expansion. The one multi-field case is
+    # "$@"/$@, which yields one part per positional parameter with a forced field
+    # break between them ($* always joins to a scalar). Quoted metacharacters are
+    # backslash-escaped so they survive field splitting and glob literally.
     class Pipeline
       def initialize(executor)
         @executor = executor
       end
 
-      # Argv expansion: expand each word to fields, splitting unquoted on IFS.
-      def expand(words) = words.flat_map { |word| FieldSplitter.new(ifs).split(parts(word)) }
+      # Argv expansion: expand each word to fields (splitting unquoted on IFS),
+      # then expand each field's pathname patterns.
+      def expand(words) = words.flat_map { |word| glob(FieldSplitter.new(ifs).split(parts(word))) }
 
       # Assignment RHS / redirection target / operator word: one field, no split.
       # Tilde expands at the leading position by default; assignment context also
@@ -33,11 +34,17 @@ module Rush
         TildeExpander.new(@executor).expand(segments, assignment: mode == :assignment)
       end
 
+      def glob(fields) = fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
+
       def field_parts(segment)
         return splat_parts(segment) if splat?(segment)
 
-        [[scalar_segment(segment), splittable?(segment), false]]
+        [[escape(scalar_segment(segment), segment.quoted), splittable?(segment), false]]
       end
+
+      # Backslash-escape glob metacharacters that came from quoted text so they
+      # match literally; unquoted text keeps them active.
+      def escape(text, quoted) = quoted ? text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" } : text
 
       def splat?(segment)
         return false unless segment.kind == :param && segment.value.op.nil?
@@ -47,7 +54,9 @@ module Rush
 
       def splat_parts(segment)
         split = !segment.quoted
-        @executor.state.positional.map.with_index { |element, index| [element, split, index.positive?] }
+        @executor.state.positional.map.with_index do |element, index|
+          [escape(element, segment.quoted), split, index.positive?]
+        end
       end
 
       def splittable?(segment) = segment.kind != :literal && !segment.quoted

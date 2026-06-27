@@ -2,6 +2,8 @@
 
 require 'open3'
 require 'tempfile'
+require 'tmpdir'
+require 'fileutils'
 
 # Differential tests: each snippet must produce the same stdout and exit status
 # under rush as under dash, the POSIX oracle. Skipped when dash is unavailable.
@@ -238,6 +240,27 @@ RSpec.describe 'rush vs dash (differential)' do
       file.flush
       source = ". #{file.path}; greet world; echo $VALUE"
       expect(rush(source)).to eq(dash(source))
+    end
+  end
+
+  # Lowercase-only names keep byte-order sorting (rush) and LC_COLLATE sorting
+  # (dash) in agreement, so these compare without forcing a locale.
+  def glob_patterns
+    ['echo *', 'echo *.txt', 'echo *.md', 'echo ?.txt', 'echo [ab].txt',
+     'echo [!a].txt', 'echo sub/*', 'echo */*.txt', 'echo "*"', "echo '*'",
+     'echo z*', 'set -f; echo *.txt', 'echo *.txt *.log', 'echo [a.txt',
+     'echo a"*"', 'for f in *.txt; do echo "$f"; done', 'set -- *.txt; echo $#']
+  end
+
+  it 'expands pathname patterns the same as dash' do
+    Dir.mktmpdir do |dir|
+      %w[a.txt b.txt c.log file1 file2].each { |f| FileUtils.touch(File.join(dir, f)) }
+      Dir.mkdir(File.join(dir, 'sub'))
+      FileUtils.touch(File.join(dir, 'sub', 'x.txt'))
+      glob_patterns.each do |pattern|
+        source = "cd #{dir}; #{pattern}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{pattern}"
+      end
     end
   end
 end

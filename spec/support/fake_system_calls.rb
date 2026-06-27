@@ -10,19 +10,26 @@ class FakeSystemCalls
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
                     executable: false, symlink: false }.freeze
 
-  def initialize(stdin: '', pwd: '/home/test', tty: false, homes: {})
+  # rubocop:disable Metrics/ParameterLists -- a test double accrues config knobs
+  def initialize(stdin: '', pwd: '/home/test', tty: false, homes: {}, globs: {})
     @stdin = StringIO.new(stdin)
     @stdout = StringIO.new
     @stderr = StringIO.new
     @pwd = pwd
     @tty = tty
     @homes = homes
+    @globs = globs
     @files = {}
     @chdirs = []
     @chdir_error = nil
     @nodes = {}
     @contents = {}
   end
+  # rubocop:enable Metrics/ParameterLists
+
+  # Configured matches for a pattern; unconfigured patterns match nothing, so
+  # ordinary words pass through as literals (mirroring no-match behaviour).
+  def glob(pattern) = @globs.fetch(pattern, [])
 
   def read_line = @stdin.gets
 

@@ -73,6 +73,12 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
     expect(run('x=g; f() { local x=in; echo $x; }; f; echo $x').first).to eq("in\ng\n")
   end
 
+  it 'expands a glob to sorted matches and leaves a no-match pattern literal' do
+    system = FakeSystemCalls.new(globs: { '*.txt' => %w[a.txt b.txt] })
+    code = Rush::CLI.run(['-c', 'echo *.txt *.md'], system: system)
+    expect([system.stdout.string, code]).to eq(["a.txt b.txt *.md\n", 0])
+  end
+
   it 'field-splits unquoted expansions but keeps quoted ones intact' do
     expect(run('x="a   b   c"; echo $x').first).to eq("a b c\n")
     expect(run('x="a b"; echo "[$x]"').first).to eq("[a b]\n")

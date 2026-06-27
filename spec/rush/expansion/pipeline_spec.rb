@@ -72,6 +72,18 @@ RSpec.describe Rush::Expansion::Pipeline do
     end
   end
 
+  describe 'pathname expansion' do
+    let(:state) { Rush::ShellState.new }
+    let(:system) { FakeSystemCalls.new(globs: { '*' => %w[x y] }) }
+    let(:pipeline) { described_class.new(Rush::Executor.new(system: system, state: state)) }
+
+    def star(quoted) = [Rush::AST::Word.new([segment.new(kind: :literal, value: '*', quoted: quoted)])]
+
+    it 'globs an unquoted pattern but leaves a quoted one literal' do
+      expect([pipeline.expand(star(false)), pipeline.expand(star(true))]).to eq([%w[x y], ['*']])
+    end
+  end
+
   describe '$* expansion' do
     let(:state) { Rush::ShellState.new(environment: Rush::Environment.new('IFS' => ':')) }
     let(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state)) }
