@@ -207,7 +207,16 @@ RSpec.describe 'rush vs dash (differential)' do
     'set -o errexit; false; echo after',
     'set -o errexit; if true; then echo c; false; fi || echo rec; echo done',
     'set +o errexit; false; echo after',
-    'set -o nounset; echo "${x:-ok}"; echo $undef; echo no'
+    'set -o nounset; echo "${x:-ok}"; echo $undef; echo no',
+    'type echo set if',
+    'type ls',
+    'f() { :; }; type f',
+    'type nosuchcmd_zzz',
+    'command -v echo',
+    'command -v ls',
+    'f() { :; }; command -v f',
+    'command -v nosuchcmd_zzz; echo "rc=$?"',
+    'echo() { echo no; }; command echo hi'
   ].freeze
 
   corpus.each do |snippet|
