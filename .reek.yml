@@ -182,15 +182,16 @@ detectors:
 
   # --- Kept on (the ratchet): cryptic names in new code ---
   # reek rejects single-character, digit-suffixed and camelCase variable names.
-  # The only accepted single letter is `e` for a rescued exception — RuboCop's
+  # The only accepted name is `e` for a rescued exception — RuboCop's
   # Naming/RescuedExceptionsVariableName forces that name, so leaving it flagged
   # would just pit the two tools against each other. Everything else is spelled
-  # out (operands left/right/value, loop index, the Tms struct tms, ...); any
-  # other single-letter / digit-suffixed / camelCase / cryptic name stays flagged.
+  # out: operands left/right/value, loop index, the Tms struct tms, and ignored
+  # destructuring/block values use a descriptive `_name` (e.g. _status, _value),
+  # not a bare `_`. Any other single-letter / digit-suffixed / camelCase / cryptic
+  # name stays flagged.
   UncommunicativeVariableName:
     accept:
       - /^e$/
-      - _ # the conventional "ignored value" name in destructuring/block params
   UncommunicativeMethodName:
     accept:
       - waitpid2

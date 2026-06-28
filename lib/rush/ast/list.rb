@@ -20,7 +20,7 @@ module Rush
       end
 
       def execute(executor)
-        entries.reduce(executor.state.last_status) { |_, entry| run_entry(executor, entry) }
+        entries.reduce(executor.state.last_status) { |_status, entry| run_entry(executor, entry) }
       end
 
       # A blank or comment-only program runs no command; SourceRunner skips it
