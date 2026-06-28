@@ -20,6 +20,23 @@ module Rush
       STRING = { '=' => :==, '!=' => :!= }.freeze
       INTEGER = { '-eq' => :==, '-ne' => :!=, '-gt' => :>, '-ge' => :>=, '-lt' => :<, '-le' => :<= }.freeze
 
+      # A string that may name an integer for the numeric primaries: #value is its
+      # integer when it is a valid (optionally signed, blank-padded) decimal, else
+      # nil. Underscores and 0x are rejected, matching dash's strtol-strictness.
+      class MaybeInteger
+        PATTERN = /\A\s*[+-]?\d+\s*\z/
+
+        def initialize(text)
+          @text = text
+        end
+
+        def valid? = @text.match?(PATTERN)
+
+        def value
+          @text.to_i if valid?
+        end
+      end
+
       def initialize(args, files)
         @args = args
         @files = files
@@ -65,11 +82,7 @@ module Rush
         to_int(lhs).public_send(INTEGER.fetch(op), to_int(rhs))
       end
 
-      def to_int(text)
-        raise TestError, "#{text}: integer expected" unless text.match?(/\A\s*[+-]?\d+\s*\z/)
-
-        text.to_i
-      end
+      def to_int(text) = MaybeInteger.new(text).value || raise(TestError, "#{text}: integer expected")
     end
   end
 end

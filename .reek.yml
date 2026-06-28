@@ -42,16 +42,10 @@ detectors:
     exclude:
       - Rush::SystemCalls
       - Rush::Redirection::HereDocRedirect#apply
-  FeatureEnvy:
-    # PipelineRunner#stage_io was genuinely moved onto Stage (Stage#io), which
-    # owns its fd topology. The rest each transform a primitive or stdlib value
-    # passed as their arg, so Ruby offers no clean home for it (a core-ext /
-    # Refused Bequest): TestExpr#to_int (String) parses a strict decimal integer,
-    # which the stdlib Integer() would over-accept (underscores). (The Array-envy
-    # methods that used to live here — ReadSplitter#pad/#trim_last, the command
-    # lookup's kind dispatch — were all refactored away.)
-    exclude:
-      - Rush::Builtins::TestExpr#to_int
+  # FeatureEnvy is intentionally absent here: it is fully ratcheted with zero
+  # exclusions. Every method it once flagged was either genuinely moved to its
+  # owner or rewritten to stop reaching into a value it does not own (the last,
+  # TestExpr's integer parsing, became the MaybeInteger value object).
   DataClump:
     # Two genuine clumps were refactored out, not excluded: PipelineRunner's
     # (index, pipes) became a Stage value object, and PrintfFormatter's
