@@ -19,10 +19,11 @@ module Rush
       end
 
       def expand
-        return plain unless @ref.op
-        return send(SPECIAL.fetch(@ref.op)) if SPECIAL.key?(@ref.op)
+        op = @ref.op
+        return plain unless op
+        return send(SPECIAL.fetch(op)) if SPECIAL.key?(op)
 
-        Parameter::FORMS.fetch(@ref.op[-1]).call(self)
+        Parameter::FORMS.fetch(op[-1]).call(self)
       end
 
       # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is

@@ -17,6 +17,7 @@ module Rush
         OPERATOR = Regexp.union(OPERATORS)
         NUMBER = /0[xX][0-9a-fA-F]+|\d+/
         NAME = /[A-Za-z_]\w*/
+        TOKENS = { num: NUMBER, name: NAME, op: OPERATOR }.freeze
 
         def initialize(source)
           @scanner = StringScanner.new(source)
@@ -36,9 +37,7 @@ module Rush
         end
 
         def next_token
-          return [:num, @scanner.matched] if @scanner.scan(NUMBER)
-          return [:name, @scanner.matched] if @scanner.scan(NAME)
-          return [:op, @scanner.matched] if @scanner.scan(OPERATOR)
+          TOKENS.each { |kind, pattern| return [kind, @scanner.matched] if @scanner.scan(pattern) }
 
           raise ExpansionError, "arithmetic: unexpected #{@scanner.rest.inspect}"
         end

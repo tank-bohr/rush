@@ -8,6 +8,7 @@ module Rush
   class FunctionRunner
     def initialize(executor, body, args)
       @executor = executor
+      @state = executor.state
       @body = body
       @args = args
     end
@@ -15,25 +16,25 @@ module Rush
     # A function body is a fresh loop scope: without_loops resets the depth so a
     # break/continue inside it cannot reach a loop in the caller (POSIX 2.9.5).
     def call
-      @executor.state.begin_scope
-      @executor.state.without_loops { with_args { invoke } }
+      @state.begin_scope
+      @state.without_loops { with_args { invoke } }
     ensure
-      @executor.state.end_scope
+      @state.end_scope
     end
 
     private
 
     def with_args
-      saved = @executor.state.positional
-      @executor.state.positional = @args
+      saved = @state.positional
+      @state.positional = @args
       yield
     ensure
-      @executor.state.positional = saved
+      @state.positional = saved
     end
 
     def invoke
       @executor.run(@body)
-      @executor.state.last_status
+      @state.last_status
     rescue ReturnSignal => e
       Status.new(e.code)
     end

@@ -113,26 +113,17 @@ detectors:
     exclude:
       - Rush::Lexer#initialize
   DuplicateMethodCall:
-    # The default (flag a call repeated 2+ times) over-fires here: twice is
-    # idiomatic accessor reuse where a local is just micro-caching, and worse,
-    # stateful reads like @scanner.getch return a DIFFERENT value each call, so
-    # "caching" them would be a bug, not a fix. max_calls: 2 flags only 3+
-    # repeats — the point at which a local genuinely clarifies — and those were
-    # fixed by extracting locals (FunctionRunner/ForRunner state, ParameterExpander
-    # @ref.op, Tokenizer matched, Set#advance, Kill#parse, Cd#update_pwd, splat?).
-    # Three residual 3+ repeats are kept and excluded:
-    #  - Tokenizer#next_token reads @scanner.matched after each scan attempt; like
-    #    getch it returns a different value each time, so it cannot be hoisted;
-    #  - ParameterExpander#expand (@ref.op) and FunctionRunner#call/#with_args
-    #    (@executor.state) repeat an IVAR's accessor — hoisting it to a local turns
-    #    self-state reads into an external referent and trips FeatureEnvy instead,
-    #    a genuine conflict between the two detectors, so the cheap accessor stays.
+    # The default (flag a call repeated 2+ times) over-fires: twice is idiomatic
+    # accessor reuse where a local is just micro-caching, and a stateful read like
+    # @scanner.getch returns a DIFFERENT value each call, so "caching" it would be
+    # a bug. max_calls: 2 keeps that latitude, flagging only 3+ repeats — the point
+    # at which a local genuinely clarifies. Every such repeat is now fixed, not
+    # excluded: Tokenizer#next_token became a token table (one @scanner.matched),
+    # FunctionRunner captures @state in its constructor (the calls on it are
+    # distinct methods, and an ivar is self, so no FeatureEnvy), and
+    # ParameterExpander#expand hoists `op = @ref.op` (op is a receiver only in
+    # op[-1], so the feared FeatureEnvy never materialises). No exclusions remain.
     max_calls: 2
-    exclude:
-      - Rush::Expansion::Arithmetic::Tokenizer#next_token
-      - Rush::Expansion::ParameterExpander#expand
-      - Rush::FunctionRunner#call
-      - Rush::FunctionRunner#with_args
 
   # --- Off by project decision / Ruby idioms / false positives ---
   NilCheck:
