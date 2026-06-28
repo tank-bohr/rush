@@ -37,6 +37,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop', '~> 1.72'
   spec.add_development_dependency 'rubocop-performance', '~> 1.23'
   spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
-  spec.add_development_dependency 'sandi_meter', '~> 1.2'
   spec.add_development_dependency 'simplecov', '~> 0.22'
 end

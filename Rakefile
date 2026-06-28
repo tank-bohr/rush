@@ -13,11 +13,8 @@ RuboCop::RakeTask.new(:rubocop)
 task spec: :compile
 task rubocop: :compile
 
-# Sandi Metz limits: 100 lines/class, 5 lines/method, 4 params per method.
-# These mirror the sandi_meter thresholds 1:1. sandi_meter itself (2015, Ripper-
-# based) is unmaintained: it calls the removed File.exists? and miscounts modern
-# Ruby (endless methods → 0 classes/methods) on Ruby >= 3.2, so it cannot gate.
-# The plan's documented fallback is used instead: rubocop's Metrics cops.
+# Sandi Metz limits (100 lines/class, 5 lines/method, 4 params per method),
+# enforced via rubocop's Metrics cops.
 SANDI_COPS = %w[
   Metrics/MethodLength
   Metrics/ClassLength
@@ -25,9 +22,9 @@ SANDI_COPS = %w[
   Metrics/ParameterLists
 ].freeze
 
-desc 'Sandi Metz limits gate (rubocop fallback; sandi_meter is broken on Ruby >= 3.2)'
+desc 'Sandi Metz limits gate (rubocop Metrics cops)'
 task :metrics do
-  # Production code only (lib + exe), mirroring the plan's `sandi_meter -p lib/`.
+  # Production code only (lib + exe).
   sh "rubocop --only #{SANDI_COPS.join(',')} lib exe"
 end
 
