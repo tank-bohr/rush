@@ -61,7 +61,17 @@ module Rush
     # when nothing matches.
     def glob(pattern) = Dir.glob(pattern)
 
-    def open_file(path, mode) = File.open(path, mode)
+    # Sync so a builtin's write reaches the file immediately — like a pipe write
+    # end (sync by default), this lets a forked subshell's output survive its
+    # exit! and be visible to a later command; close_redirect releases the fd.
+    # rubocop:disable Style/FileOpen -- a redirection keeps the file open past
+    # this call, so the auto-closing block form is wrong here.
+    def open_file(path, mode) = File.open(path, mode).tap { |io| io.sync = true }
+    # rubocop:enable Style/FileOpen
+
+    # Flush and release a file a redirection opened, so a later command in the
+    # same shell sees the data and the fd does not leak.
+    def close_redirect(io) = io.close
 
     def read_file(path) = File.read(path)
 

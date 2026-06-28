@@ -30,17 +30,19 @@ module Rush
     # No command word: perform redirections then assignments (POSIX order), and
     # take the status of the last command substitution either ran (Status.success
     # when none did), as published via the executor's cmd-sub channel.
+    # with_redirects opens/truncates the targets for their side effects, then
+    # flushes+closes them after the assignments so a later command sees the data.
     def run_bare
-      build_io # opens/truncates redirect targets for their side effects
-      @command.assignments.each { |assignment| persist(assignment) }
-      @executor.cmd_sub_status
+      @executor.with_redirects(@command.redirects, @base_io) do
+        @command.assignments.each { |assignment| persist(assignment) }
+        @executor.cmd_sub_status
+      end
     end
 
     # POSIX command search: special builtin, then function (so a function may
     # override a regular builtin), then regular builtin, then PATH.
     def run_command(argv)
-      io = build_io
-      dispatch(argv, io)
+      @executor.with_redirects(@command.redirects, @base_io) { |io| dispatch(argv, io) }
     end
 
     def dispatch(argv, io)
@@ -60,8 +62,6 @@ module Rush
       body = @executor.state.functions.fetch(argv.first)
       FunctionRunner.new(@executor, body, argv.drop(1)).call
     end
-
-    def build_io = @executor.apply_redirects(@command.redirects, @base_io)
 
     def command_env
       @command.assignments.each_with_object(@executor.state.environment.exported) do |assignment, env|

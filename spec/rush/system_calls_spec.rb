@@ -40,10 +40,18 @@ RSpec.describe Rush::SystemCalls do
     expect(Dir).to have_received(:chdir).with('/x')
   end
 
-  it 'expands paths and opens files' do
+  it 'expands paths and opens files in sync mode' do
     expect(system.expand_path('a', '/base')).to eq('/base/a')
-    allow(File).to receive(:open).with('/f', 'w').and_return(:io)
-    expect(system.open_file('/f', 'w')).to eq(:io)
+    io = instance_double(File, :sync= => true)
+    allow(File).to receive(:open).with('/f', 'w').and_return(io)
+    expect(system.open_file('/f', 'w')).to be(io)
+    expect(io).to have_received(:sync=).with(true)
+  end
+
+  it 'closes a redirect file through IO#close' do
+    io = instance_double(File, close: nil)
+    system.close_redirect(io)
+    expect(io).to have_received(:close)
   end
 
   it 'reads a file through File.read' do

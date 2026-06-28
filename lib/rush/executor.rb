@@ -22,14 +22,21 @@ module Rush
 
     def run_simple(command) = CommandRunner.new(self, command).call
 
-    # Build an IoTable by applying redirects on top of a base (the current base
-    # IoTable by default); shared by simple commands and redirected compounds.
-    def apply_redirects(redirects, base = @io)
-      redirects.reduce(base) { |io, redirect| redirect_into(redirect, io) }
+    # Apply the redirects on top of a base IoTable, yield the result, then
+    # flush+close the files those redirects opened (POSIX: a later command in the
+    # same shell sees the data). Only the streams this command opened are closed —
+    # the diff against the base leaves inherited streams and pipe ends untouched.
+    def with_redirects(redirects, base = @io)
+      io = redirects.reduce(base) { |acc, redirect| redirect_into(redirect, acc) }
+      yield io
+    ensure
+      io&.close_opened_over(base, system)
     end
 
     # Run a compound command with its redirects bound for the whole body.
-    def run_redirected(command, redirects) = with_io(apply_redirects(redirects)) { run(command) }
+    def run_redirected(command, redirects)
+      with_redirects(redirects) { |io| with_io(io) { run(command) } }
+    end
 
     # The exit status of the last command substitution performed while a simple
     # command is being built. Reset to success at the start of each command so a

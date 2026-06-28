@@ -46,6 +46,14 @@ RSpec.describe Rush::CommandRunner do
     expect(system.files).to have_key('/f')
   end
 
+  it 'propagates a redirect-open failure without trying to close anything' do
+    allow(system).to receive(:close_redirect)
+    allow(system).to receive(:open_file).and_raise(Errno::EACCES)
+    redirect = Rush::AST::Redirect.new(kind: :out, target: word('/denied'), io_number: nil)
+    expect { run(simple(words: [word('true')], redirects: [redirect])) }.to raise_error(Errno::EACCES)
+    expect(system).not_to have_received(:close_redirect)
+  end
+
   it 'dispatches to a defined function before falling through to an external' do
     state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success

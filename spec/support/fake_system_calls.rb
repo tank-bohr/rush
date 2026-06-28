@@ -99,6 +99,10 @@ class FakeSystemCalls
 
   def open_file(path, _mode) = (@files[path] = StringIO.new)
 
+  # The in-memory StringIO needs no real close; leaving it open keeps `.string`
+  # readable so specs can assert what a redirection wrote.
+  def close_redirect(_io) = nil
+
   # Seed a readable file (for the `.` builtin); read_file raises if absent.
   def provide_file(path, body) = @contents[path] = body
 

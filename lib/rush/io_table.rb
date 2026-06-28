@@ -17,6 +17,14 @@ module Rush
 
     def with(fd, io) = self.class.new(@streams.merge(fd => io))
 
+    # The bound streams, for diffing which a command's redirects freshly opened
+    # (and so must close) against the base table it inherited.
+    def ios = @streams.values
+
+    # Flush+close the streams this table opened over `base` (the ones a command's
+    # redirects added), leaving inherited streams and pipe ends untouched.
+    def close_opened_over(base, system) = (ios - base.ios).uniq.each { |io| system.close_redirect(io) }
+
     def to_spawn_options = @streams.dup
   end
 end

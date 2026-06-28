@@ -599,6 +599,26 @@ RSpec.describe 'rush vs dash (differential)' do
     end
   end
 
+  # A redirection's target is flushed+closed when the command finishes, so a
+  # later command in the same invocation sees the data (the write file is opened
+  # in sync mode, so a forked subshell's output survives its exit! too).
+  def output_redirect_snippets
+    ['echo x > f; cat f', '{ echo a; echo b; } > f; cat f', 'echo aaa > f; echo b > f; cat f',
+     'echo a > f; echo b >> f; cat f', 'for i in 1 2 3; do echo $i; done > f; cat f',
+     '( echo s1; echo s2 ) > f; cat f', '> f; cat f; echo "rc=$?"',
+     'echo one > f; cat f; echo two > f; cat f', 'echo hi > f; read x < f; echo "[$x]"',
+     '( for i in 1 2; do echo $i; done ) > f; wc -l < f', 'echo n > f; ( cat f; echo m ) > g; cat g']
+  end
+
+  it 'flushes a redirect target so a later command in the same shell sees it, like dash' do
+    Dir.mktmpdir do |dir|
+      output_redirect_snippets.each do |snippet|
+        source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
+      end
+    end
+  end
+
   # Lowercase-only names keep byte-order sorting (rush) and LC_COLLATE sorting
   # (dash) in agreement, so these compare without forcing a locale.
   def glob_patterns
