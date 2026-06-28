@@ -14,6 +14,9 @@ module Rush
       EXPANDERS = { literal: Literal, param: ParameterExpander,
                     arith: ArithmeticExpander, command: CommandSubstitution }.freeze
 
+      # Tilde expansion strategy per mode (operates on a word's segment list).
+      GROUP_EXPANDERS = { none: NoTilde, leading: TildeExpander, assignment: AssignmentTilde }.freeze
+
       def initialize(executor)
         @executor = executor
       end
@@ -34,9 +37,7 @@ module Rush
       def parts(word) = tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
 
       def tilde_expand(segments, mode)
-        return segments if mode == :none
-
-        TildeExpander.new(@executor).expand(segments, assignment: mode == :assignment)
+        GROUP_EXPANDERS.fetch(mode).new(@executor).expand(segments)
       end
 
       def glob(fields) = fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }

@@ -49,7 +49,7 @@ detectors:
     #    Ruby offers no clean home for it (a core-ext / Refused Bequest): Set#apply
     #    (String), Set#advance / Test#without_close / TestExpr#four? /
     #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
-    #    (String), Pipeline#tilde_expand (Symbol);
+    #    (String);
     #  - it dispatches on a value's kind enum: CommandLookup#describe (a lookup
     #    result kind). Pipeline#scalar_segment now does this as a kind->expander
     #    dispatch table (no conditional), but still reads the segment twice — kind
@@ -61,8 +61,7 @@ detectors:
     #    command subs;
     #  - it is a predicate/transform that needs both self and the value's fields
     #    and has no cohesive home on the value: AliasExpander#plain?
-    #    (alias-specific), TildeExpander#expand (the leading-segment tilde rewrite
-    #    is tilde-domain).
+    #    (alias-specific).
     exclude:
       - Rush::Builtins::Set#advance
       - Rush::Builtins::Set#apply
@@ -71,10 +70,8 @@ detectors:
       - Rush::Builtins::TestExpr#to_int
       - Rush::CommandLookup#describe
       - Rush::Expansion::Pipeline#scalar_segment
-      - Rush::Expansion::Pipeline#tilde_expand
       - Rush::Expansion::ReadSplitter#pad
       - Rush::Expansion::ReadSplitter#trim_last
-      - Rush::Expansion::TildeExpander#expand
       - Rush::Lexer::AliasExpander#plain?
   DataClump:
     # Two genuine clumps were refactored out, not excluded: PipelineRunner's
@@ -116,10 +113,8 @@ detectors:
     #    (command || block), FieldSplitter#initialize (ifs || WHITESPACE);
     #  - one factor in a compound precondition guard: AliasExpander#expand;
     #  - an irreducible domain distinction whose branch must live somewhere, so
-    #    splitting only relocates the flag and polymorphism would be overkill:
-    #    ShellState#set_option (option on/off), Printf#report (valid outcome),
-    #    Repl#prompt_line (PS1 vs PS2), TildeExpander#rewrite (POSIX tilde after
-    #    a colon only in assignments).
+    #    splitting only relocates the flag: ShellState#set_option (option on/off),
+    #    Printf#report (valid outcome), Repl#prompt_line (PS1 vs PS2).
     exclude:
       - Rush::Expansion::Arithmetic::Number#bool
       - Rush::Expansion::Arithmetic::Parser#accept?
@@ -130,7 +125,6 @@ detectors:
       - Rush::ShellState#set_option
       - Rush::Builtins::Printf#report
       - Rush::Repl#prompt_line
-      - Rush::Expansion::TildeExpander#rewrite
   BooleanParameter:
     # Lexer#initialize stores `interactive` as @interactive and consults it in a
     # single private branch (heredoc_line): a here-doc truncated at EOF either

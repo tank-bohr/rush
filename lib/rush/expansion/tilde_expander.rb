@@ -5,27 +5,25 @@ module Rush
     # Tilde expansion (step 1): a leading unquoted `~` or `~name` in a word's
     # first literal segment becomes $HOME or the named user's home directory. It
     # is left untouched when there is no such user, or when HOME is unset for a
-    # bare `~`. In assignment context it also expands after each unquoted colon
-    # (so PATH=~/bin:~root/x works).
+    # bare `~`. This base handles the leading form; AssignmentTilde extends it to
+    # also expand after each unquoted colon, and NoTilde disables it entirely.
     class TildeExpander
       def initialize(executor)
         @executor = executor
       end
 
-      def expand(segments, assignment:)
+      def expand(segments)
         head = segments.first
-        return segments if head&.kind != :literal || head.quoted
+        return segments unless expandable?(head)
 
-        [head.with(value: rewrite(head.value, assignment))] + segments[1..]
+        [head.with(value: rewrite(head.value))] + segments[1..]
       end
 
       private
 
-      def rewrite(text, assignment)
-        return prefix(text) unless assignment
+      def expandable?(head) = head&.kind == :literal && !head.quoted
 
-        text.split(':', -1).map { |piece| prefix(piece) }.join(':')
-      end
+      def rewrite(text) = prefix(text)
 
       def prefix(text)
         return text unless text.start_with?('~')
@@ -45,6 +43,21 @@ module Rush
 
         @executor.system.home_dir(name)
       end
+    end
+
+    # Assignment context (PATH=~/bin:~root/x): the leading tilde plus one after
+    # each unquoted colon, so every colon-separated piece gets the ~ treatment.
+    class AssignmentTilde < TildeExpander
+      private
+
+      def rewrite(text) = text.split(':', -1).map { |piece| prefix(piece) }.join(':')
+    end
+
+    # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
+    class NoTilde
+      def initialize(_executor); end
+
+      def expand(segments) = segments
     end
   end
 end
