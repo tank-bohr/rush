@@ -6,9 +6,11 @@ require 'tmpdir'
 require 'fileutils'
 
 # Differential tests: each snippet must produce the same stdout and exit status
-# under rush as under dash, the POSIX oracle. Skipped when dash is unavailable.
-# These run the real exe/rush in a child process, so they do not contribute to
-# SimpleCov; the in-process unit specs own coverage.
+# under rush as under dash, the reference implementation we verify against. The
+# authority is the POSIX standard — where dash is known to diverge from it, rush
+# follows the standard and that case is left out here. Skipped when dash is
+# unavailable. These run the real exe/rush in a child process, so they do not
+# contribute to SimpleCov; the in-process unit specs own coverage.
 RSpec.describe 'rush vs dash (differential)' do
   def project_root = File.expand_path('../..', __dir__)
 

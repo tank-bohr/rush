@@ -8,8 +8,9 @@ whose oracle is **dash**. This is the lab notebook, not the backlog:
 - **Design decisions** → `docs/architecture/`.
 - **This file** → the *why* and the non-obvious gotchas worth not re-learning.
 
-Verification model for every behavioural claim below: bit-exact vs `dash -c`, comparing
-**`[stdout, exitstatus]`** (stderr ignored), via the differential corpus
+Verification model for every behavioural claim below: differential against the **dash**
+oracle — the closest POSIX reference, but the **standard wins where dash diverges** —
+comparing **`[stdout, exitstatus]`** (stderr ignored), via the differential corpus
 (`spec/integration/differential_spec.rb`) plus ad-hoc randomized fuzzing.
 
 ---

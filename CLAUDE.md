@@ -1,8 +1,10 @@
 # Project Instructions for AI Agents
 
-**rush** — a pure-Ruby POSIX `sh` (spec = POSIX.1-2017 §2). The oracle is **dash**: every
-behaviour must be bit-exact with `dash -c`. Keep this file small and stable; bulk knowledge
-lives in `docs/` and the backlog lives in beads (see "Where things live").
+**rush** — a pure-Ruby POSIX `sh`. The authority is the **POSIX.1-2017 §2** standard, to the
+letter. **dash** is the practical oracle — the closest reference implementation — that we
+verify against differentially, so rush matches `dash -c` in practice; but where dash itself
+diverges from POSIX, follow the standard, not dash. Keep this file small and stable; bulk
+knowledge lives in `docs/` and the backlog lives in beads (see "Where things live").
 
 **Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate (in progress) · 3 full POSIX scripting ·
 4 (optional) job control + interactive. Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
@@ -12,14 +14,8 @@ lives in `docs/` and the backlog lives in beads (see "Where things live").
 `bundle exec rake` must be **fully green** before any commit. It runs, in order:
 
 1. **racc compile** — regenerate the parser from `grammar/shell.y`
-2. **rubocop** — style + `Metrics/{MethodLength,ClassLength,ModuleLength,ParameterLists}`
-3. **Sandi Metz metrics** — enforced via rubocop `Metrics/*` cops (the `sandi_meter` gem is
-   broken on Ruby ≥ 3.2): class/module ≤100 lines, method ≤5 lines, ≤4 params, `AbcSize` ≤17
-4. **rspec** — coverage floor **line 95 / branch 90** (`.simplecov`), kept near 100%
-   voluntarily. Coverage is a regression signal, **not** an architecture constraint: don't
-   contort designs to be in-process-testable — verify OS-boundary code (fork children, real-fd
-   dup/close) **differentially vs dash** instead. `:nocov:` is available for irreducible OS
-   wrappers but isn't required to hold the gate.
+2. **rubocop** (style + metrics; limits in `.rubocop.yml`)
+3. **rspec**
 
 ```bash
 bundle exec rake             # the full green gate
@@ -36,9 +32,9 @@ Work proceeds in numbered **slices**. Each slice is **exactly one commit on `mai
 - End every commit message with:
   `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
 - A slice lands only when `bundle exec rake` is green **and** the behaviour is verified
-  **bit-exact vs dash** — the differential corpus in `spec/integration/differential_spec.rb`
-  plus ad-hoc fuzzing. Differential comparison is on **`[stdout, exitstatus]`**;
-  **stderr is ignored**.
+  against the **dash** oracle — the differential corpus in `spec/integration/differential_spec.rb`
+  plus ad-hoc fuzzing — comparing **`[stdout, exitstatus]`** (stderr ignored). Where dash is
+  known to diverge from POSIX, the standard wins and the divergence is noted in `docs/journal.md`.
 - Stage files **explicitly** (`git add <paths>`) — never `git add -A` (avoids bundling
   stray/scratch files). Keep scratch fuzzers in the session scratchpad, not the repo.
 
