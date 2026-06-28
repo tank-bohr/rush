@@ -12,7 +12,7 @@ module Rush
         @source = source
       end
 
-      def call
+      def expand
         read, write = @executor.system.pipe
         pid = spawn_child(write)
         write.close

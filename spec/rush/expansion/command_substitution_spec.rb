@@ -11,13 +11,13 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
     it 'reads the child output from the pipe and strips trailing newlines' do
       allow(system).to receive_messages(pipe: [StringIO.new("hello\n\n"), StringIO.new], fork: 55)
       allow(system).to receive(:waitpid2).with(55).and_return([55, status_double(0)])
-      expect(described_class.new(executor, 'echo hello').call).to eq('hello')
+      expect(described_class.new(executor, 'echo hello').expand).to eq('hello')
     end
 
     it 'records the child exit status as the command-substitution status' do
       allow(system).to receive_messages(pipe: [StringIO.new, StringIO.new], fork: 7)
       allow(system).to receive(:waitpid2).with(7).and_return([7, status_double(3)])
-      described_class.new(executor, 'exit 3').call
+      described_class.new(executor, 'exit 3').expand
       expect(executor.cmd_sub_status.exitstatus).to eq(3)
     end
   end

@@ -9,6 +9,11 @@ module Rush
     # break between them ($* always joins to a scalar). Quoted metacharacters are
     # backslash-escaped so they survive field splitting and glob literally.
     class Pipeline
+      # Each word-segment kind expands through its own (executor, value) -> #expand
+      # strategy; :literal uses the identity expander so the dispatch is uniform.
+      EXPANDERS = { literal: Literal, param: ParameterExpander,
+                    arith: ArithmeticExpander, command: CommandSubstitution }.freeze
+
       def initialize(executor)
         @executor = executor
       end
@@ -66,11 +71,7 @@ module Rush
       def ifs = @executor.state.environment.get('IFS')
 
       def scalar_segment(segment)
-        return segment.value if segment.kind == :literal
-        return ParameterExpander.new(@executor, segment.value).expand if segment.kind == :param
-        return ArithmeticExpander.new(@executor, segment.value).expand if segment.kind == :arith
-
-        CommandSubstitution.new(@executor, segment.value).call
+        EXPANDERS.fetch(segment.kind).new(@executor, segment.value).expand
       end
     end
   end
