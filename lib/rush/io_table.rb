@@ -25,6 +25,7 @@ module Rush
     # redirects added), leaving inherited streams and pipe ends untouched.
     def close_opened_over(base, system) = (ios - base.ios).uniq.each { |io| system.close_redirect(io) }
 
-    def to_spawn_options = @streams.dup
+    # A closed fd (ClosedStream) becomes :close so a spawned child closes it.
+    def to_spawn_options = @streams.transform_values { |io| io.is_a?(ClosedStream) ? :close : io }
   end
 end

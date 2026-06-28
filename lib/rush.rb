@@ -10,6 +10,7 @@ require_relative 'rush/alias_table'
 require_relative 'rush/signals'
 require_relative 'rush/trap_table'
 require_relative 'rush/shell_state'
+require_relative 'rush/closed_stream'
 require_relative 'rush/io_table'
 require_relative 'rush/here_doc'
 
@@ -35,6 +36,7 @@ require_relative 'rush/ast/function_def'
 
 require_relative 'rush/redirection/file_redirect'
 require_relative 'rush/redirection/here_doc_redirect'
+require_relative 'rush/redirection/dup_redirect'
 require_relative 'rush/redirection/registry'
 
 require_relative 'rush/expansion/resolver'

@@ -54,7 +54,13 @@ module Rush
       External.new(@executor, argv, io, command_env).call
     end
 
-    def builtin(argv, io) = @executor.builtins.fetch(argv.first).new(@executor, argv, io).call
+    # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
+    # dash, that fails the command (status 1) without killing the shell.
+    def builtin(argv, io)
+      @executor.builtins.fetch(argv.first).new(@executor, argv, io).call
+    rescue Errno::EBADF
+      Status.new(1)
+    end
 
     def special?(name) = CommandLookup::SPECIAL.include?(name) && @executor.builtins.key?(name)
 

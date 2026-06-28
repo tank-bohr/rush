@@ -14,7 +14,13 @@ module Rush
       setup
     end
 
-    def run(node) = @state.last_status = node.execute(self)
+    # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
+    # command unrun with status 2; the shell carries on (RedirectError).
+    def run(node)
+      @state.last_status = node.execute(self)
+    rescue RedirectError
+      @state.last_status = Status.new(2)
+    end
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
@@ -34,9 +40,7 @@ module Rush
     end
 
     # Run a compound command with its redirects bound for the whole body.
-    def run_redirected(command, redirects)
-      with_redirects(redirects) { |io| with_io(io) { run(command) } }
-    end
+    def run_redirected(command, redirects) = with_redirects(redirects) { |io| with_io(io) { run(command) } }
 
     # The exit status of the last command substitution performed while a simple
     # command is being built. Reset to success at the start of each command so a
@@ -156,12 +160,9 @@ module Rush
       nil
     end
 
-    def disposition(action)
-      return 'IGNORE' if action == ''
-      return 'DEFAULT' if action == :default
-
-      nil
-    end
+    # '' ignores the signal, :default restores it; a command string installs the
+    # handler block (nil disposition), matching SystemCalls#trap_signal.
+    def disposition(action) = { '' => 'IGNORE', :default => 'DEFAULT' }[action]
 
     # Run a delivered signal's action, restoring $? so the interrupted code is
     # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.

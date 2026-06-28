@@ -10,7 +10,7 @@ class Rush::Parser
 
 token WORD ASSIGNMENT_WORD IO_NUMBER NEWLINE
 token AND_IF OR_IF
-token DGREAT LESSGREAT CLOBBER DLESS DLESSDASH
+token DGREAT LESSGREAT CLOBBER DLESS DLESSDASH GREATAND LESSAND
 token If Then Else Elif Fi Lbrace Rbrace Bang
 token While Until Do Done
 token For In NAME
@@ -222,6 +222,8 @@ rule
     | DGREAT filename                             { result = make_redirect(:append, val[1]) }
     | LESSGREAT filename                          { result = make_redirect(:readwrite, val[1]) }
     | CLOBBER filename                            { result = make_redirect(:clobber, val[1]) }
+    | GREATAND filename                           { result = make_redirect(:dup_out, val[1]) }
+    | LESSAND filename                            { result = make_redirect(:dup_in, val[1]) }
     ;
 
   filename

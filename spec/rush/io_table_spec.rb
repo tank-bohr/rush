@@ -20,4 +20,9 @@ RSpec.describe Rush::IoTable do
     table = described_class.standard(system).with(1, :sink)
     expect(table.to_spawn_options).to include(1 => :sink)
   end
+
+  it 'maps a closed stream to :close in spawn options' do
+    table = described_class.standard(system).with(2, Rush::ClosedStream.new)
+    expect(table.to_spawn_options[2]).to eq(:close)
+  end
 end

@@ -26,6 +26,12 @@ RSpec.describe Rush::Executor do
     expect(target.last_status.exitstatus).to eq(1)
   end
 
+  it 'records status 2 and carries on when a redirect duplicates an unopened fd' do
+    target = state
+    build(target).run(Rush::Parser.new(Rush::Lexer.new('echo x >&9')).parse)
+    expect(target.last_status.exitstatus).to eq(2)
+  end
+
   it 'accepts an injected builtin registry' do
     registry = Rush::Builtins::Registry.new
     expect(build(state, builtins: registry).builtins).to be(registry)

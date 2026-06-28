@@ -508,7 +508,25 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo hi | { read x; echo \"[$x]\"; }',
     '{ echo a; echo b; } | wc -l',
     '( echo a; echo b ) | cat | cat',
-    'echo a | cat | cat'
+    'echo a | cat | cat',
+    # fd-duplication: n>&m / n<&m makes fd n a copy of fd m at that point in the
+    # left-to-right fold; n>&- closes fd n (a write then fails, status 1); a fd
+    # that is not open is status 2 and the shell continues; a non-numeric target
+    # is a special-builtin error that aborts with 2.
+    'echo o; { echo e >&2; } 2>&1',
+    'echo x 2>&1 | cat',
+    '{ echo a; echo b >&2; } 2>&1 | cat',
+    'echo x 3>&1',
+    'echo close >&-; echo after',
+    'echo close >&-; echo "rc=$?"',
+    'echo ok 2>&-; echo "rc=$?"',
+    'true >&9; echo "rc=$?"',
+    'echo x >&9; echo AFTER',
+    'echo a; echo x >&9; echo b',
+    'read x <&-; echo "after=$?"',
+    "cat <&0 <<E\nhi\nE",
+    'echo x >&foo; echo AFTER',
+    "trap 'echo bye' EXIT; echo x >&foo"
   ].freeze
 
   corpus.each do |snippet|
@@ -607,7 +625,9 @@ RSpec.describe 'rush vs dash (differential)' do
      'echo a > f; echo b >> f; cat f', 'for i in 1 2 3; do echo $i; done > f; cat f',
      '( echo s1; echo s2 ) > f; cat f', '> f; cat f; echo "rc=$?"',
      'echo one > f; cat f; echo two > f; cat f', 'echo hi > f; read x < f; echo "[$x]"',
-     '( for i in 1 2; do echo $i; done ) > f; wc -l < f', 'echo n > f; ( cat f; echo m ) > g; cat g']
+     '( for i in 1 2; do echo $i; done ) > f; wc -l < f', 'echo n > f; ( cat f; echo m ) > g; cat g',
+     'echo a > f 2>&1; cat f', 'echo keep 2>&1 > f; cat f', '{ echo o; echo e >&2; } > f 2>&1; cat f',
+     'ls /no_such_rush 2>f 1>&2; cat f']
   end
 
   it 'flushes a redirect target so a later command in the same shell sees it, like dash' do

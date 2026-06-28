@@ -90,153 +90,155 @@ rule 85 io_file: ">" filename
 rule 86 io_file: DGREAT filename
 rule 87 io_file: LESSGREAT filename
 rule 88 io_file: CLOBBER filename
-rule 89 filename: WORD
-rule 90 separator_op: "&"
-rule 91 separator_op: ";"
-rule 92 newline_list: NEWLINE
-rule 93 newline_list: newline_list NEWLINE
-rule 94 linebreak: newline_list
-rule 95 linebreak: 
+rule 89 io_file: GREATAND filename
+rule 90 io_file: LESSAND filename
+rule 91 filename: WORD
+rule 92 separator_op: "&"
+rule 93 separator_op: ";"
+rule 94 newline_list: NEWLINE
+rule 95 newline_list: newline_list NEWLINE
+rule 96 linebreak: newline_list
+rule 97 linebreak: 
 
 ------- Symbols -------
 
 **Nonterminals, with rules where they appear
 
-  $start (38)
+  $start (40)
     on right: 
     on left : 
-  program (39)
+  program (41)
     on right: 
     on left : 1 2
-  linebreak (40)
+  linebreak (42)
     on right: 1 2 10 11 15 22 37 38 42 44 45 48 49 57 58 61
-    on left : 94 95
-  complete_commands (41)
+    on left : 96 97
+  complete_commands (43)
     on right: 2 4
     on left : 3 4
-  complete_command (42)
+  complete_command (44)
     on right: 3 4
     on left : 5 6
-  newline_list (43)
-    on right: 4 43 62 93 94
-    on left : 92 93
-  list (44)
+  newline_list (45)
+    on right: 4 43 62 95 96
+    on left : 94 95
+  list (46)
     on right: 5 6 7
     on left : 7 8
-  separator_op (45)
+  separator_op (47)
     on right: 5 7 61
-    on left : 90 91
-  and_or (46)
+    on left : 92 93
+  and_or (48)
     on right: 7 8 10 11 59 60
     on left : 9 10 11
-  pipeline (47)
+  pipeline (49)
     on right: 9 10 11
     on left : 12 13
-  pipe_sequence (48)
+  pipe_sequence (50)
     on right: 12 13 15
     on left : 14 15
-  command (49)
+  command (51)
     on right: 14 15
     on left : 16 17 18 19
-  simple_command (50)
+  simple_command (52)
     on right: 16
     on left : 63 64 65 66 67
-  compound_command (51)
+  compound_command (53)
     on right: 17 18 22
     on left : 23 24 25 26 27 28 29
-  redirect_list (52)
+  redirect_list (54)
     on right: 18 21
     on left : 20 21
-  function_definition (53)
+  function_definition (55)
     on right: 19
     on left : 22
-  io_redirect (54)
+  io_redirect (56)
     on right: 20 21 70 71 74 75
     on left : 78 79 80 81
-  brace_group (55)
+  brace_group (57)
     on right: 23
     on left : 30
-  subshell (56)
+  subshell (58)
     on right: 24
     on left : 31
-  if_clause (57)
+  if_clause (59)
     on right: 25
     on left : 52 53
-  while_clause (58)
+  while_clause (60)
     on right: 26
     on left : 32
-  until_clause (59)
+  until_clause (61)
     on right: 27
     on left : 33
-  for_clause (60)
+  for_clause (62)
     on right: 28
     on left : 35 36 37 38
-  case_clause (61)
+  case_clause (63)
     on right: 29
     on left : 44 45
-  compound_list (62)
+  compound_list (64)
     on right: 30 31 32 33 34 48 52 53 54 55 56
     on left : 57 58
-  do_group (63)
+  do_group (65)
     on right: 32 33 35 36 37 38
     on left : 34
-  name (64)
+  name (66)
     on right: 35 36 37 38
     on left : 39
-  sequential_sep (65)
+  sequential_sep (67)
     on right: 36 37 38
     on left : 42 43
-  wordlist (66)
+  wordlist (68)
     on right: 38 41
     on left : 40 41
-  case_list (67)
+  case_list (69)
     on right: 44 47
     on left : 46 47
-  case_item (68)
+  case_item (70)
     on right: 46 47
     on left : 48 49
-  patterns (69)
+  patterns (71)
     on right: 48 49 51
     on left : 50 51
-  else_part (70)
+  else_part (72)
     on right: 52 55
     on left : 54 55 56
-  term (71)
+  term (73)
     on right: 57 58 59
     on left : 59 60
-  separator (72)
+  separator (74)
     on right: 58 59
     on left : 61 62
-  cmd_prefix (73)
+  cmd_prefix (75)
     on right: 63 64 65 71 73
     on left : 70 71 72 73
-  cmd_word (74)
+  cmd_word (76)
     on right: 63 64
     on left : 69
-  cmd_suffix (75)
+  cmd_suffix (77)
     on right: 63 66 75 77
     on left : 74 75 76 77
-  cmd_name (76)
+  cmd_name (78)
     on right: 66 67
     on left : 68
-  io_file (77)
+  io_file (79)
     on right: 78 79
-    on left : 84 85 86 87 88
-  io_here (78)
+    on left : 84 85 86 87 88 89 90
+  io_here (80)
     on right: 80 81
     on left : 82 83
-  filename (79)
-    on right: 84 85 86 87 88
-    on left : 89
+  filename (81)
+    on right: 84 85 86 87 88 89 90
+    on left : 91
 
 **Terminals, with rules where they appear
 
   $end (0) 
   error (1) 
-  WORD (2) 22 40 41 44 45 50 51 68 69 76 77 82 83 89
+  WORD (2) 22 40 41 44 45 50 51 68 69 76 77 82 83 91
   ASSIGNMENT_WORD (3) 72 73
   IO_NUMBER (4) 79 81
-  NEWLINE (5) 92 93
+  NEWLINE (5) 94 95
   AND_IF (6) 10
   OR_IF (7) 11
   DGREAT (8) 86
@@ -244,31 +246,33 @@ rule 95 linebreak:
   CLOBBER (10) 88
   DLESS (11) 82
   DLESSDASH (12) 83
-  If (13) 52 53
-  Then (14) 52 53 54 55
-  Else (15) 56
-  Elif (16) 54 55
-  Fi (17) 52 53
-  Lbrace (18) 30
-  Rbrace (19) 30
-  Bang (20) 13
-  While (21) 32
-  Until (22) 33
-  Do (23) 34
-  Done (24) 34
-  For (25) 35 36 37 38
-  In (26) 37 38 44 45
-  NAME (27) 39
-  Case (28) 44 45
-  Esac (29) 44 45
-  DSEMI (30) 48 49
-  "|" (31) 15 51
-  "(" (32) 22 31
-  ")" (33) 22 31 48 49
-  ";" (34) 42 91
-  "<" (35) 84
-  ">" (36) 85
-  "&" (37) 90
+  GREATAND (13) 89
+  LESSAND (14) 90
+  If (15) 52 53
+  Then (16) 52 53 54 55
+  Else (17) 56
+  Elif (18) 54 55
+  Fi (19) 52 53
+  Lbrace (20) 30
+  Rbrace (21) 30
+  Bang (22) 13
+  While (23) 32
+  Until (24) 33
+  Do (25) 34
+  Done (26) 34
+  For (27) 35 36 37 38
+  In (28) 37 38 44 45
+  NAME (29) 39
+  Case (30) 44 45
+  Esac (31) 44 45
+  DSEMI (32) 48 49
+  "|" (33) 15 51
+  "(" (34) 22 31
+  ")" (35) 22 31 48 49
+  ";" (36) 42 93
+  "<" (37) 84
+  ">" (38) 85
+  "&" (39) 92
 
 --------- State ---------
 
@@ -276,7 +280,7 @@ state 0
 
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
   program       go to state 1
   linebreak     go to state 2
@@ -301,6 +305,8 @@ state 2
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -338,24 +344,24 @@ state 2
 
 state 3
 
-  92) newline_list : NEWLINE _
+  94) newline_list : NEWLINE _
 
-  $default      reduce using rule 92 (newline_list)
+  $default      reduce using rule 94 (newline_list)
 
 
 state 4
 
-  93) newline_list : newline_list _ NEWLINE
-  94) linebreak : newline_list _
+  95) newline_list : newline_list _ NEWLINE
+  96) linebreak : newline_list _
 
-  NEWLINE       shift, and go to state 46
-  $default      reduce using rule 94 (linebreak)
+  NEWLINE       shift, and go to state 48
+  $default      reduce using rule 96 (linebreak)
 
 
 state 5
 
 
-  $end          shift, and go to state 47
+  $end          shift, and go to state 49
 
 
 state 6
@@ -364,10 +370,10 @@ state 6
    4) complete_commands : complete_commands _ newline_list complete_command
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 48
-  newline_list  go to state 49
+  linebreak     go to state 50
+  newline_list  go to state 51
 
 state 7
 
@@ -382,11 +388,11 @@ state 8
    6) complete_command : list _
    7) list : list _ separator_op and_or
 
-  ";"           shift, and go to state 52
-  "&"           shift, and go to state 51
+  ";"           shift, and go to state 54
+  "&"           shift, and go to state 53
   $default      reduce using rule 6 (complete_command)
 
-  separator_op  go to state 50
+  separator_op  go to state 52
 
 state 9
 
@@ -394,8 +400,8 @@ state 9
   10) and_or : and_or _ AND_IF linebreak pipeline
   11) and_or : and_or _ OR_IF linebreak pipeline
 
-  AND_IF        shift, and go to state 53
-  OR_IF         shift, and go to state 54
+  AND_IF        shift, and go to state 55
+  OR_IF         shift, and go to state 56
   $default      reduce using rule 8 (list)
 
 
@@ -411,7 +417,7 @@ state 11
   12) pipeline : pipe_sequence _
   15) pipe_sequence : pipe_sequence _ "|" linebreak command
 
-  "|"           shift, and go to state 55
+  "|"           shift, and go to state 57
   $default      reduce using rule 12 (pipeline)
 
 
@@ -427,6 +433,8 @@ state 12
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   While         shift, and go to state 27
@@ -437,7 +445,7 @@ state 12
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
 
-  pipe_sequence  go to state 56
+  pipe_sequence  go to state 58
   command       go to state 13
   simple_command  go to state 14
   compound_command  go to state 15
@@ -480,12 +488,14 @@ state 15
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 17 (command)
 
-  redirect_list  go to state 57
-  io_redirect   go to state 58
+  redirect_list  go to state 59
+  io_redirect   go to state 60
   io_file       go to state 36
   io_here       go to state 38
 
@@ -501,7 +511,7 @@ state 17
   22) function_definition : WORD _ "(" ")" linebreak compound_command
   68) cmd_name : WORD _
 
-  "("           shift, and go to state 59
+  "("           shift, and go to state 61
   $default      reduce using rule 68 (cmd_name)
 
 
@@ -559,10 +569,10 @@ state 25
   30) brace_group : Lbrace _ compound_list Rbrace
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 60
-  linebreak     go to state 61
+  compound_list  go to state 62
+  linebreak     go to state 63
   newline_list  go to state 4
 
 state 26
@@ -570,10 +580,10 @@ state 26
   31) subshell : "(" _ compound_list ")"
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 62
-  linebreak     go to state 61
+  compound_list  go to state 64
+  linebreak     go to state 63
   newline_list  go to state 4
 
 state 27
@@ -581,10 +591,10 @@ state 27
   32) while_clause : While _ compound_list do_group
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 63
-  linebreak     go to state 61
+  compound_list  go to state 65
+  linebreak     go to state 63
   newline_list  go to state 4
 
 state 28
@@ -592,10 +602,10 @@ state 28
   33) until_clause : Until _ compound_list do_group
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 64
-  linebreak     go to state 61
+  compound_list  go to state 66
+  linebreak     go to state 63
   newline_list  go to state 4
 
 state 29
@@ -605,16 +615,16 @@ state 29
   37) for_clause : For _ name linebreak In sequential_sep do_group
   38) for_clause : For _ name linebreak In wordlist sequential_sep do_group
 
-  NAME          shift, and go to state 66
+  NAME          shift, and go to state 68
 
-  name          go to state 65
+  name          go to state 67
 
 state 30
 
   44) case_clause : Case _ WORD linebreak In linebreak case_list Esac
   45) case_clause : Case _ WORD linebreak In linebreak Esac
 
-  WORD          shift, and go to state 67
+  WORD          shift, and go to state 69
 
 
 state 31
@@ -623,10 +633,10 @@ state 31
   53) if_clause : If _ compound_list Then compound_list Fi
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 68
-  linebreak     go to state 61
+  compound_list  go to state 70
+  linebreak     go to state 63
   newline_list  go to state 4
 
 state 32
@@ -637,20 +647,22 @@ state 32
   71) cmd_prefix : cmd_prefix _ io_redirect
   73) cmd_prefix : cmd_prefix _ ASSIGNMENT_WORD
 
-  WORD          shift, and go to state 70
-  ASSIGNMENT_WORD  shift, and go to state 72
+  WORD          shift, and go to state 72
+  ASSIGNMENT_WORD  shift, and go to state 74
   IO_NUMBER     shift, and go to state 37
   DGREAT        shift, and go to state 43
   LESSGREAT     shift, and go to state 44
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 65 (simple_command)
 
-  cmd_word      go to state 69
-  io_redirect   go to state 71
+  cmd_word      go to state 71
+  io_redirect   go to state 73
   io_file       go to state 36
   io_here       go to state 38
 
@@ -659,19 +671,21 @@ state 33
   66) simple_command : cmd_name _ cmd_suffix
   67) simple_command : cmd_name _
 
-  WORD          shift, and go to state 75
+  WORD          shift, and go to state 77
   IO_NUMBER     shift, and go to state 37
   DGREAT        shift, and go to state 43
   LESSGREAT     shift, and go to state 44
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 67 (simple_command)
 
-  cmd_suffix    go to state 73
-  io_redirect   go to state 74
+  cmd_suffix    go to state 75
+  io_redirect   go to state 76
   io_file       go to state 36
   io_here       go to state 38
 
@@ -706,11 +720,13 @@ state 37
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
 
-  io_file       go to state 76
-  io_here       go to state 77
+  io_file       go to state 78
+  io_here       go to state 79
 
 state 38
 
@@ -723,91 +739,109 @@ state 39
 
   82) io_here : DLESS _ WORD
 
-  WORD          shift, and go to state 78
+  WORD          shift, and go to state 80
 
 
 state 40
 
   83) io_here : DLESSDASH _ WORD
 
-  WORD          shift, and go to state 79
+  WORD          shift, and go to state 81
 
 
 state 41
 
   84) io_file : "<" _ filename
 
-  WORD          shift, and go to state 81
+  WORD          shift, and go to state 83
 
-  filename      go to state 80
+  filename      go to state 82
 
 state 42
 
   85) io_file : ">" _ filename
 
-  WORD          shift, and go to state 81
+  WORD          shift, and go to state 83
 
-  filename      go to state 82
+  filename      go to state 84
 
 state 43
 
   86) io_file : DGREAT _ filename
 
-  WORD          shift, and go to state 81
+  WORD          shift, and go to state 83
 
-  filename      go to state 83
+  filename      go to state 85
 
 state 44
 
   87) io_file : LESSGREAT _ filename
 
-  WORD          shift, and go to state 81
+  WORD          shift, and go to state 83
 
-  filename      go to state 84
+  filename      go to state 86
 
 state 45
 
   88) io_file : CLOBBER _ filename
 
-  WORD          shift, and go to state 81
+  WORD          shift, and go to state 83
 
-  filename      go to state 85
+  filename      go to state 87
 
 state 46
 
-  93) newline_list : newline_list NEWLINE _
+  89) io_file : GREATAND _ filename
 
-  $default      reduce using rule 93 (newline_list)
+  WORD          shift, and go to state 83
 
+  filename      go to state 88
 
 state 47
+
+  90) io_file : LESSAND _ filename
+
+  WORD          shift, and go to state 83
+
+  filename      go to state 89
+
+state 48
+
+  95) newline_list : newline_list NEWLINE _
+
+  $default      reduce using rule 95 (newline_list)
+
+
+state 49
 
 
   $default      accept
 
 
-state 48
+state 50
 
    2) program : linebreak complete_commands linebreak _
 
   $default      reduce using rule 2 (program)
 
 
-state 49
+state 51
 
    4) complete_commands : complete_commands newline_list _ complete_command
-  93) newline_list : newline_list _ NEWLINE
-  94) linebreak : newline_list _
+  95) newline_list : newline_list _ NEWLINE
+  96) linebreak : newline_list _
 
   WORD          shift, and go to state 17
   ASSIGNMENT_WORD  shift, and go to state 35
   IO_NUMBER     shift, and go to state 37
-  NEWLINE       shift, and go to state 46
+  NEWLINE       shift, and go to state 48
   DGREAT        shift, and go to state 43
   LESSGREAT     shift, and go to state 44
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -818,9 +852,9 @@ state 49
   "("           shift, and go to state 26
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
-  $default      reduce using rule 94 (linebreak)
+  $default      reduce using rule 96 (linebreak)
 
-  complete_command  go to state 86
+  complete_command  go to state 90
   list          go to state 8
   and_or        go to state 9
   pipeline      go to state 10
@@ -842,7 +876,7 @@ state 49
   io_file       go to state 36
   io_here       go to state 38
 
-state 50
+state 52
 
    5) complete_command : list separator_op _
    7) list : list separator_op _ and_or
@@ -855,6 +889,8 @@ state 50
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -867,7 +903,7 @@ state 50
   ">"           shift, and go to state 42
   $default      reduce using rule 5 (complete_command)
 
-  and_or        go to state 87
+  and_or        go to state 91
   pipeline      go to state 10
   pipe_sequence  go to state 11
   command       go to state 13
@@ -887,60 +923,60 @@ state 50
   io_file       go to state 36
   io_here       go to state 38
 
-state 51
-
-  90) separator_op : "&" _
-
-  $default      reduce using rule 90 (separator_op)
-
-
-state 52
-
-  91) separator_op : ";" _
-
-  $default      reduce using rule 91 (separator_op)
-
-
 state 53
+
+  92) separator_op : "&" _
+
+  $default      reduce using rule 92 (separator_op)
+
+
+state 54
+
+  93) separator_op : ";" _
+
+  $default      reduce using rule 93 (separator_op)
+
+
+state 55
 
   10) and_or : and_or AND_IF _ linebreak pipeline
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 88
-  newline_list  go to state 4
-
-state 54
-
-  11) and_or : and_or OR_IF _ linebreak pipeline
-
-  NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
-
-  linebreak     go to state 89
-  newline_list  go to state 4
-
-state 55
-
-  15) pipe_sequence : pipe_sequence "|" _ linebreak command
-
-  NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
-
-  linebreak     go to state 90
+  linebreak     go to state 92
   newline_list  go to state 4
 
 state 56
 
+  11) and_or : and_or OR_IF _ linebreak pipeline
+
+  NEWLINE       shift, and go to state 3
+  $default      reduce using rule 97 (linebreak)
+
+  linebreak     go to state 93
+  newline_list  go to state 4
+
+state 57
+
+  15) pipe_sequence : pipe_sequence "|" _ linebreak command
+
+  NEWLINE       shift, and go to state 3
+  $default      reduce using rule 97 (linebreak)
+
+  linebreak     go to state 94
+  newline_list  go to state 4
+
+state 58
+
   13) pipeline : Bang pipe_sequence _
   15) pipe_sequence : pipe_sequence _ "|" linebreak command
 
-  "|"           shift, and go to state 55
+  "|"           shift, and go to state 57
   $default      reduce using rule 13 (pipeline)
 
 
-state 57
+state 59
 
   18) command : compound_command redirect_list _
   21) redirect_list : redirect_list _ io_redirect
@@ -951,36 +987,38 @@ state 57
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 18 (command)
 
-  io_redirect   go to state 91
+  io_redirect   go to state 95
   io_file       go to state 36
   io_here       go to state 38
 
-state 58
+state 60
 
   20) redirect_list : io_redirect _
 
   $default      reduce using rule 20 (redirect_list)
 
 
-state 59
+state 61
 
   22) function_definition : WORD "(" _ ")" linebreak compound_command
 
-  ")"           shift, and go to state 92
+  ")"           shift, and go to state 96
 
 
-state 60
+state 62
 
   30) brace_group : Lbrace compound_list _ Rbrace
 
-  Rbrace        shift, and go to state 93
+  Rbrace        shift, and go to state 97
 
 
-state 61
+state 63
 
   57) compound_list : linebreak _ term
   58) compound_list : linebreak _ term separator
@@ -993,6 +1031,8 @@ state 61
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -1005,7 +1045,7 @@ state 61
   ">"           shift, and go to state 42
 
   pipeline      go to state 10
-  and_or        go to state 94
+  and_or        go to state 98
   pipe_sequence  go to state 11
   command       go to state 13
   simple_command  go to state 14
@@ -1018,37 +1058,37 @@ state 61
   until_clause  go to state 22
   for_clause    go to state 23
   case_clause   go to state 24
-  term          go to state 95
+  term          go to state 99
   cmd_prefix    go to state 32
   cmd_name      go to state 33
   io_redirect   go to state 34
   io_file       go to state 36
   io_here       go to state 38
 
-state 62
+state 64
 
   31) subshell : "(" compound_list _ ")"
 
-  ")"           shift, and go to state 96
+  ")"           shift, and go to state 100
 
 
-state 63
+state 65
 
   32) while_clause : While compound_list _ do_group
 
-  Do            shift, and go to state 98
+  Do            shift, and go to state 102
 
-  do_group      go to state 97
+  do_group      go to state 101
 
-state 64
+state 66
 
   33) until_clause : Until compound_list _ do_group
 
-  Do            shift, and go to state 98
+  Do            shift, and go to state 102
 
-  do_group      go to state 99
+  do_group      go to state 103
 
-state 65
+state 67
 
   35) for_clause : For name _ do_group
   36) for_clause : For name _ sequential_sep do_group
@@ -1056,207 +1096,225 @@ state 65
   38) for_clause : For name _ linebreak In wordlist sequential_sep do_group
 
   NEWLINE       shift, and go to state 3
-  Do            shift, and go to state 98
-  ";"           shift, and go to state 103
-  $default      reduce using rule 95 (linebreak)
+  Do            shift, and go to state 102
+  ";"           shift, and go to state 107
+  $default      reduce using rule 97 (linebreak)
 
-  do_group      go to state 100
-  sequential_sep  go to state 101
-  linebreak     go to state 102
-  newline_list  go to state 104
+  do_group      go to state 104
+  sequential_sep  go to state 105
+  linebreak     go to state 106
+  newline_list  go to state 108
 
-state 66
+state 68
 
   39) name : NAME _
 
   $default      reduce using rule 39 (name)
 
 
-state 67
+state 69
 
   44) case_clause : Case WORD _ linebreak In linebreak case_list Esac
   45) case_clause : Case WORD _ linebreak In linebreak Esac
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 105
+  linebreak     go to state 109
   newline_list  go to state 4
 
-state 68
+state 70
 
   52) if_clause : If compound_list _ Then compound_list else_part Fi
   53) if_clause : If compound_list _ Then compound_list Fi
 
-  Then          shift, and go to state 106
+  Then          shift, and go to state 110
 
 
-state 69
+state 71
 
   63) simple_command : cmd_prefix cmd_word _ cmd_suffix
   64) simple_command : cmd_prefix cmd_word _
 
-  WORD          shift, and go to state 75
+  WORD          shift, and go to state 77
   IO_NUMBER     shift, and go to state 37
   DGREAT        shift, and go to state 43
   LESSGREAT     shift, and go to state 44
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 64 (simple_command)
 
-  cmd_suffix    go to state 107
-  io_redirect   go to state 74
+  cmd_suffix    go to state 111
+  io_redirect   go to state 76
   io_file       go to state 36
   io_here       go to state 38
 
-state 70
+state 72
 
   69) cmd_word : WORD _
 
   $default      reduce using rule 69 (cmd_word)
 
 
-state 71
+state 73
 
   71) cmd_prefix : cmd_prefix io_redirect _
 
   $default      reduce using rule 71 (cmd_prefix)
 
 
-state 72
+state 74
 
   73) cmd_prefix : cmd_prefix ASSIGNMENT_WORD _
 
   $default      reduce using rule 73 (cmd_prefix)
 
 
-state 73
+state 75
 
   66) simple_command : cmd_name cmd_suffix _
   75) cmd_suffix : cmd_suffix _ io_redirect
   77) cmd_suffix : cmd_suffix _ WORD
 
-  WORD          shift, and go to state 109
+  WORD          shift, and go to state 113
   IO_NUMBER     shift, and go to state 37
   DGREAT        shift, and go to state 43
   LESSGREAT     shift, and go to state 44
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 66 (simple_command)
 
-  io_redirect   go to state 108
+  io_redirect   go to state 112
   io_file       go to state 36
   io_here       go to state 38
 
-state 74
+state 76
 
   74) cmd_suffix : io_redirect _
 
   $default      reduce using rule 74 (cmd_suffix)
 
 
-state 75
+state 77
 
   76) cmd_suffix : WORD _
 
   $default      reduce using rule 76 (cmd_suffix)
 
 
-state 76
+state 78
 
   79) io_redirect : IO_NUMBER io_file _
 
   $default      reduce using rule 79 (io_redirect)
 
 
-state 77
+state 79
 
   81) io_redirect : IO_NUMBER io_here _
 
   $default      reduce using rule 81 (io_redirect)
 
 
-state 78
+state 80
 
   82) io_here : DLESS WORD _
 
   $default      reduce using rule 82 (io_here)
 
 
-state 79
+state 81
 
   83) io_here : DLESSDASH WORD _
 
   $default      reduce using rule 83 (io_here)
 
 
-state 80
+state 82
 
   84) io_file : "<" filename _
 
   $default      reduce using rule 84 (io_file)
 
 
-state 81
+state 83
 
-  89) filename : WORD _
+  91) filename : WORD _
 
-  $default      reduce using rule 89 (filename)
+  $default      reduce using rule 91 (filename)
 
 
-state 82
+state 84
 
   85) io_file : ">" filename _
 
   $default      reduce using rule 85 (io_file)
 
 
-state 83
+state 85
 
   86) io_file : DGREAT filename _
 
   $default      reduce using rule 86 (io_file)
 
 
-state 84
+state 86
 
   87) io_file : LESSGREAT filename _
 
   $default      reduce using rule 87 (io_file)
 
 
-state 85
+state 87
 
   88) io_file : CLOBBER filename _
 
   $default      reduce using rule 88 (io_file)
 
 
-state 86
+state 88
+
+  89) io_file : GREATAND filename _
+
+  $default      reduce using rule 89 (io_file)
+
+
+state 89
+
+  90) io_file : LESSAND filename _
+
+  $default      reduce using rule 90 (io_file)
+
+
+state 90
 
    4) complete_commands : complete_commands newline_list complete_command _
 
   $default      reduce using rule 4 (complete_commands)
 
 
-state 87
+state 91
 
    7) list : list separator_op and_or _
   10) and_or : and_or _ AND_IF linebreak pipeline
   11) and_or : and_or _ OR_IF linebreak pipeline
 
-  AND_IF        shift, and go to state 53
-  OR_IF         shift, and go to state 54
+  AND_IF        shift, and go to state 55
+  OR_IF         shift, and go to state 56
   $default      reduce using rule 7 (list)
 
 
-state 88
+state 92
 
   10) and_or : and_or AND_IF linebreak _ pipeline
 
@@ -1268,6 +1326,8 @@ state 88
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -1279,7 +1339,7 @@ state 88
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
 
-  pipeline      go to state 110
+  pipeline      go to state 114
   pipe_sequence  go to state 11
   command       go to state 13
   simple_command  go to state 14
@@ -1298,7 +1358,7 @@ state 88
   io_file       go to state 36
   io_here       go to state 38
 
-state 89
+state 93
 
   11) and_or : and_or OR_IF linebreak _ pipeline
 
@@ -1310,6 +1370,8 @@ state 89
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -1321,7 +1383,7 @@ state 89
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
 
-  pipeline      go to state 111
+  pipeline      go to state 115
   pipe_sequence  go to state 11
   command       go to state 13
   simple_command  go to state 14
@@ -1340,7 +1402,7 @@ state 89
   io_file       go to state 36
   io_here       go to state 38
 
-state 90
+state 94
 
   15) pipe_sequence : pipe_sequence "|" linebreak _ command
 
@@ -1352,6 +1414,8 @@ state 90
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   While         shift, and go to state 27
@@ -1362,7 +1426,7 @@ state 90
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
 
-  command       go to state 112
+  command       go to state 116
   simple_command  go to state 14
   compound_command  go to state 15
   function_definition  go to state 16
@@ -1379,209 +1443,211 @@ state 90
   io_file       go to state 36
   io_here       go to state 38
 
-state 91
+state 95
 
   21) redirect_list : redirect_list io_redirect _
 
   $default      reduce using rule 21 (redirect_list)
 
 
-state 92
+state 96
 
   22) function_definition : WORD "(" ")" _ linebreak compound_command
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 113
+  linebreak     go to state 117
   newline_list  go to state 4
 
-state 93
+state 97
 
   30) brace_group : Lbrace compound_list Rbrace _
 
   $default      reduce using rule 30 (brace_group)
 
 
-state 94
+state 98
 
   10) and_or : and_or _ AND_IF linebreak pipeline
   11) and_or : and_or _ OR_IF linebreak pipeline
   60) term : and_or _
 
-  AND_IF        shift, and go to state 53
-  OR_IF         shift, and go to state 54
+  AND_IF        shift, and go to state 55
+  OR_IF         shift, and go to state 56
   $default      reduce using rule 60 (term)
 
 
-state 95
+state 99
 
   57) compound_list : linebreak term _
   58) compound_list : linebreak term _ separator
   59) term : term _ separator and_or
 
   NEWLINE       shift, and go to state 3
-  ";"           shift, and go to state 52
-  "&"           shift, and go to state 51
+  ";"           shift, and go to state 54
+  "&"           shift, and go to state 53
   $default      reduce using rule 57 (compound_list)
 
-  separator     go to state 114
-  separator_op  go to state 115
-  newline_list  go to state 116
+  separator     go to state 118
+  separator_op  go to state 119
+  newline_list  go to state 120
 
-state 96
+state 100
 
   31) subshell : "(" compound_list ")" _
 
   $default      reduce using rule 31 (subshell)
 
 
-state 97
+state 101
 
   32) while_clause : While compound_list do_group _
 
   $default      reduce using rule 32 (while_clause)
 
 
-state 98
+state 102
 
   34) do_group : Do _ compound_list Done
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 117
-  linebreak     go to state 61
+  compound_list  go to state 121
+  linebreak     go to state 63
   newline_list  go to state 4
 
-state 99
+state 103
 
   33) until_clause : Until compound_list do_group _
 
   $default      reduce using rule 33 (until_clause)
 
 
-state 100
+state 104
 
   35) for_clause : For name do_group _
 
   $default      reduce using rule 35 (for_clause)
 
 
-state 101
+state 105
 
   36) for_clause : For name sequential_sep _ do_group
 
-  Do            shift, and go to state 98
+  Do            shift, and go to state 102
 
-  do_group      go to state 118
+  do_group      go to state 122
 
-state 102
+state 106
 
   37) for_clause : For name linebreak _ In sequential_sep do_group
   38) for_clause : For name linebreak _ In wordlist sequential_sep do_group
 
-  In            shift, and go to state 119
+  In            shift, and go to state 123
 
 
-state 103
+state 107
 
   42) sequential_sep : ";" _ linebreak
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 120
+  linebreak     go to state 124
   newline_list  go to state 4
 
-state 104
+state 108
 
   43) sequential_sep : newline_list _
-  93) newline_list : newline_list _ NEWLINE
-  94) linebreak : newline_list _
+  95) newline_list : newline_list _ NEWLINE
+  96) linebreak : newline_list _
 
-  NEWLINE       shift, and go to state 46
-  In            reduce using rule 94 (linebreak)
+  NEWLINE       shift, and go to state 48
+  In            reduce using rule 96 (linebreak)
   $default      reduce using rule 43 (sequential_sep)
 
 
-state 105
+state 109
 
   44) case_clause : Case WORD linebreak _ In linebreak case_list Esac
   45) case_clause : Case WORD linebreak _ In linebreak Esac
 
-  In            shift, and go to state 121
+  In            shift, and go to state 125
 
 
-state 106
+state 110
 
   52) if_clause : If compound_list Then _ compound_list else_part Fi
   53) if_clause : If compound_list Then _ compound_list Fi
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 122
-  linebreak     go to state 61
+  compound_list  go to state 126
+  linebreak     go to state 63
   newline_list  go to state 4
 
-state 107
+state 111
 
   63) simple_command : cmd_prefix cmd_word cmd_suffix _
   75) cmd_suffix : cmd_suffix _ io_redirect
   77) cmd_suffix : cmd_suffix _ WORD
 
-  WORD          shift, and go to state 109
+  WORD          shift, and go to state 113
   IO_NUMBER     shift, and go to state 37
   DGREAT        shift, and go to state 43
   LESSGREAT     shift, and go to state 44
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
   $default      reduce using rule 63 (simple_command)
 
-  io_redirect   go to state 108
+  io_redirect   go to state 112
   io_file       go to state 36
   io_here       go to state 38
 
-state 108
+state 112
 
   75) cmd_suffix : cmd_suffix io_redirect _
 
   $default      reduce using rule 75 (cmd_suffix)
 
 
-state 109
+state 113
 
   77) cmd_suffix : cmd_suffix WORD _
 
   $default      reduce using rule 77 (cmd_suffix)
 
 
-state 110
+state 114
 
   10) and_or : and_or AND_IF linebreak pipeline _
 
   $default      reduce using rule 10 (and_or)
 
 
-state 111
+state 115
 
   11) and_or : and_or OR_IF linebreak pipeline _
 
   $default      reduce using rule 11 (and_or)
 
 
-state 112
+state 116
 
   15) pipe_sequence : pipe_sequence "|" linebreak command _
 
   $default      reduce using rule 15 (pipe_sequence)
 
 
-state 113
+state 117
 
   22) function_definition : WORD "(" ")" linebreak _ compound_command
 
@@ -1593,7 +1659,7 @@ state 113
   Case          shift, and go to state 30
   "("           shift, and go to state 26
 
-  compound_command  go to state 123
+  compound_command  go to state 127
   brace_group   go to state 18
   subshell      go to state 19
   if_clause     go to state 20
@@ -1602,7 +1668,7 @@ state 113
   for_clause    go to state 23
   case_clause   go to state 24
 
-state 114
+state 118
 
   58) compound_list : linebreak term separator _
   59) term : term separator _ and_or
@@ -1615,6 +1681,8 @@ state 114
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -1628,7 +1696,7 @@ state 114
   $default      reduce using rule 58 (compound_list)
 
   pipeline      go to state 10
-  and_or        go to state 124
+  and_or        go to state 128
   pipe_sequence  go to state 11
   command       go to state 13
   simple_command  go to state 14
@@ -1647,344 +1715,344 @@ state 114
   io_file       go to state 36
   io_here       go to state 38
 
-state 115
+state 119
 
   61) separator : separator_op _ linebreak
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 125
+  linebreak     go to state 129
   newline_list  go to state 4
 
-state 116
+state 120
 
   62) separator : newline_list _
-  93) newline_list : newline_list _ NEWLINE
+  95) newline_list : newline_list _ NEWLINE
 
-  NEWLINE       shift, and go to state 46
+  NEWLINE       shift, and go to state 48
   $default      reduce using rule 62 (separator)
 
 
-state 117
+state 121
 
   34) do_group : Do compound_list _ Done
 
-  Done          shift, and go to state 126
+  Done          shift, and go to state 130
 
 
-state 118
+state 122
 
   36) for_clause : For name sequential_sep do_group _
 
   $default      reduce using rule 36 (for_clause)
 
 
-state 119
+state 123
 
   37) for_clause : For name linebreak In _ sequential_sep do_group
   38) for_clause : For name linebreak In _ wordlist sequential_sep do_group
 
-  WORD          shift, and go to state 129
+  WORD          shift, and go to state 133
   NEWLINE       shift, and go to state 3
-  ";"           shift, and go to state 103
+  ";"           shift, and go to state 107
 
-  sequential_sep  go to state 127
-  wordlist      go to state 128
-  newline_list  go to state 130
+  sequential_sep  go to state 131
+  wordlist      go to state 132
+  newline_list  go to state 134
 
-state 120
+state 124
 
   42) sequential_sep : ";" linebreak _
 
   $default      reduce using rule 42 (sequential_sep)
 
 
-state 121
+state 125
 
   44) case_clause : Case WORD linebreak In _ linebreak case_list Esac
   45) case_clause : Case WORD linebreak In _ linebreak Esac
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 131
+  linebreak     go to state 135
   newline_list  go to state 4
 
-state 122
+state 126
 
   52) if_clause : If compound_list Then compound_list _ else_part Fi
   53) if_clause : If compound_list Then compound_list _ Fi
 
-  Else          shift, and go to state 135
-  Elif          shift, and go to state 134
-  Fi            shift, and go to state 133
+  Else          shift, and go to state 139
+  Elif          shift, and go to state 138
+  Fi            shift, and go to state 137
 
-  else_part     go to state 132
+  else_part     go to state 136
 
-state 123
+state 127
 
   22) function_definition : WORD "(" ")" linebreak compound_command _
 
   $default      reduce using rule 22 (function_definition)
 
 
-state 124
+state 128
 
   10) and_or : and_or _ AND_IF linebreak pipeline
   11) and_or : and_or _ OR_IF linebreak pipeline
   59) term : term separator and_or _
 
-  AND_IF        shift, and go to state 53
-  OR_IF         shift, and go to state 54
+  AND_IF        shift, and go to state 55
+  OR_IF         shift, and go to state 56
   $default      reduce using rule 59 (term)
 
 
-state 125
+state 129
 
   61) separator : separator_op linebreak _
 
   $default      reduce using rule 61 (separator)
 
 
-state 126
+state 130
 
   34) do_group : Do compound_list Done _
 
   $default      reduce using rule 34 (do_group)
 
 
-state 127
+state 131
 
   37) for_clause : For name linebreak In sequential_sep _ do_group
 
-  Do            shift, and go to state 98
+  Do            shift, and go to state 102
 
-  do_group      go to state 136
+  do_group      go to state 140
 
-state 128
+state 132
 
   38) for_clause : For name linebreak In wordlist _ sequential_sep do_group
   41) wordlist : wordlist _ WORD
 
-  WORD          shift, and go to state 138
+  WORD          shift, and go to state 142
   NEWLINE       shift, and go to state 3
-  ";"           shift, and go to state 103
+  ";"           shift, and go to state 107
 
-  sequential_sep  go to state 137
-  newline_list  go to state 130
+  sequential_sep  go to state 141
+  newline_list  go to state 134
 
-state 129
+state 133
 
   40) wordlist : WORD _
 
   $default      reduce using rule 40 (wordlist)
 
 
-state 130
+state 134
 
   43) sequential_sep : newline_list _
-  93) newline_list : newline_list _ NEWLINE
+  95) newline_list : newline_list _ NEWLINE
 
-  NEWLINE       shift, and go to state 46
+  NEWLINE       shift, and go to state 48
   $default      reduce using rule 43 (sequential_sep)
 
 
-state 131
+state 135
 
   44) case_clause : Case WORD linebreak In linebreak _ case_list Esac
   45) case_clause : Case WORD linebreak In linebreak _ Esac
 
-  WORD          shift, and go to state 143
-  Esac          shift, and go to state 140
+  WORD          shift, and go to state 147
+  Esac          shift, and go to state 144
 
-  case_list     go to state 139
-  case_item     go to state 141
-  patterns      go to state 142
+  case_list     go to state 143
+  case_item     go to state 145
+  patterns      go to state 146
 
-state 132
+state 136
 
   52) if_clause : If compound_list Then compound_list else_part _ Fi
 
-  Fi            shift, and go to state 144
+  Fi            shift, and go to state 148
 
 
-state 133
+state 137
 
   53) if_clause : If compound_list Then compound_list Fi _
 
   $default      reduce using rule 53 (if_clause)
 
 
-state 134
+state 138
 
   54) else_part : Elif _ compound_list Then compound_list
   55) else_part : Elif _ compound_list Then compound_list else_part
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 145
-  linebreak     go to state 61
+  compound_list  go to state 149
+  linebreak     go to state 63
   newline_list  go to state 4
 
-state 135
+state 139
 
   56) else_part : Else _ compound_list
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 146
-  linebreak     go to state 61
+  compound_list  go to state 150
+  linebreak     go to state 63
   newline_list  go to state 4
 
-state 136
+state 140
 
   37) for_clause : For name linebreak In sequential_sep do_group _
 
   $default      reduce using rule 37 (for_clause)
 
 
-state 137
+state 141
 
   38) for_clause : For name linebreak In wordlist sequential_sep _ do_group
 
-  Do            shift, and go to state 98
+  Do            shift, and go to state 102
 
-  do_group      go to state 147
+  do_group      go to state 151
 
-state 138
+state 142
 
   41) wordlist : wordlist WORD _
 
   $default      reduce using rule 41 (wordlist)
 
 
-state 139
+state 143
 
   44) case_clause : Case WORD linebreak In linebreak case_list _ Esac
   47) case_list : case_list _ case_item
 
-  WORD          shift, and go to state 143
-  Esac          shift, and go to state 148
+  WORD          shift, and go to state 147
+  Esac          shift, and go to state 152
 
-  case_item     go to state 149
-  patterns      go to state 142
+  case_item     go to state 153
+  patterns      go to state 146
 
-state 140
+state 144
 
   45) case_clause : Case WORD linebreak In linebreak Esac _
 
   $default      reduce using rule 45 (case_clause)
 
 
-state 141
+state 145
 
   46) case_list : case_item _
 
   $default      reduce using rule 46 (case_list)
 
 
-state 142
+state 146
 
   48) case_item : patterns _ ")" compound_list DSEMI linebreak
   49) case_item : patterns _ ")" linebreak DSEMI linebreak
   51) patterns : patterns _ "|" WORD
 
-  "|"           shift, and go to state 151
-  ")"           shift, and go to state 150
+  "|"           shift, and go to state 155
+  ")"           shift, and go to state 154
 
 
-state 143
+state 147
 
   50) patterns : WORD _
 
   $default      reduce using rule 50 (patterns)
 
 
-state 144
+state 148
 
   52) if_clause : If compound_list Then compound_list else_part Fi _
 
   $default      reduce using rule 52 (if_clause)
 
 
-state 145
+state 149
 
   54) else_part : Elif compound_list _ Then compound_list
   55) else_part : Elif compound_list _ Then compound_list else_part
 
-  Then          shift, and go to state 152
+  Then          shift, and go to state 156
 
 
-state 146
+state 150
 
   56) else_part : Else compound_list _
 
   $default      reduce using rule 56 (else_part)
 
 
-state 147
+state 151
 
   38) for_clause : For name linebreak In wordlist sequential_sep do_group _
 
   $default      reduce using rule 38 (for_clause)
 
 
-state 148
+state 152
 
   44) case_clause : Case WORD linebreak In linebreak case_list Esac _
 
   $default      reduce using rule 44 (case_clause)
 
 
-state 149
+state 153
 
   47) case_list : case_list case_item _
 
   $default      reduce using rule 47 (case_list)
 
 
-state 150
+state 154
 
   48) case_item : patterns ")" _ compound_list DSEMI linebreak
   49) case_item : patterns ")" _ linebreak DSEMI linebreak
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 153
-  linebreak     go to state 154
+  compound_list  go to state 157
+  linebreak     go to state 158
   newline_list  go to state 4
 
-state 151
+state 155
 
   51) patterns : patterns "|" _ WORD
 
-  WORD          shift, and go to state 155
+  WORD          shift, and go to state 159
 
 
-state 152
+state 156
 
   54) else_part : Elif compound_list Then _ compound_list
   55) else_part : Elif compound_list Then _ compound_list else_part
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  compound_list  go to state 156
-  linebreak     go to state 61
+  compound_list  go to state 160
+  linebreak     go to state 63
   newline_list  go to state 4
 
-state 153
+state 157
 
   48) case_item : patterns ")" compound_list _ DSEMI linebreak
 
-  DSEMI         shift, and go to state 157
+  DSEMI         shift, and go to state 161
 
 
-state 154
+state 158
 
   49) case_item : patterns ")" linebreak _ DSEMI linebreak
   57) compound_list : linebreak _ term
@@ -1998,6 +2066,8 @@ state 154
   CLOBBER       shift, and go to state 45
   DLESS         shift, and go to state 39
   DLESSDASH     shift, and go to state 40
+  GREATAND      shift, and go to state 46
+  LESSAND       shift, and go to state 47
   If            shift, and go to state 31
   Lbrace        shift, and go to state 25
   Bang          shift, and go to state 12
@@ -2005,13 +2075,13 @@ state 154
   Until         shift, and go to state 28
   For           shift, and go to state 29
   Case          shift, and go to state 30
-  DSEMI         shift, and go to state 158
+  DSEMI         shift, and go to state 162
   "("           shift, and go to state 26
   "<"           shift, and go to state 41
   ">"           shift, and go to state 42
 
   pipeline      go to state 10
-  and_or        go to state 94
+  and_or        go to state 98
   pipe_sequence  go to state 11
   command       go to state 13
   simple_command  go to state 14
@@ -2024,66 +2094,66 @@ state 154
   until_clause  go to state 22
   for_clause    go to state 23
   case_clause   go to state 24
-  term          go to state 95
+  term          go to state 99
   cmd_prefix    go to state 32
   cmd_name      go to state 33
   io_redirect   go to state 34
   io_file       go to state 36
   io_here       go to state 38
 
-state 155
+state 159
 
   51) patterns : patterns "|" WORD _
 
   $default      reduce using rule 51 (patterns)
 
 
-state 156
+state 160
 
   54) else_part : Elif compound_list Then compound_list _
   55) else_part : Elif compound_list Then compound_list _ else_part
 
-  Else          shift, and go to state 135
-  Elif          shift, and go to state 134
+  Else          shift, and go to state 139
+  Elif          shift, and go to state 138
   $default      reduce using rule 54 (else_part)
 
-  else_part     go to state 159
+  else_part     go to state 163
 
-state 157
+state 161
 
   48) case_item : patterns ")" compound_list DSEMI _ linebreak
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 160
+  linebreak     go to state 164
   newline_list  go to state 4
 
-state 158
+state 162
 
   49) case_item : patterns ")" linebreak DSEMI _ linebreak
 
   NEWLINE       shift, and go to state 3
-  $default      reduce using rule 95 (linebreak)
+  $default      reduce using rule 97 (linebreak)
 
-  linebreak     go to state 161
+  linebreak     go to state 165
   newline_list  go to state 4
 
-state 159
+state 163
 
   55) else_part : Elif compound_list Then compound_list else_part _
 
   $default      reduce using rule 55 (else_part)
 
 
-state 160
+state 164
 
   48) case_item : patterns ")" compound_list DSEMI linebreak _
 
   $default      reduce using rule 48 (case_item)
 
 
-state 161
+state 165
 
   49) case_item : patterns ")" linebreak DSEMI linebreak _
 

@@ -27,6 +27,11 @@ module Rush
   # status 2; interactively it is reported and the shell carries on.
   class BuiltinError < Error; end
 
+  # A redirection that fails at runtime (e.g. `n>&m` duplicating a fd that is not
+  # open): the command is not run and fails with status 2, but — unlike a
+  # special-builtin error — the shell carries on.
+  class RedirectError < Error; end
+
   # Control-flow signal: `exit` unwinds to the top level carrying a status code.
   class ExitSignal < Error
     attr_reader :code

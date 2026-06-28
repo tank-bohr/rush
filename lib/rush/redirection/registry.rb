@@ -17,9 +17,13 @@ module Rush
       readwrite: [File::RDWR | File::CREAT, 0], clobber: ['w', 1]
     }.freeze
 
+    # Default fd for the dup operators: 1 for >&, 0 for <&.
+    DUPS = { dup_out: 1, dup_in: 0 }.freeze
+
     def self.default_registry
       Registry.new.tap do |registry|
         DEFAULTS.each { |kind, (mode, fd)| registry.register(kind, FileRedirect.new(mode, fd)) }
+        DUPS.each { |kind, fd| registry.register(kind, DupRedirect.new(fd)) }
         registry.register(:heredoc, HereDocRedirect.new)
       end
     end

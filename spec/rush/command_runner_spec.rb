@@ -54,6 +54,11 @@ RSpec.describe Rush::CommandRunner do
     expect(system).not_to have_received(:close_redirect)
   end
 
+  it 'fails with status 1 when a builtin writes to a fd closed by >&-' do
+    redirect = Rush::AST::Redirect.new(kind: :dup_out, target: word('-'), io_number: nil)
+    expect(run(simple(words: [word('echo'), word('hi')], redirects: [redirect])).exitstatus).to eq(1)
+  end
+
   it 'dispatches to a defined function before falling through to an external' do
     state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success
