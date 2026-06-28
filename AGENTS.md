@@ -9,7 +9,7 @@ verify against differentially, so rush matches `dash -c` in practice; but where 
 diverges from POSIX, follow the standard, not dash. Keep this file small and stable; bulk
 knowledge lives in `docs/` and the backlog lives in beads (see "Where things live").
 
-**Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate (in progress) · 3 full POSIX scripting ·
+**Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate ✓ · 3 full POSIX scripting (next) ·
 4 (optional) job control + interactive. Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
 
 ## Build & Test

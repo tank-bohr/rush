@@ -55,6 +55,15 @@ RSpec.describe Rush::Builtins::Set do
     expect(run('-q')).to be_success
   end
 
+  it 'toggles verbose with -v/+v and the -o verbose long form' do
+    run('-v')
+    expect(state.option?(:verbose)).to be(true)
+    run('+v')
+    expect(state.option?(:verbose)).to be(false)
+    run('-o', 'verbose')
+    expect(state.option?(:verbose)).to be(true)
+  end
+
   it 'toggles an option by long name with -o and +o' do
     run('-o', 'errexit')
     expect(state.option?(:errexit)).to be(true)

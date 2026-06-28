@@ -415,6 +415,11 @@ RSpec.describe 'rush vs dash (differential)' do
     'set a b c; shift 1 2; echo "[$*]"',
     'set a b c; shift 1abc; echo after',
     '( shift ); echo sub=$?',
+    # hash is a regular builtin: an empty cache lists nothing, -r clears, a builtin
+    # name and a slash path are no-ops, an unknown name errors (status 1) but does
+    # not abort. (PATH-resolving cases need a controlled PATH; covered separately.)
+    'hash', 'hash -r', 'hash echo; hash', 'hash -r; hash',
+    'hash nosuchcmd_rush_zzz; echo $?', 'hash /no/such/path; hash; echo done',
     # incremental execution: complete commands run (and flush) before a later
     # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
     # fires the EXIT trap with $?=2 (which may override the exit code via exit)
@@ -741,6 +746,28 @@ RSpec.describe 'rush vs dash (differential)' do
     Dir.mktmpdir do |dir|
       function_redirect_snippets.each do |snippet|
         source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
+      end
+    end
+  end
+
+  # `hash name` resolves the name through PATH and remembers its full path; the
+  # listing is sorted by name. Driven against a controlled PATH so rush and dash
+  # resolve to identical paths regardless of the host.
+  def hash_snippets
+    ['hash z a; hash', 'hash a; hash z; hash', 'hash a; hash -r; hash',
+     'hash a missing_zzz; echo "rc=$?"; hash']
+  end
+
+  it 'caches and lists PATH command locations the same as dash' do
+    Dir.mktmpdir do |dir|
+      %w[a z].each do |name|
+        path = File.join(dir, name)
+        File.write(path, "#!/bin/sh\n:\n")
+        FileUtils.chmod(0o755, path)
+      end
+      hash_snippets.each do |snippet|
+        source = "PATH=#{dir}; #{snippet}"
         expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
       end
     end

@@ -52,6 +52,8 @@ filed as a beads issue.
     (7al):** see the function-redirect lesson below.
 14. **`shift` past `$#` (and a bad operand) didn't abort** (rush no-op'd with status 1) — **fixed
     (7am):** now a special-builtin `BuiltinError`. See the shift lesson below.
+15. **Missing `hash` / `times` builtins and `set -v`** — **added (7an):** the low-value trio. See
+    the trio lesson below; includes one accepted `hash` auto-cache divergence.
 
 **Notes:**
 - **`pwd` / `$PWD`**: a fuzz "divergence" where rush printed an inherited `$PWD` vs dash's
@@ -171,6 +173,29 @@ dash showed `number()` accepts a leading `+`, leading zeros (decimal, not octal)
 blanks (`+1`/`01`/` 1` all shift 1) but rejects trailing garbage / empty / hex (`1abc`/``/`0x2`),
 and **ignores operands past the first** (`shift 1 2` ≡ `shift 1`) — so no bespoke parser is
 needed. `shift 0` and `shift $#` (exactly) succeed; only `> $#` aborts.
+
+### The low-value trio: `hash` / `times` / `set -v` (7an, beads `rush-6wx.4`)
+"Low-value" because none is cleanly differential-testable; verified by format/structure plus
+unit specs, with a few deterministic differential cases.
+- **`times`** — two lines, `<min>m<sec>s <min>m<sec>s` (shell, then children), six-decimal
+  seconds, via a `SystemCalls#times` port (`Process.times`; the fake returns zeros). The values
+  are non-deterministic so there is no differential case — a unit spec pins the format.
+- **`set -v`** — added `v`/`verbose` to the option maps; the echo lives in `CLI#run_commands`,
+  which wraps the line-pump so each input line is written to stderr *as it is read* when verbose
+  is set. Because the flag is checked at read time and lines are pulled lazily by `ProgramReader`,
+  a `set -v`/`set +v` correctly toggles which *later* lines echo. In `-c` mode the whole program
+  is one "line" already read, so nothing echoes — matching dash. (stderr, so differential-blind.)
+- **`hash`** — an explicit `command_hash` (name→path) on `ShellState`: `hash name` resolves via
+  `CommandLookup#find` and caches a `:file` hit (a slash path / builtin / function is a no-op; an
+  unknown name errors with status 1, but `hash` is a *regular* builtin so it does not abort); `-r`
+  clears; bare `hash` lists paths sorted by name. **Accepted divergence:** rush does not
+  auto-populate the cache as commands execute (dash caches a utility's location on use), because
+  rush delegates PATH resolution to `Process.spawn` (the OS) and has no resolved path to record
+  without a redundant lookup on the hot path. Observable only via `<cmd>; hash`; the cache is
+  otherwise bit-for-bit consistent with dash (`hash a z; hash` lists `a` then `z` by full path).
+- Naming: the builtin class is `Rush::Builtins::Hash`, shadowing `::Hash` only within the
+  `Builtins` namespace (the `Set` builtin sets the precedent) — chosen over `Hash_` so the spec
+  path cop is satisfied; safe because no builtin references core `Hash`.
 
 ---
 

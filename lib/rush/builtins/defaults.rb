@@ -11,7 +11,8 @@ module Rush
       'export' => Export, 'unset' => Unset, 'eval' => Eval, 'read' => Read,
       'printf' => Printf, '.' => Dot, 'readonly' => Readonly, 'exec' => Exec,
       'local' => Local, 'type' => Type, 'command' => Command, 'trap' => Trap,
-      'kill' => Kill, 'alias' => Alias, 'unalias' => Unalias
+      'kill' => Kill, 'alias' => Alias, 'unalias' => Unalias,
+      'hash' => Hash, 'times' => Times
     }.freeze
 
     def self.default_registry

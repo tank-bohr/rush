@@ -6,10 +6,11 @@ module Rush
     # `-o name`/`+o name` long form) and, when operands follow (or after `--`),
     # replace the positional parameters. With no operands the parameters are left
     # unchanged; an unknown option is ignored. Options: -e/errexit, -u/nounset,
-    # -x/xtrace.
+    # -x/xtrace, -f/noglob, -v/verbose.
     class Set < Base
-      OPTIONS = { 'e' => :errexit, 'u' => :nounset, 'x' => :xtrace, 'f' => :noglob }.freeze
-      LONG = { 'errexit' => :errexit, 'nounset' => :nounset, 'xtrace' => :xtrace, 'noglob' => :noglob }.freeze
+      OPTIONS = { 'e' => :errexit, 'u' => :nounset, 'x' => :xtrace, 'f' => :noglob, 'v' => :verbose }.freeze
+      LONG = { 'errexit' => :errexit, 'nounset' => :nounset, 'xtrace' => :xtrace,
+               'noglob' => :noglob, 'verbose' => :verbose }.freeze
 
       def call
         rest = strip_options(operands)

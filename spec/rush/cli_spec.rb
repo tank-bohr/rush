@@ -134,6 +134,13 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', "trap 'exit 9' EXIT\necho one\nbad )"], FakeSystemCalls.new)).to eq(9)
   end
 
+  it 'echoes input lines to stderr under set -v, and stops at set +v' do
+    system = FakeSystemCalls.new(stdin: "set -v\necho one\nset +v\necho two\n")
+    run([], system)
+    expect(system.stdout.string).to eq("one\ntwo\n")
+    expect(system.stderr.string).to eq("echo one\nset +v\n")
+  end
+
   it 'expands an alias defined by an earlier line' do
     system = FakeSystemCalls.new
     run(['-c', "alias g=echo\ng hello"], system)

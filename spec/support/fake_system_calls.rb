@@ -110,6 +110,12 @@ class FakeSystemCalls
 
   def here_doc(body) = StringIO.new(body)
 
+  # A Process::Tms stand-in for the `times` builtin; zeros keep the format
+  # deterministic (the real times are non-deterministic).
+  ProcessTimes = Struct.new(:utime, :stime, :cutime, :cstime)
+
+  def times = ProcessTimes.new(0.0, 0.0, 0.0, 0.0)
+
   # Records an exec instead of replacing the process, so specs can assert it.
   attr_reader :execed
 

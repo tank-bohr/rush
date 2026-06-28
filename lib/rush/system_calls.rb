@@ -20,6 +20,11 @@ module Rush
 
     def pid = Process.pid
 
+    # Accumulated CPU times for the `times` builtin: a Process::Tms with utime /
+    # stime for the shell and cutime / cstime for its children. Non-deterministic,
+    # so the builtin's output is verified by format rather than differentially.
+    def times = Process.times
+
     # Send a signal to a process (the `kill` builtin); signal 0 only probes that
     # the target exists. Real signal delivery cannot run under the test harness.
     # :nocov:

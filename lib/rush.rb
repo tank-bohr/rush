@@ -89,6 +89,8 @@ require_relative 'rush/builtins/trap'
 require_relative 'rush/builtins/kill'
 require_relative 'rush/builtins/alias_'
 require_relative 'rush/builtins/unalias'
+require_relative 'rush/builtins/hash'
+require_relative 'rush/builtins/times'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'

@@ -31,9 +31,16 @@ module Rush
 
     def run_commands
       queue = source.each_line.to_a
-      reader = ProgramReader.new(aliases: executor.state.aliases) { queue.shift }
+      reader = ProgramReader.new(aliases: executor.state.aliases) { echo_verbose(queue.shift) }
       loop { break unless continue?(reader) }
       executor.state.last_status.exitstatus
+    end
+
+    # Under `set -v` (verbose) each input line is written to stderr as it is read,
+    # before it runs, so a `set -v`/`set +v` toggles which later lines echo (POSIX).
+    def echo_verbose(line)
+      @system.stderr.print(line) if line && executor.state.option?(:verbose)
+      line
     end
 
     def continue?(reader)
