@@ -8,15 +8,16 @@ module Rush
     # bare `~`. This base handles the leading form; AssignmentTilde extends it to
     # also expand after each unquoted colon, and NoTilde disables it entirely.
     class TildeExpander
-      def initialize(executor)
+      def initialize(executor, segments)
         @executor = executor
+        @segments = segments
       end
 
-      def expand(segments)
-        head = segments.first
-        return segments unless expandable?(head)
+      def expand
+        head = @segments.first
+        return @segments unless expandable?(head)
 
-        [head.with(value: rewrite(head.value))] + segments[1..]
+        [head.with(value: rewrite(head.value))] + @segments[1..]
       end
 
       private
@@ -55,9 +56,11 @@ module Rush
 
     # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
     class NoTilde
-      def initialize(_executor); end
+      def initialize(_executor, segments)
+        @segments = segments
+      end
 
-      def expand(segments) = segments
+      def expand = @segments
     end
   end
 end

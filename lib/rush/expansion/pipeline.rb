@@ -14,8 +14,8 @@ module Rush
       EXPANDERS = { literal: Literal, param: ParameterExpander,
                     arith: ArithmeticExpander, command: CommandSubstitution }.freeze
 
-      # Tilde expansion strategy per mode (operates on a word's segment list).
-      GROUP_EXPANDERS = { none: NoTilde, leading: TildeExpander, assignment: AssignmentTilde }.freeze
+      # Tilde expansion strategy per mode (its value is a word's segment list).
+      TILDE_EXPANDERS = { none: NoTilde, leading: TildeExpander, assignment: AssignmentTilde }.freeze
 
       def initialize(executor)
         @executor = executor
@@ -36,9 +36,11 @@ module Rush
 
       def parts(word) = tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
 
-      def tilde_expand(segments, mode)
-        GROUP_EXPANDERS.fetch(mode).new(@executor).expand(segments)
-      end
+      def tilde_expand(segments, mode) = dispatch_expander(TILDE_EXPANDERS, mode, segments)
+
+      # Look up a strategy class by key and run it: every expander is built with
+      # the executor plus the value it transforms, and answers #expand.
+      def dispatch_expander(table, key, value) = table.fetch(key).new(@executor, value).expand
 
       def glob(fields) = fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
 
@@ -71,9 +73,7 @@ module Rush
 
       def ifs = @executor.state.environment.get('IFS')
 
-      def scalar_segment(segment)
-        EXPANDERS.fetch(segment.kind).new(@executor, segment.value).expand
-      end
+      def scalar_segment(segment) = dispatch_expander(EXPANDERS, segment.kind, segment.value)
     end
   end
 end
