@@ -3,11 +3,13 @@
 module Rush
   module Builtins
     # `shift [n]` — discard the first n positional parameters (default 1) and
-    # renumber the rest. When n exceeds the parameter count nothing changes and
-    # the status is non-zero; rush does not abort as a special builtin would.
+    # renumber the rest. As a special builtin, two errors abort a non-interactive
+    # shell with status 2 (BuiltinError, firing the EXIT trap), matching dash: a
+    # non-numeric / negative operand ("Illegal number"), and asking to shift more
+    # than $# ("can't shift that many"). Extra operands past the first are ignored.
     class Shift < Base
       def call
-        return report if count > state.positional.size
+        raise BuiltinError, "shift: can't shift that many" if count > state.positional.size
 
         state.positional = state.positional.drop(count)
         success
@@ -17,12 +19,7 @@ module Rush
 
       def state = executor.state
 
-      def count = operands.first&.to_i || 1
-
-      def report
-        stderr.puts("rush: shift: can't shift that many")
-        failure
-      end
+      def count = operands.empty? ? 1 : numeric_operand(operands.first)
     end
   end
 end

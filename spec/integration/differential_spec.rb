@@ -399,6 +399,22 @@ RSpec.describe 'rush vs dash (differential)' do
     'exit 300',
     '( exit 300 ); echo $?',
     'set -e; f() { return 300; }; f; echo no',
+    # shift is a special builtin: shifting more than $# ("can't shift that many")
+    # and a bad operand ("Illegal number") both abort a non-interactive shell with
+    # 2 (firing the EXIT trap). A valid count <= $# succeeds; extra operands and a
+    # leading +/zeros/blanks are accepted like dash's number(); 0 is a no-op.
+    'shift; echo after',
+    'set a b; shift 5; echo after',
+    'set a b c; shift 3; echo "[$*]$?"',
+    'set a b c; shift 0; echo "[$*]"',
+    'set a; shift; shift; echo after',
+    'trap "echo bye" EXIT; shift',
+    'shift abc; echo after',
+    'shift -1; echo after',
+    'set a b c; shift +1; echo "[$*]"',
+    'set a b c; shift 1 2; echo "[$*]"',
+    'set a b c; shift 1abc; echo after',
+    '( shift ); echo sub=$?',
     # incremental execution: complete commands run (and flush) before a later
     # syntax error aborts the rest; blank/comment lines preserve $?; a fatal error
     # fires the EXIT trap with $?=2 (which may override the exit code via exit)

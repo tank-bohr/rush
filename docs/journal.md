@@ -50,9 +50,10 @@ filed as a beads issue.
     — **fixed (7ak):** see the exec lesson below.
 13. **Function-call redirects not applied to the body** (`f >file` printed to stdout) — **fixed
     (7al):** see the function-redirect lesson below.
+14. **`shift` past `$#` (and a bad operand) didn't abort** (rush no-op'd with status 1) — **fixed
+    (7am):** now a special-builtin `BuiltinError`. See the shift lesson below.
 
-**Open (filed in beads, found by the 7aj fuzz):**
-- **`shift` past `$#` doesn't abort** (dash: special-builtin error → 2; rush no-ops, status 1).
+**Notes:**
 - **`pwd` / `$PWD`**: a fuzz "divergence" where rush printed an inherited `$PWD` vs dash's
   `getcwd` was a **harness artifact** (Open3 `chdir` without updating `$PWD`), not a real bug —
   noted so it isn't re-chased.
@@ -158,6 +159,18 @@ This mirrors `run_redirected`, which already wraps compound bodies and is only r
 redirects exist. The ambiguity trap while probing: assert the *destination*, not just combined
 stdout — `f(){ exec >g; }; f; echo X` yields the same stdout whether exec persisted or not; only
 splitting "before vs after restore" output across distinct files tells them apart.
+
+### `shift` is a special builtin — its errors abort (7am, beads `rush-6wx.3`)
+`shift n` with `n > $#` ("can't shift that many") and a bad operand ("Illegal number") are both
+special-builtin errors: a non-interactive shell aborts with 2 and fires the EXIT trap. rush used
+to no-op with status 1. Fix: `raise BuiltinError` for both — it propagates past `Executor#run`
+(which only rescues `RedirectError`) to `CLI#run_source`, which prints, publishes `$?`=2 and runs
+the EXIT trap; in the REPL `repl.rb` rescues it instead, so interactive shells don't die (as dash).
+The operand validation is exactly `Base#numeric_operand` (`/\A\s*\+?\d+\s*\z/`, min 0): probing
+dash showed `number()` accepts a leading `+`, leading zeros (decimal, not octal) and surrounding
+blanks (`+1`/`01`/` 1` all shift 1) but rejects trailing garbage / empty / hex (`1abc`/``/`0x2`),
+and **ignores operands past the first** (`shift 1 2` ≡ `shift 1`) — so no bespoke parser is
+needed. `shift 0` and `shift $#` (exactly) succeed; only `> $#` aborts.
 
 ---
 

@@ -25,9 +25,26 @@ RSpec.describe Rush::Builtins::Shift do
     expect(state.positional).to eq(%w[a b c])
   end
 
-  it 'fails without modifying when the count exceeds the parameter count' do
-    expect(run('5')).not_to be_success
+  it 'ignores operands past the first' do
+    run('2', 'ignored')
+    expect(state.positional).to eq(%w[c])
+  end
+
+  it 'aborts as a special builtin when the count exceeds the parameter count' do
+    expect { run('5') }.to raise_error(Rush::BuiltinError, /can't shift that many/)
     expect(state.positional).to eq(%w[a b c])
-    expect(system.stderr.string).to include('shift')
+  end
+
+  it 'aborts when there are no positionals to shift' do
+    state.positional = []
+    expect { run }.to raise_error(Rush::BuiltinError, /can't shift that many/)
+  end
+
+  it 'aborts on a non-numeric operand' do
+    expect { run('abc') }.to raise_error(Rush::BuiltinError, /Illegal number/)
+  end
+
+  it 'aborts on a negative operand' do
+    expect { run('-1') }.to raise_error(Rush::BuiltinError, /Illegal number/)
   end
 end
