@@ -61,7 +61,11 @@ detectors:
     exclude:
       - exit!
   ModuleInitialize:
-    enabled: false # ParserSupport is mixed into the Racc parser
+    # ParserSupport is the body of the Racc-generated Rush::Parser (its
+    # `---- inner` block only `include`s this module), so the `initialize` here
+    # IS the parser's initializer by design, not a surprise mixin override.
+    exclude:
+      - Rush::ParserSupport
 
   # --- Kept on (the ratchet): cryptic names in new code ---
   # The project deliberately uses single-letter names (rescue `e`, loop `i`,
