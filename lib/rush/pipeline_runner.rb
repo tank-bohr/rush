@@ -4,8 +4,11 @@ module Rush
   # Runs a multi-stage pipeline: a pipe between each pair of stages, every stage
   # forked (so they run concurrently and never deadlock on a full pipe buffer),
   # the parent's pipe ends closed, then waitpid for all. The pipeline's status is
-  # the last stage's. `start_stage` is the one irreducible fork/exit wrapper; the
-  # child-side `run_stage` (and its fd setup) is tested directly.
+  # the last stage's. A stage is an arbitrary command — a simple command, but
+  # also a group/subshell/if/while/for/case or a function call — so it is run via
+  # the executor with the stage's pipe ends bound as the base IoTable.
+  # `start_stage` is the one irreducible fork/exit wrapper; the child-side
+  # `run_stage` (and its fd setup) is tested directly.
   class PipelineRunner
     def initialize(executor, commands)
       @executor = executor
@@ -31,7 +34,7 @@ module Rush
 
     def run_stage(index, pipes)
       close_unused(index, pipes)
-      CommandRunner.new(@executor, @commands[index], stage_io(index, pipes)).call
+      @executor.with_io(stage_io(index, pipes)) { @executor.run(@commands[index]) }
     end
 
     def stage_io(index, pipes)

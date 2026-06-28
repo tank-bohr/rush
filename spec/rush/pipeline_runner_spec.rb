@@ -22,6 +22,13 @@ RSpec.describe Rush::PipelineRunner do
 
   describe '#run_stage (child side)' do
     def runner(stages) = described_class.new(executor, stages)
+    def parse_stage(src) = Rush::Parser.new(Rush::Lexer.new(src)).parse.entries.first.and_or.commands.first
+
+    it 'runs a compound command (not just a simple command) as a stage' do
+      pipes = [[StringIO.new, StringIO.new]]
+      runner([parse_stage('{ echo a; echo b; }'), echo('x')]).send(:run_stage, 0, pipes)
+      expect(pipes[0].last.string).to eq("a\nb\n")
+    end
 
     it 'binds the first stage stdout to the first pipe write end' do
       pipes = [[StringIO.new, StringIO.new]]

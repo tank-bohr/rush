@@ -495,7 +495,20 @@ RSpec.describe 'rush vs dash (differential)' do
     "f() { eval 'if'; echo in; }; f; echo after",
     "trap 'echo bye' EXIT; eval 'if'; echo after",
     "( eval 'if' ); echo after",
-    "eval 'echo a\nbad )'; echo after"
+    "eval 'echo a\nbad )'; echo after",
+    # a pipeline stage may be any command, not only a simple command: a group,
+    # subshell, if/while/for/case, or a function call, on either side of the `|`.
+    '{ echo a; } | cat',
+    'echo A | { echo G; cat; }',
+    'echo Y | ( cat )',
+    "printf '1\\n2\\n3\\n' | while read n; do echo \"got $n\"; done",
+    'echo x | if cat; then echo T; fi',
+    'echo z | case z in z) cat;; esac',
+    'f() { cat; }; echo Y | f',
+    'echo hi | { read x; echo \"[$x]\"; }',
+    '{ echo a; echo b; } | wc -l',
+    '( echo a; echo b ) | cat | cat',
+    'echo a | cat | cat'
   ].freeze
 
   corpus.each do |snippet|
