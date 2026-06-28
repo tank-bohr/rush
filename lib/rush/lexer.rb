@@ -122,7 +122,7 @@ module Rush
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
     def heredoc_newline
-      @heredocs.each { |holder| holder.body = read_heredoc(holder) }
+      @heredocs.each { |holder| holder.fill(read_heredoc(holder)) }
       @heredocs = []
       [:NEWLINE, "\n"]
     end

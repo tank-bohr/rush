@@ -6,8 +6,8 @@ module Rush
   # positional parameters and the function table. The executor backfills pwd from
   # the OS when the environment has no PWD.
   class ShellState
-    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash
-    attr_accessor :last_status, :name, :pwd, :positional
+    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name
+    attr_accessor :last_status, :pwd, :positional
 
     def initialize(environment: Environment.new, name: 'rush')
       @environment = environment

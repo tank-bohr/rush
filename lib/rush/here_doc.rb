@@ -7,8 +7,7 @@ module Rush
   # newline. It quacks like a Word (responds to #segments) so the expansion
   # pipeline expands the body as a single field at execution time.
   class HereDoc
-    attr_accessor :body
-    attr_reader :delimiter, :quoted, :strip
+    attr_reader :body, :delimiter, :quoted, :strip
 
     def initialize(delimiter:, quoted:, strip:)
       @delimiter = delimiter
@@ -16,6 +15,10 @@ module Rush
       @strip = strip
       @body = AST::Word.new([])
     end
+
+    # The lexer fills the body — an AST::Word — once it has gathered the body
+    # lines at the next newline; it is the only writer, so #body stays read-only.
+    def fill(body) = @body = body
 
     def segments = @body.segments
   end

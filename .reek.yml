@@ -47,7 +47,18 @@ detectors:
       - Rush::Expansion::Arithmetic::Number
       - Rush::CommandRunner
   Attribute:
-    enabled: false # attr_reader exposure on the small value/runtime objects is idiomatic
+    # HereDoc#body (write-once, two-phase) became attr_reader + #fill, and
+    # ShellState#name (set only at construction) became attr_reader. The three
+    # below stay writable: they model the free-form mutable POSIX runtime —
+    # $? (last_status), $PWD (pwd) and the positional parameters $1..$n
+    # (positional) — which commands and builtins update directly. There is no
+    # encapsulated invariant a setter would protect and no internal
+    # representation it would leak (the attribute IS the concept), so a
+    # record_status/replace_positional wrapper would only be a synonym for `=`.
+    exclude:
+      - Rush::ShellState#last_status
+      - Rush::ShellState#pwd
+      - Rush::ShellState#positional
   ControlParameter:
     enabled: false # flag params (set_option(enabled), rewrite(assignment), ...) are clean APIs here
   BooleanParameter:
