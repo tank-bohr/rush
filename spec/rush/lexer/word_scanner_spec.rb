@@ -3,7 +3,7 @@
 RSpec.describe Rush::Lexer::WordScanner do
   def scan(source)
     scanner = StringScanner.new(source)
-    [described_class.new(scanner).scan, scanner]
+    [described_class.next_word(scanner), scanner]
   end
 
   def field(source) = scan(source).first.segments.map(&:value).join
@@ -81,7 +81,7 @@ RSpec.describe Rush::Lexer::WordScanner do
   end
 
   it 'scans the whole operator word including blanks in whole mode' do
-    word = described_class.new(StringScanner.new('a b c'), whole: true).scan
+    word = described_class.entire('a b c')
     expect(word.segments.map(&:value).join).to eq('a b c')
   end
 

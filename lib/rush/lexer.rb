@@ -91,7 +91,7 @@ module Rush
     # here-document delimiter) splice its alias replacement in its place; a splice
     # returns nil so next_token re-reads from the new frame.
     def word
-      scanned = WordScanner.new(@scanner).scan
+      scanned = WordScanner.next_word(@scanner)
       token = TokenClassifier.new(scanned, @state).call
       value = alias_for(token, scanned)
       value ? splice(value) : finish(token)

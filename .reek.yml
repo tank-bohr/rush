@@ -38,7 +38,17 @@ detectors:
   ControlParameter:
     enabled: false # flag params (set_option(enabled), rewrite(assignment), ...) are clean APIs here
   BooleanParameter:
-    enabled: false # config flags (Lexer interactive:, WordScanner whole) are deliberate
+    # Lexer#initialize stores `interactive` as @interactive and consults it in a
+    # single private branch (heredoc_line): a here-doc truncated at EOF either
+    # raises IncompleteInput (so ProgramReader pulls another line) or ends
+    # leniently (the final, dash-compatible parse). It is constructor config, not
+    # a per-call path switch — reek's own ControlParameter does NOT flag it, and
+    # next_token's contract is identical in both modes; splitting the lexer in
+    # two for a one-line leniency difference would be strictly worse. (The former
+    # WordScanner `whole` flag was genuinely removed via the next_word/entire
+    # factories, not excluded.)
+    exclude:
+      - Rush::Lexer#initialize
   DuplicateMethodCall:
     enabled: false # readability is preferred over micro-caching repeated calls
 

@@ -60,7 +60,7 @@ module Rush
 
       def message = @ref.arg.empty? ? 'parameter null or not set' : arg
 
-      def sub_word(text) = Lexer::WordScanner.new(StringScanner.new(text), whole: true).scan
+      def sub_word(text) = Lexer::WordScanner.entire(text)
     end
   end
 end

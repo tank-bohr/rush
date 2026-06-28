@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'strscan'
+
 module Rush
   class Lexer
     # Scans one word from the shared StringScanner into an AST::Word of typed
@@ -18,11 +20,19 @@ module Rush
         '$' => :dollar, '`' => :backtick
       }.freeze
 
-      # whole: scan the entire input as one word's content (no blank/operator
-      # terminators) — used for already-delimited ${} operator words.
-      def initialize(scanner, whole: false)
+      # Scan the next shell word from a live lexer scanner, stopping at the first
+      # unquoted terminator (blank / operator).
+      def self.next_word(scanner) = new(scanner).scan
+
+      # Scan a complete, already-delimited string (a ${...} operator word or
+      # arithmetic source) as one word: no terminators apply (blanks/operators
+      # are literal), only quote / $ / ` stay special.
+      def self.entire(text) = new(StringScanner.new(text), terminator: nil).scan
+
+      # terminator: the character class that ends a word, or nil in whole mode.
+      def initialize(scanner, terminator: TERMINATOR)
         @scanner = scanner
-        @whole = whole
+        @terminator = terminator
         @segments = []
         @literal = +''
       end
@@ -35,14 +45,14 @@ module Rush
 
       private
 
-      def ended? = @scanner.eos? || (!@whole && @scanner.peek(1).match?(TERMINATOR))
+      def ended? = @scanner.eos? || (!@terminator.nil? && @scanner.peek(1).match?(@terminator))
 
       def step
         handler = DISPATCH[@scanner.peek(1)]
         handler ? send(handler) : (@literal << @scanner.scan(literal_pattern))
       end
 
-      def literal_pattern = @whole ? WHOLE_LITERAL : LITERAL_RUN
+      def literal_pattern = @terminator.nil? ? WHOLE_LITERAL : LITERAL_RUN
 
       def single_quote
         @scanner.getch
