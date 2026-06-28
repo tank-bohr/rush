@@ -27,9 +27,9 @@ module Rush
         hit ? @value[0, @value.length - hit.length] : @value
       end
 
-      def prefixes = (0..@value.length).map { |i| @value[0, i] }
+      def prefixes = (0..@value.length).map { |index| @value[0, index] }
 
-      def suffixes = (0..@value.length).map { |i| @value[@value.length - i, i] }
+      def suffixes = (0..@value.length).map { |index| @value[@value.length - index, index] }
 
       def order(list) = @op.length == 2 ? list.reverse : list
 

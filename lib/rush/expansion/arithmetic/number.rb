@@ -36,20 +36,22 @@ module Rush
         def modulo(left, right) = left - (divide(left, right) * right)
 
         UNARY = {
-          '+' => ->(n) { n }, '-' => lambda(&:-@),
-          '!' => ->(n) { bool(n.zero?) }, '~' => lambda(&:~)
+          '+' => ->(value) { value }, '-' => lambda(&:-@),
+          '!' => ->(value) { bool(value.zero?) }, '~' => lambda(&:~)
         }.freeze
 
         BINARY = {
-          '+' => ->(a, b) { a + b }, '-' => ->(a, b) { a - b }, '*' => ->(a, b) { a * b },
-          '/' => ->(a, b) { divide(a, b) }, '%' => ->(a, b) { modulo(a, b) },
+          '+' => ->(left, right) { left + right }, '-' => ->(left, right) { left - right },
+          '*' => ->(left, right) { left * right }, '/' => ->(left, right) { divide(left, right) },
+          '%' => ->(left, right) { modulo(left, right) },
           # Shift counts are masked to 6 bits, matching x86-64 (and so dash) for
           # the out-of-range/negative counts that C leaves undefined.
-          '<<' => ->(a, b) { a << (b & 63) }, '>>' => ->(a, b) { a >> (b & 63) },
-          '&' => ->(a, b) { a & b }, '|' => ->(a, b) { a | b }, '^' => ->(a, b) { a ^ b },
-          '<' => ->(a, b) { bool(a < b) }, '<=' => ->(a, b) { bool(a <= b) },
-          '>' => ->(a, b) { bool(a > b) }, '>=' => ->(a, b) { bool(a >= b) },
-          '==' => ->(a, b) { bool(a == b) }, '!=' => ->(a, b) { bool(a != b) }
+          '<<' => ->(left, right) { left << (right & 63) }, '>>' => ->(left, right) { left >> (right & 63) },
+          '&' => ->(left, right) { left & right }, '|' => ->(left, right) { left | right },
+          '^' => ->(left, right) { left ^ right },
+          '<' => ->(left, right) { bool(left < right) }, '<=' => ->(left, right) { bool(left <= right) },
+          '>' => ->(left, right) { bool(left > right) }, '>=' => ->(left, right) { bool(left >= right) },
+          '==' => ->(left, right) { bool(left == right) }, '!=' => ->(left, right) { bool(left != right) }
         }.freeze
       end
     end
