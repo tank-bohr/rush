@@ -39,12 +39,13 @@ module Rush
       def field_parts(segment)
         return splat_parts(segment) if splat?(segment)
 
-        [[escape(scalar_segment(segment), segment.quoted), splittable?(segment), false]]
+        text = scalar_segment(segment)
+        # Quoted text escapes its glob metacharacters so they match literally;
+        # unquoted text keeps them active.
+        [[segment.quoted ? escape(text) : text, splittable?(segment), false]]
       end
 
-      # Backslash-escape glob metacharacters that came from quoted text so they
-      # match literally; unquoted text keeps them active.
-      def escape(text, quoted) = quoted ? text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" } : text
+      def escape(text) = text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
 
       def splat?(segment)
         return false unless segment.kind == :param && segment.value.op.nil?
@@ -55,7 +56,7 @@ module Rush
       def splat_parts(segment)
         split = !segment.quoted
         @executor.state.positional.map.with_index do |element, index|
-          [escape(element, segment.quoted), split, index.positive?]
+          [segment.quoted ? escape(element) : element, split, index.positive?]
         end
       end
 

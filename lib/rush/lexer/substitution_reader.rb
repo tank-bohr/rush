@@ -6,6 +6,8 @@ module Rush
     # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
     # The body is re-parsed and executed at expansion time.
     class SubstitutionReader
+      DEPTH_DELTA = { '(' => 1, ')' => -1 }.freeze
+
       def initialize(scanner)
         @scanner = scanner
       end
@@ -63,10 +65,7 @@ module Rush
         @depth.zero? ? '' : char
       end
 
-      def adjust(char)
-        @depth += 1 if char == '('
-        @depth -= 1 if char == ')'
-      end
+      def adjust(char) = @depth += DEPTH_DELTA.fetch(char, 0)
     end
   end
 end

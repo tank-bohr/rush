@@ -60,7 +60,32 @@ detectors:
       - Rush::ShellState#pwd
       - Rush::ShellState#positional
   ControlParameter:
-    enabled: false # flag params (set_option(enabled), rewrite(assignment), ...) are clean APIs here
+    # Two were refactored out, not excluded: SubstitutionReader#adjust became a
+    # table lookup (@depth += DEPTH_DELTA.fetch(char, 0)), and Pipeline#escape
+    # became a pure glob-escaper with the quoted decision moved to its caller.
+    # The rest are not control couples:
+    #  - the argument is the datum being computed/matched, not a behaviour flag:
+    #    Number#bool (boolean -> 1/0), Parser#accept? (token matcher),
+    #    Command#terse (renders `command -v` output per lookup-kind enum);
+    #  - a value coalesce / default, not a branch: SystemCalls#trap_signal
+    #    (command || block), FieldSplitter#initialize (ifs || WHITESPACE);
+    #  - one factor in a compound precondition guard: AliasExpander#expand;
+    #  - an irreducible domain distinction whose branch must live somewhere, so
+    #    splitting only relocates the flag and polymorphism would be overkill:
+    #    ShellState#set_option (option on/off), Printf#report (valid outcome),
+    #    Repl#prompt_line (PS1 vs PS2), TildeExpander#rewrite (POSIX tilde after
+    #    a colon only in assignments).
+    exclude:
+      - Rush::Expansion::Arithmetic::Number#bool
+      - Rush::Expansion::Arithmetic::Parser#accept?
+      - Rush::Builtins::Command#terse
+      - Rush::SystemCalls#trap_signal
+      - Rush::Expansion::FieldSplitter#initialize
+      - Rush::Lexer::AliasExpander#expand
+      - Rush::ShellState#set_option
+      - Rush::Builtins::Printf#report
+      - Rush::Repl#prompt_line
+      - Rush::Expansion::TildeExpander#rewrite
   BooleanParameter:
     # Lexer#initialize stores `interactive` as @interactive and consults it in a
     # single private branch (heredoc_line): a here-doc truncated at EOF either
