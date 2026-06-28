@@ -86,9 +86,11 @@ Naming/InclusiveLanguage:
 Gemspec/DevelopmentDependencies:
   Enabled: false
 
-# Endless methods keep the one-line OS-port wrappers within the 5-line method limit.
+# Off: one-expression methods are written as endless defs throughout. The
+# allow_single_line default split the longer one-liners into def...end, so the
+# same kind of method showed up in two forms. Disabled so they stay uniform.
 Style/EndlessMethod:
-  EnforcedStyle: allow_single_line
+  Enabled: false
 
 Naming/MethodParameterName:
   AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's', 'op']
