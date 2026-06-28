@@ -14,7 +14,7 @@ module Rush
 
       def call
         rest = strip_options(operands)
-        executor.state.positional = rest unless rest.nil?
+        executor.state.positional = rest if rest
         success
       end
 

@@ -14,7 +14,7 @@ module Rush
 
       def expand(segments, assignment:)
         head = segments.first
-        return segments if head.nil? || head.kind != :literal || head.quoted
+        return segments if head&.kind != :literal || head.quoted
 
         [head.with(value: rewrite(head.value, assignment))] + segments[1..]
       end

@@ -16,7 +16,7 @@ module Rush
 
         def resolve(name)
           value = @executor.state.environment.get(name)
-          return 0 if value.nil? || value.strip.empty?
+          return 0 if value.to_s.strip.empty?
 
           Number.parse(value)
         end

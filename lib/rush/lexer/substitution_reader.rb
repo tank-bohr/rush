@@ -36,7 +36,7 @@ module Rush
 
       def collect(body)
         char = arith_char
-        return body if char.nil?
+        return body unless char
 
         collect(body << char)
       end

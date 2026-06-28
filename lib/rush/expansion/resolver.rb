@@ -39,7 +39,7 @@ module Rush
 
       def separator
         ifs = state.environment.get('IFS')
-        ifs.nil? ? ' ' : ifs[0].to_s
+        ifs ? ifs[0].to_s : ' '
       end
 
       def options = ''

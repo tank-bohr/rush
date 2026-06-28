@@ -48,7 +48,7 @@ module Rush
       def escape(text) = text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
 
       def splat?(segment)
-        return false unless segment.kind == :param && segment.value.op.nil?
+        return false unless segment.kind == :param && !segment.value.op
 
         segment.value.name == '@' || (segment.value.name == '*' && !segment.quoted)
       end

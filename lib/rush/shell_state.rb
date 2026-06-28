@@ -59,7 +59,7 @@ module Rush
     private
 
     def restore(name, value)
-      value.nil? ? @environment.unset(name) : @environment.assign(name, value)
+      value ? @environment.assign(name, value) : @environment.unset(name)
     end
 
     def initialize_runtime

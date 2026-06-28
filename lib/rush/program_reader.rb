@@ -31,7 +31,7 @@ module Rush
 
     def read_more
       line = @next_line.call(!@buffer.empty?)
-      return finish if line.nil?
+      return finish unless line
 
       attempt(@buffer << line)
     end

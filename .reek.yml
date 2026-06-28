@@ -103,7 +103,21 @@ detectors:
 
   # --- Off by project decision / Ruby idioms / false positives ---
   NilCheck:
-    enabled: false # explicit nil handling is legitimate throughout
+    # Most nil-checks were genuinely removed: explicit `x.nil?` ternaries were
+    # flipped to the positive case (read/cook, resolver, shell_state#restore,
+    # kill), guards became idiomatic `unless x` / `!x` (set, trap, lexer,
+    # program_reader, substitution_reader, alias_expander, pipeline, dup_redirect,
+    # parameter_expander#plain, tilde_expander, WordScanner), and an
+    # unset-or-empty test became `value.to_s.strip.empty?` (evaluator). Two are
+    # kept and excluded:
+    #  - Hash#known? returns `!kind.nil?`; the truthy `!!kind` is forbidden by
+    #    RuboCop Style/DoubleNegation, so the explicit nil-check is the clean form.
+    #  - ParameterExpander#unset_or_null? relies on `value.nil?` meaning UNSET as
+    #    distinct from null/empty — the POSIX ${x-} vs ${x:-} distinction a truthy
+    #    test would obscure.
+    exclude:
+      - Rush::Builtins::Hash#known?
+      - Rush::Expansion::ParameterExpander#unset_or_null?
   InstanceVariableAssumption:
     # The lazy per-operation ivars were genuinely initialised in their
     # constructors (ProgramReader @buffer, PrintfFormatter @consumed,

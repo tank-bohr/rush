@@ -46,7 +46,7 @@ module Rush
 
       def enter(name)
         value = @table.value(name)
-        return nil if value.nil? || @active.any? { |active, _| active == name }
+        return nil if !value || @active.any? { |active, _| active == name }
 
         @active.push([name, value])
         value

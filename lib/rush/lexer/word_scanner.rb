@@ -45,14 +45,14 @@ module Rush
 
       private
 
-      def ended? = @scanner.eos? || (!@terminator.nil? && @scanner.peek(1).match?(@terminator))
+      def ended? = @scanner.eos? || (@terminator && @scanner.peek(1).match?(@terminator))
 
       def step
         handler = DISPATCH[@scanner.peek(1)]
         handler ? send(handler) : (@literal << @scanner.scan(literal_pattern))
       end
 
-      def literal_pattern = @terminator.nil? ? WHOLE_LITERAL : LITERAL_RUN
+      def literal_pattern = @terminator ? LITERAL_RUN : WHOLE_LITERAL
 
       def single_quote
         @scanner.getch
@@ -133,7 +133,7 @@ module Rush
       def escape
         @scanner.getch
         char = @scanner.getch
-        push(char, quoted: true) unless char.nil? || char == "\n"
+        push(char, quoted: true) if char && char != "\n"
       end
 
       def push(value, quoted:) = add(:literal, value, quoted)

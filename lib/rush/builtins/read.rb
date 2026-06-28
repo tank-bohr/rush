@@ -12,7 +12,7 @@ module Rush
 
         line = stdin.gets
         assign(cook(line))
-        line.nil? ? failure : success
+        line ? success : failure
       end
 
       private
@@ -21,7 +21,7 @@ module Rush
 
       def names = raw? ? operands.drop(1) : operands
 
-      def cook(line) = line.nil? ? '' : strip_escapes(line.chomp)
+      def cook(line) = line ? strip_escapes(line.chomp) : ''
 
       def strip_escapes(text) = raw? ? text : text.gsub(/\\(.)/m, '\1').delete_suffix('\\')
 

@@ -31,7 +31,7 @@ module Rush
         return usage if pids.empty?
 
         signal = resolve(spec)
-        signal.nil? ? bad("#{spec}: invalid signal specification") : deliver(signal, pids)
+        signal ? deliver(signal, pids) : bad("#{spec}: invalid signal specification")
       end
 
       def resolve(spec)

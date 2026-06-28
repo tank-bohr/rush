@@ -28,7 +28,7 @@ module Rush
       # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is
       # an error (special parameters like $@ are exempt).
       def plain
-        raise(ExpansionError, "#{@ref.name}: parameter not set") if value.nil? && unbound?
+        raise(ExpansionError, "#{@ref.name}: parameter not set") if !value && unbound?
 
         value.to_s
       end

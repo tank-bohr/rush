@@ -134,7 +134,7 @@ module Rush
 
     def gather(holder, out)
       line = heredoc_line(holder)
-      return out if line.nil?
+      return out unless line
 
       gather(holder, out << line)
     end

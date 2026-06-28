@@ -23,7 +23,7 @@ module Rush
       # error (aborts the shell).
       def source(io, target)
         stream = io.get(numeric(target))
-        raise RedirectError, "#{target}: fd not open" if stream.nil? || stream.is_a?(ClosedStream)
+        raise RedirectError, "#{target}: fd not open" if !stream || stream.is_a?(ClosedStream)
 
         stream
       end

@@ -26,7 +26,7 @@ module Rush
       # Apply left to right, stopping at (but keeping the work before) the first
       # spec that names no signal — dash's behaviour for `trap x INT BADD TERM`.
       def apply(action, signals)
-        bad = signals.find { |spec| place(action, spec).nil? }
+        bad = signals.find { |spec| !place(action, spec) }
         bad ? bad_trap(bad) : success
       end
 
@@ -40,7 +40,7 @@ module Rush
         reset?(action) ? executor.reset_trap(name) : executor.set_trap(name, action)
       end
 
-      def reset?(action) = action.nil? || action == '-'
+      def reset?(action) = !action || action == '-'
 
       def bad_trap(spec)
         stderr.puts("trap: #{spec}: bad trap")
