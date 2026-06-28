@@ -10,6 +10,18 @@ module Rush
   # `start_stage` is the one irreducible fork/exit wrapper; the child-side
   # `run_stage` (and its fd setup) is tested directly.
   class PipelineRunner
+    # One stage of the pipeline: its position plus the shared pipe array and the
+    # stage count. The fd topology — which pipe end feeds this stage (input) and
+    # which it feeds (output), and so which ends to keep open (ends) — derives
+    # from all three, so the runner threads a single Stage rather than the
+    # (index, pipes) pair through every per-stage step.
+    Stage = Data.define(:index, :pipes, :count) do
+      def last? = index == count - 1
+      def input = index.positive? ? pipes[index - 1].first : nil
+      def output = last? ? nil : pipes[index].last
+      def ends = [input, output].compact
+    end
+
     def initialize(executor, commands)
       @executor = executor
       @commands = commands
@@ -17,7 +29,7 @@ module Rush
 
     def call
       pipes = build_pipes
-      pids = @commands.each_index.map { |index| start_stage(index, pipes) }
+      pids = @commands.each_index.map { |index| start_stage(Stage.new(index, pipes, @commands.size)) }
       close_all(pipes)
       wait(pids)
     end
@@ -26,36 +38,27 @@ module Rush
 
     def build_pipes = Array.new(@commands.size - 1) { @executor.system.pipe }
 
-    def start_stage(index, pipes)
+    def start_stage(stage)
       # :nocov:
-      @executor.system.fork { @executor.system.exit!(run_stage(index, pipes).exitstatus) }
+      @executor.system.fork { @executor.system.exit!(run_stage(stage).exitstatus) }
       # :nocov:
     end
 
-    def run_stage(index, pipes)
-      close_unused(index, pipes)
-      @executor.with_io(stage_io(index, pipes)) { @executor.run(@commands[index]) }
+    def run_stage(stage)
+      close_unused(stage)
+      @executor.with_io(stage_io(stage)) { @executor.run(@commands[stage.index]) }
     end
 
-    def stage_io(index, pipes)
+    def stage_io(stage)
       io = @executor.io
-      io = io.with(0, pipes[index - 1].first) if index.positive?
-      last?(index) ? io : io.with(1, pipes[index].last)
+      io = io.with(0, stage.input) if stage.input
+      stage.output ? io.with(1, stage.output) : io
     end
 
-    def close_unused(index, pipes)
-      keep = stage_ends(index, pipes)
-      pipes.flatten.each { |io| io.close unless keep.include?(io) }
+    def close_unused(stage)
+      keep = stage.ends
+      stage.pipes.flatten.each { |io| io.close unless keep.include?(io) }
     end
-
-    def stage_ends(index, pipes)
-      ends = []
-      ends << pipes[index - 1].first if index.positive?
-      ends << pipes[index].last unless last?(index)
-      ends
-    end
-
-    def last?(index) = index == @commands.size - 1
 
     def close_all(pipes) = pipes.flatten.each(&:close)
 

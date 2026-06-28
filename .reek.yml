@@ -32,7 +32,20 @@ detectors:
   FeatureEnvy:
     enabled: false
   DataClump:
-    enabled: false # argv+io / index+pipes etc. are deliberate internal threading
+    # Two genuine clumps were refactored out, not excluded: PipelineRunner's
+    # (index, pipes) became a Stage value object, and PrintfFormatter's
+    # (flags, conv) lost its pass-through method by consolidation. The two below
+    # are not clumps:
+    #  - Number: left/right are the two operands of binary integer arithmetic
+    #    (binary/divide/modulo) — the irreducible arity of a binary op, with no
+    #    domain concept to unify them; a Pair object would be pure ceremony.
+    #  - CommandRunner: argv (expanded words) and io (the executor-wide fd table)
+    #    come from separate phases and are each used independently elsewhere;
+    #    they co-occur only in the local dispatch chain, and (executor, argv, io)
+    #    is the established builtin call convention, not a missing value type.
+    exclude:
+      - Rush::Expansion::Arithmetic::Number
+      - Rush::CommandRunner
   Attribute:
     enabled: false # attr_reader exposure on the small value/runtime objects is idiomatic
   ControlParameter:

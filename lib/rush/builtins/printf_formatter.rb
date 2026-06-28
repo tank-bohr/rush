@@ -59,10 +59,7 @@ module Rush
       def apply(flags, conv)
         return '%' if conv == '%'
 
-        format_arg(flags, conv, take)
-      end
-
-      def format_arg(flags, conv, arg)
+        arg = take
         return numeric(flags, conv, arg) if NUMERIC.include?(conv)
         return Kernel.format("%#{flags}s", first_char(arg)) if conv == 'c'
 

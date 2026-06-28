@@ -23,27 +23,28 @@ RSpec.describe Rush::PipelineRunner do
   describe '#run_stage (child side)' do
     def runner(stages) = described_class.new(executor, stages)
     def parse_stage(src) = Rush::Parser.new(Rush::Lexer.new(src)).parse.entries.first.and_or.commands.first
+    def stage(index, pipes) = Rush::PipelineRunner::Stage.new(index, pipes, 2)
 
     it 'runs a compound command (not just a simple command) as a stage' do
       pipes = [[StringIO.new, StringIO.new]]
-      runner([parse_stage('{ echo a; echo b; }'), echo('x')]).send(:run_stage, 0, pipes)
+      runner([parse_stage('{ echo a; echo b; }'), echo('x')]).send(:run_stage, stage(0, pipes))
       expect(pipes[0].last.string).to eq("a\nb\n")
     end
 
     it 'binds the first stage stdout to the first pipe write end' do
       pipes = [[StringIO.new, StringIO.new]]
-      runner([echo('a'), echo('b')]).send(:run_stage, 0, pipes)
+      runner([echo('a'), echo('b')]).send(:run_stage, stage(0, pipes))
       expect(pipes[0].last.string).to eq("a\n")
     end
 
     it 'binds the last stage stdout to the shell stdout' do
-      runner([echo('a'), echo('b')]).send(:run_stage, 1, [[StringIO.new, StringIO.new]])
+      runner([echo('a'), echo('b')]).send(:run_stage, stage(1, [[StringIO.new, StringIO.new]]))
       expect(system.stdout.string).to eq("b\n")
     end
 
     it 'closes the pipe ends the stage does not use' do
       read = StringIO.new
-      runner([echo('a'), echo('b')]).send(:run_stage, 0, [[read, StringIO.new]])
+      runner([echo('a'), echo('b')]).send(:run_stage, stage(0, [[read, StringIO.new]]))
       expect(read).to be_closed
     end
   end
