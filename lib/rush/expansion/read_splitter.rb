@@ -35,13 +35,13 @@ module Rush
       def leading = /\A#{ws}+/
 
       def trim_last(fields)
-        fields[-1] = fields[-1].sub(/#{ws}+\z/, '') unless fields.empty?
-        fields
+        *rest, last = fields
+        last ? rest + [last.sub(/#{ws}+\z/, '')] : rest
       end
 
       def ws = "(?:#{Regexp.union(whitespace).source})"
 
-      def pad(fields) = fields + ([''] * (@count - fields.size))
+      def pad(fields) = (fields.each + [''].cycle).take(@count)
     end
   end
 end
