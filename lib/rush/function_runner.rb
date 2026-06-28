@@ -16,10 +16,10 @@ module Rush
     # A function body is a fresh loop scope: without_loops resets the depth so a
     # break/continue inside it cannot reach a loop in the caller (POSIX 2.9.5).
     def call
-      @state.begin_scope
+      @state.scope.begin_scope
       @state.without_loops { @state.with_positional(@args) { invoke } }
     ensure
-      @state.end_scope
+      @state.scope.end_scope
     end
 
     private

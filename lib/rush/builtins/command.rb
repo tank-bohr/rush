@@ -34,10 +34,12 @@ module Rush
         return success if args.empty?
 
         builtin = executor.builtins.fetch(args.first)
-        return builtin.new(executor, args, @io).call if builtin
+        return builtin.new(executor, args, io).call if builtin
 
-        External.new(executor, args, @io, executor.state.environment.exported).call
+        External.new(executor, args, io, exported_env).call
       end
+
+      def exported_env = executor.state.environment.exported
     end
   end
 end

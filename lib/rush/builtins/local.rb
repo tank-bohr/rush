@@ -8,7 +8,7 @@ module Rush
     # function it is an error with status 2.
     class Local < Base
       def call
-        return not_in_function unless state.in_function?
+        return not_in_function unless state.scope.in_function?
 
         operands.each { |operand| declare(operand) }
         success
@@ -20,7 +20,7 @@ module Rush
 
       def declare(operand)
         name, value = operand.split('=', 2)
-        state.declare_local(name)
+        state.scope.declare_local(name)
         state.environment.assign(name, value) if value
       end
 

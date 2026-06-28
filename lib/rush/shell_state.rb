@@ -2,55 +2,31 @@
 
 module Rush
   # The mutable shell state threaded through execution: variables, the last
-  # command's status, the shell name ($0), the logical working directory, the
-  # positional parameters and the function table. The executor backfills pwd from
-  # the OS when the environment has no PWD.
+  # command's status, the shell name ($0), the variable scope (local scoping and
+  # the logical cwd, off in Scope), the positional parameters and the function
+  # table. The executor backfills pwd from the OS when the environment has no PWD.
   class ShellState
-    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name, :pwd,
+    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name, :scope,
                 :last_status, :positional
 
     def initialize(environment: Environment.new, name: 'rush')
       @environment = environment
       @name = name
-      @pwd = environment.get('PWD')
+      @scope = Scope.new(environment)
       @traps = TrapTable.new
-      initialize_runtime
-    end
-
-    # Change the logical working directory, keeping $OLDPWD (the directory we
-    # left) and $PWD (the one we entered) in step — the invariant cd relies on.
-    def move_to(pwd)
-      @environment.assign('OLDPWD', @pwd)
-      @pwd = pwd
-      @environment.assign('PWD', pwd)
-    end
-
-    # Seed the logical pwd from the OS at startup when $PWD was unset; unlike
-    # #move_to this records no $OLDPWD/$PWD — there is no directory we came from.
-    def seed_pwd(path)
-      return if @pwd
-
-      @pwd = path
+      @last_status = Status.success
+      @positional = []
+      @options = Set.new
+      @loop_depth = 0
+      @functions = FunctionTable.new
+      @aliases = AliasTable.new
+      @command_hash = {}
     end
 
     # Shell options set by `set -o`-style flags (:nounset, :xtrace, ...).
     def set_option(name, enabled) = enabled ? @options.add(name) : @options.delete(name)
 
     def option?(name) = @options.include?(name)
-
-    # Dynamic `local` scope: a function call brackets its body with
-    # begin/end_scope; declare_local snapshots a variable so end_scope restores
-    # its prior value (or unsets it when it had none).
-    def begin_scope = @scopes.push({})
-
-    def end_scope = @scopes.pop.each { |name, value| restore(name, value) }
-
-    def in_function? = @scopes.any?
-
-    def declare_local(name)
-      frame = @scopes.last
-      frame[name] = @environment.get(name) unless frame.key?(name)
-    end
 
     # Lexical loop nesting for break/continue. The depth counts the for/while/
     # until loops enclosing the current command within the same execution
@@ -86,27 +62,6 @@ module Rush
       yield
     ensure
       @positional = saved
-    end
-
-    private
-
-    def restore(name, value)
-      value ? @environment.assign(name, value) : @environment.unset(name)
-    end
-
-    def initialize_runtime
-      @last_status = Status.success
-      @positional = []
-      @options = Set.new
-      build_runtime
-    end
-
-    def build_runtime
-      @scopes = []
-      @loop_depth = 0
-      @functions = FunctionTable.new
-      @aliases = AliasTable.new
-      @command_hash = {}
     end
   end
 end

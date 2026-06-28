@@ -5,7 +5,7 @@ module Rush
     # `pwd` — print the shell's logical working directory.
     class Pwd < Base
       def call
-        stdout.puts(executor.state.pwd)
+        stdout.puts(executor.state.scope.pwd)
         success
       end
     end

@@ -1,0 +1,54 @@
+# frozen_string_literal: true
+
+module Rush
+  # The variable-environment side of the shell state, layered over one
+  # Environment: dynamic `local` scoping (a stack of snapshots restored when a
+  # function returns) and the logical working directory mirrored into
+  # $PWD/$OLDPWD. Both are managed mutations of the same environment, so they
+  # live together here, off ShellState.
+  class Scope
+    attr_reader :pwd
+
+    def initialize(environment)
+      @environment = environment
+      @frames = []
+      @pwd = environment.get('PWD')
+    end
+
+    # Change the logical working directory, keeping $OLDPWD (the directory we
+    # left) and $PWD (the one we entered) in step — the invariant cd relies on.
+    def move_to(pwd)
+      @environment.assign('OLDPWD', @pwd)
+      @pwd = pwd
+      @environment.assign('PWD', pwd)
+    end
+
+    # Seed the logical pwd from the OS at startup when $PWD was unset; unlike
+    # #move_to this records no $OLDPWD/$PWD — there is no directory we came from.
+    def seed_pwd(path)
+      return if @pwd
+
+      @pwd = path
+    end
+
+    # A function call brackets its body with begin/end_scope; declare_local
+    # snapshots a variable so end_scope restores its prior value (or unsets it
+    # when it had none).
+    def begin_scope = @frames.push({})
+
+    def end_scope = @frames.pop.each { |name, value| restore(name, value) }
+
+    def in_function? = @frames.any?
+
+    def declare_local(name)
+      frame = @frames.last
+      frame[name] = @environment.get(name) unless frame.key?(name)
+    end
+
+    private
+
+    def restore(name, value)
+      value ? @environment.assign(name, value) : @environment.unset(name)
+    end
+  end
+end

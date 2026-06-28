@@ -133,27 +133,14 @@ detectors:
     #    test would obscure.
     exclude:
       - Rush::Expansion::ParameterExpander#unset_or_null?
-  InstanceVariableAssumption:
-    # The lazy per-operation ivars were genuinely initialised in their
-    # constructors (ProgramReader @buffer, PrintfFormatter @consumed,
-    # SubstitutionReader @depth), and Dot/Eval/Exec/Read now read @io through
-    # Base's inherited #io accessor rather than the raw ivar. Builtins::Command
-    # keeps the raw @io (the accessor's extra method call would push run past the
-    # enforced Metrics/AbcSize limit) and is excluded — @io is initialised in the
-    # Base#initialize it inherits, which reek's per-class analysis cannot see.
-    # The two after it ARE set in
-    # #initialize, but via a private helper (setup / initialize_runtime) that
-    # exists to satisfy RuboCop Metrics/MethodLength; reek analyses each method
-    # in isolation so it cannot see the helper, and inlining to satisfy reek
-    # would break the enforced method-length limit. (Executor#@exiting is also a
-    # transient exit-trap flag, nil unless a trap runs, read as `@exiting || x`.)
-    # Lexer has the same helper-init case but uses an inline :reek: directive so
-    # the exclude does not also swallow its nested classes (reek matches the
-    # unanchored, quoted string against the full name).
-    exclude:
-      - Rush::Builtins::Command
-      - Rush::ShellState
-      - Rush::Executor
+  # InstanceVariableAssumption runs at its default (no exclusions here). The
+  # constructors that used to trip it (ShellState, Executor) are now flat — every
+  # ivar is assigned in #initialize, which the RuboCop config's
+  # `Metrics/MethodLength: AllowedMethods: [initialize]` now permits instead of
+  # forcing a helper-split that hid the ivars from reek. Builtins::Command reads
+  # @io through Base's inherited #io accessor (its #run shed a Demeter chain to
+  # stay under AbcSize). Lexer keeps an inline :reek: directive for its own
+  # helper-init constructor.
   ManualDispatch:
     # on_error renders whatever heterogeneous semantic value racc hands back for
     # the offending token (an AST::Word with #literal_text, or a bare operator

@@ -11,7 +11,12 @@ module Rush
       @system = system
       @state = state
       @builtins = builtins
-      setup
+      @redirections = Redirection.default_registry
+      @expander = Expansion::Pipeline.new(self)
+      @io = IoTable.standard(@system)
+      @tested = false
+      @exiting = nil
+      @state.scope.seed_pwd(@system.pwd)
     end
 
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
@@ -115,14 +120,6 @@ module Rush
     end
 
     private
-
-    def setup
-      @redirections = Redirection.default_registry
-      @expander = Expansion::Pipeline.new(self)
-      @io = IoTable.standard(@system)
-      @tested = false
-      @state.seed_pwd(@system.pwd)
-    end
 
     def scoped_tested(value)
       previous = @tested

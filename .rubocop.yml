@@ -23,6 +23,11 @@ AllCops:
 Metrics/MethodLength:
   Max: 5
   CountAsOne: ['array', 'hash', 'heredoc', 'method_call']
+  # A constructor that only assigns fields is the least-complex code there is;
+  # capping its length just forces a helper-split that hides ivars from reek
+  # (InstanceVariableAssumption). Real constructor complexity is still caught by
+  # AbcSize, which is NOT exempt here.
+  AllowedMethods: ['initialize']
 
 Metrics/ClassLength:
   Max: 100

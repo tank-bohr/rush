@@ -13,11 +13,11 @@ RSpec.describe Rush::Executor do
   end
 
   it 'backfills the logical pwd from the OS when the environment has none' do
-    expect(build(state).state.pwd).to eq('/home/test')
+    expect(build(state).state.scope.pwd).to eq('/home/test')
   end
 
   it 'keeps the environment PWD when present' do
-    expect(build(state('PWD' => '/x')).state.pwd).to eq('/x')
+    expect(build(state('PWD' => '/x')).state.scope.pwd).to eq('/x')
   end
 
   it 'records the last status when running a node' do
