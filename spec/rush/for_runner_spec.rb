@@ -20,13 +20,13 @@ RSpec.describe Rush::ForRunner do
   end
 
   it 'stops on break, returning the last status' do
-    state.last_status = Rush::Status.new(4)
+    state.record_status(Rush::Status.new(4))
     allow(executor).to receive(:run).with(:body).and_raise(Rush::BreakSignal.new(1))
     expect(run(%w[a b]).exitstatus).to eq(4)
   end
 
   it 'resumes the next value on continue' do
-    state.last_status = Rush::Status.new(5)
+    state.record_status(Rush::Status.new(5))
     allow(executor).to receive(:run).with(:body).and_raise(Rush::ContinueSignal.new(1))
     expect(run(%w[a b]).exitstatus).to eq(5)
   end

@@ -6,8 +6,8 @@ module Rush
   # positional parameters and the function table. The executor backfills pwd from
   # the OS when the environment has no PWD.
   class ShellState
-    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name, :pwd
-    attr_accessor :last_status, :positional
+    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name, :pwd,
+                :last_status, :positional
 
     def initialize(environment: Environment.new, name: 'rush')
       @environment = environment
@@ -70,6 +70,22 @@ module Rush
       yield
     ensure
       @loop_depth = saved
+    end
+
+    # The last command's exit status ($?), recorded after each command runs.
+    def record_status(status) = @last_status = status
+
+    # The positional parameters ($1..$n): `set`/`shift` replace them; a function
+    # call brackets its body with #with_positional so the caller's are restored on
+    # return — the $1..$n analogue of #without_loops.
+    def replace_positional(values) = @positional = values
+
+    def with_positional(values)
+      saved = @positional
+      @positional = values
+      yield
+    ensure
+      @positional = saved
     end
 
     private

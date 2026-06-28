@@ -17,9 +17,9 @@ module Rush
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
     # command unrun with status 2; the shell carries on (RedirectError).
     def run(node)
-      @state.last_status = node.execute(self)
+      @state.record_status(node.execute(self))
     rescue RedirectError
-      @state.last_status = Status.new(2)
+      @state.record_status(Status.new(2))
     end
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
@@ -62,7 +62,7 @@ module Rush
       action = state.traps.action(Signals::EXIT)
       return code unless action
 
-      state.last_status = Status.new(code)
+      state.record_status(Status.new(code))
       fire_exit(action, code)
     end
 
@@ -176,7 +176,7 @@ module Rush
     def fire_signal(name)
       saved = state.last_status
       fire(state.traps.action(name).to_s)
-      state.last_status = saved
+      state.record_status(saved)
     end
   end
 end

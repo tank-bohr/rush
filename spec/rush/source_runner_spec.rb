@@ -25,12 +25,12 @@ RSpec.describe Rush::SourceRunner do
   end
 
   it 'returns success for empty input regardless of the prior status' do
-    state.last_status = Rush::Status.new(1)
+    state.record_status(Rush::Status.new(1))
     expect(run('')).to be_success
   end
 
   it 'returns success for comment-only input (no command ran)' do
-    state.last_status = Rush::Status.new(1)
+    state.record_status(Rush::Status.new(1))
     expect(run("# just a comment\n")).to be_success
   end
 
@@ -43,7 +43,7 @@ RSpec.describe Rush::SourceRunner do
   end
 
   it 'keeps $? live for the body (the commands inherit the current status)' do
-    state.last_status = Rush::Status.new(1)
+    state.record_status(Rush::Status.new(1))
     run("echo $?\n")
     expect(out).to eq("1\n")
   end

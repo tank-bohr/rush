@@ -8,8 +8,8 @@ RSpec.describe Rush::Expansion::Resolver do
   let(:executor) { instance_double(Rush::Executor, state: state, system: system) }
 
   before do
-    state.last_status = Rush::Status.new(3)
-    state.positional = %w[a b c]
+    state.record_status(Rush::Status.new(3))
+    state.replace_positional(%w[a b c])
   end
 
   it 'resolves ordinary variables' do

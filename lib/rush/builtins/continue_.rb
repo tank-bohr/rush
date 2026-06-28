@@ -10,7 +10,7 @@ module Rush
     class Continue < Base
       def call
         level = validated
-        executor.state.last_status = success
+        executor.state.record_status(success)
         raise ContinueSignal, clamped(level) if executor.state.in_loop?
 
         success

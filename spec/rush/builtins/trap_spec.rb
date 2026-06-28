@@ -89,7 +89,7 @@ RSpec.describe Rush::Builtins::Trap do
   end
 
   it 'runs the action and restores $? when the signal is delivered' do
-    state.last_status = Rush::Status.failure(7)
+    state.record_status(Rush::Status.failure(7))
     run('echo caught', 'TERM')
     system.trap_block('TERM').call
     expect([system.stdout.string, state.last_status.exitstatus]).to eq(["caught\n", 7])

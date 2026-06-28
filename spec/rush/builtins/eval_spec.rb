@@ -45,7 +45,7 @@ RSpec.describe Rush::Builtins::Eval do
   end
 
   it 'returns success for empty input even after a failing command' do
-    state.last_status = Rush::Status.new(1)
+    state.record_status(Rush::Status.new(1))
     expect(run('')).to be_success
   end
 

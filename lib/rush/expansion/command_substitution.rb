@@ -31,7 +31,7 @@ module Rush
       def run_isolated
         @executor.untested { @executor.run(parse) }
       rescue ExitSignal, ReturnSignal => e
-        @executor.state.last_status = Status.new(e.code)
+        @executor.state.record_status(Status.new(e.code))
       end
 
       def read_output(read, pid)

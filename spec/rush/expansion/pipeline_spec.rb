@@ -55,12 +55,12 @@ RSpec.describe Rush::Expansion::Pipeline do
     def at(quoted) = [Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('@'), quoted: quoted)])]
 
     it 'yields one field per positional parameter when quoted, preserving spaces' do
-      state.positional = ['a b', 'c']
+      state.replace_positional(['a b', 'c'])
       expect(pipeline.expand(at(true))).to eq(['a b', 'c'])
     end
 
     it 'field-splits each parameter when unquoted' do
-      state.positional = ['a b', 'c']
+      state.replace_positional(['a b', 'c'])
       expect(pipeline.expand(at(false))).to eq(%w[a b c])
     end
 
@@ -88,12 +88,12 @@ RSpec.describe Rush::Expansion::Pipeline do
     def star(quoted) = [Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('*'), quoted: quoted)])]
 
     it 'keeps each positional parameter a separate field when unquoted' do
-      state.positional = ['a b', 'c']
+      state.replace_positional(['a b', 'c'])
       expect(pipeline.expand(star(false))).to eq(['a b', 'c'])
     end
 
     it 'joins the positional parameters with the first IFS character when quoted' do
-      state.positional = %w[a b c]
+      state.replace_positional(%w[a b c])
       expect(pipeline.expand(star(true))).to eq(['a:b:c'])
     end
   end

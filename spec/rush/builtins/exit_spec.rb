@@ -12,7 +12,7 @@ RSpec.describe Rush::Builtins::Exit do
   end
 
   it 'exits with the last status when no operand is given' do
-    state.last_status = Rush::Status.new(7)
+    state.record_status(Rush::Status.new(7))
     expect { described_class.new(executor, %w[exit], io).call }
       .to raise_error(Rush::ExitSignal) { |signal| expect(signal.code).to eq(7) }
   end

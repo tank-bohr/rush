@@ -28,7 +28,7 @@ RSpec.describe Rush::LoopRunner do
   end
 
   it 'exits the loop on break, returning the last status' do
-    state.last_status = Rush::Status.new(7)
+    state.record_status(Rush::Status.new(7))
     condition(Rush::Status.success)
     body_raises(Rush::BreakSignal.new(1))
     expect(run(:while).exitstatus).to eq(7)
@@ -41,7 +41,7 @@ RSpec.describe Rush::LoopRunner do
   end
 
   it 'resumes the next iteration on continue' do
-    state.last_status = Rush::Status.new(5)
+    state.record_status(Rush::Status.new(5))
     condition(Rush::Status.success, Rush::Status.failure)
     body_raises(Rush::ContinueSignal.new(1))
     expect(run(:while).exitstatus).to eq(5)

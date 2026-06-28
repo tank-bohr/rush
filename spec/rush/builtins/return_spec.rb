@@ -11,7 +11,7 @@ RSpec.describe Rush::Builtins::Return do
   end
 
   it 'defaults to the last command status' do
-    state.last_status = Rush::Status.new(7)
+    state.record_status(Rush::Status.new(7))
     expect { described_class.new(executor, %w[return], io).call }
       .to raise_error(Rush::ReturnSignal) { |signal| expect(signal.code).to eq(7) }
   end

@@ -61,19 +61,13 @@ detectors:
     exclude:
       - Rush::Expansion::Arithmetic::Number
       - Rush::CommandRunner
-  Attribute:
-    # HereDoc#body (write-once, two-phase) became attr_reader + #fill;
-    # ShellState#name (set only at construction) and #pwd (now mutated only via
-    # #move_to, which keeps $OLDPWD/$PWD in step) became attr_reader. The two
-    # below stay writable: they model free-form mutable POSIX runtime —
-    # $? (last_status) and the positional parameters $1..$n (positional) — which
-    # commands and builtins update directly. There is no encapsulated invariant a
-    # setter would protect and no internal representation it would leak (the
-    # attribute IS the concept), so a record_status/replace_positional wrapper
-    # would only be a synonym for `=`.
-    exclude:
-      - Rush::ShellState#last_status
-      - Rush::ShellState#positional
+  # Attribute is intentionally absent: it runs fully ratcheted with zero
+  # exclusions. HereDoc#body became attr_reader + #fill; ShellState#name/#pwd
+  # became attr_reader (#pwd mutates only via #move_to, which keeps $OLDPWD/$PWD
+  # in step); and ShellState#last_status / #positional, the directly-mutable
+  # POSIX runtime ($? and $1..$n), now go through named commands
+  # (#record_status, #replace_positional, the bracketed #with_positional) so the
+  # whole state record mutates through methods, not bare setters.
   ControlParameter:
     # Two were refactored out, not excluded: SubstitutionReader#adjust became a
     # table lookup (@depth += DEPTH_DELTA.fetch(char, 0)), and Pipeline#escape

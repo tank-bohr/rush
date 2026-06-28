@@ -11,7 +11,7 @@ module Rush
     class Break < Base
       def call
         level = validated
-        executor.state.last_status = success
+        executor.state.record_status(success)
         raise BreakSignal, clamped(level) if executor.state.in_loop?
 
         success

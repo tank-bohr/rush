@@ -4,12 +4,12 @@ RSpec.describe Rush::FunctionRunner do
   let(:state) { Rush::ShellState.new }
   let(:executor) { instance_double(Rush::Executor, state: state) }
 
-  before { state.positional = %w[orig] }
+  before { state.replace_positional(%w[orig]) }
 
   it 'binds the args as positionals, runs the body, and restores them' do
     allow(executor).to receive(:run).with(:body) do
       expect(state.positional).to eq(%w[a b])
-      state.last_status = Rush::Status.success
+      state.record_status(Rush::Status.success)
     end
     described_class.new(executor, :body, %w[a b]).call
     expect(state.positional).to eq(%w[orig])
@@ -17,7 +17,7 @@ RSpec.describe Rush::FunctionRunner do
 
   it 'yields the last body status' do
     allow(executor).to receive(:run).with(:body).and_return(nil)
-    state.last_status = Rush::Status.new(2)
+    state.record_status(Rush::Status.new(2))
     expect(described_class.new(executor, :body, []).call.exitstatus).to eq(2)
   end
 

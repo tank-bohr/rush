@@ -26,7 +26,7 @@ RSpec.describe Rush::Builtins::Continue do
     end
 
     it 'sets $? to success before unwinding (continue is a successful builtin)' do
-      state.last_status = Rush::Status.new(1)
+      state.record_status(Rush::Status.new(1))
       expect { run }.to raise_error(Rush::ContinueSignal)
       expect(state.last_status).to be_success
     end
@@ -34,7 +34,7 @@ RSpec.describe Rush::Builtins::Continue do
 
   context 'with no enclosing loop' do
     it 'is a no-op that succeeds without raising' do
-      state.last_status = Rush::Status.new(1)
+      state.record_status(Rush::Status.new(1))
       expect(run).to be_success
       expect(state.last_status).to be_success
     end

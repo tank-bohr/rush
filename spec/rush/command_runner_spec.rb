@@ -24,7 +24,7 @@ RSpec.describe Rush::CommandRunner do
   end
 
   it 'reports success for a substitution-free assignment despite a prior failure' do
-    state.last_status = Rush::Status.failure(9)
+    state.record_status(Rush::Status.failure(9))
     expect(executor.run(program('x=plain'))).to be_success
   end
 

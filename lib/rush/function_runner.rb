@@ -17,20 +17,12 @@ module Rush
     # break/continue inside it cannot reach a loop in the caller (POSIX 2.9.5).
     def call
       @state.begin_scope
-      @state.without_loops { with_args { invoke } }
+      @state.without_loops { @state.with_positional(@args) { invoke } }
     ensure
       @state.end_scope
     end
 
     private
-
-    def with_args
-      saved = @state.positional
-      @state.positional = @args
-      yield
-    ensure
-      @state.positional = saved
-    end
 
     def invoke
       @executor.run(@body)

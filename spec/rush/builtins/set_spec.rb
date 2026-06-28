@@ -19,13 +19,13 @@ RSpec.describe Rush::Builtins::Set do
   end
 
   it 'clears the parameters with a bare --' do
-    state.positional = %w[old]
+    state.replace_positional(%w[old])
     run('--')
     expect(state.positional).to be_empty
   end
 
   it 'leaves the parameters unchanged when given no operands' do
-    state.positional = %w[keep]
+    state.replace_positional(%w[keep])
     expect(run).to be_success
     expect(state.positional).to eq(%w[keep])
   end
