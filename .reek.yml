@@ -28,7 +28,20 @@ detectors:
   # Nodes and helpers are intentionally small pure transforms that lean on a
   # collaborator (the executor / state); that is the design, not a smell.
   UtilityFunction:
-    enabled: false
+    # Private pure helpers are cohesive implementation details of their class
+    # (the small-transform functional style), so only PUBLIC state-less methods
+    # are flagged. The two that remain are stateless by design:
+    #  - SystemCalls is the impure PORT: every method is a thin syscall wrapper
+    #    that must be an instance method so the fake (spec/support/
+    #    fake_system_calls.rb) can be injected in its place; module functions
+    #    would break that test seam.
+    #  - HereDocRedirect#apply is a registry strategy: the redirection registry
+    #    stores applier instances and calls #apply polymorphically by kind, so it
+    #    must be an instance method even though it holds no state.
+    public_methods_only: true
+    exclude:
+      - Rush::SystemCalls
+      - Rush::Redirection::HereDocRedirect#apply
   FeatureEnvy:
     # PipelineRunner#stage_io was genuinely moved onto Stage (Stage#io), which
     # owns its fd topology. The rest, after reading each, are not misplaced:
