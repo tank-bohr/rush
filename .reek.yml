@@ -54,16 +54,14 @@ detectors:
     #  - it dispatches on a value's kind enum, and making the value self-render
     #    would couple the small AST/value objects to this subsystem:
     #    CommandLookup#describe (kind), Pipeline#scalar_segment (segment);
-    #  - it coordinates a collaborator by design — moving it breaks the visitor
-    #    dispatch or splits a step that spans two collaborators: If#condition_met?
-    #    (executor, visitor), Cd#update_pwd (state + system; even a state.move_to
-    #    helper would still leave the expand_path coordination here);
+    #  - it coordinates a collaborator by design — moving it splits a step that
+    #    spans two collaborators: Cd#update_pwd (state + system; even a
+    #    state.move_to helper would still leave the expand_path coordination here);
     #  - it is a predicate/transform that needs both self and the value's fields
     #    and has no cohesive home on the value: AliasExpander#plain?
     #    (alias-specific), TildeExpander#expand (the leading-segment tilde rewrite
     #    is tilde-domain).
     exclude:
-      - Rush::AST::If#condition_met?
       - Rush::Builtins::Cd#update_pwd
       - Rush::Builtins::PrintfFormatter#chunk
       - Rush::Builtins::PrintfFormatter#conversion

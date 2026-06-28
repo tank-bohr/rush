@@ -102,6 +102,10 @@ module Rush
 
     def untested(&) = scoped_tested(false, &)
 
+    # Evaluate an if/while/until condition: run the command in a tested context
+    # (so a failing condition never trips errexit) and report whether it succeeded.
+    def succeeds?(command) = tested { run(command) }.success?
+
     # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
     # outside a tested context aborts the shell with that status.
     def exit_on_error(status)
