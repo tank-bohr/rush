@@ -57,11 +57,27 @@ Metrics/CollectionLiteralLength:
   Exclude:
     - 'spec/**/*'
 
-# Per-class/module descriptive comments are the project norm; reek's
-# IrresponsibleModule enforces them (see .reek.yml), so this cop stays off to
-# avoid duplicating that enforcement.
+# Per-class/module descriptive comments are the project norm, double-guarded on
+# purpose: this cop gives editor/LSP feedback, reek's IrresponsibleModule holds
+# the gate. The one concern we deliberately enforce with both tools.
 Style/Documentation:
-  Enabled: false
+  Enabled: true
+
+# RuboCop ships these cops disabled by default (opt-in); NewCops:enable does NOT
+# turn them on. We opt into the ones that catch real issues without fighting the
+# project's compact style.
+Style/UnlessLogicalOperators:
+  Enabled: true # forbid the confusing mixed `unless a && b || c`; plain guards stay
+Style/InvertibleUnlessCondition:
+  Enabled: true # `unless x.zero?` reads better as `if x.nonzero?`
+Style/YodaExpression:
+  Enabled: true
+Style/ImplicitRuntimeError:
+  Enabled: true # raise must name an error class, not a bare RuntimeError
+Lint/ShadowingOuterLocalVariable:
+  Enabled: true
+Naming/InclusiveLanguage:
+  Enabled: true
 
 # The plan keeps development dependencies declared in the gemspec (single source
 # of truth), so do not force them into the Gemfile.

@@ -18,7 +18,7 @@ module Rush
 
     # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
     def self.of(process_status)
-      new(process_status.exitstatus || (128 + process_status.termsig))
+      new(process_status.exitstatus || (process_status.termsig + 128))
     end
   end
 end

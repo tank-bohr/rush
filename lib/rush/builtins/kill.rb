@@ -56,7 +56,7 @@ module Rush
       def list(args) = args.empty? ? list_all : list_one(args.first)
 
       def list_all
-        Signals::NUMBERS.each { |num, name| stdout.puts(name) unless num.zero? }
+        Signals::NUMBERS.each { |num, name| stdout.puts(name) if num.nonzero? }
         success
       end
 

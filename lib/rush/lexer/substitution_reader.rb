@@ -52,7 +52,7 @@ module Rush
       end
 
       def arith_close
-        return ')'.tap { @depth -= 1 } unless @depth.zero?
+        return ')'.tap { @depth -= 1 } if @depth.nonzero?
         raise(ParseError, 'arithmetic: malformed') unless @scanner.scan(')')
 
         nil
