@@ -82,7 +82,10 @@ detectors:
     #  - the argument is the datum being computed/matched, not a behaviour flag:
     #    Number#bool (boolean -> 1/0), Parser#accept? (token matcher);
     #  - a value coalesce / default, not a branch: SystemCalls#trap_signal
-    #    (command || block), FieldSplitter#initialize (ifs || WHITESPACE);
+    #    (command || block). (FieldSplitter's `ifs || WHITESPACE` moved into the
+    #    shared Ifs value object, where ifs is also stored, so it is no longer
+    #    read as a pure control parameter — the same reason ReadSplitter never
+    #    tripped this.)
     #  - one factor in a compound precondition predicate: AliasExpander#eligible?
     #    (command position is one of several ANDed conditions deciding whether a
     #    word may alias-expand, not a switch making the predicate do two things);
@@ -93,7 +96,6 @@ detectors:
       - Rush::Expansion::Arithmetic::Number#bool
       - Rush::Expansion::Arithmetic::Parser#accept?
       - Rush::SystemCalls#trap_signal
-      - Rush::Expansion::FieldSplitter#initialize
       - Rush::Lexer::AliasExpander#eligible?
       - Rush::ShellState#set_option
       - Rush::Builtins::Printf#report
