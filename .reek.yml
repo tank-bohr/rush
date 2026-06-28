@@ -30,7 +30,44 @@ detectors:
   UtilityFunction:
     enabled: false
   FeatureEnvy:
-    enabled: false
+    # PipelineRunner#stage_io was genuinely moved onto Stage (Stage#io), which
+    # owns its fd topology. The rest, after reading each, are not misplaced:
+    #  - the method transforms a primitive or stdlib value passed as its arg, so
+    #    Ruby offers no clean home for it (a core-ext / Refused Bequest): Set#apply
+    #    (String), Set#advance / Test#without_close / TestExpr#four? /
+    #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
+    #    (String), Times#clock (Numeric), Pipeline#tilde_expand (Symbol),
+    #    PrintfFormatter#chunk / #conversion (a StringScanner it drives);
+    #  - it dispatches on a value's kind enum, and making the value self-render
+    #    would couple the small AST/value objects to this subsystem:
+    #    CommandLookup#describe (kind), Pipeline#scalar_segment (segment);
+    #  - it coordinates a collaborator by design — moving it breaks the visitor
+    #    dispatch or splits a step that spans two collaborators: If#condition_met?
+    #    (executor, visitor), Cd#update_pwd (state + system; even a state.move_to
+    #    helper would still leave the expand_path coordination here);
+    #  - it is a predicate/transform that needs both self and the value's fields
+    #    and has no cohesive home on the value: AndOr#run_right? (needs self.op as
+    #    well as the status), AliasExpander#plain? (alias-specific), and
+    #    TildeExpander#expand (the leading-segment tilde rewrite is tilde-domain).
+    exclude:
+      - Rush::AST::AndOr#run_right?
+      - Rush::AST::If#condition_met?
+      - Rush::Builtins::Cd#update_pwd
+      - Rush::Builtins::PrintfFormatter#chunk
+      - Rush::Builtins::PrintfFormatter#conversion
+      - Rush::Builtins::Set#advance
+      - Rush::Builtins::Set#apply
+      - Rush::Builtins::Test#without_close
+      - Rush::Builtins::TestExpr#four?
+      - Rush::Builtins::TestExpr#to_int
+      - Rush::Builtins::Times#clock
+      - Rush::CommandLookup#describe
+      - Rush::Expansion::Pipeline#scalar_segment
+      - Rush::Expansion::Pipeline#tilde_expand
+      - Rush::Expansion::ReadSplitter#pad
+      - Rush::Expansion::ReadSplitter#trim_last
+      - Rush::Expansion::TildeExpander#expand
+      - Rush::Lexer::AliasExpander#plain?
   DataClump:
     # Two genuine clumps were refactored out, not excluded: PipelineRunner's
     # (index, pipes) became a Stage value object, and PrintfFormatter's

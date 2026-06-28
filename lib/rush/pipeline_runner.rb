@@ -20,6 +20,13 @@ module Rush
       def input = index.positive? ? pipes[index - 1].first : nil
       def output = last? ? nil : pipes[index].last
       def ends = [input, output].compact
+
+      # Layer this stage's pipe ends over the base IoTable: stdin from the
+      # previous pipe (unless first), stdout to the next pipe (unless last).
+      def io(base)
+        base = base.with(0, input) if input
+        output ? base.with(1, output) : base
+      end
     end
 
     def initialize(executor, commands)
@@ -46,13 +53,7 @@ module Rush
 
     def run_stage(stage)
       close_unused(stage)
-      @executor.with_io(stage_io(stage)) { @executor.run(@commands[stage.index]) }
-    end
-
-    def stage_io(stage)
-      io = @executor.io
-      io = io.with(0, stage.input) if stage.input
-      stage.output ? io.with(1, stage.output) : io
+      @executor.with_io(stage.io(@executor.io)) { @executor.run(@commands[stage.index]) }
     end
 
     def close_unused(stage)
