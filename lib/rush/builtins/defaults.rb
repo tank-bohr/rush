@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Rush
+  # The shell's builtin commands and the default name -> implementation table.
   module Builtins
     # The builtins available in Slice 1. Later slices extend this table.
     DEFAULTS = {

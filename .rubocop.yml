@@ -52,7 +52,9 @@ Metrics/CollectionLiteralLength:
   Exclude:
     - 'spec/**/*'
 
-# Documentation is provided by clear naming + the architecture doc, not per-class comments.
+# Per-class/module descriptive comments are the project norm; reek's
+# IrresponsibleModule enforces them (see .reek.yml), so this cop stays off to
+# avoid duplicating that enforcement.
 Style/Documentation:
   Enabled: false
 

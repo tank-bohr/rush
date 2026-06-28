@@ -53,7 +53,9 @@ module Rush
     end
   end
 
+  # `break N`: unwind out of N enclosing loop levels.
   class BreakSignal < LoopControl; end
+  # `continue N`: resume the Nth enclosing loop's next iteration.
   class ContinueSignal < LoopControl; end
 
   # Control-flow signal: `return` unwinds to the enclosing function call.

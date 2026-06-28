@@ -77,8 +77,6 @@ detectors:
     enabled: false # readability is preferred over micro-caching repeated calls
 
   # --- Off by project decision / Ruby idioms / false positives ---
-  IrresponsibleModule:
-    enabled: false # RuboCop Style/Documentation is deliberately disabled too
   NilCheck:
     enabled: false # explicit nil handling is legitimate throughout
   InstanceVariableAssumption:

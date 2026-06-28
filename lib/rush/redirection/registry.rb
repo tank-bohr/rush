@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 module Rush
+  # I/O redirection: the per-kind appliers and the registry that dispatches to them.
   module Redirection
     # O(1) redirection-kind -> applier lookup, populated by default_registry.
     class Registry
