@@ -41,10 +41,10 @@ module Rush
       def header_token
         return [for_header, @word] if @state.for_in? && for_header
 
-        [:In, @word] if @state.case_in? && plain? && text == 'in'
+        [:In, @word] if @state.case_in? && @word.literal_name == 'in'
       end
 
-      def arm_token = plain? && text == 'esac' ? :Esac : :WORD
+      def arm_token = @word.literal_name == 'esac' ? :Esac : :WORD
 
       def classify
         keyword = reserved
@@ -54,23 +54,17 @@ module Rush
         name ? assignment_token(name) : [:WORD, @word]
       end
 
-      def for_header = plain? ? FOR_IN[text] : nil
+      def for_header = FOR_IN[@word.literal_name]
 
       def reserved
-        RESERVED[text] if @state.expects_command? && plain?
+        RESERVED[@word.literal_name] if @state.expects_command?
       end
-
-      def plain? = @word.segments.one? && literal_unquoted?(@word.segments.first)
-
-      def literal_unquoted?(segment) = segment.kind == :literal && !segment.quoted
-
-      def text = @word.segments.first.value
 
       def assignment_name
         return nil unless @state.expects_command?
 
-        head = @word.segments.first
-        literal_unquoted?(head) ? capture(head.value) : nil
+        value = @word.segments.first.literal_value
+        capture(value) if value
       end
 
       def capture(value)

@@ -17,9 +17,10 @@ module Rush
 
       def literal_text = segments.map(&:value).join
 
-      # A bare unquoted-literal word — one literal segment, no quoting or
-      # substitution — so its text can stand in as a name (e.g. for an alias).
-      def plain? = segments.one? && segments.first.literal_unquoted?
+      # The text when this word is a bare name — one unquoted literal segment, no
+      # quoting or substitution — else nil. Used for reserved words, NAME=, and
+      # alias substitution, all of which only apply to a plain literal word.
+      def literal_name = (segments.first.literal_value if segments.one?)
     end
   end
 end

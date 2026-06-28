@@ -7,9 +7,9 @@ module Rush
     # quotes already removed; `quoted` records whether it came from a quoted
     # context, which later governs field splitting and pathname expansion.
     WordSegment = Data.define(:kind, :value, :quoted) do
-      # Plain text the lexer can treat as a bare name (alias substitution, etc.):
-      # a literal run that did not come from a quoted context.
-      def literal_unquoted? = kind == :literal && !quoted
+      # This segment's text when it is plain enough to stand in as a bare name —
+      # an unquoted literal run — else nil (a quoted or substitution segment).
+      def literal_value = (value if kind == :literal && !quoted)
     end
   end
 end

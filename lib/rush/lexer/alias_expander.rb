@@ -20,9 +20,10 @@ module Rush
       # The replacement text when `word` is an alias eligible to expand here, else
       # nil. Eligible means command position or a pending trailing-blank carry.
       def expand(word, command_position)
-        return nil unless eligible?(word, command_position)
+        name = word.literal_name
+        return nil unless name && eligible?(command_position)
 
-        enter(word.literal_text)
+        enter(name)
       end
 
       # Stash the scanner a replacement was spliced over; restore it once the
@@ -44,10 +45,9 @@ module Rush
 
       private
 
-      # Eligible to expand here: aliases are defined, the word sits in command
-      # position (or a pending trailing-blank carry makes it eligible), and it is
-      # a bare unquoted-literal word that can act as an alias name.
-      def eligible?(word, command_position) = @table && (command_position || @check_next) && word.plain?
+      # Eligible position: aliases are defined and the word sits in command
+      # position, or a pending trailing-blank carry makes it eligible here.
+      def eligible?(command_position) = @table && (command_position || @check_next)
 
       def enter(name)
         value = @table.value(name)
