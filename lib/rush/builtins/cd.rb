@@ -22,10 +22,7 @@ module Rush
 
       def update_pwd(dir)
         state = executor.state
-        old = state.pwd
-        state.pwd = executor.system.expand_path(dir, old)
-        state.environment.assign('OLDPWD', old)
-        state.environment.assign('PWD', state.pwd)
+        state.move_to(executor.system.expand_path(dir, state.pwd))
       end
 
       def report(message)

@@ -54,15 +54,11 @@ detectors:
     #  - it dispatches on a value's kind enum, and making the value self-render
     #    would couple the small AST/value objects to this subsystem:
     #    CommandLookup#describe (kind), Pipeline#scalar_segment (segment);
-    #  - it coordinates a collaborator by design — moving it splits a step that
-    #    spans two collaborators: Cd#update_pwd (state + system; even a
-    #    state.move_to helper would still leave the expand_path coordination here);
     #  - it is a predicate/transform that needs both self and the value's fields
     #    and has no cohesive home on the value: AliasExpander#plain?
     #    (alias-specific), TildeExpander#expand (the leading-segment tilde rewrite
     #    is tilde-domain).
     exclude:
-      - Rush::Builtins::Cd#update_pwd
       - Rush::Builtins::PrintfFormatter#chunk
       - Rush::Builtins::PrintfFormatter#conversion
       - Rush::Builtins::Set#advance
@@ -94,17 +90,17 @@ detectors:
       - Rush::Expansion::Arithmetic::Number
       - Rush::CommandRunner
   Attribute:
-    # HereDoc#body (write-once, two-phase) became attr_reader + #fill, and
-    # ShellState#name (set only at construction) became attr_reader. The three
-    # below stay writable: they model the free-form mutable POSIX runtime —
-    # $? (last_status), $PWD (pwd) and the positional parameters $1..$n
-    # (positional) — which commands and builtins update directly. There is no
-    # encapsulated invariant a setter would protect and no internal
-    # representation it would leak (the attribute IS the concept), so a
-    # record_status/replace_positional wrapper would only be a synonym for `=`.
+    # HereDoc#body (write-once, two-phase) became attr_reader + #fill;
+    # ShellState#name (set only at construction) and #pwd (now mutated only via
+    # #move_to, which keeps $OLDPWD/$PWD in step) became attr_reader. The two
+    # below stay writable: they model free-form mutable POSIX runtime —
+    # $? (last_status) and the positional parameters $1..$n (positional) — which
+    # commands and builtins update directly. There is no encapsulated invariant a
+    # setter would protect and no internal representation it would leak (the
+    # attribute IS the concept), so a record_status/replace_positional wrapper
+    # would only be a synonym for `=`.
     exclude:
       - Rush::ShellState#last_status
-      - Rush::ShellState#pwd
       - Rush::ShellState#positional
   ControlParameter:
     # Two were refactored out, not excluded: SubstitutionReader#adjust became a

@@ -6,8 +6,8 @@ module Rush
   # positional parameters and the function table. The executor backfills pwd from
   # the OS when the environment has no PWD.
   class ShellState
-    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name
-    attr_accessor :last_status, :pwd, :positional
+    attr_reader :environment, :functions, :traps, :aliases, :loop_depth, :command_hash, :name, :pwd
+    attr_accessor :last_status, :positional
 
     def initialize(environment: Environment.new, name: 'rush')
       @environment = environment
@@ -15,6 +15,22 @@ module Rush
       @pwd = environment.get('PWD')
       @traps = TrapTable.new
       initialize_runtime
+    end
+
+    # Change the logical working directory, keeping $OLDPWD (the directory we
+    # left) and $PWD (the one we entered) in step — the invariant cd relies on.
+    def move_to(pwd)
+      @environment.assign('OLDPWD', @pwd)
+      @pwd = pwd
+      @environment.assign('PWD', pwd)
+    end
+
+    # Seed the logical pwd from the OS at startup when $PWD was unset; unlike
+    # #move_to this records no $OLDPWD/$PWD — there is no directory we came from.
+    def seed_pwd(path)
+      return if @pwd
+
+      @pwd = path
     end
 
     # Shell options set by `set -o`-style flags (:nounset, :xtrace, ...).

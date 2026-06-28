@@ -121,7 +121,7 @@ module Rush
       @expander = Expansion::Pipeline.new(self)
       @io = IoTable.standard(@system)
       @tested = false
-      @state.pwd ||= @system.pwd
+      @state.seed_pwd(@system.pwd)
     end
 
     def scoped_tested(value)
