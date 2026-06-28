@@ -216,3 +216,41 @@ unit specs, with a few deterministic differential cases.
   (backreference + re-escaped newline bugs); pass them as direct argv elements or env vars. And
   note rush does **not** set `$1`/positionals after `-c` (only dash does) — `$1`-based harnesses
   silently break.
+
+---
+
+## Dev tooling (beyond rubocop + rspec + 100% coverage)
+
+Tool-state verified on Ruby 4.0.5 (so it isn't re-researched). Beads epic `rush-211`.
+
+### reek — a forward ratchet, not a judge of the existing code (`.reek.yml`)
+reek 6.5.0 has no *official* Ruby 4.0 support (lists 3.0–3.3) but **works**: it parsed all 111
+`lib` files with zero parse errors via `parser` 3.3.11.1 (rush uses no 3.4+ syntax — the `it`
+implicit param, etc.). Out of the box it flagged ~292 smells, but nearly all are **deliberate or
+redundant here**: metric detectors (TooManyStatements/Methods/…) duplicate the Sandi-Metz limits
+RuboCop already owns; UtilityFunction/FeatureEnvy/DuplicateMethodCall/Attribute are the
+intended functional + AST-visitor style; NilCheck/ControlParameter/BooleanParameter are
+legitimate; IrresponsibleModule mirrors the deliberately-off `Style/Documentation`; and a few are
+plain false positives (`waitpid2`, `exit!`, the Racc `parser.rb`, the ParserSupport mixin). So
+`.reek.yml` disables those (each with a one-line reason) and accepts single-letter names, leaving
+**zero residual** — reek's real value here is catching *new* cryptic names / smells, not
+re-judging reviewed code. Honest caveat: after this tuning reek's marginal signal over RuboCop is
+thin; it is kept as a cheap ratchet. `exclude_paths` is matched against the *given* paths, so it
+must be relative (`lib/rush/parser.rb`) and reek run from the repo root, as the rake task does.
+
+### types — RBS + Steep over Sorbet (decision)
+Chosen: RBS 4.0.3 + Steep 2.0.0 (both current, maintained). Rationale: RBS is the official Ruby
+type language (ships with Ruby 4.0), signatures live in `sig/*.rbs` with **zero code pollution**
+and **no runtime dependency**, and `rbs`/`typeprof` (0.31.1, already present) can bootstrap sigs.
+It also stays portable — Sorbet can consume inline RBS — so picking RBS keeps a later Sorbet layer
+open without running two checkers now. Sorbet (0.6.x, maintained by Stripe) was rejected for this
+~6k-LOC library: inline `sig`/`# typed:` sigils + `sorbet-runtime` clutter the code for strictness
+this size doesn't need.
+
+### mutant — usable, on-demand only
+mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
+actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
+cleanly** (`unparser` 0.9.0), so the `parser/ruby33`-grammar warning is cosmetic. Kept out of the
+default gate: it reruns the ~60s suite per mutation, far too slow for a per-slice gate; it belongs
+in a `rake mutant` task / CI. Its payoff is exactly what 100% coverage cannot show — whether the
+assertions actually *kill* mutations.

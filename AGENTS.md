@@ -18,7 +18,9 @@ knowledge lives in `docs/` and the backlog lives in beads (see "Where things liv
 
 1. **racc compile** — regenerate the parser from `grammar/shell.y`
 2. **rubocop** (style + metrics; limits in `.rubocop.yml`)
-3. **rspec**
+3. **metrics** (Sandi Metz limits via rubocop Metrics cops)
+4. **reek** (code-smell ratchet; config + rationale in `.reek.yml`)
+5. **rspec** (+ 100% line/branch coverage gate)
 
 ```bash
 bundle exec rake             # the full green gate

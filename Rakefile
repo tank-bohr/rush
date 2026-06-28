@@ -28,5 +28,11 @@ task :metrics do
   sh "rubocop --only #{SANDI_COPS.join(',')} lib exe"
 end
 
-desc 'Full pipeline: compile -> rubocop -> metrics -> spec (+ coverage gate)'
-task default: %i[compile rubocop metrics spec]
+desc 'Code-smell gate (reek; config + rationale in .reek.yml)'
+task :reek do
+  # Production code only (lib + exe); reek runs as a forward-looking ratchet.
+  sh 'reek lib exe'
+end
+
+desc 'Full pipeline: compile -> rubocop -> metrics -> reek -> spec (+ coverage gate)'
+task default: %i[compile rubocop metrics reek spec]
