@@ -238,6 +238,37 @@ re-judging reviewed code. Honest caveat: after this tuning reek's marginal signa
 thin; it is kept as a cheap ratchet. `exclude_paths` is matched against the *given* paths, so it
 must be relative (`lib/rush/parser.rb`) and reek run from the repo root, as the rake task does.
 
+**Update (rush-6hi): the "deliberate" hand-waves above were re-examined and the ratchet
+tightened.** All thirteen non-metric detectors that were blanket-`enabled: false` are now ON
+(one slice each, `35d5abf..59704c8`); only the five that duplicate RuboCop's Sandi-Metz Metrics
+(`TooMany*`, `LongParameterList`) stay off, since RuboCop owns those thresholds. Re-reading every
+hit produced *real* refactors, not just config: a `WordScanner.next_word/.entire` factory pair
+(killed a boolean), a `PipelineRunner::Stage` value object owning the pipe-fd topology
+(`Stage#io`), `HereDoc#fill`, ~19 nil-checks rewritten to truthy/`unless`, table-driven
+`SubstitutionReader#adjust`, and locals for genuinely-repeated calls. Where a smell was *not*
+real, the detector stays enabled with a **scoped, code-grounded** `exclude` (not a blanket
+disable). Findings worth not re-learning:
+
+- **reek `exclude` strings are `Regexp.quote`d and matched UNANCHORED** against the full context
+  name. So `?`/`#` in a method name work literally, but `Rush::Lexer` also matches
+  `Rush::Lexer::SubstitutionReader` — to scope to one class with nested classes, use an inline
+  `# :reek:SmellName` directive on the class instead (see `Lexer`).
+- **reek can't see helper-initialised ivars or inherited `initialize`.** `setup`/`init_state`/
+  `initialize_runtime` exist for `Metrics/MethodLength`, so reek's per-method
+  `InstanceVariableAssumption` misfires on `Lexer`/`ShellState`/`Executor`; builtins read `@io`
+  via Base's inherited `#io` accessor (or are excluded where the accessor would breach `AbcSize`).
+- **Detectors conflict.** Hoisting a repeated `@ivar.method` into a local to satisfy
+  `DuplicateMethodCall` turns a self-state read into an external referent and trips `FeatureEnvy`;
+  so repeated ivar accessors (`@ref.op`, `@executor.state`) keep the call and are excluded. Set
+  `DuplicateMethodCall max_calls: 2` (twice is idiomatic; 3+ earns a local).
+- **Stateful reads look like duplicates.** `@scanner.getch` / `@scanner.matched` return a
+  *different* value each call — "caching" them is a bug, so they are never extracted.
+- **`UtilityFunction public_methods_only: true`** is the right scope: private pure helpers are the
+  intended small-transform style; the only public state-less methods left are the `SystemCalls`
+  port (must stay instance methods for the injected fake) and a registry strategy `#apply`.
+- **IrresponsibleModule** mirrors the off `Style/Documentation`, but since that cop is off reek is
+  the *sole* doc enforcer (no duplication), so it is enabled and the ~10 gaps were documented.
+
 ### types — RBS + Steep over Sorbet (decision)
 Chosen: RBS 4.0.3 + Steep 2.0.0 (both current, maintained). Rationale: RBS is the official Ruby
 type language (ships with Ruby 4.0), signatures live in `sig/*.rbs` with **zero code pollution**
