@@ -33,9 +33,10 @@ module Rush
       end
 
       def advance(args, index)
-        return apply_long(args[index][0], args[index + 1]) if args[index][1..] == 'o'
+        arg = args[index]
+        return apply_long(arg[0], args[index + 1]) if arg[1..] == 'o'
 
-        apply(args[index])
+        apply(arg)
         1
       end
 

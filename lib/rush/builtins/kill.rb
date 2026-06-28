@@ -19,8 +19,9 @@ module Rush
       private
 
       def parse
-        return [operands[1], operands.drop(2)] if operands.first == '-s'
-        return [operands.first[1..], operands.drop(1)] if flag?(operands.first)
+        first = operands.first
+        return [operands[1], operands.drop(2)] if first == '-s'
+        return [first[1..], operands.drop(1)] if flag?(first)
 
         ['TERM', operands]
       end
