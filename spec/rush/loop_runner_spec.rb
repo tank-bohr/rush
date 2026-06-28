@@ -5,10 +5,21 @@ RSpec.describe Rush::LoopRunner do
   let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: state) }
   let(:state) { Rush::ShellState.new }
 
-  def run(sense) = described_class.new(executor, :cond, :body, sense).call
-  def condition(*statuses) = allow(executor).to receive(:run).with(:cond).and_return(*statuses)
-  def body_returns(status) = allow(executor).to receive(:run).with(:body).and_return(status)
-  def body_raises(error) = allow(executor).to receive(:run).with(:body).and_raise(error)
+  def run(sense)
+    described_class.new(executor, :cond, :body, sense).call
+  end
+
+  def condition(*statuses)
+    allow(executor).to receive(:run).with(:cond).and_return(*statuses)
+  end
+
+  def body_returns(status)
+    allow(executor).to receive(:run).with(:body).and_return(status)
+  end
+
+  def body_raises(error)
+    allow(executor).to receive(:run).with(:body).and_raise(error)
+  end
 
   it 'runs the body while the condition succeeds' do
     condition(Rush::Status.success, Rush::Status.success, Rush::Status.failure)

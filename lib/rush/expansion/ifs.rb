@@ -14,11 +14,17 @@ module Rush
         @chars = (ifs || WHITESPACE).chars.uniq
       end
 
-      def null? = @ifs == ''
+      def null?
+        @ifs == ''
+      end
 
-      def whitespace = @chars.select { |char| WHITESPACE.include?(char) }
+      def whitespace
+        @chars.select { |char| WHITESPACE.include?(char) }
+      end
 
-      def others = @chars.reject { |char| WHITESPACE.include?(char) }
+      def others
+        @chars.reject { |char| WHITESPACE.include?(char) }
+      end
     end
   end
 end

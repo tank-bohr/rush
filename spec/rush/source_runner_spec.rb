@@ -5,8 +5,13 @@ RSpec.describe Rush::SourceRunner do
   let(:state) { Rush::ShellState.new }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
-  def run(text) = described_class.new(executor, text).run
-  def out = system.stdout.string
+  def run(text)
+    described_class.new(executor, text).run
+  end
+
+  def out
+    system.stdout.string
+  end
 
   it 'runs the commands in order in the current shell' do
     run("echo a\necho b\n")

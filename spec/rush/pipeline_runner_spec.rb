@@ -5,7 +5,9 @@ RSpec.describe Rush::PipelineRunner do
   let(:state) { Rush::ShellState.new(environment: Rush::Environment.new({})) }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
-  def echo(*args) = Rush::AST::SimpleCommand.new([], ['echo', *args].map { |a| Rush::AST::Word.literal(a) }, [])
+  def echo(*args)
+    Rush::AST::SimpleCommand.new([], ['echo', *args].map { |a| Rush::AST::Word.literal(a) }, [])
+  end
 
   describe '#call (parent orchestration)' do
     it 'forks every stage, closes the pipes and returns the last stage status' do
@@ -17,13 +19,23 @@ RSpec.describe Rush::PipelineRunner do
       expect([forked, status.exitstatus]).to eq([3, 3])
     end
 
-    def status_double(code) = instance_double(Process::Status, exitstatus: code, termsig: nil)
+    def status_double(code)
+      instance_double(Process::Status, exitstatus: code, termsig: nil)
+    end
   end
 
   describe '#run_stage (child side)' do
-    def runner(stages) = described_class.new(executor, stages)
-    def parse_stage(src) = Rush::Parser.new(Rush::Lexer.new(src)).parse.entries.first.and_or.commands.first
-    def stage(index, pipes) = Rush::PipelineRunner::Stage.new(index, pipes, 2)
+    def runner(stages)
+      described_class.new(executor, stages)
+    end
+
+    def parse_stage(src)
+      Rush::Parser.new(Rush::Lexer.new(src)).parse.entries.first.and_or.commands.first
+    end
+
+    def stage(index, pipes)
+      Rush::PipelineRunner::Stage.new(index, pipes, 2)
+    end
 
     it 'runs a compound command (not just a simple command) as a stage' do
       pipes = [[StringIO.new, StringIO.new]]

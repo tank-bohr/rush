@@ -6,8 +6,13 @@ RSpec.describe Rush::Builtins::Alias do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['alias', *args], io).call
-  def aliases = state.aliases
+  def run(*args)
+    described_class.new(executor, ['alias', *args], io).call
+  end
+
+  def aliases
+    state.aliases
+  end
 
   it 'defines an alias from name=value' do
     run('ll=ls -l')

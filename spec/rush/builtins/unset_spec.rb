@@ -7,7 +7,9 @@ RSpec.describe Rush::Builtins::Unset do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['unset', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['unset', *args], io).call
+  end
 
   it 'removes a variable' do
     env.assign('X', '1')

@@ -40,7 +40,9 @@ module Rush
     # the loop), so a break/continue targeting a loop in the parent unwinds to
     # here and ends the subshell — the parent loop, a separate process, is
     # untouched. (With no enclosing loop the builtin no-ops and never raises.)
-    def exit_like?(error) = error.is_a?(ExitSignal) || error.is_a?(ReturnSignal)
+    def exit_like?(error)
+      error.is_a?(ExitSignal) || error.is_a?(ReturnSignal)
+    end
 
     def report_fatal(error)
       @executor.io.get(2).puts("rush: #{error.message}")

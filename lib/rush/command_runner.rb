@@ -69,7 +69,9 @@ module Rush
       Status.new(1)
     end
 
-    def special?(name) = CommandLookup::SPECIAL.include?(name) && @executor.builtins.key?(name)
+    def special?(name)
+      CommandLookup::SPECIAL.include?(name) && @executor.builtins.key?(name)
+    end
 
     # A function runs in the current shell, not a subshell. The call's redirects
     # (if any) bind the whole body and are torn down when it returns — even an
@@ -92,6 +94,8 @@ module Rush
       @executor.state.environment.assign(assignment.name, assigned(assignment.value))
     end
 
-    def assigned(word) = @executor.expander.expand_value(word, tilde: :assignment)
+    def assigned(word)
+      @executor.expander.expand_value(word, tilde: :assignment)
+    end
   end
 end

@@ -26,7 +26,9 @@ module Rush
 
       private
 
-      def field = { text: +'', real: false }
+      def field
+        { text: +'', real: false }
+      end
 
       def consume(part)
         text, splittable, brk = part
@@ -41,7 +43,9 @@ module Rush
         ordinary(char)
       end
 
-      def pend = (@pending = true unless @skip)
+      def pend
+        (@pending = true unless @skip)
+      end
 
       def ordinary(char)
         flush
@@ -56,7 +60,9 @@ module Rush
         @skip = false
       end
 
-      def flush = (open_field if @pending)
+      def flush
+        (open_field if @pending)
+      end
 
       def open_field
         @pending = false
@@ -69,7 +75,9 @@ module Rush
         @fields.map { |entry| entry[:text] }
       end
 
-      def drop_last? = @fields.last[:text].empty? && !@fields.last[:real]
+      def drop_last?
+        @fields.last[:text].empty? && !@fields.last[:real]
+      end
     end
   end
 end

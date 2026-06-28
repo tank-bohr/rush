@@ -81,14 +81,18 @@ module Rush
 
       private
 
-      def last_pass? = @consumed.zero? || @cursor >= @args.size
+      def last_pass?
+        @consumed.zero? || @cursor >= @args.size
+      end
 
       def one_pass(template)
         @consumed = 0
         Template.new(template).emit(self)
       end
 
-      def numeric(flags, conv, arg) = Kernel.format("%#{flags}#{RUBY_CONV.fetch(conv, conv)}", to_int(arg))
+      def numeric(flags, conv, arg)
+        Kernel.format("%#{flags}#{RUBY_CONV.fetch(conv, conv)}", to_int(arg))
+      end
 
       def to_int(arg)
         return 0 if arg.to_s.empty?
@@ -108,7 +112,9 @@ module Rush
         arg
       end
 
-      def first_char(arg) = arg.to_s[0].to_s
+      def first_char(arg)
+        arg.to_s[0].to_s
+      end
     end
   end
 end

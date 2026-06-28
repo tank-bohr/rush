@@ -44,7 +44,9 @@ module Rush
         [:In, @word] if @state.case_in? && @word.literal_name == 'in'
       end
 
-      def arm_token = @word.literal_name == 'esac' ? :Esac : :WORD
+      def arm_token
+        @word.literal_name == 'esac' ? :Esac : :WORD
+      end
 
       def classify
         keyword = reserved
@@ -54,7 +56,9 @@ module Rush
         name ? assignment_token(name) : [:WORD, @word]
       end
 
-      def for_header = FOR_IN[@word.literal_name]
+      def for_header
+        FOR_IN[@word.literal_name]
+      end
 
       def reserved
         RESERVED[@word.literal_name] if @state.expects_command?

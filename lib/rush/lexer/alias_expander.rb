@@ -30,9 +30,13 @@ module Rush
       # replacement is fully read, dropping the alias from the active set and, if
       # its value ended in a blank, marking the following word eligible too (OR so
       # an inner blank-ending alias still chains past an outer one).
-      def push(scanner) = @parents.push(scanner)
+      def push(scanner)
+        @parents.push(scanner)
+      end
 
-      def nested? = @parents.any?
+      def nested?
+        @parents.any?
+      end
 
       def pop
         _name, value = @active.pop
@@ -41,13 +45,17 @@ module Rush
       end
 
       # A real (non-spliced) token was emitted: spend the one-shot carry.
-      def spend = @check_next = false
+      def spend
+        @check_next = false
+      end
 
       private
 
       # Eligible position: aliases are defined and the word sits in command
       # position, or a pending trailing-blank carry makes it eligible here.
-      def eligible?(command_position) = @table && (command_position || @check_next)
+      def eligible?(command_position)
+        @table && (command_position || @check_next)
+      end
 
       def enter(name)
         value = @table.value(name)

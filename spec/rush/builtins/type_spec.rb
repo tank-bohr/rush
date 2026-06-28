@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Type do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['type', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['type', *args], io).call
+  end
 
   it 'reports each name with its kind' do
     expected = "echo is a shell builtin\nset is a special shell builtin\nif is a shell keyword\n"

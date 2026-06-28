@@ -34,11 +34,17 @@ module Rush
     # A function call brackets its body with begin/end_scope; declare_local
     # snapshots a variable so end_scope restores its prior value (or unsets it
     # when it had none).
-    def begin_scope = @frames.push({})
+    def begin_scope
+      @frames.push({})
+    end
 
-    def end_scope = @frames.pop.each { |name, value| restore(name, value) }
+    def end_scope
+      @frames.pop.each { |name, value| restore(name, value) }
+    end
 
-    def in_function? = @frames.any?
+    def in_function?
+      @frames.any?
+    end
 
     def declare_local(name)
       frame = @frames.last

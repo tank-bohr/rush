@@ -5,11 +5,17 @@ module Rush
   module Redirection
     # O(1) redirection-kind -> applier lookup, populated by default_registry.
     class Registry
-      def initialize = @appliers = {}
+      def initialize
+        @appliers = {}
+      end
 
-      def register(kind, applier) = @appliers[kind] = applier
+      def register(kind, applier)
+        @appliers[kind] = applier
+      end
 
-      def fetch(kind) = @appliers[kind]
+      def fetch(kind)
+        @appliers[kind]
+      end
     end
 
     # <> opens read-write and creates the file (POSIX), unlike the string modes.

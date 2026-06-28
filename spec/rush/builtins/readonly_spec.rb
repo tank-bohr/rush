@@ -7,7 +7,9 @@ RSpec.describe Rush::Builtins::Readonly do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['readonly', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['readonly', *args], io).call
+  end
 
   it 'assigns and marks a name read only' do
     expect(run('X=1')).to be_success

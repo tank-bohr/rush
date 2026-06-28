@@ -34,34 +34,52 @@ module Rush
         value.to_s
       end
 
-      def value = Resolver.new(@executor).resolve(@ref.name)
+      def value
+        Resolver.new(@executor).resolve(@ref.name)
+      end
 
       def unset_or_null?
         colon? ? value.nil? || value.empty? : value.nil?
       end
 
-      def arg = @executor.expander.expand_value(sub_word(@ref.arg))
+      def arg
+        @executor.expander.expand_value(sub_word(@ref.arg))
+      end
 
       def assign(text)
         @executor.state.environment.assign(@ref.name, text)
         text
       end
 
-      def raise_unset = raise(ExpansionError, "#{@ref.name}: #{message}")
+      def raise_unset
+        raise(ExpansionError, "#{@ref.name}: #{message}")
+      end
 
       private
 
-      def length = value.to_s.length.to_s
+      def length
+        value.to_s.length.to_s
+      end
 
-      def strip = PatternRemoval.new(@executor.system, @ref.op, value.to_s, arg).call
+      def strip
+        PatternRemoval.new(@executor.system, @ref.op, value.to_s, arg).call
+      end
 
-      def unbound? = @executor.state.options.on?(:nounset) && @ref.name.match?(/\A([a-zA-Z_]\w*|[1-9]\d*)\z/)
+      def unbound?
+        @executor.state.options.on?(:nounset) && @ref.name.match?(/\A([a-zA-Z_]\w*|[1-9]\d*)\z/)
+      end
 
-      def colon? = @ref.op.start_with?(':')
+      def colon?
+        @ref.op.start_with?(':')
+      end
 
-      def message = @ref.arg.empty? ? 'parameter null or not set' : arg
+      def message
+        @ref.arg.empty? ? 'parameter null or not set' : arg
+      end
 
-      def sub_word(text) = Lexer::WordScanner.entire(text)
+      def sub_word(text)
+        Lexer::WordScanner.entire(text)
+      end
     end
   end
 end

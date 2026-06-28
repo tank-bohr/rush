@@ -18,9 +18,13 @@ module Rush
         newline? ? "#{body}\n" : body
       end
 
-      def newline? = operands.first != '-n'
+      def newline?
+        operands.first != '-n'
+      end
 
-      def printed = newline? ? operands : operands.drop(1)
+      def printed
+        newline? ? operands : operands.drop(1)
+      end
     end
   end
 end

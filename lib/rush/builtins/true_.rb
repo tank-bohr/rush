@@ -4,7 +4,9 @@ module Rush
   module Builtins
     # `true` — does nothing, succeeds (status 0).
     class True < Base
-      def call = success
+      def call
+        success
+      end
     end
   end
 end

@@ -8,7 +8,9 @@ module Rush
     # that is neither a number nor `-`, or a number whose fd is not open, is a
     # "bad fd number" — a special-builtin error that aborts the shell with 2.
     class DupRedirect
-      def initialize(default_fd) = @default_fd = default_fd
+      def initialize(default_fd)
+        @default_fd = default_fd
+      end
 
       def apply(redirect, target, io, _system)
         fd = redirect.io_number || @default_fd

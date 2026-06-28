@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Kill do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['kill', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['kill', *args], io).call
+  end
 
   it 'sends TERM by default to a pid' do
     expect(run('111')).to be_success

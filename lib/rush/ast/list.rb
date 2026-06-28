@@ -25,7 +25,9 @@ module Rush
 
       # A blank or comment-only program runs no command; SourceRunner skips it
       # when tracking eval/dot's result status.
-      def empty? = entries.empty?
+      def empty?
+        entries.empty?
+      end
 
       private
 

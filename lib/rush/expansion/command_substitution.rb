@@ -42,7 +42,9 @@ module Rush
         output
       end
 
-      def strip(output) = output.sub(/\n+\z/, '')
+      def strip(output)
+        output.sub(/\n+\z/, '')
+      end
 
       def spawn_child(write)
         # :nocov:
@@ -57,7 +59,9 @@ module Rush
         # :nocov:
       end
 
-      def parse = Parser.new(Lexer.new(@source, aliases: @executor.state.aliases)).parse
+      def parse
+        Parser.new(Lexer.new(@source, aliases: @executor.state.aliases)).parse
+      end
     end
   end
 end

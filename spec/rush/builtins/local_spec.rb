@@ -7,7 +7,9 @@ RSpec.describe Rush::Builtins::Local do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['local', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['local', *args], io).call
+  end
 
   it 'fails with status 2 outside a function' do
     expect(run('x=1').exitstatus).to eq(2)

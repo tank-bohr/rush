@@ -6,12 +6,25 @@ RSpec.describe Rush::CommandRunner do
   let(:state) { Rush::ShellState.new(environment: env) }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
-  def word(text) = Rush::AST::Word.literal(text)
-  def assignment(name, text) = Rush::AST::Assignment.new(name: name, value: word(text))
-  def simple(assignments: [], words: [], redirects: []) = Rush::AST::SimpleCommand.new(assignments, words, redirects)
-  def run(command) = described_class.new(executor, command).call
+  def word(text)
+    Rush::AST::Word.literal(text)
+  end
 
-  def program(source) = Rush::Parser.new(Rush::Lexer.new(source)).parse
+  def assignment(name, text)
+    Rush::AST::Assignment.new(name: name, value: word(text))
+  end
+
+  def simple(assignments: [], words: [], redirects: [])
+    Rush::AST::SimpleCommand.new(assignments, words, redirects)
+  end
+
+  def run(command)
+    described_class.new(executor, command).call
+  end
+
+  def program(source)
+    Rush::Parser.new(Rush::Lexer.new(source)).parse
+  end
 
   it 'persists bare assignments and returns success' do
     expect(run(simple(assignments: [assignment('X', '1')]))).to be_success

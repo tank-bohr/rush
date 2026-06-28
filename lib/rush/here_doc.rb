@@ -18,8 +18,12 @@ module Rush
 
     # The lexer fills the body — an AST::Word — once it has gathered the body
     # lines at the next newline; it is the only writer, so #body stays read-only.
-    def fill(body) = @body = body
+    def fill(body)
+      @body = body
+    end
 
-    def segments = @body.segments
+    def segments
+      @body.segments
+    end
   end
 end

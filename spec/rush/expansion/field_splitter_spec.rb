@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Expansion::FieldSplitter do
-  def split(parts, ifs = nil) = described_class.new(ifs).split(parts)
+  def split(parts, ifs = nil)
+    described_class.new(ifs).split(parts)
+  end
 
   describe 'default whitespace IFS' do
     it 'keeps a single literal part as one field' do

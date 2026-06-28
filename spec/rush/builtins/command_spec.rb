@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Command do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['command', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['command', *args], io).call
+  end
 
   it 'prints the name for -v of a builtin and the path for an external' do
     system.register('/usr/bin/ls', executable: true)

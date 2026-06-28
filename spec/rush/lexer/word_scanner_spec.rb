@@ -6,7 +6,9 @@ RSpec.describe Rush::Lexer::WordScanner do
     [described_class.next_word(scanner), scanner]
   end
 
-  def field(source) = scan(source).first.segments.map(&:value).join
+  def field(source)
+    scan(source).first.segments.map(&:value).join
+  end
 
   it 'reads a bare literal word' do
     expect(field('echo')).to eq('echo')

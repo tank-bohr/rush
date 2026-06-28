@@ -66,7 +66,9 @@ module Rush
         @depth.zero? ? '' : char
       end
 
-      def adjust(char) = @depth += DEPTH_DELTA.fetch(char, 0)
+      def adjust(char)
+        @depth += DEPTH_DELTA.fetch(char, 0)
+      end
     end
   end
 end

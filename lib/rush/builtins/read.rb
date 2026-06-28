@@ -17,22 +17,34 @@ module Rush
 
       private
 
-      def raw? = operands.first == '-r'
+      def raw?
+        operands.first == '-r'
+      end
 
-      def names = raw? ? operands.drop(1) : operands
+      def names
+        raw? ? operands.drop(1) : operands
+      end
 
-      def cook(line) = line ? strip_escapes(line.chomp) : ''
+      def cook(line)
+        line ? strip_escapes(line.chomp) : ''
+      end
 
-      def strip_escapes(text) = raw? ? text : text.gsub(/\\(.)/m, '\1').delete_suffix('\\')
+      def strip_escapes(text)
+        raw? ? text : text.gsub(/\\(.)/m, '\1').delete_suffix('\\')
+      end
 
       def assign(line)
         fields = Expansion::ReadSplitter.new(ifs, names.size).split(line)
         names.each_with_index { |name, index| executor.state.environment.assign(name, fields[index]) }
       end
 
-      def ifs = executor.state.environment.get('IFS')
+      def ifs
+        executor.state.environment.get('IFS')
+      end
 
-      def stdin = io.get(0)
+      def stdin
+        io.get(0)
+      end
 
       def usage_error
         stderr.puts('rush: read: arg count')

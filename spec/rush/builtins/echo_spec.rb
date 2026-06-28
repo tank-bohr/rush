@@ -5,7 +5,9 @@ RSpec.describe Rush::Builtins::Echo do
   let(:executor) { Rush::Executor.new(system: system, state: Rush::ShellState.new) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def echo(*args) = described_class.new(executor, ['echo', *args], io).call
+  def echo(*args)
+    described_class.new(executor, ['echo', *args], io).call
+  end
 
   it 'joins arguments with spaces and appends a newline' do
     expect(echo('a', 'b')).to be_success

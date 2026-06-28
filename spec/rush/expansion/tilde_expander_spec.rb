@@ -9,8 +9,13 @@ RSpec.describe Rush::Expansion::TildeExpander do
     { literal: Rush::AST::LiteralSegment, param: Rush::AST::ParamSegment }.fetch(kind).new(value, quoted)
   end
 
-  def head(value, **) = described_class.new(executor, [seg(value, **)]).expand.first.value
-  def assigned(value) = Rush::Expansion::AssignmentTilde.new(executor, [seg(value)]).expand.first.value
+  def head(value, **)
+    described_class.new(executor, [seg(value, **)]).expand.first.value
+  end
+
+  def assigned(value)
+    Rush::Expansion::AssignmentTilde.new(executor, [seg(value)]).expand.first.value
+  end
 
   it 'expands a bare tilde and ~/path to HOME' do
     expect([head('~'), head('~/foo')]).to eq(['/home/me', '/home/me/foo'])

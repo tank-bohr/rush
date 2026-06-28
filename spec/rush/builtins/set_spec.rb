@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Set do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['set', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['set', *args], io).call
+  end
 
   it 'replaces the positional parameters with its operands' do
     expect(run('a', 'b', 'c')).to be_success

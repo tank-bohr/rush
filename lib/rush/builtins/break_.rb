@@ -19,9 +19,13 @@ module Rush
 
       private
 
-      def validated = operands.first ? numeric_operand(operands.first, min: 1) : 1
+      def validated
+        operands.first ? numeric_operand(operands.first, min: 1) : 1
+      end
 
-      def clamped(level) = [level, executor.state.loops.depth].min
+      def clamped(level)
+        [level, executor.state.loops.depth].min
+      end
     end
   end
 end

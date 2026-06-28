@@ -18,13 +18,21 @@ module Rush
           Integer(text, exception: false) or raise(ExpansionError, "arithmetic: invalid number #{text.inspect}")
         end
 
-        def unary(op, value) = wrap(UNARY.fetch(op).call(value))
+        def unary(op, value)
+          wrap(UNARY.fetch(op).call(value))
+        end
 
-        def binary(op, left, right) = wrap(BINARY.fetch(op).call(left, right))
+        def binary(op, left, right)
+          wrap(BINARY.fetch(op).call(left, right))
+        end
 
-        def wrap(num) = ((num + LIMIT) % (LIMIT << 1)) - LIMIT
+        def wrap(num)
+          ((num + LIMIT) % (LIMIT << 1)) - LIMIT
+        end
 
-        def bool(flag) = flag ? 1 : 0
+        def bool(flag)
+          flag ? 1 : 0
+        end
 
         def divide(left, right)
           raise ExpansionError, 'arithmetic: division by zero' if right.zero?
@@ -33,7 +41,9 @@ module Rush
           left.negative? == right.negative? ? magnitude : -magnitude
         end
 
-        def modulo(left, right) = left - (divide(left, right) * right)
+        def modulo(left, right)
+          left - (divide(left, right) * right)
+        end
 
         UNARY = {
           '+' => ->(value) { value }, '-' => lambda(&:-@),

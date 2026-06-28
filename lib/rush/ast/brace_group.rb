@@ -13,7 +13,9 @@ module Rush
         @body = body
       end
 
-      def execute(executor) = executor.run(body)
+      def execute(executor)
+        executor.run(body)
+      end
     end
   end
 end

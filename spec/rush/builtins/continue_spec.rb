@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Continue do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['continue', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['continue', *args], io).call
+  end
 
   context 'when inside a loop' do
     before { state.loops.enter }

@@ -26,6 +26,8 @@ module Rush
     end
 
     # The last command's exit status ($?), recorded after each command runs.
-    def record_status(status) = @last_status = status
+    def record_status(status)
+      @last_status = status
+    end
   end
 end

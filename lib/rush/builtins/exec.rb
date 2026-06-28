@@ -31,9 +31,13 @@ module Rush
         raise ExitSignal, code
       end
 
-      def options = io.to_spawn_options.merge(close_others: true)
+      def options
+        io.to_spawn_options.merge(close_others: true)
+      end
 
-      def environment = executor.state.environment
+      def environment
+        executor.state.environment
+      end
     end
   end
 end

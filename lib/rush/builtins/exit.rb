@@ -7,11 +7,15 @@ module Rush
     # status normally, or the shell's terminating status inside the EXIT trap).
     # A non-numeric n is a special-builtin error.
     class Exit < Base
-      def call = raise ExitSignal, code
+      def call
+        raise ExitSignal, code
+      end
 
       private
 
-      def code = operands.empty? ? executor.exiting_status : numeric_operand(operands.first)
+      def code
+        operands.empty? ? executor.trap_runner.exiting_status : numeric_operand(operands.first)
+      end
     end
   end
 end

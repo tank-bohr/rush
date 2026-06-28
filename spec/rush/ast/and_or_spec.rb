@@ -6,7 +6,9 @@ RSpec.describe Rush::AST::AndOr do
   let(:ok) { Rush::Status.success }
   let(:bad) { Rush::Status.failure }
 
-  def and_or(op) = described_class.new(:left, op, :right)
+  def and_or(op)
+    described_class.new(:left, op, :right)
+  end
 
   it 'runs the right side of && only when the left succeeds' do
     allow(executor).to receive(:run).with(:left).and_return(ok)

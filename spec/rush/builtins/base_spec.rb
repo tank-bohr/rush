@@ -9,7 +9,9 @@ RSpec.describe Rush::Builtins::Base do
 
   it 'exposes operands and status helpers to subclasses' do
     subclass = Class.new(described_class) do
-      def call = [operands, success.exitstatus, failure(2).exitstatus]
+      def call
+        [operands, success.exitstatus, failure(2).exitstatus]
+      end
     end
     expect(subclass.new(nil, %w[name a b], io).call).to eq([%w[a b], 0, 2])
   end

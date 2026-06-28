@@ -12,7 +12,9 @@ module Rush
           @executor = executor
         end
 
-        def evaluate(source) = Parser.new(Tokenizer.new(source).tokens).parse.result(self)
+        def evaluate(source)
+          Parser.new(Tokenizer.new(source).tokens).parse.result(self)
+        end
 
         def resolve(name)
           value = @executor.state.environment.get(name)

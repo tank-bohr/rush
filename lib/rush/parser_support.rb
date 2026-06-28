@@ -9,9 +9,13 @@ module Rush
       @lexer = lexer
     end
 
-    def parse = do_parse
+    def parse
+      do_parse
+    end
 
-    def next_token = @lexer.next_token
+    def next_token
+      @lexer.next_token
+    end
 
     def on_error(token_id, value, _stack)
       raise IncompleteInput, 'unexpected end of input' if value == false
@@ -26,7 +30,9 @@ module Rush
       AST::List.new(entries.map { |and_or, sep| AST::ListEntry.new(and_or: and_or, async: sep == '&') })
     end
 
-    def pending_entry(and_or) = [and_or, ';']
+    def pending_entry(and_or)
+      [and_or, ';']
+    end
 
     def terminate_list(entries, sep)
       entries.last[1] = sep
@@ -38,39 +44,69 @@ module Rush
       entries << [and_or, ';']
     end
 
-    def make_and_or(left, op, right) = AST::AndOr.new(left, op, right)
+    def make_and_or(left, op, right)
+      AST::AndOr.new(left, op, right)
+    end
 
-    def make_pipeline(commands, negate) = AST::Pipeline.new(commands, negate)
+    def make_pipeline(commands, negate)
+      AST::Pipeline.new(commands, negate)
+    end
 
-    def make_if(condition, consequent, alternative) = AST::If.new(condition, consequent, alternative)
+    def make_if(condition, consequent, alternative)
+      AST::If.new(condition, consequent, alternative)
+    end
 
-    def make_brace_group(body) = AST::BraceGroup.new(body)
+    def make_brace_group(body)
+      AST::BraceGroup.new(body)
+    end
 
-    def make_subshell(body) = AST::Subshell.new(body)
+    def make_subshell(body)
+      AST::Subshell.new(body)
+    end
 
-    def make_redirected(command, redirects) = AST::Redirected.new(command, redirects)
+    def make_redirected(command, redirects)
+      AST::Redirected.new(command, redirects)
+    end
 
-    def make_while(condition, body) = AST::While.new(condition, body)
+    def make_while(condition, body)
+      AST::While.new(condition, body)
+    end
 
-    def make_until(condition, body) = AST::Until.new(condition, body)
+    def make_until(condition, body)
+      AST::Until.new(condition, body)
+    end
 
-    def make_for(name, words, body) = AST::For.new(name, words, body)
+    def make_for(name, words, body)
+      AST::For.new(name, words, body)
+    end
 
-    def make_case(word, items) = AST::Case.new(word, items)
+    def make_case(word, items)
+      AST::Case.new(word, items)
+    end
 
-    def make_case_item(patterns, body) = AST::CaseItem.new(patterns: patterns, body: body)
+    def make_case_item(patterns, body)
+      AST::CaseItem.new(patterns: patterns, body: body)
+    end
 
-    def make_function(word, body) = AST::FunctionDef.new(word.literal_text, body)
+    def make_function(word, body)
+      AST::FunctionDef.new(word.literal_text, body)
+    end
 
     def make_simple_command(prefix, word, suffix)
       parts = prefix + [word].compact + suffix
       AST::SimpleCommand.new(parts.grep(AST::Assignment), parts.grep(AST::Word), parts.grep(AST::Redirect))
     end
 
-    def make_redirect(kind, target) = AST::Redirect.new(kind: kind, target: target, io_number: nil)
+    def make_redirect(kind, target)
+      AST::Redirect.new(kind: kind, target: target, io_number: nil)
+    end
 
-    def make_heredoc(holder) = AST::Redirect.new(kind: :heredoc, target: holder, io_number: nil)
+    def make_heredoc(holder)
+      AST::Redirect.new(kind: :heredoc, target: holder, io_number: nil)
+    end
 
-    def with_io_number(redirect, number) = redirect.with(io_number: number)
+    def with_io_number(redirect, number)
+      redirect.with(io_number: number)
+    end
   end
 end

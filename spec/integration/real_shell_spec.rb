@@ -7,7 +7,9 @@ require 'open3'
 # recorded by SimpleCov (a separate process); the in-process unit specs cover
 # the child-side logic, and these specs confirm it actually works.
 RSpec.describe 'rush real subprocess' do
-  def project_root = File.expand_path('../..', __dir__)
+  def project_root
+    File.expand_path('../..', __dir__)
+  end
 
   def run(source)
     out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source, chdir: project_root)

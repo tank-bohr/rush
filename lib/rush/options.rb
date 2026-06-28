@@ -9,8 +9,12 @@ module Rush
       @enabled = Set.new
     end
 
-    def set(name, enabled) = enabled ? @enabled.add(name) : @enabled.delete(name)
+    def set(name, enabled)
+      enabled ? @enabled.add(name) : @enabled.delete(name)
+    end
 
-    def on?(name) = @enabled.include?(name)
+    def on?(name)
+      @enabled.include?(name)
+    end
   end
 end

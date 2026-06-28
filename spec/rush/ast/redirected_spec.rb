@@ -3,7 +3,9 @@
 RSpec.describe Rush::AST::Redirected do
   let(:system) { FakeSystemCalls.new }
 
-  def run(source) = Rush::CLI.run(['-c', source], system: system)
+  def run(source)
+    Rush::CLI.run(['-c', source], system: system)
+  end
 
   it 'binds an output redirect across every command in the body' do
     run('{ echo a; echo b; } > /out')

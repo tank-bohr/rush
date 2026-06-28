@@ -26,6 +26,8 @@ module Rush
       NAMES.key?(name) ? name : nil
     end
 
-    def number(name) = NAMES.fetch(name)
+    def number(name)
+      NAMES.fetch(name)
+    end
   end
 end

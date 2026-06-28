@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::CLI do
-  def run(argv, system) = described_class.run(argv, system: system)
+  def run(argv, system)
+    described_class.run(argv, system: system)
+  end
 
   it 'runs a -c command and returns its exit code' do
     expect(run(['-c', 'exit 4'], FakeSystemCalls.new)).to eq(4)

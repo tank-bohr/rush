@@ -12,7 +12,9 @@ module Rush
         @body = body
       end
 
-      def execute(executor) = SubshellRunner.new(executor, body).call
+      def execute(executor)
+        SubshellRunner.new(executor, body).call
+      end
     end
   end
 end

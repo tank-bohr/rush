@@ -16,7 +16,9 @@ module Rush
 
       private
 
-      def state = executor.state
+      def state
+        executor.state
+      end
 
       def declare(operand)
         name, value = operand.split('=', 2)

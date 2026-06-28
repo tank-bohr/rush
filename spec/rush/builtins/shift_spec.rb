@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Shift do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['shift', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['shift', *args], io).call
+  end
 
   before { state.positional.replace(%w[a b c]) }
 

@@ -87,9 +87,13 @@ module Rush
           node
         end
 
-        def peek = @tokens[@pos]&.last
+        def peek
+          @tokens[@pos]&.last
+        end
 
-        def advance = take.last
+        def advance
+          take.last
+        end
 
         def take
           oops if @pos >= @tokens.size
@@ -103,9 +107,13 @@ module Rush
           true
         end
 
-        def expect(token) = accept?(token) || oops
+        def expect(token)
+          accept?(token) || oops
+        end
 
-        def oops = raise(ExpansionError, 'arithmetic: syntax error')
+        def oops
+          raise(ExpansionError, 'arithmetic: syntax error')
+        end
       end
     end
   end

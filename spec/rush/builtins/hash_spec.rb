@@ -7,7 +7,9 @@ RSpec.describe Rush::Builtins::Hash do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['hash', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['hash', *args], io).call
+  end
 
   before do
     system.register('/bin/ls', executable: true)

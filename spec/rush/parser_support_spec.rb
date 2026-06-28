@@ -3,8 +3,13 @@
 RSpec.describe Rush::ParserSupport do
   subject(:parser) { Rush::Parser.new(Rush::Lexer.new('')) }
 
-  def parse(source) = Rush::Parser.new(Rush::Lexer.new(source)).parse
-  def first_command(source) = parse(source).entries.first.and_or.commands.first
+  def parse(source)
+    Rush::Parser.new(Rush::Lexer.new(source)).parse
+  end
+
+  def first_command(source)
+    parse(source).entries.first.and_or.commands.first
+  end
 
   it 'parses an empty program into an empty list' do
     expect(parse('').entries).to be_empty

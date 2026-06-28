@@ -16,9 +16,13 @@ module Rush
       @values = values
     end
 
-    def replace(values) = @values = values
+    def replace(values)
+      @values = values
+    end
 
-    def shift(count) = @values = @values.drop(count)
+    def shift(count)
+      @values = @values.drop(count)
+    end
 
     def with(values)
       saved = @values

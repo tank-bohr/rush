@@ -5,8 +5,13 @@ RSpec.describe Rush::SubshellRunner do
   let(:state) { Rush::ShellState.new(environment: Rush::Environment.new({})) }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
-  def body(source) = Rush::Parser.new(Rush::Lexer.new(source)).parse
-  def status_double(code) = instance_double(Process::Status, exitstatus: code, termsig: nil)
+  def body(source)
+    Rush::Parser.new(Rush::Lexer.new(source)).parse
+  end
+
+  def status_double(code)
+    instance_double(Process::Status, exitstatus: code, termsig: nil)
+  end
 
   describe '#call (parent side)' do
     it 'forks the child, waits for it and adopts its status' do

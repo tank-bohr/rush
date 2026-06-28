@@ -17,9 +17,13 @@ module Rush
 
       private
 
-      def state = executor.state
+      def state
+        executor.state
+      end
 
-      def count = operands.empty? ? 1 : numeric_operand(operands.first)
+      def count
+        operands.empty? ? 1 : numeric_operand(operands.first)
+      end
     end
   end
 end

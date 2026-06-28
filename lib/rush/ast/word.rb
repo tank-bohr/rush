@@ -13,14 +13,20 @@ module Rush
         @segments = segments
       end
 
-      def self.literal(text) = new([LiteralSegment.new(text, false)])
+      def self.literal(text)
+        new([LiteralSegment.new(text, false)])
+      end
 
-      def literal_text = segments.map(&:value).join
+      def literal_text
+        segments.map(&:value).join
+      end
 
       # The text when this word is a bare name — one unquoted literal segment, no
       # quoting or substitution — else nil. Used for reserved words, NAME=, and
       # alias substitution, all of which only apply to a plain literal word.
-      def literal_name = (segments.first.literal_value if segments.one?)
+      def literal_name
+        (segments.first.literal_value if segments.one?)
+      end
     end
   end
 end

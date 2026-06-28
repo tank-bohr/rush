@@ -13,13 +13,19 @@ module Rush
         @source = source
       end
 
-      def expand = Arithmetic::Evaluator.new(@executor).evaluate(expanded).to_s
+      def expand
+        Arithmetic::Evaluator.new(@executor).evaluate(expanded).to_s
+      end
 
       private
 
-      def expanded = @executor.expander.expand_value(scanned, tilde: :none)
+      def expanded
+        @executor.expander.expand_value(scanned, tilde: :none)
+      end
 
-      def scanned = Lexer::WordScanner.entire(@source)
+      def scanned
+        Lexer::WordScanner.entire(@source)
+      end
     end
   end
 end

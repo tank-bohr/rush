@@ -8,18 +8,24 @@ module Rush
   # earlier commands run — and flush their output — before a later syntax error,
   # and a fatal error fires the EXIT trap, both matching dash.
   class CLI
-    def self.run(argv, system: SystemCalls.new) = new(argv, system).run
+    def self.run(argv, system: SystemCalls.new)
+      new(argv, system).run
+    end
 
     def initialize(argv, system)
       @argv = argv
       @system = system
     end
 
-    def run = repl? ? Repl.new(@system).run : run_source
+    def run
+      repl? ? Repl.new(@system).run : run_source
+    end
 
     private
 
-    def repl? = @argv.empty? && @system.tty?
+    def repl?
+      @argv.empty? && @system.tty?
+    end
 
     def run_source
       terminate(run_commands)
@@ -62,7 +68,9 @@ module Rush
     end
 
     # Fire the EXIT trap once the program (or an `exit`) has settled on a status.
-    def terminate(code) = executor.run_exit_trap(code)
+    def terminate(code)
+      executor.trap_runner.run_exit_trap(code)
+    end
 
     # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then
     # fire the EXIT trap (which may override the code via `exit`) — like dash.
@@ -77,6 +85,8 @@ module Rush
       @system.stdin.read
     end
 
-    def executor = @executor ||= Executor.new(system: @system, state: ShellState.new)
+    def executor
+      @executor ||= Executor.new(system: @system, state: ShellState.new)
+    end
   end
 end

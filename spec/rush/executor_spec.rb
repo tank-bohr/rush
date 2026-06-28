@@ -3,8 +3,13 @@
 RSpec.describe Rush::Executor do
   let(:system) { FakeSystemCalls.new }
 
-  def state(vars = {}) = Rush::ShellState.new(environment: Rush::Environment.new(vars))
-  def build(state, **extra) = described_class.new(system: system, state: state, **extra)
+  def state(vars = {})
+    Rush::ShellState.new(environment: Rush::Environment.new(vars))
+  end
+
+  def build(state, **extra)
+    described_class.new(system: system, state: state, **extra)
+  end
 
   it 'defaults the builtin registry and sets up the io table' do
     executor = build(state)
@@ -40,7 +45,9 @@ RSpec.describe Rush::Executor do
   describe '#exit_on_error' do
     let(:fail_status) { Rush::Status.failure }
 
-    def errexit(target) = target.tap { |s| s.options.set(:errexit, true) }
+    def errexit(target)
+      target.tap { |s| s.options.set(:errexit, true) }
+    end
 
     it 'returns the status unchanged when errexit is off' do
       expect(build(state).exit_on_error(fail_status)).to be(fail_status)

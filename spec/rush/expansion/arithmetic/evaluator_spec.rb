@@ -6,7 +6,9 @@ RSpec.describe Rush::Expansion::Arithmetic::Evaluator do
   let(:env) { Rush::Environment.new }
   let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new(environment: env)) }
 
-  def value(source) = evaluator.evaluate(source)
+  def value(source)
+    evaluator.evaluate(source)
+  end
 
   it 'respects operator precedence and grouping' do
     expect([value('2+3*4'), value('(2+3)*4')]).to eq([14, 20])

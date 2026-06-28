@@ -11,5 +11,7 @@ module SegmentHelpers
     Rush::AST::ArithSegment => :arith
   }.freeze
 
-  def segment_kind(segment) = KINDS.fetch(segment.class)
+  def segment_kind(segment)
+    KINDS.fetch(segment.class)
+  end
 end

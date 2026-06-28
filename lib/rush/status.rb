@@ -8,13 +8,21 @@ module Rush
   class Status
     attr_reader :exitstatus
 
-    def initialize(exitstatus) = @exitstatus = exitstatus
+    def initialize(exitstatus)
+      @exitstatus = exitstatus
+    end
 
-    def success? = exitstatus.zero?
+    def success?
+      exitstatus.zero?
+    end
 
-    def self.success = new(0)
+    def self.success
+      new(0)
+    end
 
-    def self.failure(code = 1) = new(code)
+    def self.failure(code = 1)
+      new(code)
+    end
 
     # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
     def self.of(process_status)

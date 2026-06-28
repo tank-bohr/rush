@@ -14,7 +14,9 @@ module Rush
         @redirects = redirects
       end
 
-      def execute(executor) = executor.run_redirected(command, redirects)
+      def execute(executor)
+        executor.run_redirected(command, redirects)
+      end
     end
   end
 end

@@ -6,8 +6,13 @@ RSpec.describe Rush::Builtins::Trap do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['trap', *args], io).call
-  def traps = state.traps
+  def run(*args)
+    described_class.new(executor, ['trap', *args], io).call
+  end
+
+  def traps
+    state.traps
+  end
 
   it 'sets an action for a signal' do
     run('echo hi', 'INT')

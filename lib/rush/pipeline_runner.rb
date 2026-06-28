@@ -16,10 +16,21 @@ module Rush
     # from all three, so the runner threads a single Stage rather than the
     # (index, pipes) pair through every per-stage step.
     Stage = Data.define(:index, :pipes, :count) do
-      def last? = index == count - 1
-      def input = index.positive? ? pipes[index - 1].first : nil
-      def output = last? ? nil : pipes[index].last
-      def ends = [input, output].compact
+      def last?
+        index == count - 1
+      end
+
+      def input
+        index.positive? ? pipes[index - 1].first : nil
+      end
+
+      def output
+        last? ? nil : pipes[index].last
+      end
+
+      def ends
+        [input, output].compact
+      end
 
       # Layer this stage's pipe ends over the base IoTable: stdin from the
       # previous pipe (unless first), stdout to the next pipe (unless last).
@@ -43,7 +54,9 @@ module Rush
 
     private
 
-    def build_pipes = Array.new(@commands.size - 1) { @executor.system.pipe }
+    def build_pipes
+      Array.new(@commands.size - 1) { @executor.system.pipe }
+    end
 
     def start_stage(stage)
       # :nocov:
@@ -61,7 +74,9 @@ module Rush
       stage.pipes.flatten.each { |io| io.close unless keep.include?(io) }
     end
 
-    def close_all(pipes) = pipes.flatten.each(&:close)
+    def close_all(pipes)
+      pipes.flatten.each(&:close)
+    end
 
     def wait(pids)
       pids.map { |pid| Status.of(@executor.system.waitpid2(pid).last) }.last

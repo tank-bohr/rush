@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Times do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run = described_class.new(executor, ['times'], io).call
+  def run
+    described_class.new(executor, ['times'], io).call
+  end
 
   it 'writes the shell and child CPU times, two lines, formatted like dash' do
     expect(run).to be_success

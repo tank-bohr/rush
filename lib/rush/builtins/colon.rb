@@ -4,7 +4,9 @@ module Rush
   module Builtins
     # `:` — the null command; expands its arguments and always succeeds.
     class Colon < Base
-      def call = success
+      def call
+        success
+      end
     end
   end
 end

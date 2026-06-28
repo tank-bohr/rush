@@ -4,8 +4,13 @@ RSpec.describe Rush::AST::Case do
   let(:system) { FakeSystemCalls.new }
   let(:executor) { Rush::Executor.new(system: system, state: Rush::ShellState.new(environment: Rush::Environment.new({}))) }
 
-  def word(text) = Rush::AST::Word.literal(text)
-  def item(patterns, body) = Rush::AST::CaseItem.new(patterns: patterns.map { |p| word(p) }, body: body)
+  def word(text)
+    Rush::AST::Word.literal(text)
+  end
+
+  def item(patterns, body)
+    Rush::AST::CaseItem.new(patterns: patterns.map { |p| word(p) }, body: body)
+  end
 
   it 'runs the body of the first matching arm' do
     allow(executor).to receive(:run).with(:body_a).and_return(Rush::Status.new(3))

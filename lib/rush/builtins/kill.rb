@@ -26,7 +26,9 @@ module Rush
         ['TERM', operands]
       end
 
-      def flag?(arg) = arg.start_with?('-') && arg != '-'
+      def flag?(arg)
+        arg.start_with?('-') && arg != '-'
+      end
 
       def send_signal(spec, pids)
         return usage if pids.empty?
@@ -53,7 +55,9 @@ module Rush
         oops("#{pid}: no such process")
       end
 
-      def list(args) = args.empty? ? list_all : list_one(args.first)
+      def list(args)
+        args.empty? ? list_all : list_one(args.first)
+      end
 
       def list_all
         Signals::NUMBERS.each { |num, name| stdout.puts(name) if num.nonzero? }
@@ -66,14 +70,18 @@ module Rush
         name ? ok(name) : bad("#{arg}: invalid signal specification")
       end
 
-      def adjust(num) = num > 128 ? num - 128 : num
+      def adjust(num)
+        num > 128 ? num - 128 : num
+      end
 
       def ok(name)
         stdout.puts(name)
         success
       end
 
-      def usage = bad('usage: kill [-s sigspec | -signum] pid ...')
+      def usage
+        bad('usage: kill [-s sigspec | -signum] pid ...')
+      end
 
       def bad(message)
         stderr.puts("kill: #{message}")

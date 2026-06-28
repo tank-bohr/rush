@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Exec do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['exec', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['exec', *args], io).call
+  end
 
   it 'makes redirections permanent when given no command' do
     redirected = io.with(1, StringIO.new)

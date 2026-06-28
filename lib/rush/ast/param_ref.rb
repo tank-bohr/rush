@@ -11,7 +11,9 @@ module Rush
     # A parameter reference parsed from $name or ${...}. The operator word is
     # expanded lazily at expansion time.
     ParamRef = Data.define(:name, :op, :arg) do
-      def self.simple(name) = new(name: name, op: nil, arg: nil)
+      def self.simple(name)
+        new(name: name, op: nil, arg: nil)
+      end
 
       def self.parse(body)
         return new(name: body[1..], op: '#len', arg: nil) if length?(body)
@@ -20,7 +22,9 @@ module Rush
         new(name: match[1], op: match[2], arg: match[3])
       end
 
-      def self.length?(body) = body.start_with?('#') && body.length > 1
+      def self.length?(body)
+        body.start_with?('#') && body.length > 1
+      end
     end
   end
 end

@@ -14,11 +14,17 @@ module Rush
       @depth = 0
     end
 
-    def enter = @depth += 1
+    def enter
+      @depth += 1
+    end
 
-    def leave = @depth -= 1
+    def leave
+      @depth -= 1
+    end
 
-    def any? = @depth.positive?
+    def any?
+      @depth.positive?
+    end
 
     def without
       saved = @depth

@@ -13,19 +13,29 @@ module Rush
       new(0 => system.stdin, 1 => system.stdout, 2 => system.stderr)
     end
 
-    def get(fd) = @streams[fd]
+    def get(fd)
+      @streams[fd]
+    end
 
-    def with(fd, io) = self.class.new(@streams.merge(fd => io))
+    def with(fd, io)
+      self.class.new(@streams.merge(fd => io))
+    end
 
     # The bound streams, for diffing which a command's redirects freshly opened
     # (and so must close) against the base table it inherited.
-    def ios = @streams.values
+    def ios
+      @streams.values
+    end
 
     # Flush+close the streams this table opened over `base` (the ones a command's
     # redirects added), leaving inherited streams and pipe ends untouched.
-    def close_opened_over(base, system) = (ios - base.ios).uniq.each { |io| system.close_redirect(io) }
+    def close_opened_over(base, system)
+      (ios - base.ios).uniq.each { |io| system.close_redirect(io) }
+    end
 
     # A closed fd (ClosedStream) becomes :close so a spawned child closes it.
-    def to_spawn_options = @streams.transform_values { |io| io.is_a?(ClosedStream) ? :close : io }
+    def to_spawn_options
+      @streams.transform_values { |io| io.is_a?(ClosedStream) ? :close : io }
+    end
   end
 end

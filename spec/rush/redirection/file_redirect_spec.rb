@@ -4,7 +4,9 @@ RSpec.describe Rush::Redirection::FileRedirect do
   let(:system) { FakeSystemCalls.new }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def redirect(io_number) = Rush::AST::Redirect.new(kind: :out, target: nil, io_number: io_number)
+  def redirect(io_number)
+    Rush::AST::Redirect.new(kind: :out, target: nil, io_number: io_number)
+  end
 
   it 'opens the target and binds it to the default fd' do
     result = described_class.new('w', 1).apply(redirect(nil), '/f', io, system)

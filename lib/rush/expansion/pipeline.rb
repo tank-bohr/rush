@@ -18,7 +18,9 @@ module Rush
 
       # Argv expansion: expand each word to fields (splitting unquoted on IFS),
       # then expand each field's pathname patterns.
-      def expand(words) = words.flat_map { |word| glob(FieldSplitter.new(ifs).split(parts(word))) }
+      def expand(words)
+        words.flat_map { |word| glob(FieldSplitter.new(ifs).split(parts(word))) }
+      end
 
       # Assignment RHS / redirection target / operator word: one field, no split.
       # Tilde expands at the leading position by default; assignment context also
@@ -29,11 +31,17 @@ module Rush
 
       private
 
-      def parts(word) = tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
+      def parts(word)
+        tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
+      end
 
-      def tilde_expand(segments, mode) = TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
+      def tilde_expand(segments, mode)
+        TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
+      end
 
-      def glob(fields) = fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
+      def glob(fields)
+        fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
+      end
 
       def field_parts(segment)
         return splat_parts(segment) if segment.splat?
@@ -43,9 +51,13 @@ module Rush
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
-      def escape_if_quoted(segment, text) = segment.quoted ? escape(text) : text
+      def escape_if_quoted(segment, text)
+        segment.quoted ? escape(text) : text
+      end
 
-      def escape(text) = text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
+      def escape(text)
+        text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
+      end
 
       def splat_parts(segment)
         split = !segment.quoted
@@ -54,7 +66,9 @@ module Rush
         end
       end
 
-      def ifs = @executor.state.environment.get('IFS')
+      def ifs
+        @executor.state.environment.get('IFS')
+      end
     end
   end
 end

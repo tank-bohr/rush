@@ -5,8 +5,13 @@ RSpec.describe Rush::Builtins::Test do
   let(:executor) { Rush::Executor.new(system: system, state: Rush::ShellState.new) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def test(*args) = described_class.new(executor, ['test', *args], io).call
-  def bracket(*args) = described_class.new(executor, ['[', *args], io).call
+  def test(*args)
+    described_class.new(executor, ['test', *args], io).call
+  end
+
+  def bracket(*args)
+    described_class.new(executor, ['[', *args], io).call
+  end
 
   it 'is false with no arguments and tracks a single operand by emptiness' do
     expect(test).not_to be_success

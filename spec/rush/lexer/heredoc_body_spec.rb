@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Lexer::HeredocBody do
-  def scan(text) = described_class.new(text).scan
-  def kinds(text) = scan(text).segments.map { |s| segment_kind(s) }
+  def scan(text)
+    described_class.new(text).scan
+  end
+
+  def kinds(text)
+    scan(text).segments.map { |s| segment_kind(s) }
+  end
 
   it 'keeps plain text as a single literal segment' do
     expect(scan('plain text').literal_text).to eq('plain text')

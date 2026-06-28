@@ -25,28 +25,46 @@ module Rush
 
       private
 
-      def state = @executor.state
+      def state
+        @executor.state
+      end
 
-      def status = state.last_status.exitstatus.to_s
+      def status
+        state.last_status.exitstatus.to_s
+      end
 
-      def count = state.positional.size.to_s
+      def count
+        state.positional.size.to_s
+      end
 
-      def pid = @executor.system.pid.to_s
+      def pid
+        @executor.system.pid.to_s
+      end
 
-      def shell_name = state.name
+      def shell_name
+        state.name
+      end
 
-      def positional_all = state.positional.join(separator)
+      def positional_all
+        state.positional.join(separator)
+      end
 
       def separator
         ifs = state.environment.get('IFS')
         ifs ? ifs[0].to_s : ' '
       end
 
-      def options = ''
+      def options
+        ''
+      end
 
-      def background = nil
+      def background
+        nil
+      end
 
-      def positional(index) = state.positional[index - 1]
+      def positional(index)
+        state.positional[index - 1]
+      end
     end
   end
 end

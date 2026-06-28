@@ -30,7 +30,9 @@ module Rush
           @text = text
         end
 
-        def valid? = @text.match?(PATTERN)
+        def valid?
+          @text.match?(PATTERN)
+        end
 
         def value
           @text.to_i if valid?
@@ -42,7 +44,9 @@ module Rush
         @files = files
       end
 
-      def true? = evaluate(@args)
+      def true?
+        evaluate(@args)
+      end
 
       private
 
@@ -55,13 +59,21 @@ module Rush
         primary(args)
       end
 
-      def wrapped?(args) = args.size >= 3 && args.first == '(' && args.last == ')'
+      def wrapped?(args)
+        args.size >= 3 && args.first == '(' && args.last == ')'
+      end
 
-      def primary(args) = send(PRIMARY.fetch(args.size, :bad), *args)
+      def primary(args)
+        send(PRIMARY.fetch(args.size, :bad), *args)
+      end
 
-      def none? = false
+      def none?
+        false
+      end
 
-      def bad(*) = raise(TestError, 'syntax error')
+      def bad(*)
+        raise(TestError, 'syntax error')
+      end
 
       def unary(op, val)
         return send(STRING_UNARY.fetch(op), val) if STRING_UNARY.key?(op)
@@ -70,11 +82,17 @@ module Rush
         raise TestError, "#{op}: unary operator expected"
       end
 
-      def nonempty?(val) = !val.empty?
+      def nonempty?(val)
+        !val.empty?
+      end
 
-      def empty?(val) = val.empty?
+      def empty?(val)
+        val.empty?
+      end
 
-      def binary?(op) = STRING.key?(op) || INTEGER.key?(op)
+      def binary?(op)
+        STRING.key?(op) || INTEGER.key?(op)
+      end
 
       def binary(lhs, op, rhs)
         return lhs.public_send(STRING.fetch(op), rhs) if STRING.key?(op)
@@ -82,7 +100,9 @@ module Rush
         to_int(lhs).public_send(INTEGER.fetch(op), to_int(rhs))
       end
 
-      def to_int(text) = MaybeInteger.new(text).value || raise(TestError, "#{text}: integer expected")
+      def to_int(text)
+        MaybeInteger.new(text).value || raise(TestError, "#{text}: integer expected")
+      end
     end
   end
 end

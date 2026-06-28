@@ -4,8 +4,10 @@ require 'strscan'
 require_relative 'lexer/operator_table'
 require_relative 'lexer/lex_state'
 require_relative 'lexer/substitution_reader'
+require_relative 'lexer/dollar_scanner'
 require_relative 'lexer/word_scanner'
 require_relative 'lexer/heredoc_body'
+require_relative 'lexer/heredoc_reader'
 require_relative 'lexer/token_classifier'
 require_relative 'lexer/alias_expander'
 
@@ -29,7 +31,9 @@ module Rush
       @heredocs = []
     end
 
-    def location = @scanner.charpos
+    def location
+      @scanner.charpos
+    end
 
     def next_token
       drain
@@ -105,7 +109,9 @@ module Rush
       nil
     end
 
-    def finish(token) = @awaiting ? delimiter(token.last) : token
+    def finish(token)
+      @awaiting ? delimiter(token.last) : token
+    end
 
     def delimiter(word)
       holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
@@ -118,40 +124,9 @@ module Rush
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
     def heredoc_newline
-      @heredocs.each { |holder| holder.fill(read_heredoc(holder)) }
+      HeredocReader.new(@scanner, interactive: @interactive).fill(@heredocs)
       @heredocs = []
       [:NEWLINE, "\n"]
     end
-
-    def read_heredoc(holder) = build_body(holder, gather(holder, +''))
-
-    def gather(holder, out)
-      line = heredoc_line(holder)
-      return out unless line
-
-      gather(holder, out << line)
-    end
-
-    def heredoc_line(holder)
-      line = @scanner.scan(/[^\n]*\n?/)
-      raise IncompleteInput, 'unterminated here-document' if line.to_s.empty? && @interactive
-      return if line.to_s.empty? || delimiter?(holder, line)
-
-      strip_tabs(holder, line)
-    end
-
-    def delimiter?(holder, line) = strip_tabs(holder, line).chomp == holder.delimiter
-
-    def strip_tabs(holder, line) = holder.strip ? line.sub(/\A\t+/, '') : line
-
-    # A quoted delimiter (<<'EOF') makes the body literal; an unquoted one is
-    # parsed for expansion ($var, $(...), `...`), applied later at execution.
-    def build_body(holder, text)
-      return literal_word(text) if holder.quoted
-
-      HeredocBody.new(text).scan
-    end
-
-    def literal_word(text) = AST::Word.new([AST::LiteralSegment.new(text, false)])
   end
 end

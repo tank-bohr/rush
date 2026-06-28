@@ -12,7 +12,9 @@ module Rush
         @body = body
       end
 
-      def execute(executor) = LoopRunner.new(executor, condition, body, :until).call
+      def execute(executor)
+        LoopRunner.new(executor, condition, body, :until).call
+      end
     end
   end
 end

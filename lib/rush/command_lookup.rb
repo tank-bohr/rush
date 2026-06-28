@@ -19,8 +19,13 @@ module Rush
         @detail = detail
       end
 
-      def known? = true
-      def cache_into(_cache) = nil
+      def known?
+        true
+      end
+
+      def cache_into(_cache)
+        nil
+      end
 
       private
 
@@ -29,27 +34,50 @@ module Rush
 
     # An unresolved name: not known, and nothing to describe.
     class Unknown < Match
-      def known? = false
-      def describe = nil
+      def known?
+        false
+      end
+
+      def describe
+        nil
+      end
     end
 
     # A keyword / function / special / regular builtin, named by a fixed label.
     class Labelled < Match
-      def describe = "#{name} is #{detail}"
-      def terse = name
+      def describe
+        "#{name} is #{detail}"
+      end
+
+      def terse
+        name
+      end
     end
 
     # A shell alias; `command -v` prints its definition.
     class Aliased < Match
-      def describe = "#{name} is an alias for #{detail}"
-      def terse = "alias '#{"#{name}=#{detail}".gsub("'", %q('"'"'))}'"
+      def describe
+        "#{name} is an alias for #{detail}"
+      end
+
+      def terse
+        "alias '#{"#{name}=#{detail}".gsub("'", %q('"'"'))}'"
+      end
     end
 
     # An external executable found on PATH (or used directly via a slash path).
     class Executable < Match
-      def describe = "#{name} is #{detail}"
-      def terse = detail
-      def cache_into(cache) = cache[name] = detail
+      def describe
+        "#{name} is #{detail}"
+      end
+
+      def terse
+        detail
+      end
+
+      def cache_into(cache)
+        cache[name] = detail
+      end
     end
 
     def initialize(executor)
@@ -59,22 +87,48 @@ module Rush
     # The Match for a name (Unknown if it resolves to nothing). An alias outranks
     # a function/builtin but not a reserved word; a PATH/slash file is the last
     # resort.
-    def find(name) = RESOLVERS.lazy.filter_map { |resolver| send(resolver, name) }.first || Unknown.new(name)
+    def find(name)
+      RESOLVERS.lazy.filter_map { |resolver| send(resolver, name) }.first || Unknown.new(name)
+    end
 
     # The `type`/`command -V` description line for a name, or nil if unknown.
-    def describe(name) = find(name).describe
+    def describe(name)
+      find(name).describe
+    end
 
     private
 
-    def as_keyword(name) = KEYWORDS.include?(name) && Labelled.new(name, 'a shell keyword')
-    def as_alias(name) = aliases.key?(name) && Aliased.new(name, aliases.value(name))
-    def as_function(name) = functions.key?(name) && Labelled.new(name, 'a shell function')
-    def as_special(name) = SPECIAL.include?(name) && Labelled.new(name, 'a special shell builtin')
-    def as_builtin(name) = @executor.builtins.key?(name) && Labelled.new(name, 'a shell builtin')
-    def as_file(name) = (path = path_of(name)) && Executable.new(name, path)
+    def as_keyword(name)
+      KEYWORDS.include?(name) && Labelled.new(name, 'a shell keyword')
+    end
 
-    def aliases = @executor.state.aliases
-    def functions = @executor.state.functions
+    def as_alias(name)
+      aliases.key?(name) && Aliased.new(name, aliases.value(name))
+    end
+
+    def as_function(name)
+      functions.key?(name) && Labelled.new(name, 'a shell function')
+    end
+
+    def as_special(name)
+      SPECIAL.include?(name) && Labelled.new(name, 'a special shell builtin')
+    end
+
+    def as_builtin(name)
+      @executor.builtins.key?(name) && Labelled.new(name, 'a shell builtin')
+    end
+
+    def as_file(name)
+      (path = path_of(name)) && Executable.new(name, path)
+    end
+
+    def aliases
+      @executor.state.aliases
+    end
+
+    def functions
+      @executor.state.functions
+    end
 
     def path_of(name)
       return unless name
@@ -84,10 +138,16 @@ module Rush
       dirs.map { |dir| join(dir, name) }.find { |candidate| executable?(candidate) }
     end
 
-    def join(dir, name) = dir.empty? ? name : "#{dir}/#{name}"
+    def join(dir, name)
+      dir.empty? ? name : "#{dir}/#{name}"
+    end
 
-    def executable?(path) = @executor.system.file?(path) && @executor.system.executable?(path)
+    def executable?(path)
+      @executor.system.file?(path) && @executor.system.executable?(path)
+    end
 
-    def dirs = (@executor.state.environment.get('PATH') || '').split(':', -1)
+    def dirs
+      (@executor.state.environment.get('PATH') || '').split(':', -1)
+    end
   end
 end

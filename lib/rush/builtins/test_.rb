@@ -15,7 +15,9 @@ module Rush
 
       private
 
-      def bracketed? = argv.first == '['
+      def bracketed?
+        argv.first == '['
+      end
 
       def without_close(ops)
         *body, close = ops
@@ -24,7 +26,9 @@ module Rush
         body
       end
 
-      def evaluate(ops) = TestExpr.new(ops, executor.system).true? ? success : failure
+      def evaluate(ops)
+        TestExpr.new(ops, executor.system).true? ? success : failure
+      end
 
       def report(message)
         stderr.puts("rush: #{argv.first}: #{message}")

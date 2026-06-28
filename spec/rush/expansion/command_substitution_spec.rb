@@ -5,7 +5,9 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
   let(:state) { Rush::ShellState.new(environment: Rush::Environment.new({})) }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
-  def status_double(code) = instance_double(Process::Status, exitstatus: code, termsig: nil)
+  def status_double(code)
+    instance_double(Process::Status, exitstatus: code, termsig: nil)
+  end
 
   describe '#call (parent side)' do
     it 'reads the child output from the pipe and strips trailing newlines' do

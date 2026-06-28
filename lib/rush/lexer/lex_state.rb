@@ -29,20 +29,41 @@ module Rush
         @mode = :normal
       end
 
-      def expects_command? = @command_position && !@expect_filename
+      def expects_command?
+        @command_position && !@expect_filename
+      end
 
       # A command word here is a real command name, so alias substitution applies:
       # the normal mode and a case arm's command list. The for-header and case
       # subject/pattern modes do not expand aliases, even when a newline resets
       # command position.
-      def command_mode? = @mode == :normal || @mode == :case_body
+      def command_mode?
+        @mode == :normal || @mode == :case_body
+      end
 
-      def for_name? = @mode == :for_name
-      def for_in? = @mode == :for_in
-      def case_subject? = @mode == :case_subject
-      def case_in? = @mode == :case_in
-      def case_arm? = @mode == :case_arm
-      def case_pat? = @mode == :case_pat
+      def for_name?
+        @mode == :for_name
+      end
+
+      def for_in?
+        @mode == :for_in
+      end
+
+      def case_subject?
+        @mode == :case_subject
+      end
+
+      def case_in?
+        @mode == :case_in
+      end
+
+      def case_arm?
+        @mode == :case_arm
+      end
+
+      def case_pat?
+        @mode == :case_pat
+      end
 
       def advance(symbol)
         @mode = TRANSITIONS.fetch([@mode, symbol], @mode)

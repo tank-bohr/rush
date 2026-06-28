@@ -23,7 +23,9 @@ module Rush
 
       private
 
-      def rewrite(text) = prefix(text)
+      def rewrite(text)
+        prefix(text)
+      end
 
       def prefix(text)
         return text unless text.start_with?('~')
@@ -50,7 +52,9 @@ module Rush
     class AssignmentTilde < TildeExpander
       private
 
-      def rewrite(text) = text.split(':', -1).map { |piece| prefix(piece) }.join(':')
+      def rewrite(text)
+        text.split(':', -1).map { |piece| prefix(piece) }.join(':')
+      end
     end
 
     # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
@@ -59,7 +63,9 @@ module Rush
         @segments = segments
       end
 
-      def expand = @segments
+      def expand
+        @segments
+      end
     end
   end
 end

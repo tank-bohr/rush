@@ -46,7 +46,9 @@ module Rush
         args[index] == '--' ? args[(index + 1)..] : args[index..]
       end
 
-      def option?(flag) = flag.is_a?(String) && flag.length > 1 && flag != '--' && '-+'.include?(flag[0])
+      def option?(flag)
+        flag.is_a?(String) && flag.length > 1 && flag != '--' && '-+'.include?(flag[0])
+      end
 
       def apply(flag)
         sign, *letters = flag.chars

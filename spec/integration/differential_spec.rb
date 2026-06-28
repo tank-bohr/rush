@@ -12,7 +12,9 @@ require 'fileutils'
 # unavailable. These run the real exe/rush in a child process, so they do not
 # contribute to SimpleCov; the in-process unit specs own coverage.
 RSpec.describe 'rush vs dash (differential)' do
-  def project_root = File.expand_path('../..', __dir__)
+  def project_root
+    File.expand_path('../..', __dir__)
+  end
 
   def rush(source, input = nil)
     out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,

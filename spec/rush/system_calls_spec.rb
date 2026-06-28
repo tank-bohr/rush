@@ -104,4 +104,9 @@ RSpec.describe Rush::SystemCalls do
     allow(Dir).to receive(:glob).with('*.rb').and_return(['a.rb'])
     expect(system.glob('*.rb')).to eq(['a.rb'])
   end
+
+  it 'reports accumulated CPU times through Process.times' do
+    allow(Process).to receive(:times).and_return(:tms)
+    expect(system.times).to eq(:tms)
+  end
 end

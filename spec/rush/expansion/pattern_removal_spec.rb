@@ -3,7 +3,9 @@
 RSpec.describe Rush::Expansion::PatternRemoval do
   let(:system) { FakeSystemCalls.new }
 
-  def strip(op, value, pattern) = described_class.new(system, op, value, pattern).call
+  def strip(op, value, pattern)
+    described_class.new(system, op, value, pattern).call
+  end
 
   it 'removes the smallest and largest matching prefix' do
     expect(strip('#', 'foo.tar.gz', '*.')).to eq('tar.gz')

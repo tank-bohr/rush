@@ -10,7 +10,9 @@ module Rush
       @readonly = Set.new
     end
 
-    def get(name) = @vars[name]
+    def get(name)
+      @vars[name]
+    end
 
     def assign(name, value)
       raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
@@ -18,9 +20,13 @@ module Rush
       @vars[name] = value.to_s
     end
 
-    def export(name) = @exported.add(name)
+    def export(name)
+      @exported.add(name)
+    end
 
-    def readonly(name) = @readonly.add(name)
+    def readonly(name)
+      @readonly.add(name)
+    end
 
     def unset(name)
       raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
@@ -29,6 +35,8 @@ module Rush
       @exported.delete(name)
     end
 
-    def exported = @vars.slice(*@exported)
+    def exported
+      @vars.slice(*@exported)
+    end
   end
 end

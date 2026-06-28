@@ -19,7 +19,9 @@ module Rush
         environment.export(name)
       end
 
-      def environment = executor.state.environment
+      def environment
+        executor.state.environment
+      end
     end
   end
 end

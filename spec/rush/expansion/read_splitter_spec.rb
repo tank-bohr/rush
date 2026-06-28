@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Expansion::ReadSplitter do
-  def split(line, count, ifs = nil) = described_class.new(ifs, count).split(line)
+  def split(line, count, ifs = nil)
+    described_class.new(ifs, count).split(line)
+  end
 
   it 'splits a line into the requested number of fields' do
     expect(split('x y z', 3)).to eq(%w[x y z])

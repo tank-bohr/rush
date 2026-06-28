@@ -46,11 +46,17 @@ module Rush
         success
       end
 
-      def single_quote(text) = "'#{text.gsub("'", %q('"'"'))}'"
+      def single_quote(text)
+        "'#{text.gsub("'", %q('"'"'))}'"
+      end
 
-      def keep(status, result) = status.success? ? result : status
+      def keep(status, result)
+        status.success? ? result : status
+      end
 
-      def aliases = executor.state.aliases
+      def aliases
+        executor.state.aliases
+      end
     end
   end
 end

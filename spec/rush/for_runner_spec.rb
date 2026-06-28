@@ -7,7 +7,9 @@ RSpec.describe Rush::ForRunner do
 
   before { allow(executor).to receive(:state).and_return(state) }
 
-  def run(values) = described_class.new(executor, 'x', values, :body).call
+  def run(values)
+    described_class.new(executor, 'x', values, :body).call
+  end
 
   it 'assigns the variable and runs the body for each value' do
     allow(executor).to receive(:run).with(:body).and_return(Rush::Status.success)

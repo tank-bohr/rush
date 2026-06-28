@@ -4,7 +4,9 @@ RSpec.describe Rush::Redirection::HereDocRedirect do
   let(:system) { FakeSystemCalls.new }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def redirect(io_number) = Rush::AST::Redirect.new(kind: :heredoc, target: nil, io_number: io_number)
+  def redirect(io_number)
+    Rush::AST::Redirect.new(kind: :heredoc, target: nil, io_number: io_number)
+  end
 
   it 'binds the body to stdin as a readable stream' do
     result = described_class.new.apply(redirect(nil), "body\n", io, system)

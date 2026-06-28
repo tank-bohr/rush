@@ -32,6 +32,7 @@ detectors:
     public_methods_only: true
     exclude:
       - Rush::SystemCalls
+      - Rush::SystemCalls::FileTests # the syscall port's file-test mixin, same nature
       - Rush::Redirection::HereDocRedirect#apply
 
   # Number's left/right are a binary op's operands; CommandRunner's (argv, io) is

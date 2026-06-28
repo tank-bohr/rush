@@ -12,15 +12,21 @@ module Rush
 
       private
 
-      def names = operands.first&.start_with?('-') ? operands.drop(1) : operands
+      def names
+        operands.first&.start_with?('-') ? operands.drop(1) : operands
+      end
 
-      def function? = operands.first == '-f'
+      def function?
+        operands.first == '-f'
+      end
 
       def remove(name)
         function? ? state.functions.undefine(name) : state.environment.unset(name)
       end
 
-      def state = executor.state
+      def state
+        executor.state
+      end
     end
   end
 end

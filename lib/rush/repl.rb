@@ -32,7 +32,9 @@ module Rush
     end
 
     # The EXIT trap fires as the session ends, on Ctrl-D or `exit` alike.
-    def terminate(code) = @executor.run_exit_trap(code)
+    def terminate(code)
+      @executor.trap_runner.run_exit_trap(code)
+    end
 
     def continue?
       program = read_program
@@ -64,6 +66,8 @@ module Rush
       report(e)
     end
 
-    def report(error) = @system.stderr.puts("rush: #{error.message}")
+    def report(error)
+      @system.stderr.puts("rush: #{error.message}")
+    end
   end
 end

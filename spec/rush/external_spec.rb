@@ -5,7 +5,9 @@ RSpec.describe Rush::External do
   let(:executor) { instance_double(Rush::Executor, system: system) }
   let(:io) { Rush::IoTable.standard(FakeSystemCalls.new) }
 
-  def run(argv) = described_class.new(executor, argv, io, {}).call
+  def run(argv)
+    described_class.new(executor, argv, io, {}).call
+  end
 
   it 'spawns the program and translates its exit status' do
     process_status = instance_double(Process::Status, exitstatus: 3, termsig: nil)

@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Eval do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['eval', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['eval', *args], io).call
+  end
 
   it 'parses and runs the joined arguments in the current shell' do
     expect(run('echo', 'hi')).to be_success

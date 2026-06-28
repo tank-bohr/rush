@@ -39,7 +39,9 @@ module Rush
         External.new(executor, args, io, exported_env).call
       end
 
-      def exported_env = executor.state.environment.exported
+      def exported_env
+        executor.state.environment.exported
+      end
     end
   end
 end

@@ -17,21 +17,33 @@ module Rush
         @io = io
       end
 
-      def call = raise NotImplementedError
+      def call
+        raise NotImplementedError
+      end
 
       private
 
       attr_reader :executor, :argv, :io
 
-      def operands = argv.drop(1)
+      def operands
+        argv.drop(1)
+      end
 
-      def stdout = io.get(1)
+      def stdout
+        io.get(1)
+      end
 
-      def stderr = io.get(2)
+      def stderr
+        io.get(2)
+      end
 
-      def success = Status.success
+      def success
+        Status.success
+      end
 
-      def failure(code = 1) = Status.failure(code)
+      def failure(code = 1)
+        Status.failure(code)
+      end
 
       # Parse a numeric operand for a special builtin: an exit code for
       # exit/return (min 0), or a loop level for break/continue (min 1). dash

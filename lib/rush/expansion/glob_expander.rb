@@ -21,7 +21,9 @@ module Rush
 
       private
 
-      def unescape(field) = field.gsub(/\\(.)/, '\1')
+      def unescape(field)
+        field.gsub(/\\(.)/, '\1')
+      end
     end
   end
 end

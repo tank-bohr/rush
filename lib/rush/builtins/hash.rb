@@ -22,7 +22,9 @@ module Rush
 
       private
 
-      def cache = executor.state.command_hash
+      def cache
+        executor.state.command_hash
+      end
 
       def reset
         cache.clear

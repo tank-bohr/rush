@@ -13,7 +13,9 @@ module Rush
         @pattern = pattern
       end
 
-      def call = @op.start_with?('#') ? strip_prefix : strip_suffix
+      def call
+        @op.start_with?('#') ? strip_prefix : strip_suffix
+      end
 
       private
 
@@ -27,13 +29,21 @@ module Rush
         hit ? @value[0, @value.length - hit.length] : @value
       end
 
-      def prefixes = (0..@value.length).map { |index| @value[0, index] }
+      def prefixes
+        (0..@value.length).map { |index| @value[0, index] }
+      end
 
-      def suffixes = (0..@value.length).map { |index| @value[@value.length - index, index] }
+      def suffixes
+        (0..@value.length).map { |index| @value[@value.length - index, index] }
+      end
 
-      def order(list) = @op.length == 2 ? list.reverse : list
+      def order(list)
+        @op.length == 2 ? list.reverse : list
+      end
 
-      def match?(part) = @system.fnmatch(@pattern, part)
+      def match?(part)
+        @system.fnmatch(@pattern, part)
+      end
     end
   end
 end

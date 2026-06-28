@@ -26,9 +26,13 @@ module Rush
         failure(1)
       end
 
-      def keep(status, result) = status.success? ? result : status
+      def keep(status, result)
+        status.success? ? result : status
+      end
 
-      def aliases = executor.state.aliases
+      def aliases
+        executor.state.aliases
+      end
     end
   end
 end

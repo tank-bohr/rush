@@ -10,8 +10,12 @@ module Rush
       define_method(method) { |*| raise Errno::EBADF }
     end
 
-    def close = nil
+    def close
+      nil
+    end
 
-    def flush = self
+    def flush
+      self
+    end
   end
 end

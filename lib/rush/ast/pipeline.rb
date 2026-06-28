@@ -28,7 +28,9 @@ module Rush
         commands.one? ? executor.run(commands.first) : PipelineRunner.new(executor, commands).call
       end
 
-      def invert(status) = status.success? ? Status.failure : Status.success
+      def invert(status)
+        status.success? ? Status.failure : Status.success
+      end
     end
   end
 end

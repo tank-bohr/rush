@@ -4,7 +4,9 @@ RSpec.describe Rush::Redirection::DupRedirect do
   let(:system) { FakeSystemCalls.new }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def redirect(io_number) = Rush::AST::Redirect.new(kind: :dup_out, target: nil, io_number: io_number)
+  def redirect(io_number)
+    Rush::AST::Redirect.new(kind: :dup_out, target: nil, io_number: io_number)
+  end
 
   it 'duplicates the source fd onto the default fd (>&2)' do
     result = described_class.new(1).apply(redirect(nil), '2', io, system)

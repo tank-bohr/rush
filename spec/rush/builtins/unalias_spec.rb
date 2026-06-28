@@ -6,8 +6,13 @@ RSpec.describe Rush::Builtins::Unalias do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['unalias', *args], io).call
-  def aliases = state.aliases
+  def run(*args)
+    described_class.new(executor, ['unalias', *args], io).call
+  end
+
+  def aliases
+    state.aliases
+  end
 
   before do
     aliases.define('a', '1')

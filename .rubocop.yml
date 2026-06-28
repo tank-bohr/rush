@@ -86,11 +86,10 @@ Naming/InclusiveLanguage:
 Gemspec/DevelopmentDependencies:
   Enabled: false
 
-# Off: one-expression methods are written as endless defs throughout. The
-# allow_single_line default split the longer one-liners into def...end, so the
-# same kind of method showed up in two forms. Disabled so they stay uniform.
+# All method definitions use the def...end form; endless defs are disallowed so
+# the same kind of method never appears in two shapes.
 Style/EndlessMethod:
-  Enabled: false
+  EnforcedStyle: disallow
 
 Naming/MethodParameterName:
   AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's', 'op']

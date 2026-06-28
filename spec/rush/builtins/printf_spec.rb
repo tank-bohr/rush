@@ -5,7 +5,9 @@ RSpec.describe Rush::Builtins::Printf do
   let(:executor) { Rush::Executor.new(system: system, state: Rush::ShellState.new) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['printf', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['printf', *args], io).call
+  end
 
   it 'writes the formatted text without a trailing newline of its own' do
     expect(run('%s-%s', 'a', 'b')).to be_success

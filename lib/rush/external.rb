@@ -21,10 +21,14 @@ module Rush
 
     private
 
-    def system = @executor.system
+    def system
+      @executor.system
+    end
 
     # close_others closes inherited fds >= 3 (e.g. pipeline pipe ends) in the child.
-    def spawn_options = @io.to_spawn_options.merge(close_others: true)
+    def spawn_options
+      @io.to_spawn_options.merge(close_others: true)
+    end
 
     def error_status(error)
       code = error.is_a?(Errno::EACCES) ? 126 : 127

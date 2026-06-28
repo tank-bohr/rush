@@ -37,10 +37,12 @@ module Rush
       end
 
       def change(name, action)
-        reset?(action) ? executor.reset_trap(name) : executor.set_trap(name, action)
+        reset?(action) ? executor.trap_runner.reset(name) : executor.trap_runner.set(name, action)
       end
 
-      def reset?(action) = !action || action == '-'
+      def reset?(action)
+        !action || action == '-'
+      end
 
       def bad_trap(spec)
         stderr.puts("trap: #{spec}: bad trap")
@@ -52,11 +54,17 @@ module Rush
         success
       end
 
-      def line(name, action) = "trap -- #{quote(action)} #{name}"
+      def line(name, action)
+        "trap -- #{quote(action)} #{name}"
+      end
 
-      def quote(action) = "'#{action.gsub("'", %q('"'"'))}'"
+      def quote(action)
+        "'#{action.gsub("'", %q('"'"'))}'"
+      end
 
-      def traps = executor.state.traps
+      def traps
+        executor.state.traps
+      end
     end
   end
 end

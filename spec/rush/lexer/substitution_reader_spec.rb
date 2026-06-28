@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Lexer::SubstitutionReader do
-  def reader(source) = described_class.new(StringScanner.new(source))
+  def reader(source)
+    described_class.new(StringScanner.new(source))
+  end
 
   it 'reads a balanced parenthesised body and consumes the closing paren' do
     scanner = StringScanner.new('echo (nested) done) rest')

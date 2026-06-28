@@ -6,7 +6,9 @@ RSpec.describe Rush::Builtins::Dot do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def run(*args) = described_class.new(executor, ['.', *args], io).call
+  def run(*args)
+    described_class.new(executor, ['.', *args], io).call
+  end
 
   it 'runs the file in the current shell, persisting its definitions' do
     system.provide_file('/lib.sh', "greet() { echo hi; }\nX=loaded\n")

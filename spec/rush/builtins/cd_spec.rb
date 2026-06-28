@@ -7,7 +7,9 @@ RSpec.describe Rush::Builtins::Cd do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
 
-  def cd(*args) = described_class.new(executor, ['cd', *args], io).call
+  def cd(*args)
+    described_class.new(executor, ['cd', *args], io).call
+  end
 
   it 'changes to the given directory and updates PWD/OLDPWD' do
     state.scope.move_to('/start')

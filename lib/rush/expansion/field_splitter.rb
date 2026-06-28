@@ -10,7 +10,9 @@ module Rush
         @ifs = Ifs.new(ifs)
       end
 
-      def split(parts) = IfsScanner.new(@ifs.whitespace, @ifs.others).run(parts)
+      def split(parts)
+        IfsScanner.new(@ifs.whitespace, @ifs.others).run(parts)
+      end
     end
   end
 end

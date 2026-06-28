@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Builtins::PrintfFormatter do
-  def render(template, *args) = described_class.new(args).render(template)
-  def text(template, *) = render(template, *).first
+  def render(template, *args)
+    described_class.new(args).render(template)
+  end
+
+  def text(template, *)
+    render(template, *).first
+  end
 
   it 'substitutes %s and processes format escapes' do
     expect(text("%s\n", 'hi')).to eq("hi\n")
