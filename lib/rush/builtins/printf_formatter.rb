@@ -11,11 +11,46 @@ module Rush
     # non-number is reported via the ok flag and treated as 0, a missing one as
     # 0 silently). %b and octal escapes arrive in a later slice. Returns [text, ok].
     class PrintfFormatter
-      ESCAPES = { '\\' => '\\', 'a' => "\a", 'b' => "\b", 'f' => "\f",
-                  'n' => "\n", 'r' => "\r", 't' => "\t", 'v' => "\v" }.freeze
-      CONVERSION = /\A%([-+ #0]*\d*(?:\.\d+)?)([diouxXcs%])/
       RUBY_CONV = { 'i' => 'd', 'u' => 'd' }.freeze
       NUMERIC = %w[d i o u x X].freeze
+
+      # Scans and walks one pass of a printf template: literal runs and resolved
+      # backslash escapes pass straight through, while each %conversion is handed
+      # back to the formatter to render against the next argument (double
+      # dispatch), so the scanning lives here and the formatting stays there.
+      class Template < StringScanner
+        ESCAPES = { '\\' => '\\', 'a' => "\a", 'b' => "\b", 'f' => "\f",
+                    'n' => "\n", 'r' => "\r", 't' => "\t", 'v' => "\v" }.freeze
+        SPEC = /\A%([-+ #0]*\d*(?:\.\d+)?)([diouxXcs%])/
+        LITERAL = /[^%\\]+/
+
+        def emit(formatter)
+          out = +''
+          out << piece(formatter) until eos?
+          out
+        end
+
+        private
+
+        def piece(formatter)
+          return conversion(formatter) if peek(1) == '%'
+          return escape if peek(1) == '\\'
+
+          scan(LITERAL)
+        end
+
+        def conversion(formatter)
+          return getch unless scan(SPEC)
+
+          formatter.convert(self[1], self[2])
+        end
+
+        def escape
+          getch
+          char = getch
+          ESCAPES.fetch(char) { "\\#{char}" }
+        end
+      end
 
       def initialize(args)
         @args = args
@@ -32,32 +67,9 @@ module Rush
         [text + rest, @ok]
       end
 
-      private
-
-      def last_pass? = @consumed.zero? || @cursor >= @args.size
-
-      def one_pass(template)
-        @consumed = 0
-        scan = StringScanner.new(template)
-        out = +''
-        out << chunk(scan) until scan.eos?
-        out
-      end
-
-      def chunk(scan)
-        return conversion(scan) if scan.peek(1) == '%'
-        return escape(scan) if scan.peek(1) == '\\'
-
-        scan.scan(/[^%\\]+/)
-      end
-
-      def conversion(scan)
-        return scan.getch unless scan.scan(CONVERSION)
-
-        apply(scan[1], scan[2])
-      end
-
-      def apply(flags, conv)
+      # Render one %conversion (called back from Template): %% is a literal %, a
+      # numeric/char/string conversion consumes and formats the next argument.
+      def convert(flags, conv)
         return '%' if conv == '%'
 
         arg = take
@@ -65,6 +77,15 @@ module Rush
         return Kernel.format("%#{flags}s", first_char(arg)) if conv == 'c'
 
         Kernel.format("%#{flags}s", arg.to_s)
+      end
+
+      private
+
+      def last_pass? = @consumed.zero? || @cursor >= @args.size
+
+      def one_pass(template)
+        @consumed = 0
+        Template.new(template).emit(self)
       end
 
       def numeric(flags, conv, arg) = Kernel.format("%#{flags}#{RUBY_CONV.fetch(conv, conv)}", to_int(arg))
@@ -88,12 +109,6 @@ module Rush
       end
 
       def first_char(arg) = arg.to_s[0].to_s
-
-      def escape(scan)
-        scan.getch
-        char = scan.getch
-        ESCAPES.fetch(char) { "\\#{char}" }
-      end
     end
   end
 end

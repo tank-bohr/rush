@@ -49,8 +49,7 @@ detectors:
     #    Ruby offers no clean home for it (a core-ext / Refused Bequest): Set#apply
     #    (String), Set#advance / Test#without_close / TestExpr#four? /
     #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
-    #    (String), Times#clock (Numeric), Pipeline#tilde_expand (Symbol),
-    #    PrintfFormatter#chunk / #conversion (a StringScanner it drives);
+    #    (String), Times#clock (Numeric), Pipeline#tilde_expand (Symbol);
     #  - it dispatches on a value's kind enum, and making the value self-render
     #    would couple the small AST/value objects to this subsystem:
     #    CommandLookup#describe (kind), Pipeline#scalar_segment (segment);
@@ -59,8 +58,6 @@ detectors:
     #    (alias-specific), TildeExpander#expand (the leading-segment tilde rewrite
     #    is tilde-domain).
     exclude:
-      - Rush::Builtins::PrintfFormatter#chunk
-      - Rush::Builtins::PrintfFormatter#conversion
       - Rush::Builtins::Set#advance
       - Rush::Builtins::Set#apply
       - Rush::Builtins::Test#without_close
