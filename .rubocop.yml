@@ -63,9 +63,12 @@ Metrics/CollectionLiteralLength:
 Style/Documentation:
   Enabled: true
 
-# RuboCop ships these cops disabled by default (opt-in); NewCops:enable does NOT
-# turn them on. We opt into the ones that catch real issues without fighting the
-# project's compact style.
+# RuboCop ships a set of cops disabled by default (opt-in); NewCops:enable does
+# NOT turn them on. Every one is listed explicitly here so this file is the single
+# source of truth: a RuboCop upgrade can't silently flip a default, and the off
+# cops are visible rather than hidden in RuboCop's own defaults.
+#
+# Opted in — these earn their keep without fighting the project's compact style:
 Style/UnlessLogicalOperators:
   Enabled: true # forbid the confusing mixed `unless a && b || c`; plain guards stay
 Style/InvertibleUnlessCondition:
@@ -80,6 +83,85 @@ Lint/ShadowingOuterLocalVariable:
   Enabled: true
 Naming/InclusiveLanguage:
   Enabled: true
+
+# Left off — each weighed against the project's style and rejected; pinned to
+# false so the decision is explicit. Grouped by department, alphabetical.
+# Bundler
+Bundler/GemComment: { Enabled: false }
+Bundler/GemVersion: { Enabled: false }
+
+# Gemspec
+Gemspec/DependencyVersion: { Enabled: false }
+
+# Layout
+Layout/ClassStructure: { Enabled: false }
+Layout/EmptyLineAfterMultilineCondition: { Enabled: false }
+Layout/FirstArrayElementLineBreak: { Enabled: false }
+Layout/FirstHashElementLineBreak: { Enabled: false }
+Layout/FirstMethodArgumentLineBreak: { Enabled: false }
+Layout/FirstMethodParameterLineBreak: { Enabled: false }
+Layout/HeredocArgumentClosingParenthesis: { Enabled: false }
+Layout/MultilineArrayLineBreaks: { Enabled: false }
+Layout/MultilineAssignmentLayout: { Enabled: false }
+Layout/MultilineHashKeyLineBreaks: { Enabled: false }
+Layout/MultilineMethodArgumentLineBreaks: { Enabled: false }
+Layout/MultilineMethodParameterLineBreaks: { Enabled: false }
+Layout/RedundantLineBreak: { Enabled: false }
+Layout/SingleLineBlockChain: { Enabled: false }
+
+# Lint
+Lint/ConstantResolution: { Enabled: false }
+Lint/HeredocMethodCallPosition: { Enabled: false }
+Lint/NumberConversion: { Enabled: false }
+
+# Performance
+Performance/ArraySemiInfiniteRangeSlice: { Enabled: false }
+Performance/BigDecimalWithNumericArgument: { Enabled: false }
+Performance/BlockGivenWithExplicitBlock: { Enabled: false }
+Performance/Casecmp: { Enabled: false }
+Performance/CaseWhenSplat: { Enabled: false }
+Performance/ChainArrayAllocation: { Enabled: false }
+Performance/IoReadlines: { Enabled: false }
+Performance/OpenStruct: { Enabled: false }
+Performance/SelectMap: { Enabled: false }
+
+# RSpec
+RSpec/AlignLeftLetBrace: { Enabled: false }
+RSpec/AlignRightLetBrace: { Enabled: false }
+RSpec/DescribedClassModuleWrapping: { Enabled: false }
+RSpec/Dialect: { Enabled: false }
+RSpec/MessageExpectation: { Enabled: false }
+RSpec/Pending: { Enabled: false }
+
+# Style
+Style/ArrayCoercion: { Enabled: false }
+Style/ArrayFirstLast: { Enabled: false }
+Style/AsciiComments: { Enabled: false }
+Style/AutoResourceCleanup: { Enabled: false }
+Style/ClassMethodsDefinitions: { Enabled: false }
+Style/CollectionMethods: { Enabled: false }
+Style/ConstantVisibility: { Enabled: false }
+Style/Copyright: { Enabled: false }
+Style/DateTime: { Enabled: false }
+Style/DisableCopsWithinSourceCodeDirective: { Enabled: false }
+Style/DocumentationMethod: { Enabled: false }
+Style/HashLookupMethod: { Enabled: false }
+Style/InlineComment: { Enabled: false }
+Style/IpAddresses: { Enabled: false }
+Style/MethodCalledOnDoEndBlock: { Enabled: false }
+Style/MethodCallWithArgsParentheses: { Enabled: false }
+Style/MissingElse: { Enabled: false }
+Style/MultilineMethodSignature: { Enabled: false }
+Style/OptionHash: { Enabled: false }
+Style/RedundantStructKeywordInit: { Enabled: false }
+Style/RequireOrder: { Enabled: false }
+Style/Send: { Enabled: false }
+Style/SingleLineBlockParams: { Enabled: false }
+Style/StaticClass: { Enabled: false }
+Style/StringHashKeys: { Enabled: false }
+Style/StringMethods: { Enabled: false }
+Style/TopLevelMethodDefinition: { Enabled: false }
+Style/TrailingCommaInBlockArgs: { Enabled: false }
 
 # The plan keeps development dependencies declared in the gemspec (single source
 # of truth), so do not force them into the Gemfile.
