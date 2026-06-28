@@ -16,6 +16,10 @@ module Rush
       def self.literal(text) = new([WordSegment.new(kind: :literal, value: text, quoted: false)])
 
       def literal_text = segments.map(&:value).join
+
+      # A bare unquoted-literal word — one literal segment, no quoting or
+      # substitution — so its text can stand in as a name (e.g. for an alias).
+      def plain? = segments.one? && segments.first.literal_unquoted?
     end
   end
 end

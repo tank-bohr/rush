@@ -58,10 +58,7 @@ detectors:
     #    in the AST layer, which has ZERO dependencies on Expansion (the dependency
     #    runs one way, Expansion -> AST); carrying an expander there would invert
     #    that into a cycle and make a value object instantiate expanders / run
-    #    command subs;
-    #  - it is a predicate/transform that needs both self and the value's fields
-    #    and has no cohesive home on the value: AliasExpander#plain?
-    #    (alias-specific).
+    #    command subs.
     exclude:
       - Rush::Builtins::Set#advance
       - Rush::Builtins::Set#apply
@@ -72,7 +69,6 @@ detectors:
       - Rush::Expansion::Pipeline#scalar_segment
       - Rush::Expansion::ReadSplitter#pad
       - Rush::Expansion::ReadSplitter#trim_last
-      - Rush::Lexer::AliasExpander#plain?
   DataClump:
     # Two genuine clumps were refactored out, not excluded: PipelineRunner's
     # (index, pipes) became a Stage value object, and PrintfFormatter's
@@ -111,7 +107,9 @@ detectors:
     #    Command#terse (renders `command -v` output per lookup-kind enum);
     #  - a value coalesce / default, not a branch: SystemCalls#trap_signal
     #    (command || block), FieldSplitter#initialize (ifs || WHITESPACE);
-    #  - one factor in a compound precondition guard: AliasExpander#expand;
+    #  - one factor in a compound precondition predicate: AliasExpander#eligible?
+    #    (command position is one of several ANDed conditions deciding whether a
+    #    word may alias-expand, not a switch making the predicate do two things);
     #  - an irreducible domain distinction whose branch must live somewhere, so
     #    splitting only relocates the flag: ShellState#set_option (option on/off),
     #    Printf#report (valid outcome), Repl#prompt_line (PS1 vs PS2).
@@ -121,7 +119,7 @@ detectors:
       - Rush::Builtins::Command#terse
       - Rush::SystemCalls#trap_signal
       - Rush::Expansion::FieldSplitter#initialize
-      - Rush::Lexer::AliasExpander#expand
+      - Rush::Lexer::AliasExpander#eligible?
       - Rush::ShellState#set_option
       - Rush::Builtins::Printf#report
       - Rush::Repl#prompt_line
