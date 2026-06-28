@@ -56,7 +56,10 @@ detectors:
     exclude:
       - Rush::ParserSupport#on_error
   MissingSafeMethod:
-    enabled: false # exit! is Ruby's standard bang method, not a custom unsafe one
+    # exit! mirrors Ruby's own Process.exit!/Kernel#exit! (force-exit, skipping
+    # at_exit), not a custom "dangerous" variant that needs a bang-less twin.
+    exclude:
+      - exit!
   ModuleInitialize:
     enabled: false # ParserSupport is mixed into the Racc parser
 
