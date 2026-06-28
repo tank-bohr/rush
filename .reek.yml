@@ -44,17 +44,13 @@ detectors:
       - Rush::Redirection::HereDocRedirect#apply
   FeatureEnvy:
     # PipelineRunner#stage_io was genuinely moved onto Stage (Stage#io), which
-    # owns its fd topology. The rest, after reading each, are not misplaced:
-    #  - the method transforms a primitive or stdlib value passed as its arg, so
-    #    Ruby offers no clean home for it (a core-ext / Refused Bequest):
-    #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
-    #    (String);
-    #  - it dispatches on a value's kind enum where the value cannot host the
-    #    method: CommandLookup#describe (a lookup-result kind). (Word segments,
-    #    which used to need this, now expand themselves polymorphically.)
+    # owns its fd topology. The rest each transform a primitive or stdlib value
+    # passed as their arg, so Ruby offers no clean home for them (a core-ext /
+    # Refused Bequest): ReadSplitter#pad / ReadSplitter#trim_last (Array),
+    # TestExpr#to_int (String). (CommandLookup's kind dispatch, which used to be
+    # excluded here, is gone — its lookup results are polymorphic Match objects.)
     exclude:
       - Rush::Builtins::TestExpr#to_int
-      - Rush::CommandLookup#describe
       - Rush::Expansion::ReadSplitter#pad
       - Rush::Expansion::ReadSplitter#trim_last
   DataClump:
@@ -91,8 +87,7 @@ detectors:
     # became a pure glob-escaper with the quoted decision moved to its caller.
     # The rest are not control couples:
     #  - the argument is the datum being computed/matched, not a behaviour flag:
-    #    Number#bool (boolean -> 1/0), Parser#accept? (token matcher),
-    #    Command#terse (renders `command -v` output per lookup-kind enum);
+    #    Number#bool (boolean -> 1/0), Parser#accept? (token matcher);
     #  - a value coalesce / default, not a branch: SystemCalls#trap_signal
     #    (command || block), FieldSplitter#initialize (ifs || WHITESPACE);
     #  - one factor in a compound precondition predicate: AliasExpander#eligible?
@@ -104,7 +99,6 @@ detectors:
     exclude:
       - Rush::Expansion::Arithmetic::Number#bool
       - Rush::Expansion::Arithmetic::Parser#accept?
-      - Rush::Builtins::Command#terse
       - Rush::SystemCalls#trap_signal
       - Rush::Expansion::FieldSplitter#initialize
       - Rush::Lexer::AliasExpander#eligible?
@@ -152,15 +146,12 @@ detectors:
     # kill), guards became idiomatic `unless x` / `!x` (set, trap, lexer,
     # program_reader, substitution_reader, alias_expander, pipeline, dup_redirect,
     # parameter_expander#plain, tilde_expander, WordScanner), and an
-    # unset-or-empty test became `value.to_s.strip.empty?` (evaluator). Two are
+    # unset-or-empty test became `value.to_s.strip.empty?` (evaluator). One is
     # kept and excluded:
-    #  - Hash#known? returns `!kind.nil?`; the truthy `!!kind` is forbidden by
-    #    RuboCop Style/DoubleNegation, so the explicit nil-check is the clean form.
     #  - ParameterExpander#unset_or_null? relies on `value.nil?` meaning UNSET as
     #    distinct from null/empty — the POSIX ${x-} vs ${x:-} distinction a truthy
     #    test would obscure.
     exclude:
-      - Rush::Builtins::Hash#known?
       - Rush::Expansion::ParameterExpander#unset_or_null?
   InstanceVariableAssumption:
     # The lazy per-operation ivars were genuinely initialised in their

@@ -45,9 +45,9 @@ module Rush
       def known?(name)
         return true if name.include?('/')
 
-        kind, path = CommandLookup.new(executor).find(name)
-        cache[name] = path if kind == :file
-        !kind.nil?
+        match = CommandLookup.new(executor).find(name)
+        match.cache_into(cache)
+        match.known?
       end
     end
   end

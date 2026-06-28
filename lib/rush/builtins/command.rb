@@ -17,18 +17,11 @@ module Rush
       private
 
       def verify(name)
-        kind, detail = name && CommandLookup.new(executor).find(name)
-        return failure(127) unless kind
+        match = CommandLookup.new(executor).find(name)
+        return failure(127) unless match.known?
 
-        stdout.puts(terse(kind, name, detail))
+        stdout.puts(match.terse)
         success
-      end
-
-      def terse(kind, name, detail)
-        return detail if kind == :file
-        return "alias '#{"#{name}=#{detail}".gsub("'", %q('"'"'))}'" if kind == :alias
-
-        name
       end
 
       def verbose(name)
