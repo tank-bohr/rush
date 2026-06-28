@@ -15,7 +15,7 @@ module Rush
     def initialize(system)
       @system = system
       @executor = Executor.new(system: system, state: ShellState.new)
-      @reader = ProgramReader.new(aliases: @executor.state.aliases) { |c| prompt_line(c) }
+      @reader = ProgramReader.new(aliases: @executor.state.aliases) { |continuation| prompt_line(continuation) }
     end
 
     def run

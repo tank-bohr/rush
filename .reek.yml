@@ -181,9 +181,11 @@ detectors:
       - Rush::ParserSupport
 
   # --- Kept on (the ratchet): cryptic names in new code ---
-  # The project deliberately uses single-letter names (rescue `e`, loop `i`,
-  # arithmetic operands a/b/c, ...) — accepted; multi-character cryptic names and
-  # the few standard method names below stay flagged.
+  # reek rejects single-character, digit-suffixed and camelCase variable names.
+  # The project deliberately uses single letters in tight scopes (rescue `e`,
+  # loop `i`, arithmetic operands `a`/`b`/`n`, the Process::Tms struct `t`), so
+  # single lowercase letters are accepted; digit-suffixed, camelCase and
+  # multi-character cryptic names stay flagged.
   UncommunicativeVariableName:
     accept:
       - /^[a-z]$/
