@@ -59,11 +59,10 @@ detectors:
     #    (executor, visitor), Cd#update_pwd (state + system; even a state.move_to
     #    helper would still leave the expand_path coordination here);
     #  - it is a predicate/transform that needs both self and the value's fields
-    #    and has no cohesive home on the value: AndOr#run_right? (needs self.op as
-    #    well as the status), AliasExpander#plain? (alias-specific), and
-    #    TildeExpander#expand (the leading-segment tilde rewrite is tilde-domain).
+    #    and has no cohesive home on the value: AliasExpander#plain?
+    #    (alias-specific), TildeExpander#expand (the leading-segment tilde rewrite
+    #    is tilde-domain).
     exclude:
-      - Rush::AST::AndOr#run_right?
       - Rush::AST::If#condition_met?
       - Rush::Builtins::Cd#update_pwd
       - Rush::Builtins::PrintfFormatter#chunk

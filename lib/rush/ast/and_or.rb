@@ -23,7 +23,10 @@ module Rush
 
       private
 
-      def run_right?(status) = op == :and ? status.success? : !status.success?
+      def run_right?(status)
+        succeeded = status.success?
+        op == :and ? succeeded : !succeeded
+      end
     end
   end
 end
