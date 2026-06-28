@@ -21,13 +21,13 @@ module Rush
 
       private
 
-      attr_reader :executor, :argv
+      attr_reader :executor, :argv, :io
 
       def operands = argv.drop(1)
 
-      def stdout = @io.get(1)
+      def stdout = io.get(1)
 
-      def stderr = @io.get(2)
+      def stderr = io.get(2)
 
       def success = Status.success
 

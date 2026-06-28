@@ -13,6 +13,7 @@ module Rush
     def initialize(aliases: nil, &next_line)
       @next_line = next_line
       @aliases = aliases
+      @buffer = +''
     end
 
     # The next complete program, or :eof. Raises ParseError on a real syntax

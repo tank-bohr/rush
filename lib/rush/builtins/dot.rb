@@ -25,7 +25,7 @@ module Rush
 
       def source(path)
         text = executor.system.read_file(path)
-        executor.with_io(@io) { run_text(text) }
+        executor.with_io(io) { run_text(text) }
       rescue ParseError => e
         raise BuiltinError, ".: #{e.message}"
       end

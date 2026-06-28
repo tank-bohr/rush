@@ -32,7 +32,7 @@ module Rush
 
       def ifs = executor.state.environment.get('IFS')
 
-      def stdin = @io.get(0)
+      def stdin = io.get(0)
 
       def usage_error
         stderr.puts('rush: read: arg count')

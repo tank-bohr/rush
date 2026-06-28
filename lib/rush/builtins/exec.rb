@@ -14,7 +14,7 @@ module Rush
       private
 
       def redirect_shell
-        executor.replace_io(@io)
+        executor.replace_io(io)
         success
       end
 
@@ -31,7 +31,7 @@ module Rush
         raise ExitSignal, code
       end
 
-      def options = @io.to_spawn_options.merge(close_others: true)
+      def options = io.to_spawn_options.merge(close_others: true)
 
       def environment = executor.state.environment
     end

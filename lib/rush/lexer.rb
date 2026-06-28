@@ -14,6 +14,9 @@ module Rush
   # blanks and comments, then emits NEWLINE, an IO_NUMBER, an operator, or a
   # WORD/ASSIGNMENT_WORD (classified against LexState, which advances after each
   # token to track command position — the seed of POSIX Grammar Rules 1-9).
+  # :reek:InstanceVariableAssumption -- @state/@heredocs/@awaiting are set in
+  #   #initialize via init_state, a helper split out for Metrics/MethodLength;
+  #   reek's per-method analysis cannot trace the helper call.
   class Lexer
     BLANK = /[ \t]+/
     COMMENT = /#[^\n]*/

@@ -10,6 +10,7 @@ module Rush
 
       def initialize(scanner)
         @scanner = scanner
+        @depth = 0
       end
 
       def parens

@@ -20,6 +20,7 @@ module Rush
       def initialize(args)
         @args = args
         @cursor = 0
+        @consumed = 0
         @ok = true
       end
 

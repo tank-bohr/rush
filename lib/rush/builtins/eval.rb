@@ -12,7 +12,7 @@ module Rush
     # complete commands before it have run.
     class Eval < Base
       def call
-        executor.with_io(@io) { SourceRunner.new(executor, operands.join(' ')).run }
+        executor.with_io(io) { SourceRunner.new(executor, operands.join(' ')).run }
       rescue ParseError => e
         raise BuiltinError, "eval: #{e.message}"
       end
