@@ -21,7 +21,7 @@ module Rush
       private
 
       def strip_options(args)
-        return nil if args.empty?
+        return if args.empty?
 
         positionals(args, consume_options(args))
       end
@@ -41,7 +41,7 @@ module Rush
       end
 
       def positionals(args, index)
-        return nil if index == args.size
+        return if index == args.size
 
         args[index] == '--' ? args[(index + 1)..] : args[index..]
       end

@@ -61,7 +61,7 @@ module Rush
       end
 
       def assignment_name
-        return nil unless @state.expects_command?
+        return unless @state.expects_command?
 
         value = @word.segments.first.literal_value
         capture(value) if value

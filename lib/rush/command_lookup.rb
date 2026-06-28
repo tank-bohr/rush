@@ -77,9 +77,9 @@ module Rush
     def functions = @executor.state.functions
 
     def path_of(name)
-      return nil unless name
+      return unless name
       return name if name.include?('/') && executable?(name)
-      return nil if name.include?('/')
+      return if name.include?('/')
 
       dirs.map { |dir| join(dir, name) }.find { |candidate| executable?(candidate) }
     end

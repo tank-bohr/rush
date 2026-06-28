@@ -21,7 +21,7 @@ module Rush
       # nil. Eligible means command position or a pending trailing-blank carry.
       def expand(word, command_position)
         name = word.literal_name
-        return nil unless name && eligible?(command_position)
+        return unless name && eligible?(command_position)
 
         enter(name)
       end
@@ -51,7 +51,7 @@ module Rush
 
       def enter(name)
         value = @table.value(name)
-        return nil if !value || @active.any? { |active, _value| active == name }
+        return if !value || @active.any? { |active, _value| active == name }
 
         @active.push([name, value])
         value

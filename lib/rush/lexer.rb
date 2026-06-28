@@ -94,7 +94,7 @@ module Rush
     end
 
     def alias_for(token, word)
-      return nil if @awaiting || token.first != :WORD || !@state.command_mode?
+      return if @awaiting || token.first != :WORD || !@state.command_mode?
 
       @aliases.expand(word, @state.expects_command?)
     end
@@ -135,7 +135,7 @@ module Rush
     def heredoc_line(holder)
       line = @scanner.scan(/[^\n]*\n?/)
       raise IncompleteInput, 'unterminated here-document' if line.to_s.empty? && @interactive
-      return nil if line.to_s.empty? || delimiter?(holder, line)
+      return if line.to_s.empty? || delimiter?(holder, line)
 
       strip_tabs(holder, line)
     end

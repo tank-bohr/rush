@@ -74,6 +74,8 @@ Style/YodaExpression:
   Enabled: true
 Style/ImplicitRuntimeError:
   Enabled: true # raise must name an error class, not a bare RuntimeError
+Style/ReturnNil:
+  Enabled: true # bare `return` everywhere; `return nil` is redundant
 Lint/ShadowingOuterLocalVariable:
   Enabled: true
 Naming/InclusiveLanguage:
