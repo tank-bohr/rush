@@ -65,6 +65,14 @@ RSpec.describe Rush::CommandRunner do
     expect(run(simple(words: [word('echo'), word('hi')], redirects: [redirect])).exitstatus).to eq(1)
   end
 
+  it 'commits redirect-only exec and leaves its opened file open so it persists' do
+    allow(system).to receive(:close_redirect)
+    redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f'), io_number: nil)
+    run(simple(words: [word('exec')], redirects: [redirect]))
+    expect(executor.io.get(1)).to be(system.files['/f'])
+    expect(system).not_to have_received(:close_redirect)
+  end
+
   it 'dispatches to a defined function before falling through to an external' do
     state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success

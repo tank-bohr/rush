@@ -46,6 +46,8 @@ filed as a beads issue.
     — **fixed (7ad).**
 11. **Redirect-open failure** crashed rush with an uncaught `Errno` — **fixed (7aj):** see the
     redirect lesson below.
+12. **`exec` redirect-only permanence** (`exec >file` / `3>file` closed out from under the shell)
+    — **fixed (7ak):** see the exec lesson below.
 
 **Open (filed in beads, found by the 7aj fuzz):**
 - **function-call redirects not applied to the body** (`f >file`): `CommandRunner#run_function`
@@ -122,11 +124,22 @@ failures are status 2 in dash. Regular command / function / regular builtin / no
 status 2, shell continues (`Executor#run` maps `RedirectError`→2). **Special builtin** →
 `CommandRunner#run_command` re-raises as `BuiltinError` → fatal abort 2 + EXIT trap.
 
-### `exec` redirect-only permanence — the remaining path-2 piece (beads `rush-6wx.1`)
-`exec >file` / `exec 3>file` must persist for the rest of the shell. Already wired via
-`executor.replace_io(@io)`; the dup form (`exec 2>&1`) already works because no new stream is
-opened. The bug: `with_redirects`' `ensure` closes the file opened over base, undoing it. Fix:
-skip the close when the executor committed the io (`io.equal?(@io)` after `replace_io`).
+### `exec` redirect-only permanence — the last path-2 piece (7ak, beads `rush-6wx.1`)
+`exec >file` / `exec 3>file` must persist for the rest of the shell. The committal was already
+wired via `executor.replace_io(@io)`; the dup form (`exec 2>&1`) already worked because it opens
+no new stream (`ios - base.ios` is empty, so `close_opened_over` closes nothing). The bug was
+that `with_redirects`' `ensure` then **closed the file opened over base, undoing the committal** —
+the next command wrote to a closed stream. Fix: skip the close when the executor committed the io,
+i.e. `io&.close_opened_over(base, system) unless io.equal?(@io)`. After `replace_io(io)` the
+executor's `@io` *is* the yielded table, so identity tells "exec kept this" from "scope it".
+Why the obvious alternatives don't regress: a per-command redirect yields a *derived* table
+(`base.with(...)`) that is never installed as `@io`, so it still closes; `run_redirected`/pipeline
+stages set `@io` only inside a nested `with_io` whose `ensure` restores `@io` *before* this one
+runs, so identity is false there too; a no-redirect call yields `base` itself (`== @io`) and skips,
+but `close_opened_over` would have been a no-op anyway. A forked subshell's `exec >f` mutates only
+the child's `@io` and dies, so it can't leak (verified differentially: `( exec >sub; … ); echo
+outside`). Restoring the real stdout for read-back in the corpus uses a spare fd (`exec 4>&1; exec
+>f; …; exec 1>&4 4>&-; cat f`) rather than `exec 1>&-`, which would just feed `cat` a closed fd1.
 
 ---
 

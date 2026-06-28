@@ -32,11 +32,14 @@ module Rush
     # flush+close the files those redirects opened (POSIX: a later command in the
     # same shell sees the data). Only the streams this command opened are closed —
     # the diff against the base leaves inherited streams and pipe ends untouched.
+    # Exception: redirect-only `exec` commits the table as the shell's base
+    # (replace_io), so it now equals @io — leave those files open so they persist
+    # for the rest of the shell rather than closing them out from under it.
     def with_redirects(redirects, base = @io)
       io = redirects.reduce(base) { |acc, redirect| redirect_into(redirect, acc) }
       yield io
     ensure
-      io&.close_opened_over(base, system)
+      io&.close_opened_over(base, system) unless io.equal?(@io)
     end
 
     # Run a compound command with its redirects bound for the whole body.

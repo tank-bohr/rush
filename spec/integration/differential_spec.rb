@@ -682,4 +682,26 @@ RSpec.describe 'rush vs dash (differential)' do
       end
     end
   end
+
+  # Redirect-only `exec` makes the redirection permanent for the rest of the
+  # shell, unlike a per-command redirect: the opened target must stay open so
+  # later commands keep writing to / reading from it. The dup form (2>&1) opens
+  # nothing, so it already persisted; a forked subshell's exec must not leak out.
+  def exec_persist_snippets
+    ['exec 4>&1; exec > f; echo one; echo two; exec 1>&4 4>&-; cat f',
+     'exec 3> f; echo hi >&3; exec 3>&-; cat f',
+     'echo seed > f; exec 4>&1; exec >> f; echo more; exec 1>&4 4>&-; cat f',
+     'printf "a\nb\n" > in; exec < in; read x; read y; echo "$x-$y"',
+     'exec 2>&1; echo viastderr >&2', '( exec > sub; echo inside ); echo outside',
+     'exec 4>&1; exec > f; echo first; exec > g; echo second; exec 1>&4 4>&-; cat f; cat g']
+  end
+
+  it 'makes redirect-only exec persist for the rest of the shell, like dash' do
+    Dir.mktmpdir do |dir|
+      exec_persist_snippets.each do |snippet|
+        source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
+      end
+    end
+  end
 end
