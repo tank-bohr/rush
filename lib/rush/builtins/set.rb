@@ -14,7 +14,7 @@ module Rush
 
       def call
         rest = strip_options(operands)
-        executor.state.replace_positional(rest) if rest
+        executor.state.positional.replace(rest) if rest
         success
       end
 
@@ -59,7 +59,7 @@ module Rush
       end
 
       def toggle(option, sign)
-        option && executor.state.set_option(option, sign == '-')
+        option && executor.state.options.set(option, sign == '-')
       end
     end
   end

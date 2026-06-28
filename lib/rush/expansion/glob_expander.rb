@@ -13,7 +13,7 @@ module Rush
       end
 
       def expand(field)
-        return [unescape(field)] if @executor.state.option?(:noglob)
+        return [unescape(field)] if @executor.state.options.on?(:noglob)
 
         matches = @executor.system.glob(field)
         matches.empty? ? [unescape(field)] : matches

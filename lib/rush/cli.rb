@@ -39,7 +39,7 @@ module Rush
     # Under `set -v` (verbose) each input line is written to stderr as it is read,
     # before it runs, so a `set -v`/`set +v` toggles which later lines echo (POSIX).
     def echo_verbose(line)
-      @system.stderr.print(line) if line && executor.state.option?(:verbose)
+      @system.stderr.print(line) if line && executor.state.options.on?(:verbose)
       line
     end
 

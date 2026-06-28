@@ -24,7 +24,7 @@ module Rush
     private
 
     def trace(argv)
-      @executor.io.get(2).puts("+ #{argv.join(' ')}") if @executor.state.option?(:xtrace)
+      @executor.io.get(2).puts("+ #{argv.join(' ')}") if @executor.state.options.on?(:xtrace)
     end
 
     # No command word: perform redirections then assignments (POSIX order), and

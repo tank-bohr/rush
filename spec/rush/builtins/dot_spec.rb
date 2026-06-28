@@ -53,7 +53,7 @@ RSpec.describe Rush::Builtins::Dot do
   end
 
   it 'propagates break to the caller (a loop outside the dot script)' do
-    state.enter_loop
+    state.loops.enter
     system.provide_file('/b.sh', "break\n")
     expect { run('/b.sh') }.to raise_error(Rush::LoopControl)
   end

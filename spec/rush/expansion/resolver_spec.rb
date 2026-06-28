@@ -9,7 +9,7 @@ RSpec.describe Rush::Expansion::Resolver do
 
   before do
     state.record_status(Rush::Status.new(3))
-    state.replace_positional(%w[a b c])
+    state.positional.replace(%w[a b c])
   end
 
   it 'resolves ordinary variables' do

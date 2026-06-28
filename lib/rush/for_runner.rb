@@ -15,12 +15,12 @@ module Rush
     end
 
     # Bracket the loop so break/continue see the right nesting depth (see
-    # ShellState#enter_loop); leave_loop runs even when break unwinds.
+    # LoopNesting#enter via state.loops); leave runs even when break unwinds.
     def call
-      @executor.state.enter_loop
+      @executor.state.loops.enter
       run_loop
     ensure
-      @executor.state.leave_loop
+      @executor.state.loops.leave
     end
 
     private

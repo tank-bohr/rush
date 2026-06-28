@@ -36,7 +36,7 @@ RSpec.describe Rush::SubshellRunner do
     end
 
     it 'ends the subshell when a break targets a loop in the enclosing parent' do
-      state.enter_loop # the subshell is lexically inside a parent loop
+      state.loops.enter # the subshell is lexically inside a parent loop
       result = described_class.new(executor, body("break\necho unreached")).run_body
       expect([result.exitstatus, system.stdout.string]).to eq([0, ''])
     end

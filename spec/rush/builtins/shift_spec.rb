@@ -8,7 +8,7 @@ RSpec.describe Rush::Builtins::Shift do
 
   def run(*args) = described_class.new(executor, ['shift', *args], io).call
 
-  before { state.replace_positional(%w[a b c]) }
+  before { state.positional.replace(%w[a b c]) }
 
   it 'discards the first parameter by default' do
     expect(run).to be_success
@@ -36,7 +36,7 @@ RSpec.describe Rush::Builtins::Shift do
   end
 
   it 'aborts when there are no positionals to shift' do
-    state.replace_positional([])
+    state.positional.replace([])
     expect { run }.to raise_error(Rush::BuiltinError, /can't shift that many/)
   end
 

@@ -50,7 +50,7 @@ RSpec.describe Rush::Builtins::Eval do
   end
 
   it 'propagates break from the evaluated input to an enclosing loop' do
-    state.enter_loop
+    state.loops.enter
     expect { run('break') }.to raise_error(Rush::LoopControl)
   end
 

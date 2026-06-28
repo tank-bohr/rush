@@ -129,7 +129,7 @@ module Rush
       @tested = previous
     end
 
-    def abort_on?(status) = @state.option?(:errexit) && !@tested && !status.success?
+    def abort_on?(status) = @state.options.on?(:errexit) && !@tested && !status.success?
 
     def redirect_into(redirect, io)
       redirections.fetch(redirect.kind).apply(redirect, expander.expand_value(redirect.target), io, system)

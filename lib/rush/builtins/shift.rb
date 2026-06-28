@@ -11,7 +11,7 @@ module Rush
       def call
         raise BuiltinError, "shift: can't shift that many" if count > state.positional.size
 
-        state.replace_positional(state.positional.drop(count))
+        state.positional.shift(count)
         success
       end
 

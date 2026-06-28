@@ -84,14 +84,14 @@ detectors:
     #    (command position is one of several ANDed conditions deciding whether a
     #    word may alias-expand, not a switch making the predicate do two things);
     #  - an irreducible domain distinction whose branch must live somewhere, so
-    #    splitting only relocates the flag: ShellState#set_option (option on/off),
+    #    splitting only relocates the flag: Options#set (option on/off),
     #    Printf#report (valid outcome), Repl#prompt_line (PS1 vs PS2).
     exclude:
       - Rush::Expansion::Arithmetic::Number#bool
       - Rush::Expansion::Arithmetic::Parser#accept?
       - Rush::SystemCalls#trap_signal
       - Rush::Lexer::AliasExpander#eligible?
-      - Rush::ShellState#set_option
+      - Rush::Options#set
       - Rush::Builtins::Printf#report
       - Rush::Repl#prompt_line
   BooleanParameter:

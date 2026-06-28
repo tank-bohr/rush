@@ -22,7 +22,7 @@ module Rush
       private
 
       def values(executor)
-        words ? executor.expander.expand(words) : executor.state.positional
+        words ? executor.expander.expand(words) : executor.state.positional.to_a
       end
     end
   end

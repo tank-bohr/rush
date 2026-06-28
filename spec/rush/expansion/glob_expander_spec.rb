@@ -3,7 +3,7 @@
 RSpec.describe Rush::Expansion::GlobExpander do
   def glob(field, globs: {}, noglob: false)
     state = Rush::ShellState.new
-    state.set_option(:noglob, true) if noglob
+    state.options.set(:noglob, true) if noglob
     executor = Rush::Executor.new(system: FakeSystemCalls.new(globs: globs), state: state)
     described_class.new(executor).expand(field)
   end

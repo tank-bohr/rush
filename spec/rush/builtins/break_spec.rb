@@ -9,14 +9,14 @@ RSpec.describe Rush::Builtins::Break do
   def run(*args) = described_class.new(executor, ['break', *args], io).call
 
   context 'when inside a loop' do
-    before { state.enter_loop }
+    before { state.loops.enter }
 
     it 'raises a BreakSignal with the default level of 1' do
       expect { run }.to raise_error(Rush::BreakSignal) { |signal| expect(signal.count).to eq(1) }
     end
 
     it 'raises a BreakSignal with the requested level' do
-      state.enter_loop
+      state.loops.enter
       expect { run('2') }.to raise_error(Rush::BreakSignal) { |signal| expect(signal.count).to eq(2) }
     end
 

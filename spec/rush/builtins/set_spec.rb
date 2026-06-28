@@ -19,34 +19,34 @@ RSpec.describe Rush::Builtins::Set do
   end
 
   it 'clears the parameters with a bare --' do
-    state.replace_positional(%w[old])
+    state.positional.replace(%w[old])
     run('--')
     expect(state.positional).to be_empty
   end
 
   it 'leaves the parameters unchanged when given no operands' do
-    state.replace_positional(%w[keep])
+    state.positional.replace(%w[keep])
     expect(run).to be_success
     expect(state.positional).to eq(%w[keep])
   end
 
   it 'toggles a shell option with - and +' do
     run('-u')
-    expect(state.option?(:nounset)).to be(true)
+    expect(state.options.on?(:nounset)).to be(true)
     run('+u')
-    expect(state.option?(:nounset)).to be(false)
+    expect(state.options.on?(:nounset)).to be(false)
   end
 
   it 'enables and disables errexit with -e and +e' do
     run('-e')
-    expect(state.option?(:errexit)).to be(true)
+    expect(state.options.on?(:errexit)).to be(true)
     run('+e')
-    expect(state.option?(:errexit)).to be(false)
+    expect(state.options.on?(:errexit)).to be(false)
   end
 
   it 'combines option flags with positional parameters after --' do
     run('-ux', '--', 'a', 'b')
-    expect([state.option?(:nounset), state.option?(:xtrace), state.positional]).to eq([true, true, %w[a b]])
+    expect([state.options.on?(:nounset), state.options.on?(:xtrace), state.positional]).to eq([true, true, %w[a b]])
   end
 
   it 'treats a multi-character non-option as a positional and ignores unknown flags' do
@@ -57,22 +57,22 @@ RSpec.describe Rush::Builtins::Set do
 
   it 'toggles verbose with -v/+v and the -o verbose long form' do
     run('-v')
-    expect(state.option?(:verbose)).to be(true)
+    expect(state.options.on?(:verbose)).to be(true)
     run('+v')
-    expect(state.option?(:verbose)).to be(false)
+    expect(state.options.on?(:verbose)).to be(false)
     run('-o', 'verbose')
-    expect(state.option?(:verbose)).to be(true)
+    expect(state.options.on?(:verbose)).to be(true)
   end
 
   it 'toggles an option by long name with -o and +o' do
     run('-o', 'errexit')
-    expect(state.option?(:errexit)).to be(true)
+    expect(state.options.on?(:errexit)).to be(true)
     run('+o', 'errexit')
-    expect(state.option?(:errexit)).to be(false)
+    expect(state.options.on?(:errexit)).to be(false)
   end
 
   it 'ignores an unknown long option name and keeps parsing operands' do
     run('-o', 'bogus', 'x', 'y')
-    expect([state.option?(:errexit), state.positional]).to eq([false, %w[x y]])
+    expect([state.options.on?(:errexit), state.positional]).to eq([false, %w[x y]])
   end
 end

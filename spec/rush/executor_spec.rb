@@ -40,7 +40,7 @@ RSpec.describe Rush::Executor do
   describe '#exit_on_error' do
     let(:fail_status) { Rush::Status.failure }
 
-    def errexit(target) = target.tap { |s| s.set_option(:errexit, true) }
+    def errexit(target) = target.tap { |s| s.options.set(:errexit, true) }
 
     it 'returns the status unchanged when errexit is off' do
       expect(build(state).exit_on_error(fail_status)).to be(fail_status)

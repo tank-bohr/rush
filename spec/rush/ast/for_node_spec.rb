@@ -13,7 +13,7 @@ RSpec.describe Rush::AST::For do
 
   it 'iterates over the positional parameters when there is no in clause' do
     state = Rush::ShellState.new
-    state.replace_positional(%w[p q])
+    state.positional.replace(%w[p q])
     allow(executor).to receive(:state).and_return(state)
     allow(Rush::ForRunner).to receive(:new).with(executor, 'x', %w[p q], :body).and_return(runner)
     expect(described_class.new('x', nil, :body).execute(executor)).to be_success

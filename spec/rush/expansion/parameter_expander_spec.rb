@@ -58,7 +58,7 @@ RSpec.describe Rush::Expansion::ParameterExpander do
   end
 
   describe 'nounset (set -u)' do
-    before { state.set_option(:nounset, true) }
+    before { state.options.set(:nounset, true) }
 
     it 'raises for an unset name or positional' do
       expect { expand('missing') }.to raise_error(Rush::ExpansionError, /not set/)

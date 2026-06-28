@@ -9,15 +9,15 @@ RSpec.describe Rush::Builtins::Continue do
   def run(*args) = described_class.new(executor, ['continue', *args], io).call
 
   context 'when inside a loop' do
-    before { state.enter_loop }
+    before { state.loops.enter }
 
     it 'raises a ContinueSignal with the default level of 1' do
       expect { run }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(1) }
     end
 
     it 'raises a ContinueSignal with the requested level' do
-      state.enter_loop
-      state.enter_loop
+      state.loops.enter
+      state.loops.enter
       expect { run('3') }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(3) }
     end
 

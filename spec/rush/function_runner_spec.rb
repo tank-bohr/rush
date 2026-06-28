@@ -4,7 +4,7 @@ RSpec.describe Rush::FunctionRunner do
   let(:state) { Rush::ShellState.new }
   let(:executor) { instance_double(Rush::Executor, state: state) }
 
-  before { state.replace_positional(%w[orig]) }
+  before { state.positional.replace(%w[orig]) }
 
   it 'binds the args as positionals, runs the body, and restores them' do
     allow(executor).to receive(:run).with(:body) do

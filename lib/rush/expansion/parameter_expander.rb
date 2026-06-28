@@ -55,7 +55,7 @@ module Rush
 
       def strip = PatternRemoval.new(@executor.system, @ref.op, value.to_s, arg).call
 
-      def unbound? = @executor.state.option?(:nounset) && @ref.name.match?(/\A([a-zA-Z_]\w*|[1-9]\d*)\z/)
+      def unbound? = @executor.state.options.on?(:nounset) && @ref.name.match?(/\A([a-zA-Z_]\w*|[1-9]\d*)\z/)
 
       def colon? = @ref.op.start_with?(':')
 

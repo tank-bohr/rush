@@ -87,7 +87,7 @@ RSpec.describe Rush::CommandRunner do
   end
 
   it 'traces the command to stderr under xtrace' do
-    state.set_option(:xtrace, true)
+    state.options.set(:xtrace, true)
     run(simple(words: [word('true')]))
     expect(system.stderr.string).to eq("+ true\n")
   end

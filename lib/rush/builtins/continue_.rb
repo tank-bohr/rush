@@ -11,7 +11,7 @@ module Rush
       def call
         level = validated
         executor.state.record_status(success)
-        raise ContinueSignal, clamped(level) if executor.state.in_loop?
+        raise ContinueSignal, clamped(level) if executor.state.loops.any?
 
         success
       end
@@ -20,7 +20,7 @@ module Rush
 
       def validated = operands.first ? numeric_operand(operands.first, min: 1) : 1
 
-      def clamped(level) = [level, executor.state.loop_depth].min
+      def clamped(level) = [level, executor.state.loops.depth].min
     end
   end
 end
