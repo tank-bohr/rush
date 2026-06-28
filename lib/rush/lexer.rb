@@ -159,6 +159,6 @@ module Rush
       HeredocBody.new(text).scan
     end
 
-    def literal_word(text) = AST::Word.new([AST::WordSegment.new(kind: :literal, value: text, quoted: false)])
+    def literal_word(text) = AST::Word.new([AST::LiteralSegment.new(text, false)])
   end
 end

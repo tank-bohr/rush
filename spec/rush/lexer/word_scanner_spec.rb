@@ -58,7 +58,7 @@ RSpec.describe Rush::Lexer::WordScanner do
 
   it 'produces a :param segment for $name' do
     segment = scan('$foo').first.segments.first
-    expect([segment.kind, segment.value.name]).to eq([:param, 'foo'])
+    expect([segment_kind(segment), segment.value.name]).to eq([:param, 'foo'])
   end
 
   it 'recognizes special and single-digit positional parameters' do
@@ -73,7 +73,7 @@ RSpec.describe Rush::Lexer::WordScanner do
 
   it 'keeps a parameter inside double quotes, marked quoted' do
     segment = scan('"$x"').first.segments.first
-    expect([segment.kind, segment.quoted]).to eq([:param, true])
+    expect([segment_kind(segment), segment.quoted]).to eq([:param, true])
   end
 
   it 'treats a lone $ as a literal, quoted or not' do
@@ -91,31 +91,31 @@ RSpec.describe Rush::Lexer::WordScanner do
 
   it 'produces a :command segment for $(...)' do
     segment = scan('$(echo hi)').first.segments.first
-    expect([segment.kind, segment.value]).to eq([:command, 'echo hi'])
+    expect([segment_kind(segment), segment.value]).to eq([:command, 'echo hi'])
   end
 
   it 'produces an :arith segment for $((...)), keeping balanced inner parens' do
     segment = scan('$(( (1+2) * 3 ))').first.segments.first
-    expect([segment.kind, segment.value]).to eq([:arith, ' (1+2) * 3 '])
+    expect([segment_kind(segment), segment.value]).to eq([:arith, ' (1+2) * 3 '])
   end
 
   it 'treats $( ( as command substitution, not arithmetic' do
     segment = scan('$( (echo hi) )').first.segments.first
-    expect([segment.kind, segment.value]).to eq([:command, ' (echo hi) '])
+    expect([segment_kind(segment), segment.value]).to eq([:command, ' (echo hi) '])
   end
 
   it 'produces a :command segment for a backtick substitution' do
     segment = scan('`date`').first.segments.first
-    expect([segment.kind, segment.value]).to eq([:command, 'date'])
+    expect([segment_kind(segment), segment.value]).to eq([:command, 'date'])
   end
 
   it 'keeps a command substitution inside double quotes, marked quoted' do
     segment = scan('"$(echo hi)"').first.segments.first
-    expect([segment.kind, segment.quoted]).to eq([:command, true])
+    expect([segment_kind(segment), segment.quoted]).to eq([:command, true])
   end
 
   it 'keeps a backtick substitution inside double quotes, marked quoted' do
     segment = scan('"`date`"').first.segments.first
-    expect([segment.kind, segment.value, segment.quoted]).to eq([:command, 'date', true])
+    expect([segment_kind(segment), segment.value, segment.quoted]).to eq([:command, 'date', true])
   end
 end

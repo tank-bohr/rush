@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Expansion::Pipeline do
-  let(:segment) { Rush::AST::WordSegment }
+  def lit(value, quoted: false) = Rush::AST::LiteralSegment.new(value, quoted)
+  def par(ref, quoted: false) = Rush::AST::ParamSegment.new(ref, quoted)
+  def cmd(source, quoted: false) = Rush::AST::CommandSegment.new(source, quoted)
 
   describe 'literal expansion' do
     subject(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new)) }
@@ -12,8 +14,7 @@ RSpec.describe Rush::Expansion::Pipeline do
     end
 
     it "concatenates a word's segments into a single field" do
-      word = Rush::AST::Word.new([segment.new(kind: :literal, value: 'a ', quoted: true),
-                                  segment.new(kind: :literal, value: 'b', quoted: false)])
+      word = Rush::AST::Word.new([lit('a ', quoted: true), lit('b')])
       expect(pipeline.expand([word])).to eq(['a b'])
     end
 
@@ -25,8 +26,7 @@ RSpec.describe Rush::Expansion::Pipeline do
   it 'parameter-expands a :param segment' do
     state = Rush::ShellState.new(environment: Rush::Environment.new('X' => 'v'))
     executor = Rush::Executor.new(system: FakeSystemCalls.new, state: state)
-    ref = Rush::AST::ParamRef.simple('X')
-    word = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: false)])
+    word = Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('X'))])
     expect(described_class.new(executor).expand([word])).to eq(['v'])
   end
 
@@ -34,7 +34,7 @@ RSpec.describe Rush::Expansion::Pipeline do
     executor = Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new)
     sub = instance_double(Rush::Expansion::CommandSubstitution, expand: 'OUT')
     allow(Rush::Expansion::CommandSubstitution).to receive(:new).and_return(sub)
-    word = Rush::AST::Word.new([segment.new(kind: :command, value: 'echo x', quoted: false)])
+    word = Rush::AST::Word.new([cmd('echo x')])
     expect(described_class.new(executor).expand([word])).to eq(['OUT'])
   end
 
@@ -42,8 +42,8 @@ RSpec.describe Rush::Expansion::Pipeline do
     state = Rush::ShellState.new(environment: Rush::Environment.new('X' => 'a b'))
     pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state))
     ref = Rush::AST::ParamRef.simple('X')
-    unquoted = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: false)])
-    quoted = Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: true)])
+    unquoted = Rush::AST::Word.new([par(ref)])
+    quoted = Rush::AST::Word.new([par(ref, quoted: true)])
     expect([pipeline.expand([unquoted]), pipeline.expand([quoted])]).to eq([%w[a b], ['a b']])
   end
 
@@ -52,10 +52,7 @@ RSpec.describe Rush::Expansion::Pipeline do
 
     let(:state) { Rush::ShellState.new }
 
-    def at(quoted)
-      ref = Rush::AST::ParamRef.simple('@')
-      [Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: quoted)])]
-    end
+    def at(quoted) = [Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('@'), quoted: quoted)])]
 
     it 'yields one field per positional parameter when quoted, preserving spaces' do
       state.positional = ['a b', 'c']
@@ -77,7 +74,7 @@ RSpec.describe Rush::Expansion::Pipeline do
     let(:system) { FakeSystemCalls.new(globs: { '*' => %w[x y] }) }
     let(:pipeline) { described_class.new(Rush::Executor.new(system: system, state: state)) }
 
-    def star(quoted) = [Rush::AST::Word.new([segment.new(kind: :literal, value: '*', quoted: quoted)])]
+    def star(quoted) = [Rush::AST::Word.new([lit('*', quoted: quoted)])]
 
     it 'globs an unquoted pattern but leaves a quoted one literal' do
       expect([pipeline.expand(star(false)), pipeline.expand(star(true))]).to eq([%w[x y], ['*']])
@@ -88,10 +85,7 @@ RSpec.describe Rush::Expansion::Pipeline do
     let(:state) { Rush::ShellState.new(environment: Rush::Environment.new('IFS' => ':')) }
     let(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state)) }
 
-    def star(quoted)
-      ref = Rush::AST::ParamRef.simple('*')
-      [Rush::AST::Word.new([segment.new(kind: :param, value: ref, quoted: quoted)])]
-    end
+    def star(quoted) = [Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('*'), quoted: quoted)])]
 
     it 'keeps each positional parameter a separate field when unquoted' do
       state.positional = ['a b', 'c']

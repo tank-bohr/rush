@@ -39,7 +39,6 @@ require_relative 'rush/redirection/here_doc_redirect'
 require_relative 'rush/redirection/dup_redirect'
 require_relative 'rush/redirection/registry'
 
-require_relative 'rush/expansion/literal'
 require_relative 'rush/expansion/resolver'
 require_relative 'rush/expansion/parameter_forms'
 require_relative 'rush/expansion/pattern_removal'

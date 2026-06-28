@@ -2,18 +2,13 @@
 
 module Rush
   module Expansion
-    # Orchestrates the ordered POSIX word expansion. Each segment expands to one
-    # or more parts ([text, splittable, break_before]); unquoted results undergo
-    # IFS field splitting and then pathname expansion. The one multi-field case is
-    # "$@"/$@, which yields one part per positional parameter with a forced field
-    # break between them ($* always joins to a scalar). Quoted metacharacters are
-    # backslash-escaped so they survive field splitting and glob literally.
+    # Orchestrates the ordered POSIX word expansion. Each segment expands itself
+    # to one or more parts ([text, splittable, break_before]); unquoted results
+    # undergo IFS field splitting and then pathname expansion. The one multi-field
+    # case is "$@"/$@, which yields one part per positional parameter with a
+    # forced field break between them ($* always joins to a scalar). Quoted
+    # metacharacters are backslash-escaped so they survive splitting and glob.
     class Pipeline
-      # Each word-segment kind expands through its own (executor, value) -> #expand
-      # strategy; :literal uses the identity expander so the dispatch is uniform.
-      EXPANDERS = { literal: Literal, param: ParameterExpander,
-                    arith: ArithmeticExpander, command: CommandSubstitution }.freeze
-
       # Tilde expansion strategy per mode (its value is a word's segment list).
       TILDE_EXPANDERS = { none: NoTilde, leading: TildeExpander, assignment: AssignmentTilde }.freeze
 
@@ -29,51 +24,37 @@ module Rush
       # Tilde expands at the leading position by default; assignment context also
       # expands after colons, and arithmetic opts out (~ is bitwise not there).
       def expand_value(word, tilde: :leading)
-        tilde_expand(word.segments, tilde).map { |segment| scalar_segment(segment) }.join
+        tilde_expand(word.segments, tilde).map { |segment| segment.expand(@executor) }.join
       end
 
       private
 
       def parts(word) = tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
 
-      def tilde_expand(segments, mode) = dispatch_expander(TILDE_EXPANDERS, mode, segments)
-
-      # Look up a strategy class by key and run it: every expander is built with
-      # the executor plus the value it transforms, and answers #expand.
-      def dispatch_expander(table, key, value) = table.fetch(key).new(@executor, value).expand
+      def tilde_expand(segments, mode) = TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
 
       def glob(fields) = fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
 
       def field_parts(segment)
-        return splat_parts(segment) if splat?(segment)
+        return splat_parts(segment) if segment.splat?
 
-        text = scalar_segment(segment)
-        # Quoted text escapes its glob metacharacters so they match literally;
-        # unquoted text keeps them active.
-        [[segment.quoted ? escape(text) : text, splittable?(segment), false]]
+        [[escape_if_quoted(segment, segment.expand(@executor)), segment.splittable?, false]]
       end
+
+      # Glob metacharacters in quoted text are escaped so they match literally;
+      # unquoted text keeps them active.
+      def escape_if_quoted(segment, text) = segment.quoted ? escape(text) : text
 
       def escape(text) = text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
-
-      def splat?(segment)
-        value = segment.value
-        return false unless segment.kind == :param && !value.op
-
-        value.name == '@' || (value.name == '*' && !segment.quoted)
-      end
 
       def splat_parts(segment)
         split = !segment.quoted
         @executor.state.positional.map.with_index do |element, index|
-          [segment.quoted ? escape(element) : element, split, index.positive?]
+          [escape_if_quoted(segment, element), split, index.positive?]
         end
       end
 
-      def splittable?(segment) = segment.kind != :literal && !segment.quoted
-
       def ifs = @executor.state.environment.get('IFS')
-
-      def scalar_segment(segment) = dispatch_expander(EXPANDERS, segment.kind, segment.value)
     end
   end
 end

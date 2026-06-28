@@ -13,7 +13,7 @@ module Rush
         @segments = segments
       end
 
-      def self.literal(text) = new([WordSegment.new(kind: :literal, value: text, quoted: false)])
+      def self.literal(text) = new([LiteralSegment.new(text, false)])
 
       def literal_text = segments.map(&:value).join
 

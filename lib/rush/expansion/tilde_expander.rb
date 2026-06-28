@@ -15,14 +15,13 @@ module Rush
 
       def expand
         head = @segments.first
-        return @segments unless expandable?(head)
+        text = head&.literal_value
+        return @segments unless text
 
-        [head.with(value: rewrite(head.value))] + @segments[1..]
+        [head.with_value(rewrite(text))] + @segments[1..]
       end
 
       private
-
-      def expandable?(head) = head&.kind == :literal && !head.quoted
 
       def rewrite(text) = prefix(text)
 

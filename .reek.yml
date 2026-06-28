@@ -50,15 +50,9 @@ detectors:
     #    (String), Set#advance / Test#without_close / TestExpr#four? /
     #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
     #    (String);
-    #  - it dispatches on a value's kind enum: CommandLookup#describe (a lookup
-    #    result kind). Pipeline#scalar_segment now does this as a kind->expander
-    #    dispatch table (no conditional), but still reads the segment twice — kind
-    #    to pick the expander, value to feed it — vs @executor once, so it envies
-    #    the segment. It cannot move onto AST::WordSegment: that is a pure-data node
-    #    in the AST layer, which has ZERO dependencies on Expansion (the dependency
-    #    runs one way, Expansion -> AST); carrying an expander there would invert
-    #    that into a cycle and make a value object instantiate expanders / run
-    #    command subs.
+    #  - it dispatches on a value's kind enum where the value cannot host the
+    #    method: CommandLookup#describe (a lookup-result kind). (Word segments,
+    #    which used to need this, now expand themselves polymorphically.)
     exclude:
       - Rush::Builtins::Set#advance
       - Rush::Builtins::Set#apply
@@ -66,7 +60,6 @@ detectors:
       - Rush::Builtins::TestExpr#four?
       - Rush::Builtins::TestExpr#to_int
       - Rush::CommandLookup#describe
-      - Rush::Expansion::Pipeline#scalar_segment
       - Rush::Expansion::ReadSplitter#pad
       - Rush::Expansion::ReadSplitter#trim_last
   DataClump:
@@ -142,9 +135,8 @@ detectors:
     # "caching" them would be a bug, not a fix. max_calls: 2 flags only 3+
     # repeats — the point at which a local genuinely clarifies — and those were
     # fixed by extracting locals (FunctionRunner/ForRunner state, ParameterExpander
-    # @ref.op, Tokenizer matched, Set#advance, Kill#parse, Cd#update_pwd, splat?)
-    # or, for scalar_segment, by a kind->expander dispatch table. Three residual
-    # 3+ repeats are kept and excluded:
+    # @ref.op, Tokenizer matched, Set#advance, Kill#parse, Cd#update_pwd, splat?).
+    # Three residual 3+ repeats are kept and excluded:
     #  - Tokenizer#next_token reads @scanner.matched after each scan attempt; like
     #    getch it returns a different value each time, so it cannot be hoisted;
     #  - ParameterExpander#expand (@ref.op) and FunctionRunner#call/#with_args

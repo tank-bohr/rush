@@ -5,7 +5,10 @@ RSpec.describe Rush::Expansion::TildeExpander do
   let(:system) { FakeSystemCalls.new(homes: { 'bob' => '/home/bob' }) }
   let(:executor) { Rush::Executor.new(system: system, state: Rush::ShellState.new(environment: env)) }
 
-  def seg(value, kind: :literal, quoted: false) = Rush::AST::WordSegment.new(kind: kind, value: value, quoted: quoted)
+  def seg(value, kind: :literal, quoted: false)
+    { literal: Rush::AST::LiteralSegment, param: Rush::AST::ParamSegment }.fetch(kind).new(value, quoted)
+  end
+
   def head(value, **) = described_class.new(executor, [seg(value, **)]).expand.first.value
   def assigned(value) = Rush::Expansion::AssignmentTilde.new(executor, [seg(value)]).expand.first.value
 
@@ -28,7 +31,7 @@ RSpec.describe Rush::Expansion::TildeExpander do
   end
 
   it 'does not touch a word whose first segment is not an unquoted literal' do
-    expect(described_class.new(executor, [seg('x', kind: :param)]).expand.first.kind).to eq(:param)
+    expect(described_class.new(executor, [seg('x', kind: :param)]).expand.first).to be_a(Rush::AST::ParamSegment)
     expect(described_class.new(executor, []).expand).to eq([])
   end
 

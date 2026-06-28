@@ -144,7 +144,7 @@ RSpec.describe Rush::Lexer do
 
     it 'parses an unquoted body for later expansion' do
       holder = tokens("cat <<EOF\nhi $name\nEOF\n")[2].last
-      expect(holder.body.segments.map(&:kind)).to eq(%i[literal param literal])
+      expect(holder.body.segments.map { |s| segment_kind(s) }).to eq(%i[literal param literal])
     end
   end
 

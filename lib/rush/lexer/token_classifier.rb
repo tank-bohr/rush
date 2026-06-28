@@ -78,7 +78,7 @@ module Rush
 
       def assignment_value(name)
         head = @word.segments.first
-        remainder = AST::WordSegment.new(kind: :literal, value: head.value[(name.length + 1)..], quoted: false)
+        remainder = AST::LiteralSegment.new(head.value[(name.length + 1)..], false)
         AST::Word.new([remainder] + @word.segments.drop(1))
       end
     end

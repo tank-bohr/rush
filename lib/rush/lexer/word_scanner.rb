@@ -94,7 +94,7 @@ module Rush
         return dollar_paren(quoted) if @scanner.peek(1) == '('
 
         ref = read_param_ref
-        return add(:param, ref, quoted) if ref
+        return add(AST::ParamSegment.new(ref, quoted)) if ref
 
         quoted ? push('$', quoted: true) : (@literal << '$')
       end
@@ -102,17 +102,18 @@ module Rush
       # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
       def dollar_paren(quoted)
         @scanner.getch # opening (
-        return add(:command, SubstitutionReader.new(@scanner).parens, quoted) unless @scanner.peek(1) == '('
+        reader = SubstitutionReader.new(@scanner)
+        return add(AST::CommandSegment.new(reader.parens, quoted)) unless @scanner.peek(1) == '('
 
         @scanner.getch # second (
-        add(:arith, SubstitutionReader.new(@scanner).arithmetic, quoted)
+        add(AST::ArithSegment.new(reader.arithmetic, quoted))
       end
 
       def backtick = read_backtick(quoted: false)
 
       def read_backtick(quoted:)
         @scanner.getch # `
-        add(:command, SubstitutionReader.new(@scanner).backticks, quoted)
+        add(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, quoted))
       end
 
       def read_param_ref
@@ -136,17 +137,17 @@ module Rush
         push(char, quoted: true) if char && char != "\n"
       end
 
-      def push(value, quoted:) = add(:literal, value, quoted)
+      def push(value, quoted:) = add(AST::LiteralSegment.new(value, quoted))
 
-      def add(kind, value, quoted)
+      def add(segment)
         flush
-        @segments << AST::WordSegment.new(kind: kind, value: value, quoted: quoted)
+        @segments << segment
       end
 
       def flush
         return if @literal.empty?
 
-        @segments << AST::WordSegment.new(kind: :literal, value: @literal, quoted: false)
+        @segments << AST::LiteralSegment.new(@literal, false)
         @literal = +''
       end
     end

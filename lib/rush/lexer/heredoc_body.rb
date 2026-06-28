@@ -44,17 +44,17 @@ module Rush
 
       def command_sub
         @scanner.getch
-        push(:command, SubstitutionReader.new(@scanner).parens)
+        push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).parens, false))
       end
 
       def backtick
         @scanner.getch
-        push(:command, SubstitutionReader.new(@scanner).backticks)
+        push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, false))
       end
 
       def param
         ref = read_ref
-        ref ? push(:param, ref) : (@literal << '$')
+        ref ? push(AST::ParamSegment.new(ref, false)) : (@literal << '$')
       end
 
       def read_ref
@@ -78,15 +78,15 @@ module Rush
         @literal << (ESCAPABLE.include?(char) ? char : "\\#{char}")
       end
 
-      def push(kind, value)
+      def push(segment)
         flush
-        @segments << AST::WordSegment.new(kind: kind, value: value, quoted: false)
+        @segments << segment
       end
 
       def flush
         return if @literal.empty?
 
-        @segments << AST::WordSegment.new(kind: :literal, value: @literal, quoted: false)
+        @segments << AST::LiteralSegment.new(@literal, false)
         @literal = +''
       end
     end
