@@ -15,4 +15,10 @@ RSpec.describe Rush::Redirection::FileRedirect do
     result = described_class.new('w', 1).apply(redirect(2), '/f', io, system)
     expect(result.get(2)).to be(system.files['/f'])
   end
+
+  it 'raises a redirect error when the target cannot be opened' do
+    allow(system).to receive(:open_file).and_raise(Errno::ENOENT)
+    expect { described_class.new('w', 1).apply(redirect(nil), '/no/such/f', io, system) }
+      .to raise_error(Rush::RedirectError)
+  end
 end

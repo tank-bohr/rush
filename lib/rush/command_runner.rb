@@ -40,9 +40,16 @@ module Rush
     end
 
     # POSIX command search: special builtin, then function (so a function may
-    # override a regular builtin), then regular builtin, then PATH.
+    # override a regular builtin), then regular builtin, then PATH. A redirect
+    # error leaves a regular command unrun with status 2 (RedirectError reaches
+    # Executor#run), but on a special builtin it aborts the shell (POSIX 2.8.1),
+    # so it is re-raised as a fatal BuiltinError.
     def run_command(argv)
       @executor.with_redirects(@command.redirects, @base_io) { |io| dispatch(argv, io) }
+    rescue RedirectError => e
+      raise BuiltinError, e.message if special?(argv.first)
+
+      raise
     end
 
     def dispatch(argv, io)

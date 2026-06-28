@@ -602,6 +602,27 @@ RSpec.describe 'rush vs dash (differential)' do
     end
   end
 
+  # A redirect whose target cannot be opened leaves a regular command unrun with
+  # status 2 and the shell carries on; on a special builtin it aborts the shell
+  # (firing the EXIT trap) — `nodir/` does not exist, `.` is a directory.
+  def redirect_failure_snippets
+    ['echo x >nodir/f; echo AFTER', 'echo x >nodir/f; echo $?', 'cat <nodir/f; echo $?',
+     'echo x >.; echo $?', 'echo x >>nodir/f; echo $?', '>nodir/f; echo $?',
+     'read x <nodir/f; echo AFTER', 'f(){ echo in; }; f >nodir/f; echo AFTER',
+     ': >nodir/f; echo AFTER', 'export X=1 >nodir/f; echo AFTER', 'eval : >nodir/f; echo AFTER',
+     'exec 3>nodir/f; echo AFTER', 'trap "echo T" EXIT; : >nodir/f; echo AFTER',
+     '( : >nodir/f ); echo AFTER', 'true; : >nodir/f; echo unreached']
+  end
+
+  it 'handles a failed redirect open the same as dash (status 2; fatal on a special builtin)' do
+    Dir.mktmpdir do |dir|
+      redirect_failure_snippets.each do |snippet|
+        source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
+      end
+    end
+  end
+
   def input_redirect_snippets
     ['while read v; do echo "<$v>"; done < in', 'if read a; then echo "got $a"; fi < in',
      '{ read p; read q; echo "$p-$q"; } < in', 'for w in one; do echo "$w"; done < in']

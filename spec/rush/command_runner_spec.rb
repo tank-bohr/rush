@@ -46,12 +46,18 @@ RSpec.describe Rush::CommandRunner do
     expect(system.files).to have_key('/f')
   end
 
-  it 'propagates a redirect-open failure without trying to close anything' do
+  it 'raises a redirect error on a failed open without trying to close anything' do
     allow(system).to receive(:close_redirect)
     allow(system).to receive(:open_file).and_raise(Errno::EACCES)
     redirect = Rush::AST::Redirect.new(kind: :out, target: word('/denied'), io_number: nil)
-    expect { run(simple(words: [word('true')], redirects: [redirect])) }.to raise_error(Errno::EACCES)
+    expect { run(simple(words: [word('true')], redirects: [redirect])) }.to raise_error(Rush::RedirectError)
     expect(system).not_to have_received(:close_redirect)
+  end
+
+  it 'escalates a redirect-open failure on a special builtin to a fatal builtin error' do
+    allow(system).to receive(:open_file).and_raise(Errno::ENOENT)
+    redirect = Rush::AST::Redirect.new(kind: :out, target: word('/denied'), io_number: nil)
+    expect { run(simple(words: [word(':')], redirects: [redirect])) }.to raise_error(Rush::BuiltinError)
   end
 
   it 'fails with status 1 when a builtin writes to a fd closed by >&-' do
