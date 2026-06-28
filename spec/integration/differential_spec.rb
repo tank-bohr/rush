@@ -704,4 +704,29 @@ RSpec.describe 'rush vs dash (differential)' do
       end
     end
   end
+
+  # A function runs in the current shell, so a redirect on the *call* binds the
+  # whole body (output, stderr dup, nested calls) and is torn down on return —
+  # an `exec` inside `f >file` is scoped to that redirect (undone after f), but an
+  # `exec` inside a call with no redirect persists (the body shares the shell io).
+  def function_redirect_snippets
+    ['f(){ echo body; }; f > f.txt; echo after; cat f.txt',
+     'f(){ echo x; return 3; }; f > f.txt; echo "rc=$?"; cat f.txt',
+     'f(){ echo out; echo err >&2; }; f > f.txt 2>&1; cat f.txt',
+     'f(){ echo a; echo b; }; f > f.txt; f >> f.txt; cat f.txt',
+     'f(){ echo outer; echo inner > i.txt; }; f > o.txt; printf "[o]"; cat o.txt; printf "[i]"; cat i.txt',
+     'g(){ echo from-g; }; f(){ echo from-f; g; }; f > f.txt; cat f.txt',
+     'exec 4>&1; f(){ exec > g.txt; }; f; echo A; exec 1>&4 4>&-; echo B; printf "G="; cat g.txt',
+     'exec 4>&1; f(){ echo first; exec > o.txt; echo second; }; f > f.txt; echo A; exec 1>&4 4>&-; ' \
+     'printf "F="; cat f.txt; printf "O="; cat o.txt']
+  end
+
+  it 'binds a redirect on a function call to the whole body, like dash' do
+    Dir.mktmpdir do |dir|
+      function_redirect_snippets.each do |snippet|
+        source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "diverged on: #{snippet}"
+      end
+    end
+  end
 end

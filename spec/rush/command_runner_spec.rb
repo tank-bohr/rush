@@ -73,6 +73,14 @@ RSpec.describe Rush::CommandRunner do
     expect(system).not_to have_received(:close_redirect)
   end
 
+  it 'binds a redirect on a function call to the function body' do
+    state.functions.define('f', Rush::AST::SimpleCommand.new([], [word('echo'), word('body')], []))
+    redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f.txt'), io_number: nil)
+    run(simple(words: [word('f')], redirects: [redirect]))
+    expect(system.files['/f.txt'].string).to eq("body\n")
+    expect(system.stdout.string).to be_empty
+  end
+
   it 'dispatches to a defined function before falling through to an external' do
     state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success

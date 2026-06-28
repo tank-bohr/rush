@@ -55,7 +55,7 @@ module Rush
     def dispatch(argv, io)
       name = argv.first
       return builtin(argv, io) if special?(name)
-      return run_function(argv) if @executor.state.functions.key?(name)
+      return run_function(argv, io) if @executor.state.functions.key?(name)
       return builtin(argv, io) if @executor.builtins.key?(name)
 
       External.new(@executor, argv, io, command_env).call
@@ -71,9 +71,15 @@ module Rush
 
     def special?(name) = CommandLookup::SPECIAL.include?(name) && @executor.builtins.key?(name)
 
-    def run_function(argv)
+    # A function runs in the current shell, not a subshell. The call's redirects
+    # (if any) bind the whole body and are torn down when it returns — even an
+    # `exec` inside is scoped to them, as dash does. With no redirects the body
+    # shares the shell's io table so an `exec` inside *persists*, so wrap in
+    # with_io only when a redirect actually layered a new table over the base.
+    def run_function(argv, io)
       body = @executor.state.functions.fetch(argv.first)
-      FunctionRunner.new(@executor, body, argv.drop(1)).call
+      run = -> { FunctionRunner.new(@executor, body, argv.drop(1)).call }
+      io.equal?(@executor.io) ? run.call : @executor.with_io(io, &run)
     end
 
     def command_env

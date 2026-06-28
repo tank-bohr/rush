@@ -48,10 +48,10 @@ filed as a beads issue.
     redirect lesson below.
 12. **`exec` redirect-only permanence** (`exec >file` / `3>file` closed out from under the shell)
     — **fixed (7ak):** see the exec lesson below.
+13. **Function-call redirects not applied to the body** (`f >file` printed to stdout) — **fixed
+    (7al):** see the function-redirect lesson below.
 
 **Open (filed in beads, found by the 7aj fuzz):**
-- **function-call redirects not applied to the body** (`f >file`): `CommandRunner#run_function`
-  doesn't thread the redirected io into the function body.
 - **`shift` past `$#` doesn't abort** (dash: special-builtin error → 2; rush no-ops, status 1).
 - **`pwd` / `$PWD`**: a fuzz "divergence" where rush printed an inherited `$PWD` vs dash's
   `getcwd` was a **harness artifact** (Open3 `chdir` without updating `$PWD`), not a real bug —
@@ -140,6 +140,24 @@ but `close_opened_over` would have been a no-op anyway. A forked subshell's `exe
 the child's `@io` and dies, so it can't leak (verified differentially: `( exec >sub; … ); echo
 outside`). Restoring the real stdout for read-back in the corpus uses a spare fd (`exec 4>&1; exec
 >f; …; exec 1>&4 4>&-; cat f`) rather than `exec 1>&-`, which would just feed `cat` a closed fd1.
+
+### Function-call redirects bind the body — but only as a *scope* (7al, beads `rush-6wx.2`)
+A function runs in the current shell (not a subshell), so a redirect on the *call* (`f >file`)
+must bind the whole body — `CommandRunner#dispatch` was passing the redirected `io` to builtins
+and externals but `run_function` ignored it, so the body printed to the shell's stdout. The fix
+is *not* an unconditional `with_io(io)` wrap, because two dash behaviours pull opposite ways and
+both must hold (confirmed differentially):
+- `exec >x` inside a call with **no** redirect **persists** (the body shares the shell io table).
+- `exec >x` inside `f >file` is **undone** when `f` returns (the call's redirect is a scope torn
+  down on return — dash restores the fd saved at `>file`, discarding the inner exec too).
+So wrap in `with_io` **only when a redirect actually layered a new table**, detected by identity:
+`io.equal?(@executor.io) ? run.call : @executor.with_io(io, &run)`. No redirect → `io` *is* the
+base → run in place so an inner `exec` mutates `@io` permanently; redirect present → wrap, and
+`with_io`'s unconditional restore correctly tears the scope (inner exec included) down on return.
+This mirrors `run_redirected`, which already wraps compound bodies and is only reached when
+redirects exist. The ambiguity trap while probing: assert the *destination*, not just combined
+stdout — `f(){ exec >g; }; f; echo X` yields the same stdout whether exec persisted or not; only
+splitting "before vs after restore" output across distinct files tells them apart.
 
 ---
 
