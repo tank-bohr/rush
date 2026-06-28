@@ -49,7 +49,7 @@ detectors:
     #    Ruby offers no clean home for it (a core-ext / Refused Bequest): Set#apply
     #    (String), Set#advance / Test#without_close / TestExpr#four? /
     #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
-    #    (String), Times#clock (Numeric), Pipeline#tilde_expand (Symbol);
+    #    (String), Pipeline#tilde_expand (Symbol);
     #  - it dispatches on a value's kind enum, and making the value self-render
     #    would couple the small AST/value objects to this subsystem:
     #    CommandLookup#describe (kind), Pipeline#scalar_segment (segment);
@@ -63,7 +63,6 @@ detectors:
       - Rush::Builtins::Test#without_close
       - Rush::Builtins::TestExpr#four?
       - Rush::Builtins::TestExpr#to_int
-      - Rush::Builtins::Times#clock
       - Rush::CommandLookup#describe
       - Rush::Expansion::Pipeline#scalar_segment
       - Rush::Expansion::Pipeline#tilde_expand

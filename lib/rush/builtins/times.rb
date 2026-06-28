@@ -17,8 +17,8 @@ module Rush
       private
 
       def clock(seconds)
-        minutes = (seconds / 60).to_i
-        format('%<min>dm%<sec>fs', min: minutes, sec: seconds - (minutes * 60))
+        minutes, secs = seconds.divmod(60)
+        format('%<min>dm%<sec>fs', min: minutes, sec: secs)
       end
     end
   end
