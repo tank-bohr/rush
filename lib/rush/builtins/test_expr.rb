@@ -3,12 +3,16 @@
 module Rush
   module Builtins
     # Pure evaluator for `test`/`[` expressions. POSIX specifies the result by
-    # argument count (XCU `test`), so the arity drives dispatch and the `!`/`( )`
-    # groupings recurse into the smaller arities. String and integer primaries
-    # live here; file-test primaries (-e, -f, ...) arrive in a later slice. A
-    # malformed expression raises TestError, which the builtin maps to exit 2.
+    # argument count (XCU `test`), so #evaluate peels the structural layers —
+    # a leading `!` negates the rest, a `( … )` wrapper drops to its contents —
+    # recursing until what is left is a primary it dispatches by arity (0 → false,
+    # 1 → non-empty, 2 → unary like -n/-f, 3 → binary like = / -eq). The one
+    # exception POSIX bakes in: at three arguments a binary primary outranks the
+    # `!`/`( )` reading, so it is tried first. String and integer primaries live
+    # here; file-test primaries arrive via @files. A malformed expression raises
+    # TestError, which the builtin maps to exit 2.
     class TestExpr
-      SIZES = { 0 => :none?, 1 => :one?, 2 => :two?, 3 => :three?, 4 => :four? }.freeze
+      PRIMARY = { 0 => :none?, 1 => :nonempty?, 2 => :unary }.freeze
       STRING_UNARY = { '-n' => :nonempty?, '-z' => :empty? }.freeze
       FILE_UNARY = { '-e' => :exist?, '-f' => :file?, '-d' => :directory?, '-r' => :readable?,
                      '-w' => :writable?, '-x' => :executable?, '-s' => :file_nonempty?,
@@ -25,36 +29,22 @@ module Rush
 
       private
 
-      def evaluate(args) = send(SIZES.fetch(args.size, :many), args)
+      def evaluate(args)
+        raise TestError, 'too many arguments' if args.size > 4
+        return binary(*args) if args.size == 3 && binary?(args[1])
+        return !evaluate(args[1..]) if args.first == '!'
+        return evaluate(args[1...-1]) if wrapped?(args)
 
-      def none?(_args) = false
-
-      def one?(args) = !args.first.empty?
-
-      def two?(args)
-        op, val = args
-        return !one?([val]) if op == '!'
-
-        unary(op, val)
+        primary(args)
       end
 
-      def three?(args)
-        lhs, op, rhs = args
-        return binary(lhs, op, rhs) if binary?(op)
-        return !two?([op, rhs]) if lhs == '!'
-        return one?([op]) if lhs == '(' && rhs == ')'
+      def wrapped?(args) = args.size >= 3 && args.first == '(' && args.last == ')'
 
-        raise TestError, 'syntax error'
-      end
+      def primary(args) = send(PRIMARY.fetch(args.size, :bad), *args)
 
-      def four?(args)
-        return !three?(args.drop(1)) if args.first == '!'
-        return two?(args[1..2]) if args.first == '(' && args.last == ')'
+      def none? = false
 
-        raise TestError, 'syntax error'
-      end
-
-      def many(_args) = raise TestError, 'too many arguments'
+      def bad(*) = raise(TestError, 'syntax error')
 
       def unary(op, val)
         return send(STRING_UNARY.fetch(op), val) if STRING_UNARY.key?(op)

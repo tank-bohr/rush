@@ -46,18 +46,13 @@ detectors:
     # PipelineRunner#stage_io was genuinely moved onto Stage (Stage#io), which
     # owns its fd topology. The rest, after reading each, are not misplaced:
     #  - the method transforms a primitive or stdlib value passed as its arg, so
-    #    Ruby offers no clean home for it (a core-ext / Refused Bequest): Set#apply
-    #    (String), Set#advance / Test#without_close / TestExpr#four? /
+    #    Ruby offers no clean home for it (a core-ext / Refused Bequest):
     #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
     #    (String);
     #  - it dispatches on a value's kind enum where the value cannot host the
     #    method: CommandLookup#describe (a lookup-result kind). (Word segments,
     #    which used to need this, now expand themselves polymorphically.)
     exclude:
-      - Rush::Builtins::Set#advance
-      - Rush::Builtins::Set#apply
-      - Rush::Builtins::Test#without_close
-      - Rush::Builtins::TestExpr#four?
       - Rush::Builtins::TestExpr#to_int
       - Rush::CommandLookup#describe
       - Rush::Expansion::ReadSplitter#pad

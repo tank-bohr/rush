@@ -18,9 +18,10 @@ module Rush
       def bracketed? = argv.first == '['
 
       def without_close(ops)
-        raise TestError, "missing `]'" unless ops.last == ']'
+        *body, close = ops
+        raise TestError, "missing `]'" unless close == ']'
 
-        ops[0...-1]
+        body
       end
 
       def evaluate(ops) = TestExpr.new(ops, executor.system).true? ? success : failure

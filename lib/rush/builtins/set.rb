@@ -49,7 +49,8 @@ module Rush
       def option?(flag) = flag.is_a?(String) && flag.length > 1 && flag != '--' && '-+'.include?(flag[0])
 
       def apply(flag)
-        flag[1..].each_char { |char| toggle(OPTIONS[char], flag[0]) }
+        sign, *letters = flag.chars
+        letters.each { |char| toggle(OPTIONS[char], sign) }
       end
 
       def apply_long(sign, name)
