@@ -66,7 +66,7 @@ module Rush
       end
 
       def to_int(text)
-        raise TestError, "#{text}: integer expected" unless text.match?(/\A[+-]?\d+\z/)
+        raise TestError, "#{text}: integer expected" unless text.match?(/\A\s*[+-]?\d+\s*\z/)
 
         text.to_i
       end

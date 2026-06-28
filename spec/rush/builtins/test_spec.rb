@@ -58,6 +58,15 @@ RSpec.describe Rush::Builtins::Test do
     expect(system.stderr.string).to include('integer expected')
   end
 
+  it 'accepts integer operands padded with surrounding whitespace, as dash and bash do' do
+    expect([test(' 5', '-eq', '5'), test('5 ', '-eq', '5'), test(' 5 ', '-eq', '5')]).to all(be_success)
+  end
+
+  it 'still rejects underscored or hexadecimal integer operands, as dash does' do
+    expect([test('1_000', '-eq', '1000'), test('0x10', '-eq', '16')])
+      .to all(satisfy { |s| s.exitstatus == 2 })
+  end
+
   it 'handles three-argument ! and ( ) groupings' do
     expect(test('!', '-n', '')).to be_success
     expect(test('(', 'x', ')')).to be_success
