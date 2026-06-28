@@ -50,7 +50,11 @@ detectors:
   InstanceVariableAssumption:
     enabled: false # lazy / conditional ivar initialisation is used deliberately
   ManualDispatch:
-    enabled: false # the Racc support module dispatches by design
+    # on_error renders whatever heterogeneous semantic value racc hands back for
+    # the offending token (an AST::Word with #literal_text, or a bare operator
+    # String); duck-typing is correct — there is no shared type to dispatch on.
+    exclude:
+      - Rush::ParserSupport#on_error
   MissingSafeMethod:
     enabled: false # exit! is Ruby's standard bang method, not a custom unsafe one
   ModuleInitialize:
