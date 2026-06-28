@@ -50,9 +50,14 @@ detectors:
     #    (String), Set#advance / Test#without_close / TestExpr#four? /
     #    ReadSplitter#pad / ReadSplitter#trim_last (Array), TestExpr#to_int
     #    (String), Pipeline#tilde_expand (Symbol);
-    #  - it dispatches on a value's kind enum, and making the value self-render
-    #    would couple the small AST/value objects to this subsystem:
-    #    CommandLookup#describe (kind), Pipeline#scalar_segment (segment);
+    #  - it dispatches on a value's kind enum: CommandLookup#describe (a lookup
+    #    result kind). Pipeline#scalar_segment dispatches on an AST::WordSegment's
+    #    kind to pick an expander — but WordSegment is a pure-data node in the AST
+    #    layer, which has ZERO dependencies on Expansion (the dependency runs one
+    #    way, Expansion -> AST); moving the dispatch onto it would invert that into
+    #    a cycle and make a value object instantiate expanders / run command subs.
+    #    The in-place fix (extract value + `case kind`) is 7 lines, over the
+    #    enforced Metrics/MethodLength of 5, so the if-chain stays;
     #  - it is a predicate/transform that needs both self and the value's fields
     #    and has no cohesive home on the value: AliasExpander#plain?
     #    (alias-specific), TildeExpander#expand (the leading-segment tilde rewrite
