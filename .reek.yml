@@ -182,13 +182,15 @@ detectors:
 
   # --- Kept on (the ratchet): cryptic names in new code ---
   # reek rejects single-character, digit-suffixed and camelCase variable names.
-  # The project deliberately uses single letters in tight scopes (rescue `e`,
-  # loop `i`, arithmetic operands `a`/`b`/`n`, the Process::Tms struct `t`), so
-  # single lowercase letters are accepted; digit-suffixed, camelCase and
-  # multi-character cryptic names stay flagged.
+  # Only the few conventional single letters are accepted: `e` (rescued exception
+  # — also what RuboCop's Naming/RescuedExceptionsVariableName forces), `i` (loop
+  # index), and `a`/`b`/`n` (arithmetic operands). Every OTHER single letter — and
+  # digit-suffixed / camelCase / multi-character cryptic names — stays flagged, so
+  # a non-conventional one (e.g. the old `t` for a Tms struct, now `tms`) gets
+  # caught.
   UncommunicativeVariableName:
     accept:
-      - /^[a-z]$/
+      - /^[abein]$/
       - _ # the conventional "ignored value" name in destructuring/block params
   UncommunicativeMethodName:
     accept:

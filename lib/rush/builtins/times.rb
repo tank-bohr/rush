@@ -8,9 +8,9 @@ module Rush
     # The values are non-deterministic, so behaviour is verified by format.
     class Times < Base
       def call
-        t = executor.system.times
-        stdout.puts("#{clock(t.utime)} #{clock(t.stime)}")
-        stdout.puts("#{clock(t.cutime)} #{clock(t.cstime)}")
+        tms = executor.system.times
+        stdout.puts("#{clock(tms.utime)} #{clock(tms.stime)}")
+        stdout.puts("#{clock(tms.cutime)} #{clock(tms.cstime)}")
         success
       end
 
