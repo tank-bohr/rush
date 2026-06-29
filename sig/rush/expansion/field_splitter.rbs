@@ -4,11 +4,11 @@ module Rush
     # delimiter sets (an Ifs value) to IfsScanner, which applies the three POSIX
     # cases.
     class FieldSplitter
-      @ifs: untyped
+      @ifs: Ifs
 
-      def initialize: (untyped ifs) -> void
+      def initialize: (String? ifs) -> void
 
-      def split: (untyped parts) -> untyped
+      def split: (Array[[ String, bool, bool ]] parts) -> Array[String]
     end
   end
 end

@@ -5,19 +5,19 @@ module Rush
     # <space><tab><newline>; a null IFS (the empty string) leaves both sets empty,
     # so no character delimits.
     class Ifs
-      @ifs: untyped
+      @ifs: String?
 
-      @chars: untyped
+      @chars: Array[String]
 
-      WHITESPACE: " \t\n"
+      WHITESPACE: String
 
-      def initialize: (untyped ifs) -> void
+      def initialize: (String? ifs) -> void
 
-      def null?: () -> untyped
+      def null?: () -> bool
 
-      def whitespace: () -> untyped
+      def whitespace: () -> Array[String]
 
-      def others: () -> untyped
+      def others: () -> Array[String]
     end
   end
 end

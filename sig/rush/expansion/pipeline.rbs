@@ -10,38 +10,38 @@ module Rush
       @executor: Executor
 
       # Tilde expansion strategy per mode (its value is a word's segment list).
-      TILDE_EXPANDERS: { none: untyped, leading: untyped, assignment: untyped }
+      TILDE_EXPANDERS: Hash[Symbol, untyped]
 
-      def initialize: (untyped executor) -> void
+      def initialize: (Executor executor) -> void
 
       # Argv expansion: expand each word to fields (splitting unquoted on IFS),
       # then expand each field's pathname patterns.
-      def expand: (untyped words) -> untyped
+      def expand: (Array[untyped] words) -> Array[String]
 
       # Assignment RHS / redirection target / operator word: one field, no split.
       # Tilde expands at the leading position by default; assignment context also
       # expands after colons, and arithmetic opts out (~ is bitwise not there).
-      def expand_value: (untyped word, ?tilde: ::Symbol) -> untyped
+      def expand_value: (untyped word, ?tilde: Symbol) -> String
 
       private
 
-      def parts: (untyped word) -> untyped
+      def parts: (untyped word) -> Array[[ String, bool, bool ]]
 
-      def tilde_expand: (untyped segments, untyped mode) -> untyped
+      def tilde_expand: (untyped segments, Symbol mode) -> Array[untyped]
 
-      def glob: (untyped fields) -> untyped
+      def glob: (Array[String] fields) -> Array[String]
 
-      def field_parts: (untyped segment) -> (untyped | ::Array[::Array[untyped | false]])
+      def field_parts: (untyped segment) -> Array[[ String, bool, bool ]]
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
-      def escape_if_quoted: (untyped segment, untyped text) -> untyped
+      def escape_if_quoted: (untyped segment, String text) -> String
 
-      def escape: (untyped text) -> untyped
+      def escape: (String text) -> String
 
-      def splat_parts: (untyped segment) -> untyped
+      def splat_parts: (untyped segment) -> Array[[ String, bool, bool ]]
 
-      def ifs: () -> untyped
+      def ifs: () -> String?
     end
   end
 end

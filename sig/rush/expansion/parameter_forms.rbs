@@ -5,7 +5,7 @@ module Rush
     # variants treat a null value like an unset one (ParameterExpander#unset_or_null?).
     module Parameter
       # '-' use default · '=' assign default · '?' error if unset · '+' use alternative
-      FORMS: { "-" => untyped, "=" => untyped, "?" => untyped, "+" => untyped }
+      FORMS: Hash[String, ^(untyped param) -> String]
     end
   end
 end
