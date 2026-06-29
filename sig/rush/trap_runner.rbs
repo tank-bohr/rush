@@ -7,47 +7,47 @@ module Rush
   class TrapRunner
     @executor: Executor
 
-    @state: untyped
+    @state: ShellState
 
-    @exiting: untyped
+    @exiting: Integer?
 
-    def initialize: (untyped executor) -> void
+    def initialize: (Executor executor) -> void
 
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
     # shell exits with: the given code, unless the trap itself runs `exit`. $?
     # inside the trap is that same code (POSIX 2.14), so it is published first.
-    def run_exit_trap: (untyped code) -> untyped
+    def run_exit_trap: (Integer code) -> Integer
 
     # The status a bare `exit` reports: while the EXIT trap runs, the status the
     # shell is terminating with (POSIX), not the trap body's last $?; otherwise
     # the last command's status.
-    def exiting_status: () -> untyped
+    def exiting_status: () -> Integer
 
     # Record a trap and (for real signals, not EXIT) install its disposition so a
     # delivered signal runs the action / is ignored / restores the default.
-    def set: (untyped name, untyped action) -> untyped
+    def set: (String name, String action) -> void
 
-    def reset: (untyped name) -> untyped
+    def reset: (String name) -> void
 
     private
 
-    def fire_exit: (untyped action, untyped code) -> untyped
+    def fire_exit: (String action, Integer code) -> Integer
 
     # Publish `code` as the status a bare `exit` in the action reports, cleared
     # afterwards so a bare exit elsewhere falls back to the last command status.
-    def with_exiting: (untyped code) { () -> untyped } -> untyped
+    def with_exiting: [T] (Integer code) { () -> T } -> T
 
-    def fire: (untyped action) -> untyped
+    def fire: (String action) -> void
 
     # An untrappable signal (KILL/STOP) raises; keep the table entry like dash.
-    def install_signal: (untyped name, untyped action) -> untyped
+    def install_signal: (String name, (String | :default) action) -> void
 
     # '' ignores the signal, :default restores it; a command string installs the
     # handler block (nil disposition), matching SystemCalls#trap_signal.
-    def disposition: (untyped action) -> untyped
+    def disposition: ((String | :default) action) -> String?
 
     # Run a delivered signal's action, restoring $? so the interrupted code is
     # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.
-    def fire_signal: (untyped name) -> untyped
+    def fire_signal: (String name) -> void
   end
 end

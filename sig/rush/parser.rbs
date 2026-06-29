@@ -3,7 +3,11 @@
 # the rest of lib resolve the `Rush::Parser` constant and its public surface.
 module Rush
   class Parser
-    def initialize: (untyped lexer) -> void
-    def parse: () -> untyped
+    def initialize: (Lexer lexer) -> void
+
+    # The grammar's start rule (`program`) always reduces through make_list, so a
+    # successful parse is an AST::List (the program root). do_parse itself is racc
+    # (untyped); this annotation pins the start-symbol type for every caller.
+    def parse: () -> AST::List
   end
 end

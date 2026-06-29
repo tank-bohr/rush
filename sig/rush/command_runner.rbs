@@ -6,51 +6,53 @@ module Rush
   class CommandRunner
     @executor: Executor
 
-    @command: untyped
+    @command: AST::SimpleCommand
 
-    @base_io: untyped
+    @base_io: IoTable
 
-    def initialize: (untyped executor, untyped command, ?untyped base_io) -> void
+    def initialize: (Executor executor, AST::SimpleCommand command, ?IoTable base_io) -> void
 
-    def call: () -> untyped
+    def call: () -> Status
 
     private
 
-    def trace: (untyped argv) -> (untyped | nil)
+    def trace: (Array[String] argv) -> void
 
     # No command word: perform redirections then assignments (POSIX order), and
     # take the status of the last command substitution either ran (Status.success
     # when none did), as published via the executor's cmd-sub channel.
     # with_redirects opens/truncates the targets for their side effects, then
     # flushes+closes them after the assignments so a later command sees the data.
-    def run_bare: () -> untyped
+    def run_bare: () -> Status
 
     # POSIX command search: special builtin, then function (so a function may
     # override a regular builtin), then regular builtin, then PATH. A redirect
     # error leaves a regular command unrun with status 2 (RedirectError reaches
     # Executor#run), but on a special builtin it aborts the shell (POSIX 2.8.1),
     # so it is re-raised as a fatal BuiltinError.
-    def run_command: (untyped argv) -> untyped
+    def run_command: (Array[String] argv) -> Status
 
-    def dispatch: (untyped argv, untyped io) -> untyped
+    # io is the per-command stream table yielded by with_redirects; its values are
+    # the heterogeneous streams IoTable holds (kept untyped, see io_table.rbs).
+    def dispatch: (Array[String] argv, untyped io) -> Status
 
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
     # dash, that fails the command (status 1) without killing the shell.
-    def builtin: (untyped argv, untyped io) -> untyped
+    def builtin: (Array[String] argv, untyped io) -> Status
 
-    def special?: (untyped name) -> untyped
+    def special?: (String? name) -> bool
 
     # A function runs in the current shell, not a subshell. The call's redirects
     # (if any) bind the whole body and are torn down when it returns — even an
     # `exec` inside is scoped to them, as dash does. With no redirects the body
     # shares the shell's io table so an `exec` inside *persists*, so wrap in
     # with_io only when a redirect actually layered a new table over the base.
-    def run_function: (untyped argv, untyped io) -> untyped
+    def run_function: (Array[String] argv, untyped io) -> Status
 
-    def command_env: () -> untyped
+    def command_env: () -> Hash[String, String]
 
-    def persist: (untyped assignment) -> untyped
+    def persist: (AST::Assignment assignment) -> void
 
-    def assigned: (untyped word) -> untyped
+    def assigned: (AST::Word word) -> String
   end
 end

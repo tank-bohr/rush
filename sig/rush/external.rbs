@@ -5,23 +5,23 @@ module Rush
   class External
     @executor: Executor
 
-    @argv: untyped
+    @argv: Array[String]
 
-    @io: untyped
+    @io: IoTable
 
-    @env: untyped
+    @env: Hash[String, String]
 
-    def initialize: (untyped executor, untyped argv, untyped io, untyped env) -> void
+    def initialize: (Executor executor, Array[String] argv, IoTable io, Hash[String, String] env) -> void
 
-    def call: () -> untyped
+    def call: () -> Status
 
     private
 
-    def system: () -> untyped
+    def system: () -> SystemCalls
 
     # close_others closes inherited fds >= 3 (e.g. pipeline pipe ends) in the child.
-    def spawn_options: () -> untyped
+    def spawn_options: () -> Hash[Integer | Symbol, untyped]
 
-    def error_status: (untyped error) -> untyped
+    def error_status: (SystemCallError error) -> Status
   end
 end

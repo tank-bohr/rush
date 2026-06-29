@@ -10,22 +10,22 @@ module Rush
   class SourceRunner
     @executor: Executor
 
-    @lines: untyped
+    @lines: Array[String]
 
-    @reader: untyped
+    @reader: ProgramReader
 
-    @result: untyped
+    @result: Status
 
-    def initialize: (untyped executor, untyped text) -> void
+    def initialize: (Executor executor, String text) -> void
 
-    def run: () -> untyped
+    def run: () -> Status
 
     private
 
     # Read the next complete program and run it, returning it (or :eof) so `run`
     # knows when the input is exhausted.
-    def advance: () -> untyped
+    def advance: () -> (AST::List | :eof)
 
-    def execute: (untyped program) -> untyped
+    def execute: (AST::List program) -> void
   end
 end

@@ -8,25 +8,27 @@ module Rush
   # input a pending buffer gets one final, non-interactive parse so an
   # unterminated here-document still runs with the body so far, exactly like dash.
   class ProgramReader
-    @next_line: untyped
+    # Called with whether a partial program is already buffered (the prompt picks
+    # PS1 vs PS2 from it); returns the next source line, or nil at end of input.
+    @next_line: ^(bool buffered) -> String?
 
-    @aliases: untyped
+    @aliases: AliasTable?
 
-    @buffer: untyped
+    @buffer: String
 
-    def initialize: (?aliases: untyped?) { (?) -> untyped } -> void
+    def initialize: (?aliases: AliasTable?) { (bool buffered) -> String? } -> void
 
     # The next complete program, or :eof. Raises ParseError on a real syntax
     # error, so the caller decides policy: batch aborts, the REPL reports and
     # resumes.
-    def next_program: () -> untyped
+    def next_program: () -> (AST::List | :eof)
 
     private
 
-    def read_more: () -> untyped
+    def read_more: () -> (AST::List | :eof | :more)
 
-    def attempt: (untyped source) -> untyped
+    def attempt: (String source) -> (AST::List | :more)
 
-    def finish: () -> (:eof | untyped)
+    def finish: () -> (AST::List | :eof)
   end
 end

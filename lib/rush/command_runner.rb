@@ -53,7 +53,7 @@ module Rush
     end
 
     def dispatch(argv, io)
-      name = argv.first
+      name = argv.fetch(0)
       return builtin(argv, io) if special?(name)
       return run_function(argv, io) if @executor.state.functions.key?(name)
       return builtin(argv, io) if @executor.builtins.key?(name)
@@ -79,7 +79,7 @@ module Rush
     # shares the shell's io table so an `exec` inside *persists*, so wrap in
     # with_io only when a redirect actually layered a new table over the base.
     def run_function(argv, io)
-      body = @executor.state.functions.fetch(argv.first)
+      body = @executor.state.functions.fetch(argv.fetch(0))
       run = -> { FunctionRunner.new(@executor, body, argv.drop(1)).call }
       io.equal?(@executor.io) ? run.call : @executor.with_io(io, &run)
     end

@@ -17,7 +17,7 @@ module Rush
     end
 
     def fetch(name)
-      @functions[name]
+      @functions.fetch(name)
     end
 
     def key?(name)

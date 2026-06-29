@@ -6,47 +6,47 @@ module Rush
   # earlier commands run — and flush their output — before a later syntax error,
   # and a fatal error fires the EXIT trap, both matching dash.
   class CLI
-    @argv: untyped
+    @argv: Array[String]
 
-    @system: untyped
+    @system: SystemCalls
 
     @executor: Executor
 
-    def self.run: (untyped argv, ?system: untyped) -> untyped
+    def self.run: (Array[String] argv, ?system: SystemCalls) -> Integer
 
-    def initialize: (untyped argv, untyped system) -> void
+    def initialize: (Array[String] argv, SystemCalls system) -> void
 
-    def run: () -> untyped
+    def run: () -> Integer
 
     private
 
-    def repl?: () -> untyped
+    def repl?: () -> bool
 
-    def run_source: () -> untyped
+    def run_source: () -> Integer
 
-    def run_commands: () -> untyped
+    def run_commands: () -> Integer
 
     # Under `set -v` (verbose) each input line is written to stderr as it is read,
     # before it runs, so a `set -v`/`set +v` toggles which later lines echo (POSIX).
-    def echo_verbose: (untyped line) -> untyped
+    def echo_verbose: (String? line) -> String?
 
-    def continue?: (untyped reader) -> (false | true)
+    def continue?: (ProgramReader reader) -> bool
 
     # A `return` not caught by a function or dot script acts like `exit` with
     # that code in a non-interactive shell (POSIX): re-raise as ExitSignal so it
     # settles the status and fires the EXIT trap. A stray break/continue no longer
     # reaches here — with no enclosing loop the builtin is a no-op.
-    def execute: (untyped program) -> untyped
+    def execute: (AST::List program) -> Status
 
     # Fire the EXIT trap once the program (or an `exit`) has settled on a status.
-    def terminate: (untyped code) -> untyped
+    def terminate: (Integer code) -> Integer
 
     # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then
     # fire the EXIT trap (which may override the code via `exit`) — like dash.
-    def abort_with: (untyped error) -> untyped
+    def abort_with: (StandardError error) -> Integer
 
-    def source: () -> untyped
+    def source: () -> String
 
-    def executor: () -> untyped
+    def executor: () -> Executor
   end
 end

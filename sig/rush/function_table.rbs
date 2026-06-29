@@ -1,17 +1,18 @@
 module Rush
   # Name -> function body (an AST node), defined by function definitions and
-  # looked up during command dispatch. The body stays `untyped` until the AST
-  # nodes are typed (they are Data.define classes; see rush-211.5/211.6).
+  # looked up during command dispatch.
   class FunctionTable
-    @functions: Hash[String, untyped]
+    @functions: Hash[String, AST::Node]
 
     def initialize: () -> void
 
-    def define: (String name, untyped body) -> untyped
+    def define: (String name, AST::Node body) -> AST::Node
 
-    def undefine: (String name) -> untyped
+    def undefine: (String name) -> AST::Node?
 
-    def fetch: (String name) -> untyped
+    # Looked up only after key? confirms presence (command dispatch), so this is a
+    # loud fetch: a missing name is a bug, not a nil to thread through.
+    def fetch: (String name) -> AST::Node
 
     def key?: (String name) -> bool
   end
