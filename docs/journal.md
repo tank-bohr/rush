@@ -303,6 +303,17 @@ Findings worth not re-learning (the research payoff of running the tool hard):
   heterogeneously-typed hash (`redirection/registry.rb`: `DEFAULTS.each { |kind, (mode, fd)| }`)
   → `to_ary returns non-array-ish type`. rush is AST-heavy with `Data.define`, so this is a real
   limit on how far Steep can go here without upstream fixes.
+  - **Root cause + partial fix (rush-211.6).** The crash isn't `Data.define` per se — it's that
+    `rbs prototype` emits `Foo: untyped` (a *constant*, not a class) for a `Data.define`-with-block,
+    so when Steep checks the block's method bodies the self-type is `untyped` → `for_new_method`
+    raises. Declaring the node as a **real class** (`class ParamRef < ::Data` with members +
+    methods) gives a concrete self and the crash is gone. But a second, subtler limitation remains:
+    Steep attributes **instance** methods written inside a `Data.define do…end` block to the
+    *enclosing module*, not the class — so `value`/`op`/`result` resolve against `Arithmetic` and
+    fail. **Singleton** methods (`def self.x`) attribute correctly, which is why `param_ref` (all
+    `self.`) types green but `nodes`/`pipeline_runner` (instance `def result`/`def last?`) do not.
+    Fully typing those needs the methods moved out of the block into a reopened `class X` — a code
+    restructure weighed against the elegance of the `do…end` form.
 - **rbs 4.0 core declares `spawn`/`exec`/`fork`/`exit!` only on `Kernel`, not `singleton(Process)`**
   — so `Process.spawn(...)` trips `Ruby::NoMethod` while `Process.waitpid2/pid/times/kill` resolve
   fine. A core-RBS modelling gap, not a rush bug.
