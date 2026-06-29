@@ -357,11 +357,15 @@ unary operators the idiomatic value is `lambda(&:-@)` / `lambda(&:~)` — which 
 `Style/SymbolProc` mandates**, but which **Steep can't type** (it sees `lambda`'s block as
 zero-arity and `Symbol#to_proc` as one-arity). The escape forms each lose: `->(v) { -v }` /
 `->(v) { ~v }` are themselves `Style/SymbolProc` offenses; `->(v) { v ^ -1 }` satisfies both but is
-write-only. With no readable form in the intersection, the call is to **keep the idiomatic,
-rubocop-blessed code and `ignore` the file in Steep** — i.e. let the two type-checkers disagree on
-coverage rather than uglify real code for the tool. (The independent Sorbet track may type it
-fine; that divergence is itself the experiment.) So the "refactor pleases both" lesson has a
-corollary: when the intersection is empty, code clarity wins and the weaker-fit instrument yields.
+write-only. **Resolution (chosen later):** the `UNARY` table is *already* a mix of explicit
+lambdas (`->(v){ v }` for `+`, `bool(v.zero?)` for `!`), so write `-`/`~` as explicit lambdas too
+— uniform with the table — and **disable `Style/SymbolProc` for `number.rb`** (it's the cop that's
+wrong here: it would break both the table's own style and Steep). This is the same move as
+`Style/DataInheritance` — when a cop fundamentally contradicts the typed code, scope-disable the
+cop rather than `ignore` the file or contort the code. So the corollary stands but with a sharper
+edge: an empty intersection doesn't force *clarity vs types* — usually the rubocop side is the one
+mis-fitting Ruby-3-era code, and yielding the cop keeps **both** clean. After this the Steep ignore
+list is just the racc-generated `parser.rb` — every hand-written file is checked.
 
 #### Coercions move the proof from the checker to runtime — and structure beats coercion
 The single most important lesson of the typing work. When Steep flags `x.last[...]` or `match[1]`
