@@ -2,5 +2,6 @@
 ./lib
 --dir
 ./exe
---ignore=/vendor/
+--dir
+./sorbet/rbi
 --ignore=/lib/rush/parser.rb

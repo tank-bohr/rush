@@ -478,6 +478,38 @@ the *structural* seams (class shape, splat syntax) the first system and the lint
 pinned — and each clash is a small, real piece of "how these tools see Ruby differently", which is
 exactly what this project is for. (Inline `sig {}` and raising `# typed:` levels: next slice.)
 
+#### Sorbet — slice 2 (raising `# typed: true`)
+`# typed: false` barely checks anything (syntax, constant resolution); the gate only earns its keep
+at `# typed: true`, where Sorbet checks method existence on typed receivers, arg counts, and dead
+code — even with no `sig {}` yet (everything inferred as `T.untyped`). Tagging all of lib+exe `true`
+surfaced just **22 errors**, and **117 of 122 files now sit at `# typed: true`** with srb green.
+
+What got there cleanly: a `Rush::Parser` RBI shim in `sorbet/rbi/shims/` (the Racc-generated
+`parser.rb` is excluded, exactly like Steep's `parser.rbs` stub — the *one* place the two type
+systems' stubs are deliberately parallel; `sorbet/config` had to add `--dir ./sorbet/rbi` because the
+raw binary, unlike `srb`, doesn't auto-read it), and `Kernel.raise` in LoopControlHandling (a bare
+`raise` in a mixin has no resolvable self — the same fix ClosedStream already used).
+
+Five files stay `# typed: false`, each a concrete Steep⟂Sorbet drift (Steep types them; Sorbet
+can't, or mistypes):
+- **`Integer(x, exception: false)`** — Sorbet's RBI types it **non-nil**, so the `… or raise` /
+  `… || invalid` nil-fallback reads as dead code (srb.help/7006). Steep/rbs models the nilable
+  return correctly. Hits `number.rb` and `printf_formatter.rb`.
+- **non-static splats** (srb.help/7019) — `send(sym, *args)` (test/[ arity dispatch) and
+  `Process.spawn(env, [cmd], *argv.drop(1), opts)` (the splat isn't terminal — `opts` follows).
+  Steep accepts both. `test_expr.rb`, `system_calls.rb`.
+- **`module_function` + Kernel** — in `number.rb` Sorbet can't see `Integer`/`raise` on the module's
+  singleton self; Steep resolves them.
+- **Racc host methods** — `parser_support.rb` is mixed into the generated parser and calls
+  `do_parse`/`token_to_str` from the `Racc::Parser` superclass Sorbet never sees.
+
+Each is fixable with an inline escape (`T.unsafe`, a `Kernel.Integer` shim) — but `T.*` in the
+shared source would break *Steep* (no RBS for the `T` DSL), so reclaiming these is bound up with the
+inline-`sig {}` work, which needs an RBS bridge for `T`/`T::Sig` so Steep tolerates the Sorbet
+annotations on the same files. That bridge — and `sig {}` on the public API — is the next slice.
+The standing lesson holds: the second checker pays off not as a number but as a list of precise
+spots where it and the first disagree about Ruby.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
