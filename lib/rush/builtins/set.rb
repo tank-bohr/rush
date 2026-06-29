@@ -47,7 +47,7 @@ module Rush
       end
 
       def option?(flag)
-        flag.is_a?(String) && flag.length > 1 && flag != '--' && '-+'.include?(flag[0])
+        flag.is_a?(String) && flag.length > 1 && flag != '--' && flag.start_with?('-', '+')
       end
 
       def apply(flag)

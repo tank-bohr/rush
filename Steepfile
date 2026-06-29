@@ -20,12 +20,6 @@ target :lib do
   ignore 'lib/rush/pipeline_runner.rb'            # Data.define + Enumerable-style self calls
   ignore 'lib/rush/system_calls.rb'               # rbs core lacks Process.spawn/exec/fork/exit! on the singleton
   ignore 'lib/rush/parser_support.rb'             # Racc::Parser host methods (do_parse/token_to_str) unmodelled
-  ignore 'lib/rush/closed_stream.rb'              # prototype sig: Kernel#raise visibility
-  ignore 'lib/rush/builtins/test_expr.rb'         # prototype sig: arg arity
-  ignore 'lib/rush/builtins/printf_formatter.rb'  # prototype sig: Hash#fetch overload
-  ignore 'lib/rush/builtins/set.rb'               # prototype sig: nilable arg
-  ignore 'lib/rush/builtins/kill.rb'              # prototype sig: arg arity
-  ignore 'lib/rush/builtins/trap.rb'              # prototype sig: arg arity
   ignore 'lib/rush/expansion/arithmetic/number.rb' # prototype sig: Proc block-pass to untyped block
   ignore 'lib/rush/redirection/registry.rb'       # nested block-param destructuring over heterogeneous hash crashes Steep 2.0.0
 

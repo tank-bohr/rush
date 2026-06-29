@@ -51,7 +51,7 @@ module Rush
       private
 
       def evaluate(args)
-        return binary(*args) if args.size == 3 && binary?(args[1])
+        return binary(args) if args.size == 3 && binary?(args[1])
         return !evaluate(args[1..]) if args.first == '!'
         return evaluate(args[1...-1]) if wrapped?(args)
 
@@ -96,7 +96,8 @@ module Rush
         STRING.key?(op) || INTEGER.key?(op)
       end
 
-      def binary(lhs, op, rhs)
+      def binary(args)
+        lhs, op, rhs = args
         return lhs.public_send(STRING.fetch(op), rhs) if STRING.key?(op)
 
         to_int(lhs).public_send(INTEGER.fetch(op), to_int(rhs))

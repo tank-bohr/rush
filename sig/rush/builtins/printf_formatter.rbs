@@ -24,7 +24,7 @@ module Rush
       # back to the formatter to render against the next argument (double
       # dispatch), so the scanning lives here and the formatting stays there.
       class Template < StringScanner
-        ESCAPES: { "\\" => "\\", "a" => "\a", "b" => "\b", "f" => "\f", "n" => "\n", "r" => "\r", "t" => "\t", "v" => "\v" }
+        ESCAPES: ::Hash[String, String]
 
         SPEC: ::Regexp
 

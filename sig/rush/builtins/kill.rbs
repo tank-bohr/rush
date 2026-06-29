@@ -12,7 +12,8 @@ module Rush
 
       private
 
-      def parse: () -> (::Array[untyped] | ::Array["TERM" | untyped])
+      # tuple, not Array: parse feeds `send_signal(*parse)`, a fixed-arity call.
+      def parse: () -> [ untyped, untyped ]
 
       def flag?: (untyped arg) -> untyped
 

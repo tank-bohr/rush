@@ -48,7 +48,9 @@ module Rush
         def escape
           getch
           char = getch
-          ESCAPES.fetch(char) { "\\#{char}" }
+          # getch is String? at end-of-string; .to_s keeps the missing-key path
+          # identical (fetch("") and fetch(nil) both miss → block → "\\").
+          ESCAPES.fetch(char.to_s) { "\\#{char}" }
         end
       end
 

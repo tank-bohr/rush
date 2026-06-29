@@ -11,7 +11,8 @@ module Rush
 
       private
 
-      def split: () -> (::Array[nil | untyped] | ::Array[untyped])
+      # tuple, not Array: split feeds `apply(*split)`, a fixed-arity call.
+      def split: () -> [ untyped, untyped ]
 
       # Apply left to right, stopping at (but keeping the work before) the first
       # spec that names no signal — dash's behaviour for `trap x INT BADD TERM`.
