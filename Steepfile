@@ -18,10 +18,8 @@ target :lib do
   ignore 'lib/rush/ast/param_ref.rb'              # Data.define + self.* methods crashes Steep 2.0.0
   ignore 'lib/rush/expansion/arithmetic/nodes.rb' # Data.define node hierarchy / shared interface
   ignore 'lib/rush/pipeline_runner.rb'            # Data.define + Enumerable-style self calls
-  ignore 'lib/rush/system_calls.rb'               # rbs core lacks Process.spawn/exec/fork/exit! on the singleton
-  ignore 'lib/rush/parser_support.rb'             # Racc::Parser host methods (do_parse/token_to_str) unmodelled
-  ignore 'lib/rush/expansion/arithmetic/number.rb' # prototype sig: Proc block-pass to untyped block
   ignore 'lib/rush/redirection/registry.rb'       # nested block-param destructuring over heterogeneous hash crashes Steep 2.0.0
+  ignore 'lib/rush/expansion/arithmetic/number.rb' # rubocop Style/SymbolProc wants lambda(&:-@)/(&:~), which Steep can't type; no form satisfies both
 
   library 'etc', 'forwardable', 'strscan', 'tempfile'
 

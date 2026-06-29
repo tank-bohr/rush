@@ -15,6 +15,11 @@ module Rush
 
     private
 
+    # Provided by the Racc::Parser host this module is mixed into (no rbs for racc).
+    def do_parse: () -> untyped
+
+    def token_to_str: (untyped token_id) -> untyped
+
     def make_list: (untyped entries) -> untyped
 
     def pending_entry: (untyped and_or) -> ::Array[untyped | ";"]

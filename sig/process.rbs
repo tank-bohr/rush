@@ -1,0 +1,13 @@
+# rbs 4.0 core models spawn / exec / fork / exit! on Kernel, not on the Process
+# singleton, but rush calls them as Process.* (see lib/rush/system_calls.rb). These
+# declarations add the singleton methods rush uses; args are permissive because the
+# callers are thin one-line syscall wrappers. A core-RBS gap, not a rush quirk.
+module Process
+  def self.spawn: (*untyped) -> Integer
+
+  def self.exec: (*untyped) -> bot
+
+  def self.fork: () ?{ () -> void } -> Integer?
+
+  def self.exit!: (?untyped status) -> bot
+end
