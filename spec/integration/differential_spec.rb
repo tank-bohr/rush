@@ -16,14 +16,18 @@ RSpec.describe 'rush vs dash (differential)' do
     File.expand_path('../..', __dir__)
   end
 
+  # close_others keeps the fd table hermetic: an fd >= 3 leaked in from the
+  # launcher (e.g. an interactive shell that ran `exec 9>…`) would let dash's
+  # `>&9` dup it while rush, which only tracks fds it opened, could not — so a
+  # snippet redirecting to an fd it never opened must see it closed either way.
   def rush(source, input = nil)
     out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,
-                                       chdir: project_root, stdin_data: input.to_s)
+                                       chdir: project_root, stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
 
   def dash(source, input = nil)
-    out, _err, status = Open3.capture3('dash', '-c', source, stdin_data: input.to_s)
+    out, _err, status = Open3.capture3('dash', '-c', source, stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
 
