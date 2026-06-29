@@ -1,27 +1,34 @@
 module Rush
   module AST
     # One `pattern|pattern) body ;;` arm of a case statement.
-    CaseItem: untyped
+    class CaseItem < ::Data
+      attr_reader patterns: Array[Word]
+
+      attr_reader body: Node
+
+      def self.new: (patterns: Array[Word], body: Node) -> CaseItem
+                  | (Array[Word] patterns, Node body) -> CaseItem
+    end
 
     # `case word in pattern) body ;; ... esac`. Expands the subject, then runs the
     # body of the first arm with a pattern (fnmatch glob) that matches it; no
     # match yields status 0. There is no fall-through.
     class Case < Node
-      @word: untyped
+      @word: Word
 
-      @items: untyped
+      @items: Array[CaseItem]
 
-      attr_reader word: untyped
+      attr_reader word: Word
 
-      attr_reader items: untyped
+      attr_reader items: Array[CaseItem]
 
-      def initialize: (untyped word, untyped items) -> void
+      def initialize: (Word word, Array[CaseItem] items) -> void
 
       def execute: (Executor executor) -> Status
 
       private
 
-      def matches?: (Executor executor, untyped item, String subject) -> bool
+      def matches?: (Executor executor, CaseItem item, String subject) -> bool
     end
   end
 end

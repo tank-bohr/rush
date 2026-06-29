@@ -1,7 +1,14 @@
 module Rush
   module AST
     # One element of a list: an and-or list and whether it was terminated by `&`.
-    ListEntry: untyped
+    class ListEntry < ::Data
+      attr_reader and_or: Node
+
+      attr_reader async: bool
+
+      def self.new: (Node and_or, bool async) -> ListEntry
+                  | (and_or: Node, async: bool) -> ListEntry
+    end
 
     # A `;` / `&` / newline-separated list of and-or lists and the program root.
     # Runs each entry in order; the list's status is the last entry's. An empty
@@ -10,11 +17,11 @@ module Rush
     # lands with the fork slice; for now it is parsed and recorded but run
     # synchronously.
     class List < Node
-      @entries: untyped
+      @entries: Array[ListEntry]
 
-      attr_reader entries: untyped
+      attr_reader entries: Array[ListEntry]
 
-      def initialize: (untyped entries) -> void
+      def initialize: (Array[ListEntry] entries) -> void
 
       def execute: (Executor executor) -> Status
 
@@ -25,7 +32,7 @@ module Rush
       private
 
       # An async (&) command is exempt from errexit, so it runs in a tested context.
-      def run_entry: (Executor executor, untyped entry) -> Status
+      def run_entry: (Executor executor, ListEntry entry) -> Status
     end
   end
 end

@@ -4,19 +4,19 @@ module Rush
     # success runs the consequent, otherwise the alternative (an else List, a
     # nested If for elif, or nil). With no matching branch the status is 0.
     class If < Node
-      @condition: untyped
+      @condition: Node
 
-      @consequent: untyped
+      @consequent: Node
 
-      @alternative: untyped
+      @alternative: Node?
 
-      attr_reader condition: untyped
+      attr_reader condition: Node
 
-      attr_reader consequent: untyped
+      attr_reader consequent: Node
 
-      attr_reader alternative: untyped
+      attr_reader alternative: Node?
 
-      def initialize: (untyped condition, untyped consequent, untyped alternative) -> void
+      def initialize: (Node condition, Node consequent, Node? alternative) -> void
 
       def execute: (Executor executor) -> Status
     end

@@ -3,6 +3,18 @@ module Rush
     # A redirection: a kind (:in/:out/:append/:dup_in/:dup_out/:readwrite/
     # :clobber), an unexpanded target Word, and an optional explicit fd parsed
     # from a leading IO_NUMBER (nil means the kind's default fd).
-    Redirect: untyped
+    class Redirect < ::Data
+      attr_reader kind: Symbol
+
+      # Word, or a HereDoc holder for <<-style redirects — kept untyped.
+      attr_reader target: untyped
+
+      attr_reader io_number: Integer?
+
+      def self.new: (kind: Symbol, target: untyped, io_number: Integer?) -> Redirect
+                  | (Symbol kind, untyped target, Integer? io_number) -> Redirect
+
+      def with: (?kind: Symbol, ?target: untyped, ?io_number: Integer?) -> Redirect
+    end
   end
 end

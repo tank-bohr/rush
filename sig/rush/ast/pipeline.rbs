@@ -4,15 +4,15 @@ module Rush
     # command runs in-process (so builtins affect the shell); a multi-stage
     # pipeline forks each stage via PipelineRunner. Negation inverts the status.
     class Pipeline < Node
-      @commands: untyped
+      @commands: Array[Node]
 
-      @negate: untyped
+      @negate: bool
 
-      attr_reader commands: untyped
+      attr_reader commands: Array[Node]
 
-      attr_reader negate: untyped
+      attr_reader negate: bool
 
-      def initialize: (untyped commands, untyped negate) -> void
+      def initialize: (Array[Node] commands, bool negate) -> void
 
       # A negated pipeline (`! cmd`) is exempt from errexit and runs its stages in
       # a tested context; otherwise the leaf status is the errexit check point.

@@ -27,13 +27,13 @@ module Rush
 
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
     # command unrun with status 2; the shell carries on (RedirectError).
-    def run: (untyped node) -> Status
+    def run: (AST::Node node) -> Status
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
     def replace_io: (IoTable table) -> void
 
-    def run_simple: (untyped command) -> Status
+    def run_simple: (AST::SimpleCommand command) -> Status
 
     # Apply the redirects on top of a base IoTable, yield the result, then
     # flush+close the files those redirects opened (POSIX: a later command in the
@@ -42,10 +42,10 @@ module Rush
     # Exception: redirect-only `exec` commits the table as the shell's base
     # (replace_io), so it now equals @io — leave those files open so they persist
     # for the rest of the shell rather than closing them out from under it.
-    def with_redirects: [T] (untyped redirects, ?IoTable base) { (untyped io) -> T } -> T
+    def with_redirects: [T] (Array[AST::Redirect] redirects, ?IoTable base) { (untyped io) -> T } -> T
 
     # Run a compound command with its redirects bound for the whole body.
-    def run_redirected: (untyped command, untyped redirects) -> Status
+    def run_redirected: (AST::Node command, Array[AST::Redirect] redirects) -> Status
 
     # The exit status of the last command substitution performed while a simple
     # command is being built. Reset to success at the start of each command so a
@@ -72,7 +72,7 @@ module Rush
 
     # Evaluate an if/while/until condition: run the command in a tested context
     # (so a failing condition never trips errexit) and report whether it succeeded.
-    def succeeds?: (untyped command) -> bool
+    def succeeds?: (AST::Node command) -> bool
 
     # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
     # outside a tested context aborts the shell with that status.
@@ -84,6 +84,6 @@ module Rush
 
     def abort_on?: (Status status) -> bool
 
-    def redirect_into: (untyped redirect, untyped io) -> untyped
+    def redirect_into: (AST::Redirect redirect, IoTable io) -> untyped
   end
 end

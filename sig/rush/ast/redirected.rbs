@@ -4,15 +4,15 @@ module Rush
     # on the whole command: they build a base IoTable that every command in the
     # body inherits, restored once the command finishes. Its status is the body's.
     class Redirected < Node
-      @command: untyped
+      @command: Node
 
-      @redirects: untyped
+      @redirects: Array[Redirect]
 
-      attr_reader command: untyped
+      attr_reader command: Node
 
-      attr_reader redirects: untyped
+      attr_reader redirects: Array[Redirect]
 
-      def initialize: (untyped command, untyped redirects) -> void
+      def initialize: (Node command, Array[Redirect] redirects) -> void
 
       def execute: (Executor executor) -> Status
     end

@@ -2,6 +2,13 @@ module Rush
   module AST
     # `name=value` — value is an unexpanded Word (it receives tilde and the
     # step-1 expansions, but no field splitting or pathname expansion).
-    Assignment: untyped
+    class Assignment < ::Data
+      attr_reader name: String
+
+      attr_reader value: Word
+
+      def self.new: (name: String, value: Word) -> Assignment
+                  | (String name, Word value) -> Assignment
+    end
   end
 end

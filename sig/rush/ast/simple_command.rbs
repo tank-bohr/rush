@@ -3,19 +3,19 @@ module Rush
     # `name=val ... cmd arg ... >file` — variable assignments, argv words and
     # redirections (in source order within each group).
     class SimpleCommand < Node
-      @assignments: untyped
+      @assignments: Array[Assignment]
 
-      @words: untyped
+      @words: Array[Word]
 
-      @redirects: untyped
+      @redirects: Array[Redirect]
 
-      attr_reader assignments: untyped
+      attr_reader assignments: Array[Assignment]
 
-      attr_reader words: untyped
+      attr_reader words: Array[Word]
 
-      attr_reader redirects: untyped
+      attr_reader redirects: Array[Redirect]
 
-      def initialize: (untyped assignments, untyped words, untyped redirects) -> void
+      def initialize: (Array[Assignment] assignments, Array[Word] words, Array[Redirect] redirects) -> void
 
       def execute: (Executor executor) -> Status
     end

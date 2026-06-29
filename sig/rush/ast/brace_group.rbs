@@ -4,11 +4,11 @@ module Rush
     # current shell environment. (Redirections on the group arrive with the
     # fd-management slice.)
     class BraceGroup < Node
-      @body: untyped
+      @body: Node
 
-      attr_reader body: untyped
+      attr_reader body: Node
 
-      def initialize: (untyped body) -> void
+      def initialize: (Node body) -> void
 
       def execute: (Executor executor) -> Status
     end

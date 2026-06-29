@@ -3,15 +3,15 @@ module Rush
     # `name() compound-command` — registers the body in the function table and
     # succeeds. The body runs (in the current shell) when the name is invoked.
     class FunctionDef < Node
-      @name: untyped
+      @name: String
 
-      @body: untyped
+      @body: Node
 
-      attr_reader name: untyped
+      attr_reader name: String
 
-      attr_reader body: untyped
+      attr_reader body: Node
 
-      def initialize: (untyped name, untyped body) -> void
+      def initialize: (String name, Node body) -> void
 
       def execute: (Executor executor) -> Status
     end

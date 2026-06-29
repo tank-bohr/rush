@@ -4,19 +4,19 @@ module Rush
     # are expanded (and field-split); with no `in` clause the loop iterates over
     # the positional parameters ($@).
     class For < Node
-      @name: untyped
+      @name: String
 
-      @words: untyped
+      @words: Array[Word]?
 
-      @body: untyped
+      @body: Node
 
-      attr_reader name: untyped
+      attr_reader name: String
 
-      attr_reader words: untyped
+      attr_reader words: Array[Word]?
 
-      attr_reader body: untyped
+      attr_reader body: Node
 
-      def initialize: (untyped name, untyped words, untyped body) -> void
+      def initialize: (String name, Array[Word]? words, Node body) -> void
 
       def execute: (Executor executor) -> Status
 
