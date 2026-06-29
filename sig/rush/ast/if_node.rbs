@@ -18,7 +18,7 @@ module Rush
 
       def initialize: (untyped condition, untyped consequent, untyped alternative) -> void
 
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
     end
   end
 end

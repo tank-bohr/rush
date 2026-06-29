@@ -19,11 +19,11 @@ module Rush
 
       # The left side is non-final, so it runs in a tested context (errexit
       # suppressed); only the final command's status reaches the errexit check.
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
 
       private
 
-      def run_right?: (untyped status) -> untyped
+      def run_right?: (Status status) -> bool
     end
   end
 end

@@ -58,11 +58,11 @@ module Rush
       end
 
       def for_header
-        FOR_IN[@word.literal_name]
+        FOR_IN[@word.literal_name.to_s]
       end
 
       def reserved
-        RESERVED[@word.literal_name] if @state.expects_command?
+        RESERVED[@word.literal_name.to_s] if @state.expects_command?
       end
 
       def assignment_name

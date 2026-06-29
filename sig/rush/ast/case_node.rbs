@@ -17,11 +17,11 @@ module Rush
 
       def initialize: (untyped word, untyped items) -> void
 
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
 
       private
 
-      def matches?: (untyped executor, untyped item, untyped subject) -> untyped
+      def matches?: (Executor executor, untyped item, String subject) -> bool
     end
   end
 end

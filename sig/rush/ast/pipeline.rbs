@@ -16,13 +16,13 @@ module Rush
 
       # A negated pipeline (`! cmd`) is exempt from errexit and runs its stages in
       # a tested context; otherwise the leaf status is the errexit check point.
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
 
       private
 
-      def run_stages: (untyped executor) -> untyped
+      def run_stages: (Executor executor) -> Status
 
-      def invert: (untyped status) -> untyped
+      def invert: (Status status) -> Status
     end
   end
 end

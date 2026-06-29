@@ -16,16 +16,16 @@ module Rush
 
       def initialize: (untyped entries) -> void
 
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
 
       # A blank or comment-only program runs no command; SourceRunner skips it
       # when tracking eval/dot's result status.
-      def empty?: () -> untyped
+      def empty?: () -> bool
 
       private
 
       # An async (&) command is exempt from errexit, so it runs in a tested context.
-      def run_entry: (untyped executor, untyped entry) -> untyped
+      def run_entry: (Executor executor, untyped entry) -> Status
     end
   end
 end

@@ -4,20 +4,20 @@ module Rush
     # the segments into fields; `literal_text` is the simple concatenation used
     # for error messages and (unquoted) assignment-name detection.
     class Word < Node
-      @segments: untyped
+      @segments: Array[untyped]
 
-      attr_reader segments: untyped
+      attr_reader segments: Array[untyped]
 
-      def initialize: (untyped segments) -> void
+      def initialize: (Array[untyped] segments) -> void
 
-      def self.literal: (untyped text) -> untyped
+      def self.literal: (String text) -> Word
 
-      def literal_text: () -> untyped
+      def literal_text: () -> String
 
       # The text when this word is a bare name — one unquoted literal segment, no
       # quoting or substitution — else nil. Used for reserved words, NAME=, and
       # alias substitution, all of which only apply to a plain literal word.
-      def literal_name: () -> untyped
+      def literal_name: () -> String?
     end
   end
 end

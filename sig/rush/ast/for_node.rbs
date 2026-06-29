@@ -18,11 +18,11 @@ module Rush
 
       def initialize: (untyped name, untyped words, untyped body) -> void
 
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
 
       private
 
-      def values: (untyped executor) -> untyped
+      def values: (Executor executor) -> Array[String]
     end
   end
 end

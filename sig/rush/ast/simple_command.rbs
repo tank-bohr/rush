@@ -17,7 +17,7 @@ module Rush
 
       def initialize: (untyped assignments, untyped words, untyped redirects) -> void
 
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
     end
   end
 end

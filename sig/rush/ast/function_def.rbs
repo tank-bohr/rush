@@ -13,7 +13,7 @@ module Rush
 
       def initialize: (untyped name, untyped body) -> void
 
-      def execute: (untyped executor) -> untyped
+      def execute: (Executor executor) -> Status
     end
   end
 end

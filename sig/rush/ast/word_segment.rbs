@@ -10,28 +10,28 @@ module Rush
     class WordSegment
       @value: untyped
 
-      @quoted: untyped
+      @quoted: bool
 
       attr_reader value: untyped
 
-      attr_reader quoted: untyped
+      attr_reader quoted: bool
 
-      def initialize: (untyped value, untyped quoted) -> void
+      def initialize: (untyped value, bool quoted) -> void
 
-      def literal_value: () -> nil
+      def literal_value: () -> untyped
 
-      def splittable?: () -> false
+      def splittable?: () -> bool
 
-      def splat?: () -> false
+      def splat?: () -> bool
 
       # A copy with a rewritten value (e.g. after tilde expansion).
-      def with_value: (untyped new_value) -> untyped
+      def with_value: (untyped new_value) -> WordSegment
 
-      def ==: (untyped other) -> untyped
+      def ==: (untyped other) -> bool
 
       alias eql? ==
 
-      def hash: () -> untyped
+      def hash: () -> Integer
     end
 
     # Literal text. It expands to itself, can act as a bare name when unquoted,
@@ -45,25 +45,25 @@ module Rush
     # A segment substituted at expansion time (param / command / arithmetic): its
     # unquoted result undergoes field splitting.
     class DynamicSegment < WordSegment
-      def splittable?: () -> untyped
+      def splittable?: () -> bool
     end
 
     # $name / ${...}: value is the ParamRef.
     class ParamSegment < DynamicSegment
-      def expand: (untyped executor) -> untyped
+      def expand: (Executor executor) -> String
 
       # $@ (always) and unquoted $* expand to one field per positional parameter.
-      def splat?: () -> untyped
+      def splat?: () -> bool
     end
 
     # $(...) / `...`: value is the command-substitution source.
     class CommandSegment < DynamicSegment
-      def expand: (untyped executor) -> untyped
+      def expand: (Executor executor) -> String
     end
 
     # $((...)): value is the arithmetic source.
     class ArithSegment < DynamicSegment
-      def expand: (untyped executor) -> untyped
+      def expand: (Executor executor) -> String
     end
   end
 end
