@@ -15,6 +15,7 @@ module Rush
     def empty?: () -> bool
     def join: (?String? separator) -> String
     def map: [U] () { (String value) -> U } -> Array[U]
+           | () -> ::Enumerator[String, ::Array[untyped]]
     def each: () { (String value) -> void } -> Array[String]
     def to_a: () -> Array[String]
 

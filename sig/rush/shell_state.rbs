@@ -6,53 +6,34 @@ module Rush
   # LoopNesting, Options, Positional, the function/alias/trap tables and the
   # command-location cache.
   class ShellState
-    @environment: untyped
+    @environment: Environment
+    @name: String
+    @scope: Scope
+    @traps: TrapTable
+    @last_status: Status
+    @loops: LoopNesting
+    @options: Options
+    @positional: Positional
+    @functions: FunctionTable
+    @aliases: AliasTable
+    @command_hash: Hash[String, String]
 
-    @name: untyped
+    attr_reader environment: Environment
+    attr_reader functions: FunctionTable
+    attr_reader traps: TrapTable
+    attr_reader aliases: AliasTable
+    attr_reader command_hash: Hash[String, String]
+    attr_reader name: String
+    attr_reader scope: Scope
+    attr_reader loops: LoopNesting
+    attr_reader options: Options
+    attr_reader last_status: Status
+    attr_reader positional: Positional
 
-    @scope: untyped
+    def initialize: (?environment: Environment, ?name: String) -> void
 
-    @traps: untyped
-
-    @last_status: untyped
-
-    @loops: untyped
-
-    @options: untyped
-
-    @positional: untyped
-
-    @functions: untyped
-
-    @aliases: untyped
-
-    @command_hash: untyped
-
-    attr_reader environment: untyped
-
-    attr_reader functions: untyped
-
-    attr_reader traps: untyped
-
-    attr_reader aliases: untyped
-
-    attr_reader command_hash: untyped
-
-    attr_reader name: untyped
-
-    attr_reader scope: untyped
-
-    attr_reader loops: untyped
-
-    attr_reader options: untyped
-
-    attr_reader last_status: untyped
-
-    attr_reader positional: untyped
-
-    def initialize: (?environment: untyped, ?name: ::String) -> void
-
-    # The last command's exit status ($?), recorded after each command runs.
-    def record_status: (untyped status) -> untyped
+    # The last command's exit status ($?), recorded after each command runs;
+    # returns the status it recorded (Executor#run passes it straight through).
+    def record_status: (Status status) -> Status
   end
 end
