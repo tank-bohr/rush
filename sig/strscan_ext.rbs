@@ -1,0 +1,6 @@
+# rbs's StringScanner#scan/#skip/#match? predate Ruby 3.4's String-pattern support;
+# rush passes single-char String literals (rubocop's Style/RedundantRegexpArgument
+# prefers them). Add the String overloads so code and checker agree.
+class StringScanner
+  def scan: (Regexp | String pattern) -> String?
+end

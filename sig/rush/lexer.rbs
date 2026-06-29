@@ -4,65 +4,67 @@ module Rush
   # WORD/ASSIGNMENT_WORD (classified against LexState, which advances after each
   # token to track command position — the seed of POSIX Grammar Rules 1-9).
   class Lexer
-    @scanner: untyped
+    @scanner: StringScanner
 
-    @aliases: untyped
+    @aliases: AliasExpander
 
-    @interactive: untyped
+    @interactive: bool
 
-    @state: untyped
+    @state: LexState
 
-    @awaiting: untyped
+    @awaiting: Symbol?
 
-    @heredocs: untyped
+    @heredocs: Array[HereDoc]
 
-    BLANK: ::Regexp
+    BLANK: Regexp
 
-    COMMENT: ::Regexp
+    COMMENT: Regexp
 
-    IO_NUMBER: ::Regexp
+    IO_NUMBER: Regexp
 
-    HEREDOC_OPS: { DLESS: :plain, DLESSDASH: :strip }
+    # keys are :DLESS/:DLESSDASH, but operator tags are looked up here as Symbol|String
+    # (some operators are literal strings), and a non-heredoc op just misses.
+    HEREDOC_OPS: Hash[untyped, Symbol]
 
-    def initialize: (untyped source, ?interactive: bool, ?aliases: untyped?) -> void
+    def initialize: (String source, ?interactive: bool, ?aliases: AliasTable?) -> void
 
-    def location: () -> untyped
+    def location: () -> Integer
 
-    def next_token: () -> (::Array[false] | untyped)
+    def next_token: () -> [ untyped, untyped ]
 
     private
 
-    def emit: (untyped token) -> untyped
+    def emit: ([ untyped, untyped ] token) -> [ untyped, untyped ]
 
     # Skip blanks and comments; when the current frame is an exhausted alias
     # replacement, restore the input beneath it and keep skipping.
-    def drain: () -> (nil | untyped)
+    def drain: () -> void
 
-    def skip_insignificant: () -> untyped
+    def skip_insignificant: () -> void
 
-    def scan_token: () -> untyped
+    def scan_token: () -> [ untyped, untyped ]?
 
-    def io_number: () -> untyped
+    def io_number: () -> [ untyped, untyped ]?
 
-    def operator: () -> untyped
+    def operator: () -> [ untyped, untyped ]?
 
-    def operator_token: (untyped matched) -> ::Array[untyped]
+    def operator_token: (String matched) -> [ untyped, untyped ]
 
     # Classify the word, then (only a plain WORD, never a reserved word or a
     # here-document delimiter) splice its alias replacement in its place; a splice
     # returns nil so next_token re-reads from the new frame.
-    def word: () -> untyped
+    def word: () -> [ untyped, untyped ]?
 
-    def alias_for: (untyped token, untyped word) -> (nil | untyped)
+    def alias_for: ([ untyped, untyped ] token, untyped word) -> String?
 
-    def splice: (untyped value) -> nil
+    def splice: (String value) -> nil
 
-    def finish: (untyped token) -> untyped
+    def finish: ([ untyped, untyped ] token) -> [ untyped, untyped ]
 
-    def delimiter: (untyped word) -> ::Array[:WORD | untyped]
+    def delimiter: (untyped word) -> [ untyped, untyped ]
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
-    def heredoc_newline: () -> ::Array[:NEWLINE | "\n"]
+    def heredoc_newline: () -> [ untyped, untyped ]
   end
 end

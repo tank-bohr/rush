@@ -5,43 +5,43 @@ module Rush
     # unquoted NAME= prefix), or a plain WORD. The assignment value keeps its
     # quoted segments (x="a b").
     class TokenClassifier
-      @word: untyped
+      @word: AST::Word
 
-      @state: untyped
+      @state: LexState
 
-      NAME: ::Regexp
+      NAME: Regexp
 
-      RESERVED: { "if" => :If, "then" => :Then, "else" => :Else, "elif" => :Elif, "fi" => :Fi, "while" => :While, "until" => :Until, "do" => :Do, "done" => :Done, "for" => :For, "case" => :Case, "{" => :Lbrace, "}" => :Rbrace, "!" => :Bang }
+      RESERVED: Hash[String, Symbol]
 
-      FOR_IN: { "in" => :In, "do" => :Do }
+      FOR_IN: Hash[String, Symbol]
 
-      def initialize: (untyped word, untyped state) -> void
+      def initialize: (AST::Word word, LexState state) -> void
 
-      def call: () -> untyped
+      def call: () -> [ Symbol, untyped ]
 
       private
 
-      def state_token: () -> untyped
+      def state_token: () -> [ Symbol, untyped ]?
 
-      def forced: () -> (::Array[:NAME | untyped] | ::Array[untyped] | untyped)
+      def forced: () -> [ Symbol, untyped ]?
 
-      def header_token: () -> (::Array[untyped] | untyped)
+      def header_token: () -> [ Symbol, untyped ]?
 
-      def arm_token: () -> (:Esac | :WORD)
+      def arm_token: () -> Symbol
 
-      def classify: () -> (::Array[untyped] | untyped)
+      def classify: () -> [ Symbol, untyped ]
 
-      def for_header: () -> untyped
+      def for_header: () -> Symbol?
 
-      def reserved: () -> (untyped | nil)
+      def reserved: () -> Symbol?
 
-      def assignment_name: () -> (nil | untyped)
+      def assignment_name: () -> String?
 
-      def capture: (untyped value) -> untyped
+      def capture: (untyped value) -> String?
 
-      def assignment_token: (untyped name) -> ::Array[:ASSIGNMENT_WORD | untyped]
+      def assignment_token: (String name) -> [ Symbol, untyped ]
 
-      def assignment_value: (untyped name) -> untyped
+      def assignment_value: (String name) -> untyped
     end
   end
 end

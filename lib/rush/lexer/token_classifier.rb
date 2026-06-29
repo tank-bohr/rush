@@ -39,7 +39,8 @@ module Rush
       end
 
       def header_token
-        return [for_header, @word] if @state.for_in? && for_header
+        keyword = for_header
+        return [keyword, @word] if @state.for_in? && keyword
 
         [:In, @word] if @state.case_in? && @word.literal_name == 'in'
       end
