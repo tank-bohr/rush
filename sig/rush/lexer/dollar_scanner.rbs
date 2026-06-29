@@ -1,0 +1,31 @@
+module Rush
+  class Lexer
+    # Reads a substitution at the word scanner's current position into the matching
+    # AST segment: $name / ${...} parameter refs, $(...) command substitution,
+    # $((...)) arithmetic, and `...` backticks. #read returns nil for a lone `$`
+    # that begins no valid reference, so the caller keeps it as a literal dollar.
+    class DollarScanner
+      @scanner: untyped
+
+      SIMPLE_PARAM: ::Regexp
+
+      def initialize: (untyped scanner) -> void
+
+      # The segment for a `$...` at the scanner head (the `$` not yet consumed),
+      # or nil when no valid reference follows.
+      def read: (quoted: untyped) -> untyped
+
+      # The command segment for a `` `...` `` at the scanner head.
+      def read_backtick: (quoted: untyped) -> untyped
+
+      private
+
+      # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
+      def dollar_paren: (untyped quoted) -> untyped
+
+      def read_param_ref: () -> untyped
+
+      def braced_ref: () -> untyped
+    end
+  end
+end

@@ -1,0 +1,30 @@
+module Rush
+  # Runs a while/until loop, catching break/continue at the loop boundary (see
+  # LoopControlHandling). The loop's status is the last body status (0 if the
+  # body never runs).
+  class LoopRunner
+    @executor: untyped
+
+    @condition: untyped
+
+    @body: untyped
+
+    @sense: untyped
+
+    include LoopControlHandling
+
+    def initialize: (untyped executor, untyped condition, untyped body, untyped sense) -> void
+
+    # Bracket the loop so break/continue see the right nesting depth (see
+    # LoopNesting#enter via state.loops); leave runs even when break unwinds.
+    def call: () -> untyped
+
+    private
+
+    def run_loop: () -> untyped
+
+    def proceed?: () -> untyped
+
+    def iterate: () -> untyped
+  end
+end

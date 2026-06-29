@@ -1,0 +1,19 @@
+module Rush
+  # The positional parameters $1..$n: a list of strings that `set` replaces,
+  # `shift` drops the front of, and a function call brackets with #with so the
+  # caller's are restored on return. Reads ($1, $#, $@, the for-loop word list)
+  # delegate to the underlying array.
+  class Positional
+    @values: untyped
+
+    extend Forwardable
+
+    def initialize: (?untyped values) -> void
+
+    def replace: (untyped values) -> untyped
+
+    def shift: (untyped count) -> untyped
+
+    def with: (untyped values) { () -> untyped } -> untyped
+  end
+end

@@ -1,0 +1,31 @@
+module Rush
+  module Builtins
+    # `hash [-r] [name ...]` — the command-location cache. With names, look each up
+    # in PATH and remember it; a name containing a slash or naming a builtin /
+    # function / keyword is a silent no-op, an unresolvable name an error (status
+    # 1). `-r` forgets all. With no operands, list the remembered locations, one
+    # path per line, sorted by name.
+    #
+    # Divergence: rush does not auto-populate the cache as commands run (POSIX/dash
+    # remember a utility's location when it is used); only an explicit `hash name`
+    # records one. Observable only via `<cmd>; hash` and noted in the journal — the
+    # cache is otherwise bit-for-bit consistent with dash.
+    class Hash < Base
+      def call: () -> untyped
+
+      private
+
+      def cache: () -> untyped
+
+      def reset: () -> untyped
+
+      def list: () -> untyped
+
+      def remember: (untyped names) -> untyped
+
+      # Whether the name is a known command; a resolvable PATH command is also
+      # cached (a slash path or a builtin / function is known but not cached).
+      def known?: (untyped name) -> (true | untyped)
+    end
+  end
+end

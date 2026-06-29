@@ -1,0 +1,69 @@
+module Rush
+  module Builtins
+    # Renders a printf template against its arguments: literal text (with
+    # backslash escapes), %% and the %[flags][width][.prec]conv conversions,
+    # cycling the template while arguments remain. Flags/width/precision defer to
+    # Ruby's format; numeric conversions coerce their argument (a present
+    # non-number is reported via the ok flag and treated as 0, a missing one as
+    # 0 silently). %b and octal escapes arrive in a later slice. Returns [text, ok].
+    class PrintfFormatter
+      @args: untyped
+
+      @cursor: untyped
+
+      @consumed: untyped
+
+      @ok: untyped
+
+      RUBY_CONV: { "i" => "d", "u" => "d" }
+
+      NUMERIC: ::Array["d" | "i" | "o" | "u" | "x" | "X"]
+
+      # Scans and walks one pass of a printf template: literal runs and resolved
+      # backslash escapes pass straight through, while each %conversion is handed
+      # back to the formatter to render against the next argument (double
+      # dispatch), so the scanning lives here and the formatting stays there.
+      class Template < StringScanner
+        ESCAPES: { "\\" => "\\", "a" => "\a", "b" => "\b", "f" => "\f", "n" => "\n", "r" => "\r", "t" => "\t", "v" => "\v" }
+
+        SPEC: ::Regexp
+
+        LITERAL: ::Regexp
+
+        def emit: (untyped formatter) -> untyped
+
+        private
+
+        def piece: (untyped formatter) -> untyped
+
+        def conversion: (untyped formatter) -> untyped
+
+        def escape: () -> untyped
+      end
+
+      def initialize: (untyped args) -> void
+
+      def render: (untyped template) -> ::Array[untyped]
+
+      # Render one %conversion (called back from Template): %% is a literal %, a
+      # numeric/char/string conversion consumes and formats the next argument.
+      def convert: (untyped flags, untyped conv) -> ("%" | untyped)
+
+      private
+
+      def last_pass?: () -> untyped
+
+      def one_pass: (untyped template) -> untyped
+
+      def numeric: (untyped flags, untyped conv, untyped arg) -> untyped
+
+      def to_int: (untyped arg) -> (0 | untyped)
+
+      def invalid: () -> 0
+
+      def take: () -> untyped
+
+      def first_char: (untyped arg) -> untyped
+    end
+  end
+end

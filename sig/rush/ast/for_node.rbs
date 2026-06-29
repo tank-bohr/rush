@@ -1,0 +1,28 @@
+module Rush
+  module AST
+    # `for name [in words]; do body; done`. With an explicit word list the words
+    # are expanded (and field-split); with no `in` clause the loop iterates over
+    # the positional parameters ($@).
+    class For < Node
+      @name: untyped
+
+      @words: untyped
+
+      @body: untyped
+
+      attr_reader name: untyped
+
+      attr_reader words: untyped
+
+      attr_reader body: untyped
+
+      def initialize: (untyped name, untyped words, untyped body) -> void
+
+      def execute: (untyped executor) -> untyped
+
+      private
+
+      def values: (untyped executor) -> untyped
+    end
+  end
+end

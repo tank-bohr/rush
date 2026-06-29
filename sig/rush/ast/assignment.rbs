@@ -1,0 +1,7 @@
+module Rush
+  module AST
+    # `name=value` — value is an unexpanded Word (it receives tilde and the
+    # step-1 expansions, but no field splitting or pathname expansion).
+    Assignment: untyped
+  end
+end

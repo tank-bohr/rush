@@ -1,0 +1,37 @@
+module Rush
+  module Builtins
+    # `trap [action] signal...` sets, ignores ("" action) or resets ("-" action)
+    # the handler for each signal; EXIT (or 0) runs when the shell exits. With no
+    # operands it lists the active traps, one `trap -- 'action' NAME` line each in
+    # signal-number order. The action word is consumed only when a signal follows
+    # it, so `trap INT` resets INT (matching dash). A spec that names no signal is
+    # reported as "trap: SPEC: bad trap" and stops processing with status 1.
+    class Trap < Base
+      def call: () -> untyped
+
+      private
+
+      def split: () -> (::Array[nil | untyped] | ::Array[untyped])
+
+      # Apply left to right, stopping at (but keeping the work before) the first
+      # spec that names no signal — dash's behaviour for `trap x INT BADD TERM`.
+      def apply: (untyped action, untyped signals) -> untyped
+
+      def place: (untyped action, untyped spec) -> untyped
+
+      def change: (untyped name, untyped action) -> untyped
+
+      def reset?: (untyped action) -> untyped
+
+      def bad_trap: (untyped spec) -> untyped
+
+      def list: () -> untyped
+
+      def line: (untyped name, untyped action) -> ::String
+
+      def quote: (untyped action) -> ::String
+
+      def traps: () -> untyped
+    end
+  end
+end

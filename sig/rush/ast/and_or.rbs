@@ -1,0 +1,29 @@
+module Rush
+  module AST
+    # `pipeline && pipeline` / `pipeline || pipeline`, left-associative. Runs the
+    # left side, then the right side only when the operator's short-circuit allows.
+    class AndOr < Node
+      @left: untyped
+
+      @op: untyped
+
+      @right: untyped
+
+      attr_reader left: untyped
+
+      attr_reader op: untyped
+
+      attr_reader right: untyped
+
+      def initialize: (untyped left, untyped op, untyped right) -> void
+
+      # The left side is non-final, so it runs in a tested context (errexit
+      # suppressed); only the final command's status reaches the errexit check.
+      def execute: (untyped executor) -> untyped
+
+      private
+
+      def run_right?: (untyped status) -> untyped
+    end
+  end
+end

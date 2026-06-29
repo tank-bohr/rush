@@ -1,0 +1,18 @@
+module Rush
+  module AST
+    # `while cond; do body; done` — runs the body while the condition succeeds.
+    class While < Node
+      @condition: untyped
+
+      @body: untyped
+
+      attr_reader condition: untyped
+
+      attr_reader body: untyped
+
+      def initialize: (untyped condition, untyped body) -> void
+
+      def execute: (untyped executor) -> untyped
+    end
+  end
+end

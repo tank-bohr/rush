@@ -1,0 +1,58 @@
+module Rush
+  # The mutable shell state threaded through execution: the variable environment,
+  # the last command's status ($?, the one field with behaviour here), the shell
+  # name ($0), and the session sub-objects it bundles for the rest of the
+  # interpreter to drive directly — the variable Scope (local scoping + cwd),
+  # LoopNesting, Options, Positional, the function/alias/trap tables and the
+  # command-location cache.
+  class ShellState
+    @environment: untyped
+
+    @name: untyped
+
+    @scope: untyped
+
+    @traps: untyped
+
+    @last_status: untyped
+
+    @loops: untyped
+
+    @options: untyped
+
+    @positional: untyped
+
+    @functions: untyped
+
+    @aliases: untyped
+
+    @command_hash: untyped
+
+    attr_reader environment: untyped
+
+    attr_reader functions: untyped
+
+    attr_reader traps: untyped
+
+    attr_reader aliases: untyped
+
+    attr_reader command_hash: untyped
+
+    attr_reader name: untyped
+
+    attr_reader scope: untyped
+
+    attr_reader loops: untyped
+
+    attr_reader options: untyped
+
+    attr_reader last_status: untyped
+
+    attr_reader positional: untyped
+
+    def initialize: (?environment: untyped, ?name: ::String) -> void
+
+    # The last command's exit status ($?), recorded after each command runs.
+    def record_status: (untyped status) -> untyped
+  end
+end

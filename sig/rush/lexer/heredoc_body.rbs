@@ -1,0 +1,50 @@
+module Rush
+  class Lexer
+    # Scans an unquoted here-document body into an AST::Word of literal / :param /
+    # :command segments. Unlike WordScanner there are no quote delimiters (quotes
+    # are literal) and no terminator (it consumes the whole body); a backslash
+    # escapes only $, ` and \. Expansion itself is deferred to execution, so the
+    # body reflects the variable values at the time the command runs. (Shares the
+    # $-and-backtick shape with WordScanner; a common extractor can wait until the
+    # Phase 2 ${} forms land.)
+    class HeredocBody
+      @scanner: untyped
+
+      @segments: untyped
+
+      @literal: untyped
+
+      RUN: ::Regexp
+
+      PARAM: ::Regexp
+
+      ESCAPABLE: ::Array["$" | "`" | "\\"]
+
+      def initialize: (untyped text) -> void
+
+      def scan: () -> untyped
+
+      private
+
+      def step: () -> untyped
+
+      def dollar: () -> untyped
+
+      def command_sub: () -> untyped
+
+      def backtick: () -> untyped
+
+      def param: () -> untyped
+
+      def read_ref: () -> untyped
+
+      def braced: () -> untyped
+
+      def escape: () -> untyped
+
+      def push: (untyped segment) -> untyped
+
+      def flush: () -> (nil | untyped)
+    end
+  end
+end

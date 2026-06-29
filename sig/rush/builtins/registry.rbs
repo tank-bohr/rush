@@ -1,0 +1,16 @@
+module Rush
+  module Builtins
+    # O(1) name -> builtin class lookup, populated by Builtins.default_registry.
+    class Registry
+      @builtins: untyped
+
+      def initialize: () -> void
+
+      def register: (untyped name, untyped klass) -> untyped
+
+      def fetch: (untyped name) -> untyped
+
+      def key?: (untyped name) -> untyped
+    end
+  end
+end

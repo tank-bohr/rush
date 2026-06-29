@@ -1,0 +1,104 @@
+module Rush
+  # Walks the AST by polymorphic dispatch (node.execute(self)) over shared shell
+  # state, with all OS access funneled through the injected SystemCalls port. The
+  # base IoTable, builtin registry, redirection registry and expander hang off it;
+  # signal and trap handling live in the TrapRunner it owns.
+  class Executor
+    @system: untyped
+
+    @state: untyped
+
+    @builtins: untyped
+
+    @redirections: untyped
+
+    @expander: untyped
+
+    @io: untyped
+
+    @tested: untyped
+
+    @trap_runner: untyped
+
+    @cmd_sub_status: untyped
+
+    attr_reader system: untyped
+
+    attr_reader state: untyped
+
+    attr_reader builtins: untyped
+
+    attr_reader redirections: untyped
+
+    attr_reader expander: untyped
+
+    attr_reader io: untyped
+
+    attr_reader cmd_sub_status: untyped
+
+    attr_reader trap_runner: untyped
+
+    def initialize: (system: untyped, state: untyped, ?builtins: untyped) -> void
+
+    # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
+    # command unrun with status 2; the shell carries on (RedirectError).
+    def run: (untyped node) -> untyped
+
+    # Permanently rebind the base IoTable (the `exec` redirection-only form),
+    # unlike with_io which restores afterwards.
+    def replace_io: (untyped table) -> untyped
+
+    def run_simple: (untyped command) -> untyped
+
+    # Apply the redirects on top of a base IoTable, yield the result, then
+    # flush+close the files those redirects opened (POSIX: a later command in the
+    # same shell sees the data). Only the streams this command opened are closed —
+    # the diff against the base leaves inherited streams and pipe ends untouched.
+    # Exception: redirect-only `exec` commits the table as the shell's base
+    # (replace_io), so it now equals @io — leave those files open so they persist
+    # for the rest of the shell rather than closing them out from under it.
+    def with_redirects: (untyped redirects, ?untyped base) { (untyped) -> untyped } -> untyped
+
+    # Run a compound command with its redirects bound for the whole body.
+    def run_redirected: (untyped command, untyped redirects) -> untyped
+
+    # The exit status of the last command substitution performed while a simple
+    # command is being built. Reset to success at the start of each command so a
+    # no-command-word command (only assignments/redirections) reports 0 unless a
+    # substitution sets it (POSIX 2.9.1: such a command takes the status of the
+    # last command substitution). Kept off last_status so a later $? in the same
+    # command still sees the previous command's status, as dash does.
+    def reset_cmd_sub_status: () -> untyped
+
+    def record_cmd_sub_status: (untyped status) -> untyped
+
+    # Run a block with a different base IoTable (command substitution / future
+    # `exec`), restoring the previous one afterwards.
+    def with_io: (untyped io) { () -> untyped } -> untyped
+
+    # Run a block in a "tested" context (errexit suppressed): the condition of
+    # if/while/until, the non-final part of an && / || list, a negated pipeline,
+    # and an async (&) command. `untested` is the inverse — command substitution
+    # starts a fresh errexit context regardless of the caller's. Both restore on
+    # exit, so the flag follows the call tree.
+    def tested: () { (?) -> untyped } -> untyped
+
+    def untested: () { (?) -> untyped } -> untyped
+
+    # Evaluate an if/while/until condition: run the command in a tested context
+    # (so a failing condition never trips errexit) and report whether it succeeded.
+    def succeeds?: (untyped command) -> untyped
+
+    # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
+    # outside a tested context aborts the shell with that status.
+    def exit_on_error: (untyped status) -> untyped
+
+    private
+
+    def scoped_tested: (untyped value) { () -> untyped } -> untyped
+
+    def abort_on?: (untyped status) -> untyped
+
+    def redirect_into: (untyped redirect, untyped io) -> untyped
+  end
+end

@@ -1,0 +1,47 @@
+module Rush
+  class Lexer
+    # Classifies a scanned word given the lexer state: a reserved word (only an
+    # unquoted single-literal word in command position), an ASSIGNMENT_WORD (an
+    # unquoted NAME= prefix), or a plain WORD. The assignment value keeps its
+    # quoted segments (x="a b").
+    class TokenClassifier
+      @word: untyped
+
+      @state: untyped
+
+      NAME: ::Regexp
+
+      RESERVED: { "if" => :If, "then" => :Then, "else" => :Else, "elif" => :Elif, "fi" => :Fi, "while" => :While, "until" => :Until, "do" => :Do, "done" => :Done, "for" => :For, "case" => :Case, "{" => :Lbrace, "}" => :Rbrace, "!" => :Bang }
+
+      FOR_IN: { "in" => :In, "do" => :Do }
+
+      def initialize: (untyped word, untyped state) -> void
+
+      def call: () -> untyped
+
+      private
+
+      def state_token: () -> untyped
+
+      def forced: () -> (::Array[:NAME | untyped] | ::Array[untyped] | untyped)
+
+      def header_token: () -> (::Array[untyped] | untyped)
+
+      def arm_token: () -> (:Esac | :WORD)
+
+      def classify: () -> (::Array[untyped] | untyped)
+
+      def for_header: () -> untyped
+
+      def reserved: () -> (untyped | nil)
+
+      def assignment_name: () -> (nil | untyped)
+
+      def capture: (untyped value) -> untyped
+
+      def assignment_token: (untyped name) -> ::Array[:ASSIGNMENT_WORD | untyped]
+
+      def assignment_value: (untyped name) -> untyped
+    end
+  end
+end

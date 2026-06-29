@@ -1,0 +1,39 @@
+module Rush
+  module Expansion
+    # Resolves a parameter name to its current value (or nil when unset): the
+    # special parameters, the positional parameters ($1, $2, ...), and ordinary
+    # shell variables. $- (options) and $! (last background pid) are placeholders
+    # until set-options and job control land.
+    class Resolver
+      @executor: untyped
+
+      SPECIAL: { "?" => :status, "#" => :count, "$" => :pid, "0" => :shell_name, "@" => :positional_all, "*" => :positional_all, "-" => :options, "!" => :background }
+
+      def initialize: (untyped executor) -> void
+
+      def resolve: (untyped name) -> untyped
+
+      private
+
+      def state: () -> untyped
+
+      def status: () -> untyped
+
+      def count: () -> untyped
+
+      def pid: () -> untyped
+
+      def shell_name: () -> untyped
+
+      def positional_all: () -> untyped
+
+      def separator: () -> untyped
+
+      def options: () -> ""
+
+      def background: () -> nil
+
+      def positional: (untyped index) -> untyped
+    end
+  end
+end

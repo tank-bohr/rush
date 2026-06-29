@@ -1,0 +1,68 @@
+module Rush
+  # StringScanner pump that yields [symbol, value] pairs for racc. It skips
+  # blanks and comments, then emits NEWLINE, an IO_NUMBER, an operator, or a
+  # WORD/ASSIGNMENT_WORD (classified against LexState, which advances after each
+  # token to track command position — the seed of POSIX Grammar Rules 1-9).
+  class Lexer
+    @scanner: untyped
+
+    @aliases: untyped
+
+    @interactive: untyped
+
+    @state: untyped
+
+    @awaiting: untyped
+
+    @heredocs: untyped
+
+    BLANK: ::Regexp
+
+    COMMENT: ::Regexp
+
+    IO_NUMBER: ::Regexp
+
+    HEREDOC_OPS: { DLESS: :plain, DLESSDASH: :strip }
+
+    def initialize: (untyped source, ?interactive: bool, ?aliases: untyped?) -> void
+
+    def location: () -> untyped
+
+    def next_token: () -> (::Array[false] | untyped)
+
+    private
+
+    def emit: (untyped token) -> untyped
+
+    # Skip blanks and comments; when the current frame is an exhausted alias
+    # replacement, restore the input beneath it and keep skipping.
+    def drain: () -> (nil | untyped)
+
+    def skip_insignificant: () -> untyped
+
+    def scan_token: () -> untyped
+
+    def io_number: () -> untyped
+
+    def operator: () -> untyped
+
+    def operator_token: (untyped matched) -> ::Array[untyped]
+
+    # Classify the word, then (only a plain WORD, never a reserved word or a
+    # here-document delimiter) splice its alias replacement in its place; a splice
+    # returns nil so next_token re-reads from the new frame.
+    def word: () -> untyped
+
+    def alias_for: (untyped token, untyped word) -> (nil | untyped)
+
+    def splice: (untyped value) -> nil
+
+    def finish: (untyped token) -> untyped
+
+    def delimiter: (untyped word) -> ::Array[:WORD | untyped]
+
+    # On the newline that ends the command line, drain the pending here-docs:
+    # read each body from the lines that follow, in the order the `<<`s appeared.
+    def heredoc_newline: () -> ::Array[:NEWLINE | "\n"]
+  end
+end

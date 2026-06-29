@@ -1,0 +1,8 @@
+module Rush
+  module Builtins
+    # `false` — does nothing, fails (status 1).
+    class False < Base
+      def call: () -> untyped
+    end
+  end
+end

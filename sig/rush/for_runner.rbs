@@ -1,0 +1,28 @@
+module Rush
+  # Runs a for loop: assign the variable to each value in turn and run the body,
+  # catching break/continue at the loop boundary (see LoopControlHandling). The
+  # loop's status is the last body status (0 if the value list is empty).
+  class ForRunner
+    @executor: untyped
+
+    @name: untyped
+
+    @values: untyped
+
+    @body: untyped
+
+    include LoopControlHandling
+
+    def initialize: (untyped executor, untyped name, untyped values, untyped body) -> void
+
+    # Bracket the loop so break/continue see the right nesting depth (see
+    # LoopNesting#enter via state.loops); leave runs even when break unwinds.
+    def call: () -> untyped
+
+    private
+
+    def run_loop: () -> untyped
+
+    def iterate: (untyped value) -> untyped
+  end
+end

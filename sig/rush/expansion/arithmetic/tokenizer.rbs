@@ -1,0 +1,32 @@
+module Rush
+  module Expansion
+    module Arithmetic
+      # Splits an arithmetic expression into [kind, text] tokens (:num, :name,
+      # :op), skipping blanks. Operators are listed longest-first so multi-byte
+      # ones win over their prefixes; any other leftover character is an error.
+      class Tokenizer
+        @scanner: untyped
+
+        OPERATORS: ::Array["<<=" | ">>=" | "<<" | ">>" | "<=" | ">=" | "==" | "!=" | "&&" | "||" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "^=" | "|=" | "+" | "-" | "*" | "/" | "%" | "<" | ">" | "&" | "^" | "|" | "~" | "!" | "(" | ")" | "?" | ":" | "="]
+
+        OPERATOR: untyped
+
+        NUMBER: ::Regexp
+
+        NAME: ::Regexp
+
+        TOKENS: { num: untyped, name: untyped, op: untyped }
+
+        def initialize: (untyped source) -> void
+
+        def tokens: () -> untyped
+
+        private
+
+        def at_token?: () -> untyped
+
+        def next_token: () -> (::Array[untyped] | untyped)
+      end
+    end
+  end
+end

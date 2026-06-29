@@ -1,0 +1,23 @@
+module Rush
+  module Expansion
+    # The IFS value, parsed once into its whitespace and non-whitespace delimiter
+    # sets for POSIX field splitting. Unset IFS (nil) defaults to the standard
+    # <space><tab><newline>; a null IFS (the empty string) leaves both sets empty,
+    # so no character delimits.
+    class Ifs
+      @ifs: untyped
+
+      @chars: untyped
+
+      WHITESPACE: " \t\n"
+
+      def initialize: (untyped ifs) -> void
+
+      def null?: () -> untyped
+
+      def whitespace: () -> untyped
+
+      def others: () -> untyped
+    end
+  end
+end

@@ -1,0 +1,8 @@
+module Rush
+  module Builtins
+    # `:` — the null command; expands its arguments and always succeeds.
+    class Colon < Base
+      def call: () -> untyped
+    end
+  end
+end

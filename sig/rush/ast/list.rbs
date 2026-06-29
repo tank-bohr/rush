@@ -1,0 +1,31 @@
+module Rush
+  module AST
+    # One element of a list: an and-or list and whether it was terminated by `&`.
+    ListEntry: untyped
+
+    # A `;` / `&` / newline-separated list of and-or lists and the program root.
+    # Runs each entry in order; the list's status is the last entry's. An empty
+    # list (a blank or comment-only line, which is its own program under
+    # command-by-command reading) preserves $?, like dash. Async (`&`) execution
+    # lands with the fork slice; for now it is parsed and recorded but run
+    # synchronously.
+    class List < Node
+      @entries: untyped
+
+      attr_reader entries: untyped
+
+      def initialize: (untyped entries) -> void
+
+      def execute: (untyped executor) -> untyped
+
+      # A blank or comment-only program runs no command; SourceRunner skips it
+      # when tracking eval/dot's result status.
+      def empty?: () -> untyped
+
+      private
+
+      # An async (&) command is exempt from errexit, so it runs in a tested context.
+      def run_entry: (untyped executor, untyped entry) -> untyped
+    end
+  end
+end

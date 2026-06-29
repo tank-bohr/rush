@@ -1,0 +1,19 @@
+module Rush
+  module AST
+    # `name() compound-command` — registers the body in the function table and
+    # succeeds. The body runs (in the current shell) when the name is invoked.
+    class FunctionDef < Node
+      @name: untyped
+
+      @body: untyped
+
+      attr_reader name: untyped
+
+      attr_reader body: untyped
+
+      def initialize: (untyped name, untyped body) -> void
+
+      def execute: (untyped executor) -> untyped
+    end
+  end
+end

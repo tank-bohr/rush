@@ -1,0 +1,14 @@
+module Rush
+  # The shell options toggled by `set -[+]o name` / `set -[+]x` and friends
+  # (:errexit, :nounset, :xtrace, :noglob, :verbose): the set of those currently
+  # on, with #set to flip one and #on? to query it.
+  class Options
+    @enabled: untyped
+
+    def initialize: () -> void
+
+    def set: (untyped name, untyped enabled) -> untyped
+
+    def on?: (untyped name) -> untyped
+  end
+end

@@ -1,0 +1,27 @@
+module Rush
+  module AST
+    # One `pattern|pattern) body ;;` arm of a case statement.
+    CaseItem: untyped
+
+    # `case word in pattern) body ;; ... esac`. Expands the subject, then runs the
+    # body of the first arm with a pattern (fnmatch glob) that matches it; no
+    # match yields status 0. There is no fall-through.
+    class Case < Node
+      @word: untyped
+
+      @items: untyped
+
+      attr_reader word: untyped
+
+      attr_reader items: untyped
+
+      def initialize: (untyped word, untyped items) -> void
+
+      def execute: (untyped executor) -> untyped
+
+      private
+
+      def matches?: (untyped executor, untyped item, untyped subject) -> untyped
+    end
+  end
+end

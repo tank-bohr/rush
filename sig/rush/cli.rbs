@@ -1,0 +1,52 @@
+module Rush
+  # Entry point: parse argv, build the executor, run the requested source and
+  # return the process exit code. Supports `-c command`, a batch program on
+  # stdin, and an interactive REPL when invoked with no arguments on a terminal.
+  # The program is read and executed command by command (see ProgramReader), so
+  # earlier commands run — and flush their output — before a later syntax error,
+  # and a fatal error fires the EXIT trap, both matching dash.
+  class CLI
+    @argv: untyped
+
+    @system: untyped
+
+    @executor: untyped
+
+    def self.run: (untyped argv, ?system: untyped) -> untyped
+
+    def initialize: (untyped argv, untyped system) -> void
+
+    def run: () -> untyped
+
+    private
+
+    def repl?: () -> untyped
+
+    def run_source: () -> untyped
+
+    def run_commands: () -> untyped
+
+    # Under `set -v` (verbose) each input line is written to stderr as it is read,
+    # before it runs, so a `set -v`/`set +v` toggles which later lines echo (POSIX).
+    def echo_verbose: (untyped line) -> untyped
+
+    def continue?: (untyped reader) -> (false | true)
+
+    # A `return` not caught by a function or dot script acts like `exit` with
+    # that code in a non-interactive shell (POSIX): re-raise as ExitSignal so it
+    # settles the status and fires the EXIT trap. A stray break/continue no longer
+    # reaches here — with no enclosing loop the builtin is a no-op.
+    def execute: (untyped program) -> untyped
+
+    # Fire the EXIT trap once the program (or an `exit`) has settled on a status.
+    def terminate: (untyped code) -> untyped
+
+    # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then
+    # fire the EXIT trap (which may override the code via `exit`) — like dash.
+    def abort_with: (untyped error) -> untyped
+
+    def source: () -> untyped
+
+    def executor: () -> untyped
+  end
+end

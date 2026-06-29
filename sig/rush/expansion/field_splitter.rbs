@@ -1,0 +1,14 @@
+module Rush
+  module Expansion
+    # Entry point for IFS field splitting: it hands the parts and the IFS
+    # delimiter sets (an Ifs value) to IfsScanner, which applies the three POSIX
+    # cases.
+    class FieldSplitter
+      @ifs: untyped
+
+      def initialize: (untyped ifs) -> void
+
+      def split: (untyped parts) -> untyped
+    end
+  end
+end

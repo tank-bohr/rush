@@ -1,0 +1,29 @@
+module Rush
+  module Builtins
+    # `read [-r] var ...` — read a line from stdin, split it on IFS and assign the
+    # fields to the named variables (the last variable takes the remainder).
+    # Without -r a backslash escapes the next character. Returns non-zero at end
+    # of file (clearing the variables); with no variable operand it is an error.
+    class Read < Base
+      def call: () -> untyped
+
+      private
+
+      def raw?: () -> untyped
+
+      def names: () -> untyped
+
+      def cook: (untyped line) -> (untyped | "")
+
+      def strip_escapes: (untyped text) -> untyped
+
+      def assign: (untyped line) -> untyped
+
+      def ifs: () -> untyped
+
+      def stdin: () -> untyped
+
+      def usage_error: () -> untyped
+    end
+  end
+end

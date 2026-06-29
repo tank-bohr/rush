@@ -1,0 +1,8 @@
+module Rush
+  module Builtins
+    # `true` — does nothing, succeeds (status 0).
+    class True < Base
+      def call: () -> untyped
+    end
+  end
+end

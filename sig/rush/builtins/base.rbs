@@ -1,0 +1,48 @@
+module Rush
+  module Builtins
+    # Base for builtins. Subclasses implement #call returning a Status. Streams
+    # come from the per-command IoTable so redirections apply to builtins too.
+    class Base
+      @executor: untyped
+
+      @argv: untyped
+
+      @io: untyped
+
+      # A non-negative decimal integer (optionally signed +, surrounding blanks);
+      # the accepted form of an exit/return operand. dash parses it into a C int,
+      # so a value past INT_MAX overflows and is rejected like a non-numeric one.
+      NUMERIC_OPERAND: ::Regexp
+
+      INT_MAX: 2147483647
+
+      def initialize: (untyped executor, untyped argv, untyped io) -> void
+
+      def call: () -> untyped
+
+      private
+
+      attr_reader executor: untyped
+
+      attr_reader argv: untyped
+
+      attr_reader io: untyped
+
+      def operands: () -> untyped
+
+      def stdout: () -> untyped
+
+      def stderr: () -> untyped
+
+      def success: () -> untyped
+
+      def failure: (?::Integer code) -> untyped
+
+      # Parse a numeric operand for a special builtin: an exit code for
+      # exit/return (min 0), or a loop level for break/continue (min 1). dash
+      # rejects a non-numeric, too-small or out-of-range value with a
+      # special-builtin error (which aborts a non-interactive shell).
+      def numeric_operand: (untyped text, ?min: ::Integer) -> untyped
+    end
+  end
+end

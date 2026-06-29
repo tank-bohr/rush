@@ -1,0 +1,21 @@
+module Rush
+  module Builtins
+    # `command name [arg ...]` runs name as a command, skipping shell functions
+    # (so a function can call the builtin it shadows). `command -v name` prints
+    # how name resolves — the name itself for a keyword/function/builtin, or the
+    # PATH for an external — and exits 127 when it is unknown.
+    class Command < Base
+      def call: () -> untyped
+
+      private
+
+      def verify: (untyped name) -> untyped
+
+      def verbose: (untyped name) -> untyped
+
+      def run: (untyped args) -> untyped
+
+      def exported_env: () -> untyped
+    end
+  end
+end

@@ -1,0 +1,41 @@
+module Rush
+  # The variable-environment side of the shell state, layered over one
+  # Environment: dynamic `local` scoping (a stack of snapshots restored when a
+  # function returns) and the logical working directory mirrored into
+  # $PWD/$OLDPWD. Both are managed mutations of the same environment, so they
+  # live together here, off ShellState.
+  class Scope
+    @environment: untyped
+
+    @frames: untyped
+
+    @pwd: untyped
+
+    attr_reader pwd: untyped
+
+    def initialize: (untyped environment) -> void
+
+    # Change the logical working directory, keeping $OLDPWD (the directory we
+    # left) and $PWD (the one we entered) in step — the invariant cd relies on.
+    def move_to: (untyped pwd) -> untyped
+
+    # Seed the logical pwd from the OS at startup when $PWD was unset; unlike
+    # #move_to this records no $OLDPWD/$PWD — there is no directory we came from.
+    def seed_pwd: (untyped path) -> (nil | untyped)
+
+    # A function call brackets its body with begin/end_scope; declare_local
+    # snapshots a variable so end_scope restores its prior value (or unsets it
+    # when it had none).
+    def begin_scope: () -> untyped
+
+    def end_scope: () -> untyped
+
+    def in_function?: () -> untyped
+
+    def declare_local: (untyped name) -> untyped
+
+    private
+
+    def restore: (untyped name, untyped value) -> untyped
+  end
+end

@@ -1,0 +1,28 @@
+module Rush
+  module AST
+    # A pipeline of one or more commands, optionally negated with `!`. A single
+    # command runs in-process (so builtins affect the shell); a multi-stage
+    # pipeline forks each stage via PipelineRunner. Negation inverts the status.
+    class Pipeline < Node
+      @commands: untyped
+
+      @negate: untyped
+
+      attr_reader commands: untyped
+
+      attr_reader negate: untyped
+
+      def initialize: (untyped commands, untyped negate) -> void
+
+      # A negated pipeline (`! cmd`) is exempt from errexit and runs its stages in
+      # a tested context; otherwise the leaf status is the errexit check point.
+      def execute: (untyped executor) -> untyped
+
+      private
+
+      def run_stages: (untyped executor) -> untyped
+
+      def invert: (untyped status) -> untyped
+    end
+  end
+end

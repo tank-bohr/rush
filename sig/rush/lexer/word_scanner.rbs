@@ -1,0 +1,77 @@
+module Rush
+  class Lexer
+    # Scans one word from the shared StringScanner into an AST::Word of typed
+    # segments: literal runs (quote-removed, with a `quoted` flag) and :param
+    # segments for $name / ${...}. Handles the three quoting forms; command
+    # substitution and arithmetic arrive in later slices.
+    class WordScanner
+      @scanner: untyped
+
+      @terminator: untyped
+
+      @segments: untyped
+
+      @literal: untyped
+
+      TERMINATOR: ::Regexp
+
+      LITERAL_RUN: ::Regexp
+
+      WHOLE_LITERAL: ::Regexp
+
+      DOUBLE_LITERAL: ::Regexp
+
+      DOUBLE_SPECIAL: ::Array["\"" | "\\" | "$" | "`"]
+
+      DISPATCH: { "'" => :single_quote, "\"" => :double_quote, "\\" => :escape, "$" => :dollar, "`" => :backtick }
+
+      # Scan the next shell word from a live lexer scanner, stopping at the first
+      # unquoted terminator (blank / operator).
+      def self.next_word: (untyped scanner) -> untyped
+
+      # Scan a complete, already-delimited string (a ${...} operator word or
+      # arithmetic source) as one word: no terminators apply (blanks/operators
+      # are literal), only quote / $ / ` stay special.
+      def self.entire: (untyped text) -> untyped
+
+      # terminator: the character class that ends a word, or nil in whole mode.
+      def initialize: (untyped scanner, ?terminator: untyped) -> void
+
+      def scan: () -> untyped
+
+      private
+
+      def ended?: () -> untyped
+
+      def step: () -> untyped
+
+      def literal_pattern: () -> untyped
+
+      def single_quote: () -> untyped
+
+      def double_quote: () -> untyped
+
+      def end_double?: () -> untyped
+
+      def double_step: () -> untyped
+
+      def double_escape: () -> untyped
+
+      # A lone `$` that begins no valid reference stays a literal dollar: merged
+      # into the current literal run when bare, a quoted literal segment in "...".
+      def dollar: () -> untyped
+
+      def double_dollar: () -> untyped
+
+      def backtick: () -> untyped
+
+      def escape: () -> untyped
+
+      def push: (untyped value, quoted: untyped) -> untyped
+
+      def add: (untyped segment) -> untyped
+
+      def flush: () -> (nil | untyped)
+    end
+  end
+end

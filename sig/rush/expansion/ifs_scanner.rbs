@@ -1,0 +1,49 @@
+module Rush
+  module Expansion
+    # The POSIX §2.6.5 field-splitting state machine. It runs once, left to right,
+    # over the expanded parts ([text, splittable, break]) so a delimiter that
+    # spans two adjacent unquoted expansions still yields the right (possibly
+    # empty) fields. IFS whitespace coalesces and is stripped at the ends; each
+    # non-whitespace IFS character delimits a field (so adjacent ones generate
+    # empty fields), while a single trailing delimiter is absorbed. Quoted text
+    # and a break-flagged part (the elements of $@/$*) anchor or force a field
+    # regardless of IFS. A trailing empty, non-anchored field is dropped.
+    class IfsScanner
+      @ws: untyped
+
+      @others: untyped
+
+      @fields: untyped
+
+      @pending: untyped
+
+      @skip: untyped
+
+      def initialize: (untyped whitespace, untyped others) -> void
+
+      def run: (untyped parts) -> untyped
+
+      private
+
+      def field: () -> { text: untyped, real: false }
+
+      def consume: (untyped part) -> untyped
+
+      def step: (untyped char) -> untyped
+
+      def pend: () -> untyped
+
+      def ordinary: (untyped char) -> untyped
+
+      def literal: (untyped text) -> untyped
+
+      def flush: () -> untyped
+
+      def open_field: () -> untyped
+
+      def result: () -> untyped
+
+      def drop_last?: () -> untyped
+    end
+  end
+end

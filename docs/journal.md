@@ -15,6 +15,17 @@ comparing **`[stdout, exitstatus]`** (stderr ignored), via the differential corp
 
 ---
 
+## Charter — what rush is actually investigating
+
+rush is a **research project about Ruby (the language + ecosystem), not about shells**: a
+POSIX `sh` is a deliberately *solved* problem (dash is the oracle, correctness is externally
+decidable), so all effort goes to the *how* — under extreme quality pressure (RuboCop +
+Sandi-Metz + reek + 100% coverage + mutant + two type systems), what does the ecosystem offer
+for non-trivial code, and what code results? Two type systems (RBS/Steep and inline Sorbet) are
+run independently on the same code — the task is to compare how each fares.
+
+---
+
 ## POSIX divergences discovered (and where they went)
 
 Found while building; each was out of scope when found, then fixed in a later slice or
@@ -269,14 +280,35 @@ disable). Findings worth not re-learning:
 - **IrresponsibleModule** mirrors the off `Style/Documentation`, but since that cop is off reek is
   the *sole* doc enforcer (no duplication), so it is enabled and the ~10 gaps were documented.
 
-### types — RBS + Steep over Sorbet (decision)
-Chosen: RBS 4.0.3 + Steep 2.0.0 (both current, maintained). Rationale: RBS is the official Ruby
-type language (ships with Ruby 4.0), signatures live in `sig/*.rbs` with **zero code pollution**
-and **no runtime dependency**, and `rbs`/`typeprof` (0.31.1, already present) can bootstrap sigs.
-It also stays portable — Sorbet can consume inline RBS — so picking RBS keeps a later Sorbet layer
-open without running two checkers now. Sorbet (0.6.x, maintained by Stripe) was rejected for this
-~6k-LOC library: inline `sig`/`# typed:` sigils + `sorbet-runtime` clutter the code for strictness
-this size doesn't need.
+### types — two independent checkers (RBS/Steep ⟂ Sorbet)
+**Decision superseded.** The earlier "RBS *over* Sorbet" rationale is dropped: per the Charter,
+rush runs **both** RBS/Steep (sig/*.rbs, external) and Sorbet (inline `sig {}`) independently and
+compares how each fares. RBS/Steep = rush-211.2 (this section); Sorbet = rush-211.4.
+
+#### RBS/Steep rollout — slice 1 (infra + green baseline)
+`steep 2.0.0` + `rbs 4.0.3` (dev deps), a `Steepfile` targeting `lib/`, `sig/` bootstrapped with
+`rbs prototype rb` (mostly `untyped` skeletons), and `steep check` wired into the default `rake`
+gate. Gradual by design (the bead anticipates it): **108 / 122 files checked**, 14 `ignore`d with
+per-file reasons in the `Steepfile`, ~**54% of calls typed** at baseline (rbs core types the
+stdlib/syscall calls even before our own sigs are tightened). `Ruby::UnannotatedEmptyCollection`
+is silenced while sig/ is untyped — it's pure bootstrap noise, re-enabled as types land.
+
+Findings worth not re-learning (the research payoff of running the tool hard):
+- **Steep 2.0.0 crashes internally on two of rush's core patterns**, and *swallows the crash* —
+  it logs `FATAL` to stderr, skips the file, and still exits 0 with "No type error detected". So
+  a crashing file is **silently unchecked, not green**; you must enumerate crashers
+  (`steep check 2>&1 | grep FATAL`) and `ignore` them explicitly or the gate lies. The triggers:
+  (1) `Data.define` blocks that define methods (`ast/param_ref.rb`, `expansion/arithmetic/nodes.rb`)
+  → `Unexpected self_type: untyped`; (2) nested block-param destructuring over a
+  heterogeneously-typed hash (`redirection/registry.rb`: `DEFAULTS.each { |kind, (mode, fd)| }`)
+  → `to_ary returns non-array-ish type`. rush is AST-heavy with `Data.define`, so this is a real
+  limit on how far Steep can go here without upstream fixes.
+- **rbs 4.0 core declares `spawn`/`exec`/`fork`/`exit!` only on `Kernel`, not `singleton(Process)`**
+  — so `Process.spawn(...)` trips `Ruby::NoMethod` while `Process.waitpid2/pid/times/kill` resolve
+  fine. A core-RBS modelling gap, not a rush bug.
+- **Racc isn't typed**: the generated `parser.rb` is excluded (sig-gen + check); a hand stub
+  `sig/rush/parser.rbs` lets the rest resolve the `Parser` constant. `ParserSupport`'s host methods
+  (`do_parse`/`token_to_str`, from `Racc::Parser`) are unmodelled, so that file is deferred too.
 
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and

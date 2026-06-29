@@ -1,0 +1,69 @@
+module Rush
+  module AST
+    # A typed piece of a word. Subclasses know how to expand themselves (the
+    # segment-level counterpart of a command node's #execute), so there is no
+    # `kind` to dispatch on: `quoted` records whether it came from a quoted
+    # context (which governs field splitting and pathname expansion), `value` is
+    # the kind-specific payload (literal text, a ParamRef, or substitution
+    # source). literal_value is the text when the segment can stand in as a bare
+    # name; splittable?/splat? are its field-splitting roles.
+    class WordSegment
+      @value: untyped
+
+      @quoted: untyped
+
+      attr_reader value: untyped
+
+      attr_reader quoted: untyped
+
+      def initialize: (untyped value, untyped quoted) -> void
+
+      def literal_value: () -> nil
+
+      def splittable?: () -> false
+
+      def splat?: () -> false
+
+      # A copy with a rewritten value (e.g. after tilde expansion).
+      def with_value: (untyped new_value) -> untyped
+
+      def ==: (untyped other) -> untyped
+
+      alias eql? ==
+
+      def hash: () -> untyped
+    end
+
+    # Literal text. It expands to itself, can act as a bare name when unquoted,
+    # and is never field-split.
+    class LiteralSegment < WordSegment
+      def expand: (untyped _executor) -> untyped
+
+      def literal_value: () -> untyped
+    end
+
+    # A segment substituted at expansion time (param / command / arithmetic): its
+    # unquoted result undergoes field splitting.
+    class DynamicSegment < WordSegment
+      def splittable?: () -> untyped
+    end
+
+    # $name / ${...}: value is the ParamRef.
+    class ParamSegment < DynamicSegment
+      def expand: (untyped executor) -> untyped
+
+      # $@ (always) and unquoted $* expand to one field per positional parameter.
+      def splat?: () -> untyped
+    end
+
+    # $(...) / `...`: value is the command-substitution source.
+    class CommandSegment < DynamicSegment
+      def expand: (untyped executor) -> untyped
+    end
+
+    # $((...)): value is the arithmetic source.
+    class ArithSegment < DynamicSegment
+      def expand: (untyped executor) -> untyped
+    end
+  end
+end

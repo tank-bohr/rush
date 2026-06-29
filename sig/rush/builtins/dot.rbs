@@ -1,0 +1,25 @@
+module Rush
+  module Builtins
+    # `. filename` — read the file and run it in the current shell, so its
+    # functions and variables persist. The file is read command by command
+    # (SourceRunner), so an alias or function it defines shapes its own later
+    # lines. Redirections apply to the file's commands (executor.with_io);
+    # exit/break/continue propagate to the caller, but `return` is bounded to the
+    # dot script — it stops the file and becomes the `.` command's status (POSIX
+    # 2.14), unlike eval. A missing file or a syntax error is a special-builtin
+    # error that aborts a non-interactive shell with status 2 (BuiltinError); a
+    # missing operand is a plain usage error that does not abort. PATH search for
+    # an unqualified name arrives later.
+    class Dot < Base
+      def call: () -> untyped
+
+      private
+
+      def source: (untyped path) -> untyped
+
+      def run_text: (untyped text) -> untyped
+
+      def usage: () -> untyped
+    end
+  end
+end

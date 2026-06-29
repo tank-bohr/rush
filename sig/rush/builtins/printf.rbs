@@ -1,0 +1,17 @@
+module Rush
+  module Builtins
+    # `printf format [arg ...]` — write the arguments under the control of the
+    # format, which is reused until the arguments are exhausted. Writes no
+    # trailing newline of its own. A present non-numeric argument to a numeric
+    # conversion is reported and treated as 0 (exit status 1).
+    class Printf < Base
+      def call: () -> untyped
+
+      private
+
+      def report: (untyped valid) -> untyped
+
+      def usage: () -> untyped
+    end
+  end
+end

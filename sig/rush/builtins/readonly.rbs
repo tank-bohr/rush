@@ -1,0 +1,16 @@
+module Rush
+  module Builtins
+    # `readonly name[=value] ...` — assign the value (when given) and mark each
+    # name read only, so a later assignment or unset aborts (see ReadonlyError).
+    # (The `-p` listing form arrives with the variable-printing slice.)
+    class Readonly < Base
+      def call: () -> untyped
+
+      private
+
+      def declare: (untyped operand) -> untyped
+
+      def environment: () -> untyped
+    end
+  end
+end

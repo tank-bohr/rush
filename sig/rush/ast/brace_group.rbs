@@ -1,0 +1,16 @@
+module Rush
+  module AST
+    # `{ list; }` — groups commands without a subshell, so they run in the
+    # current shell environment. (Redirections on the group arrive with the
+    # fd-management slice.)
+    class BraceGroup < Node
+      @body: untyped
+
+      attr_reader body: untyped
+
+      def initialize: (untyped body) -> void
+
+      def execute: (untyped executor) -> untyped
+    end
+  end
+end

@@ -1,0 +1,32 @@
+module Rush
+  # Reads a shell source one line at a time, accumulating until the buffer parses
+  # to a complete program. POSIX reads and executes command by command, so an
+  # earlier command (a function definition, a future `alias`) can shape later
+  # input and a syntax error only stops the commands that follow it — the ones
+  # before it have already run. IncompleteInput means "the construct is
+  # unfinished": pull another line (multi-line here-documents included). At end of
+  # input a pending buffer gets one final, non-interactive parse so an
+  # unterminated here-document still runs with the body so far, exactly like dash.
+  class ProgramReader
+    @next_line: untyped
+
+    @aliases: untyped
+
+    @buffer: untyped
+
+    def initialize: (?aliases: untyped?) { (?) -> untyped } -> void
+
+    # The next complete program, or :eof. Raises ParseError on a real syntax
+    # error, so the caller decides policy: batch aborts, the REPL reports and
+    # resumes.
+    def next_program: () -> untyped
+
+    private
+
+    def read_more: () -> untyped
+
+    def attempt: (untyped source) -> untyped
+
+    def finish: () -> (:eof | untyped)
+  end
+end

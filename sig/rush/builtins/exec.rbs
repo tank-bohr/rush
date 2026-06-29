@@ -1,0 +1,23 @@
+module Rush
+  module Builtins
+    # `exec [command [arg ...]]` — with no command, make the redirections
+    # permanent for the rest of the shell; with a command, replace the shell
+    # process with it (applying the redirections first). A failed exec aborts the
+    # shell with 127 (not found) or 126 (not executable), matching dash.
+    class Exec < Base
+      def call: () -> untyped
+
+      private
+
+      def redirect_shell: () -> untyped
+
+      def replace_process: () -> untyped
+
+      def abort_exec: (untyped reason, untyped code) -> untyped
+
+      def options: () -> untyped
+
+      def environment: () -> untyped
+    end
+  end
+end

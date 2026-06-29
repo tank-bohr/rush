@@ -1,0 +1,13 @@
+module Rush
+  # Shared break/continue handling for the loop runners. A multi-level signal is
+  # re-raised with one fewer level so the next enclosing loop handles it; a
+  # single-level signal stops here and yields the last command status. Hosts must
+  # expose @executor.
+  module LoopControlHandling
+    private
+
+    def unwind: (untyped signal) -> untyped
+
+    def relay: (untyped signal) -> (untyped | nil)
+  end
+end

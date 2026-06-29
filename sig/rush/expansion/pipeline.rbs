@@ -1,0 +1,47 @@
+module Rush
+  module Expansion
+    # Orchestrates the ordered POSIX word expansion. Each segment expands itself
+    # to one or more parts ([text, splittable, break_before]); unquoted results
+    # undergo IFS field splitting and then pathname expansion. The one multi-field
+    # case is "$@"/$@, which yields one part per positional parameter with a
+    # forced field break between them ($* always joins to a scalar). Quoted
+    # metacharacters are backslash-escaped so they survive splitting and glob.
+    class Pipeline
+      @executor: untyped
+
+      # Tilde expansion strategy per mode (its value is a word's segment list).
+      TILDE_EXPANDERS: { none: untyped, leading: untyped, assignment: untyped }
+
+      def initialize: (untyped executor) -> void
+
+      # Argv expansion: expand each word to fields (splitting unquoted on IFS),
+      # then expand each field's pathname patterns.
+      def expand: (untyped words) -> untyped
+
+      # Assignment RHS / redirection target / operator word: one field, no split.
+      # Tilde expands at the leading position by default; assignment context also
+      # expands after colons, and arithmetic opts out (~ is bitwise not there).
+      def expand_value: (untyped word, ?tilde: ::Symbol) -> untyped
+
+      private
+
+      def parts: (untyped word) -> untyped
+
+      def tilde_expand: (untyped segments, untyped mode) -> untyped
+
+      def glob: (untyped fields) -> untyped
+
+      def field_parts: (untyped segment) -> (untyped | ::Array[::Array[untyped | false]])
+
+      # Glob metacharacters in quoted text are escaped so they match literally;
+      # unquoted text keeps them active.
+      def escape_if_quoted: (untyped segment, untyped text) -> untyped
+
+      def escape: (untyped text) -> untyped
+
+      def splat_parts: (untyped segment) -> untyped
+
+      def ifs: () -> untyped
+    end
+  end
+end

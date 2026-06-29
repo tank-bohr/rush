@@ -1,0 +1,33 @@
+module Rush
+  module Expansion
+    # Field splitting for the `read` builtin: strip leading IFS whitespace, split
+    # into at most `count` fields (the last keeps the unsplit remainder, with
+    # trailing IFS whitespace removed) and pad with empty strings up to `count`.
+    # Uses the full three IFS cases (via the Ifs delimiter sets): whitespace
+    # coalesces, each non-whitespace IFS character delimits (generating empty
+    # fields), a null IFS does not split.
+    class ReadSplitter
+      @ifs: untyped
+
+      @count: untyped
+
+      def initialize: (untyped ifs, untyped count) -> void
+
+      def split: (untyped line) -> untyped
+
+      private
+
+      # A field delimiter: one non-whitespace IFS char with any adjacent IFS
+      # whitespace, or a run of IFS whitespace on its own.
+      def delimiter: () -> untyped
+
+      def leading: () -> ::Regexp
+
+      def trim_last: (untyped fields) -> untyped
+
+      def ws: () -> ::String
+
+      def pad: (untyped fields) -> untyped
+    end
+  end
+end

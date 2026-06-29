@@ -1,0 +1,9 @@
+module Rush
+  module Redirection
+    # Binds a here-document's (already-expanded) body to the redirection's fd —
+    # fd 0 by default — as a readable stream supplied by the SystemCalls port.
+    class HereDocRedirect
+      def apply: (untyped redirect, untyped body, untyped io, untyped system) -> untyped
+    end
+  end
+end

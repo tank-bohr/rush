@@ -19,5 +19,11 @@ task :reek do
   sh 'reek lib exe'
 end
 
-desc 'Full pipeline: compile -> rubocop -> reek -> spec (+ coverage gate)'
-task default: %i[compile rubocop reek spec]
+desc 'Type-check gate (Steep over RBS sigs in sig/; config + rollout in Steepfile)'
+task :steep do
+  # RBS/Steep is one of two independent type checkers (see docs/journal.md).
+  sh 'steep check'
+end
+
+desc 'Full pipeline: compile -> rubocop -> reek -> steep -> spec (+ coverage gate)'
+task default: %i[compile rubocop reek steep spec]

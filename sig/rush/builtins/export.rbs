@@ -1,0 +1,16 @@
+module Rush
+  module Builtins
+    # `export name[=value] ...` — mark each name for inclusion in the environment
+    # of subsequently executed commands, assigning the value first when one is
+    # given. (The `-p` listing form arrives with the variable-printing slice.)
+    class Export < Base
+      def call: () -> untyped
+
+      private
+
+      def declare: (untyped operand) -> untyped
+
+      def environment: () -> untyped
+    end
+  end
+end

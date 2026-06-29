@@ -1,0 +1,27 @@
+module Rush
+  # Maps file descriptors to IO objects for a single command. Redirections fold
+  # over a base table to produce a new one (`with`), so the shell's own streams
+  # are never mutated and a command's redirections are scoped to that command.
+  class IoTable
+    @streams: untyped
+
+    def initialize: (untyped streams) -> void
+
+    def self.standard: (untyped system) -> untyped
+
+    def get: (untyped fd) -> untyped
+
+    def with: (untyped fd, untyped io) -> untyped
+
+    # The bound streams, for diffing which a command's redirects freshly opened
+    # (and so must close) against the base table it inherited.
+    def ios: () -> untyped
+
+    # Flush+close the streams this table opened over `base` (the ones a command's
+    # redirects added), leaving inherited streams and pipe ends untouched.
+    def close_opened_over: (untyped base, untyped system) -> untyped
+
+    # A closed fd (ClosedStream) becomes :close so a spawned child closes it.
+    def to_spawn_options: () -> untyped
+  end
+end

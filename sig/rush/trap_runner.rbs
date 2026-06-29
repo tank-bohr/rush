@@ -1,0 +1,53 @@
+module Rush
+  # Owns the executor's signal/trap handling: it records a trap, installs or
+  # clears the matching OS disposition, runs a delivered signal's action (with $?
+  # preserved, POSIX 2.14), and runs the EXIT trap as the shell terminates. Trap
+  # bodies are parsed and run back through the executor, so this collaborates with
+  # it rather than re-implementing execution.
+  class TrapRunner
+    @executor: untyped
+
+    @state: untyped
+
+    @exiting: untyped
+
+    def initialize: (untyped executor) -> void
+
+    # Run the EXIT trap (if any) as the shell terminates, returning the status the
+    # shell exits with: the given code, unless the trap itself runs `exit`. $?
+    # inside the trap is that same code (POSIX 2.14), so it is published first.
+    def run_exit_trap: (untyped code) -> untyped
+
+    # The status a bare `exit` reports: while the EXIT trap runs, the status the
+    # shell is terminating with (POSIX), not the trap body's last $?; otherwise
+    # the last command's status.
+    def exiting_status: () -> untyped
+
+    # Record a trap and (for real signals, not EXIT) install its disposition so a
+    # delivered signal runs the action / is ignored / restores the default.
+    def set: (untyped name, untyped action) -> untyped
+
+    def reset: (untyped name) -> untyped
+
+    private
+
+    def fire_exit: (untyped action, untyped code) -> untyped
+
+    # Publish `code` as the status a bare `exit` in the action reports, cleared
+    # afterwards so a bare exit elsewhere falls back to the last command status.
+    def with_exiting: (untyped code) { () -> untyped } -> untyped
+
+    def fire: (untyped action) -> untyped
+
+    # An untrappable signal (KILL/STOP) raises; keep the table entry like dash.
+    def install_signal: (untyped name, untyped action) -> untyped
+
+    # '' ignores the signal, :default restores it; a command string installs the
+    # handler block (nil disposition), matching SystemCalls#trap_signal.
+    def disposition: (untyped action) -> untyped
+
+    # Run a delivered signal's action, restoring $? so the interrupted code is
+    # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.
+    def fire_signal: (untyped name) -> untyped
+  end
+end

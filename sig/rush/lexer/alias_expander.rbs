@@ -1,0 +1,47 @@
+module Rush
+  class Lexer
+    # POSIX 2.3.1 alias substitution at lex time. Decides whether a word scanned
+    # in command position is an alias to splice, guarding against re-expanding an
+    # alias within its own replacement (recursion), and tracking the trailing
+    # <blank> rule: a replacement ending in a blank makes the *next* word eligible
+    # too, even though it sits in argument position. Eligibility carries into the
+    # first word of a replacement, so `b` -> `hello` -> `world` chains. It also
+    # owns the stack of input scanners pushed beneath the replacements being read.
+    class AliasExpander
+      @table: untyped
+
+      @active: untyped
+
+      @parents: untyped
+
+      @check_next: untyped
+
+      def initialize: (untyped table) -> void
+
+      # The replacement text when `word` is an alias eligible to expand here, else
+      # nil. Eligible means command position or a pending trailing-blank carry.
+      def expand: (untyped word, untyped command_position) -> (nil | untyped)
+
+      # Stash the scanner a replacement was spliced over; restore it once the
+      # replacement is fully read, dropping the alias from the active set and, if
+      # its value ended in a blank, marking the following word eligible too (OR so
+      # an inner blank-ending alias still chains past an outer one).
+      def push: (untyped scanner) -> untyped
+
+      def nested?: () -> untyped
+
+      def pop: () -> untyped
+
+      # A real (non-spliced) token was emitted: spend the one-shot carry.
+      def spend: () -> untyped
+
+      private
+
+      # Eligible position: aliases are defined and the word sits in command
+      # position, or a pending trailing-blank carry makes it eligible here.
+      def eligible?: (untyped command_position) -> untyped
+
+      def enter: (untyped name) -> (nil | untyped)
+    end
+  end
+end

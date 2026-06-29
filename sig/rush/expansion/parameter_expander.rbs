@@ -1,0 +1,49 @@
+module Rush
+  module Expansion
+    # Expands one ParamRef to a string: resolves the base value, then applies the
+    # operator form (if any). The operator word is itself expanded (so
+    # ${x:-$y} works) by re-scanning it into a Word and running it back through
+    # the expansion pipeline.
+    class ParameterExpander
+      @executor: untyped
+
+      @ref: untyped
+
+      # Operators handled here rather than by the FORMS lambdas: the ${#p} length
+      # and the # ## % %% pattern-removal forms.
+      SPECIAL: { "#len" => :length, "#" => :strip, "##" => :strip, "%" => :strip, "%%" => :strip }
+
+      def initialize: (untyped executor, untyped ref) -> void
+
+      def expand: () -> untyped
+
+      # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is
+      # an error (special parameters like $@ are exempt).
+      def plain: () -> untyped
+
+      def value: () -> untyped
+
+      def unset_or_null?: () -> untyped
+
+      def arg: () -> untyped
+
+      def assign: (untyped text) -> untyped
+
+      def raise_unset: () -> untyped
+
+      private
+
+      def length: () -> untyped
+
+      def strip: () -> untyped
+
+      def unbound?: () -> untyped
+
+      def colon?: () -> untyped
+
+      def message: () -> ("parameter null or not set" | untyped)
+
+      def sub_word: (untyped text) -> untyped
+    end
+  end
+end

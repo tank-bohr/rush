@@ -1,0 +1,17 @@
+module Rush
+  # Name -> function body (an AST node), defined by function definitions and
+  # looked up during command dispatch.
+  class FunctionTable
+    @functions: untyped
+
+    def initialize: () -> void
+
+    def define: (untyped name, untyped body) -> untyped
+
+    def undefine: (untyped name) -> untyped
+
+    def fetch: (untyped name) -> untyped
+
+    def key?: (untyped name) -> untyped
+  end
+end

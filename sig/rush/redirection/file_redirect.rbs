@@ -1,0 +1,21 @@
+module Rush
+  module Redirection
+    # Opens the (already-expanded) target file and binds it to the redirection's
+    # fd, returning a new IoTable. Covers <, >, >>, <> and >|, which differ only
+    # in open mode and default fd.
+    class FileRedirect
+      @mode: untyped
+
+      @default_fd: untyped
+
+      def initialize: (untyped mode, untyped default_fd) -> void
+
+      # A failure to open the target (missing directory, permission denied, a
+      # directory where a file is expected) is a redirection error: the command
+      # is left unrun with status 2 (RedirectError), or — on a special builtin —
+      # aborts the shell, the escalation being handled one level up in
+      # CommandRunner where the command word is known.
+      def apply: (untyped redirect, untyped target, untyped io, untyped system) -> untyped
+    end
+  end
+end

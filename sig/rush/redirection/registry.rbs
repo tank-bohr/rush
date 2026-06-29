@@ -1,0 +1,23 @@
+module Rush
+  # I/O redirection: the per-kind appliers and the registry that dispatches to them.
+  module Redirection
+    # O(1) redirection-kind -> applier lookup, populated by default_registry.
+    class Registry
+      @appliers: untyped
+
+      def initialize: () -> void
+
+      def register: (untyped kind, untyped applier) -> untyped
+
+      def fetch: (untyped kind) -> untyped
+    end
+
+    # <> opens read-write and creates the file (POSIX), unlike the string modes.
+    DEFAULTS: { in: ::Array["r" | 0], out: ::Array["w" | 1], append: ::Array["a" | 1], readwrite: ::Array[untyped | 0], clobber: ::Array["w" | 1] }
+
+    # Default fd for the dup operators: 1 for >&, 0 for <&.
+    DUPS: { dup_out: 1, dup_in: 0 }
+
+    def self.default_registry: () -> untyped
+  end
+end

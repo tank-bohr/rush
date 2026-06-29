@@ -33,10 +33,12 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'racc', '~> 1.7', '>= 1.7.3'
 
   spec.add_development_dependency 'rake', '~> 13.0'
+  spec.add_development_dependency 'rbs', '~> 4.0'
   spec.add_development_dependency 'reek', '~> 6.5'
   spec.add_development_dependency 'rspec', '~> 3.13'
   spec.add_development_dependency 'rubocop', '~> 1.72'
   spec.add_development_dependency 'rubocop-performance', '~> 1.23'
   spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
   spec.add_development_dependency 'simplecov', '~> 0.22'
+  spec.add_development_dependency 'steep', '~> 2.0'
 end

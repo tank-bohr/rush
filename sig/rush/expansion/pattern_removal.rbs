@@ -1,0 +1,34 @@
+module Rush
+  module Expansion
+    # Implements ${p#pat} ${p##pat} ${p%pat} ${p%%pat}: remove from the value the
+    # smallest (#/%) or largest (##/%%) prefix (#) or suffix (%) that matches the
+    # glob pattern, leaving the value unchanged when nothing matches.
+    class PatternRemoval
+      @system: untyped
+
+      @op: untyped
+
+      @value: untyped
+
+      @pattern: untyped
+
+      def initialize: (untyped system, untyped op, untyped value, untyped pattern) -> void
+
+      def call: () -> untyped
+
+      private
+
+      def strip_prefix: () -> untyped
+
+      def strip_suffix: () -> untyped
+
+      def prefixes: () -> untyped
+
+      def suffixes: () -> untyped
+
+      def order: (untyped list) -> untyped
+
+      def match?: (untyped part) -> untyped
+    end
+  end
+end

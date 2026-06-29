@@ -1,0 +1,38 @@
+module Rush
+  # Runs `( list )` in a forked subshell so cd/variable changes never leak to the
+  # parent. The child runs the body and exits with its status; the parent waits
+  # and adopts that status. fork/exit! are the one irreducible wrapper (covered
+  # by subprocess specs); the child-side `run_body` is tested directly.
+  class SubshellRunner
+    @executor: untyped
+
+    @body: untyped
+
+    def initialize: (untyped executor, untyped body) -> void
+
+    def call: () -> untyped
+
+    # The subshell is a fresh top level: exit (or an uncaught return) ends it
+    # with that code, a stray break/continue is a no-op, and a fatal error
+    # (readonly, ${x:?}, ...) aborts only the subshell — the parent shell carries
+    # on — without letting the exception escape the fork.
+    def run_body: () -> untyped
+
+    private
+
+    def resolve: (untyped error) -> untyped
+
+    # exit, and a `return` not caught by a function/dot, both end the subshell
+    # with their code. A subshell inherits the loop scope (it is lexically inside
+    # the loop), so a break/continue targeting a loop in the parent unwinds to
+    # here and ends the subshell — the parent loop, a separate process, is
+    # untouched. (With no enclosing loop the builtin no-ops and never raises.)
+    def exit_like?: (untyped error) -> untyped
+
+    def report_fatal: (untyped error) -> untyped
+
+    def spawn_child: () -> untyped
+
+    def run_child: () -> untyped
+  end
+end

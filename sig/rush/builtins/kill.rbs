@@ -1,0 +1,44 @@
+module Rush
+  module Builtins
+    # `kill [-s sigspec | -sigspec | -signum] pid...` sends a signal (TERM by
+    # default) to each process; `kill -0 pid` only checks that it exists. Signal
+    # names follow Rush::Signals (case-insensitive, no "SIG" prefix); numbers go
+    # straight to the OS so the unnamed ones (16, RT, ...) still work. `kill -l N`
+    # prints the signal name for a number or wait status (128 + signal), and a
+    # bare `kill -l` lists the known names. A bad spec exits 2; a delivery that
+    # fails (no such process) exits 1.
+    class Kill < Base
+      def call: () -> untyped
+
+      private
+
+      def parse: () -> (::Array[untyped] | ::Array["TERM" | untyped])
+
+      def flag?: (untyped arg) -> untyped
+
+      def send_signal: (untyped spec, untyped pids) -> untyped
+
+      def resolve: (untyped spec) -> untyped
+
+      def deliver: (untyped signal, untyped pids) -> untyped
+
+      def send_to: (untyped signal, untyped pid) -> untyped
+
+      def list: (untyped args) -> untyped
+
+      def list_all: () -> untyped
+
+      def list_one: (untyped arg) -> untyped
+
+      def adjust: (untyped num) -> untyped
+
+      def ok: (untyped name) -> untyped
+
+      def usage: () -> untyped
+
+      def bad: (untyped message) -> untyped
+
+      def oops: (untyped message) -> nil
+    end
+  end
+end

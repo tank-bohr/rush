@@ -1,0 +1,53 @@
+module Rush
+  class Lexer
+    # Tracks command position (POSIX Grammar Rule 1) plus the for-header and case
+    # modes (Rules 4-6): the for NAME and `in`, and the case subject / `in` /
+    # pattern / `esac` positions. Modes are a single token (not a stack), so
+    # `for`/`case` nested *directly* inside a case body are not tracked.
+    class LexState
+      @command_position: untyped
+
+      @expect_filename: untyped
+
+      @mode: untyped
+
+      REDIRECT_OPS: ::Array["<" | ">" | :DGREAT | :LESSGREAT | :CLOBBER]
+
+      INTRODUCERS: ::Array[:NEWLINE | ";" | "&" | "|" | "(" | ")" | :AND_IF | :OR_IF | :If | :Then | :Else | :Elif | :Lbrace | :Bang | :While | :Until | :Do | :DSEMI]
+
+      NEUTRAL: ::Array[:ASSIGNMENT_WORD | :IO_NUMBER]
+
+      TRANSITIONS: ::Hash[::Array[:normal | :For] | ::Array[:normal | :Case] | ::Array[:for_name | :NAME] | ::Array[:for_in | :In] | ::Array[:for_in | :Do] | ::Array[:for_in | :NEWLINE] | ::Array[:for_in | ";"] | ::Array[:for_in | "&"] | ::Array[:case_subject | :WORD] | ::Array[:case_in | :In] | ::Array[:case_arm | :WORD] | ::Array[:case_arm | :Esac] | ::Array[:case_pat | ")"] | ::Array[:case_body | :DSEMI], :for_name | :case_subject | :for_in | :normal | :case_in | :case_arm | :case_pat | :case_body]
+
+      def initialize: () -> void
+
+      def expects_command?: () -> untyped
+
+      # A command word here is a real command name, so alias substitution applies:
+      # the normal mode and a case arm's command list. The for-header and case
+      # subject/pattern modes do not expand aliases, even when a newline resets
+      # command position.
+      def command_mode?: () -> untyped
+
+      def for_name?: () -> untyped
+
+      def for_in?: () -> untyped
+
+      def case_subject?: () -> untyped
+
+      def case_in?: () -> untyped
+
+      def case_arm?: () -> untyped
+
+      def case_pat?: () -> untyped
+
+      def advance: (untyped symbol) -> untyped
+
+      private
+
+      def reset: () -> untyped
+
+      def consume_word: () -> untyped
+    end
+  end
+end

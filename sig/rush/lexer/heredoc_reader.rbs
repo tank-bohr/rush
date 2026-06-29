@@ -1,0 +1,37 @@
+module Rush
+  class Lexer
+    # Reads here-document bodies from the lexer's scanner once the command line's
+    # terminating newline is reached. For each pending `<<word` holder it gathers
+    # the following lines up to the delimiter line, strips leading tabs for the
+    # `<<-` form, and parses the body for expansion unless the delimiter was
+    # quoted (a quoted delimiter makes the body literal).
+    class HeredocReader
+      @scanner: untyped
+
+      @interactive: untyped
+
+      def initialize: (untyped scanner, interactive: untyped) -> void
+
+      # Fill each holder, in the order the `<<`s appeared, with its body.
+      def fill: (untyped holders) -> untyped
+
+      private
+
+      def read: (untyped holder) -> untyped
+
+      def gather: (untyped holder, untyped out) -> untyped
+
+      def heredoc_line: (untyped holder) -> (nil | untyped)
+
+      def delimiter?: (untyped holder, untyped line) -> untyped
+
+      def strip_tabs: (untyped holder, untyped line) -> untyped
+
+      # A quoted delimiter (<<'EOF') makes the body literal; an unquoted one is
+      # parsed for expansion ($var, $(...), `...`), applied later at execution.
+      def build_body: (untyped holder, untyped text) -> untyped
+
+      def literal_word: (untyped text) -> untyped
+    end
+  end
+end

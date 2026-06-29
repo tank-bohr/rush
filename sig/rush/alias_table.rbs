@@ -1,0 +1,24 @@
+module Rush
+  # The shell's alias definitions: a name maps to the replacement text the lexer
+  # splices in when the name appears in command position (POSIX 2.3.1). The
+  # `alias` builtin validates names; the table just stores what it is given.
+  class AliasTable
+    @aliases: untyped
+
+    def initialize: () -> void
+
+    def define: (untyped name, untyped value) -> untyped
+
+    def remove: (untyped name) -> untyped
+
+    def value: (untyped name) -> untyped
+
+    def key?: (untyped name) -> untyped
+
+    def clear: () -> untyped
+
+    # name => value pairs sorted by name, for `alias` with no operands. dash lists
+    # in hash order; rush sorts for a deterministic, testable listing.
+    def listing: () -> untyped
+  end
+end

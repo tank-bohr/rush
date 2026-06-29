@@ -1,0 +1,32 @@
+module Rush
+  module Expansion
+    module Arithmetic
+      # The arithmetic AST. Each node computes against an Evaluator (`ctx`), which
+      # resolves variable names. And/Or and the conditional short-circuit so a
+      # branch that is not taken never runs (matching dash, where `0 && 1/0` is 0).
+      Num: untyped
+
+      # A variable reference; resolves its name through the evaluator.
+      Var: untyped
+
+      # A unary operation (+ - ! ~) on one operand.
+      Unary: untyped
+
+      # A binary arithmetic / bitwise / comparison operation on two operands.
+      Binary: untyped
+
+      # Logical &&: short-circuits, so the right operand runs only when the left is non-zero.
+      And: untyped
+
+      # Logical ||: short-circuits, so the right operand runs only when the left is zero.
+      Or: untyped
+
+      # The ?: conditional: only the taken branch is evaluated.
+      Cond: untyped
+
+      # The right-hand side is evaluated before the target is read, so a nested
+      # assignment in the rhs (e.g. `a += a += 1`) takes effect first.
+      Assign: untyped
+    end
+  end
+end

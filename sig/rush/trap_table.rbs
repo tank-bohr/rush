@@ -1,0 +1,19 @@
+module Rush
+  # The shell's trap actions, keyed by canonical signal name (see Rush::Signals).
+  # An action is the command string to run when the signal fires; "" means the
+  # signal is ignored. Resetting a signal drops its entry, restoring the default.
+  class TrapTable
+    @actions: untyped
+
+    def initialize: () -> void
+
+    def set: (untyped name, untyped action) -> untyped
+
+    def clear: (untyped name) -> untyped
+
+    def action: (untyped name) -> untyped
+
+    # [name, action] pairs ordered by signal number, for `trap` with no operands.
+    def listing: () -> untyped
+  end
+end

@@ -1,0 +1,13 @@
+module Rush
+  module Builtins
+    # `return [n]` — return from the current function with status n (default: the
+    # last command's status). A non-numeric n is a special-builtin error.
+    class Return < Base
+      def call: () -> untyped
+
+      private
+
+      def code: () -> untyped
+    end
+  end
+end

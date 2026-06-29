@@ -1,0 +1,93 @@
+module Rush
+  # The sole impure class: every syscall rush makes is a thin wrapper here, so
+  # specs inject a fake (spec/support/fake_system_calls.rb) and reach every
+  # error branch without touching the real OS. Grows one wrapper per slice.
+  class SystemCalls
+    include FileTests
+
+    # Run argv as an external program. The [cmd, argv0] form forbids the shell
+    # path even for a single-word command, so `spawn` never re-interprets words.
+    def spawn: (untyped env, untyped argv, untyped options) -> untyped
+
+    def waitpid2: (untyped pid) -> untyped
+
+    # Replace the current process image (the `exec` builtin); the [cmd, argv0]
+    # form forbids the shell path, like #spawn. Returns only if the exec fails.
+    def exec: (untyped env, untyped argv, untyped options) -> untyped
+
+    def pid: () -> untyped
+
+    # Accumulated CPU times for the `times` builtin: a Process::Tms with utime /
+    # stime for the shell and cutime / cstime for its children. Non-deterministic,
+    # so the builtin's output is verified by format rather than differentially.
+    def times: () -> untyped
+
+    # Send a signal to a process (the `kill` builtin); signal 0 only probes that
+    # the target exists. Real signal delivery cannot run under the test harness.
+    # :nocov:
+    def kill: (untyped signal, untyped pid) -> untyped
+
+    # Install a signal disposition for `trap`: a command string ('IGNORE' /
+    # 'DEFAULT') or, when nil, the block to run when the signal arrives. Mutating
+    # the process's real signal handlers cannot run under the test harness.
+    def trap_signal: (untyped name, untyped command) { (?) -> untyped } -> untyped
+
+    def pipe: () -> untyped
+
+    # fork/exit! replace or split the process and so cannot run in-process under
+    # the test harness; the child-side logic they drive is extracted into pure
+    # methods that ARE tested, and real behaviour is covered by subprocess specs.
+    # exit! flushes the standard streams first: $stdout is unbuffered only when a
+    # tty, so a forked child running a builtin would otherwise lose its output.
+    # :nocov:
+    def fork: () { (?) -> untyped } -> untyped
+
+    def exit!: (untyped code) -> untyped
+
+    def chdir: (untyped path) -> untyped
+
+    def pwd: () -> untyped
+
+    def expand_path: (untyped path, untyped base) -> untyped
+
+    def fnmatch: (untyped pattern, untyped str) -> untyped
+
+    # Pathname expansion: sorted matches for a glob pattern (backslash escapes
+    # are honoured; a leading dot is matched only by an explicit dot). Empty
+    # when nothing matches.
+    def glob: (untyped pattern) -> untyped
+
+    # Sync so a builtin's write reaches the file immediately — like a pipe write
+    # end (sync by default), this lets a forked subshell's output survive its
+    # exit! and be visible to a later command; close_redirect releases the fd.
+    # rubocop:disable Style/FileOpen -- a redirection keeps the file open past
+    # this call, so the auto-closing block form is wrong here.
+    def open_file: (untyped path, untyped mode) -> untyped
+
+    # Flush and release a file a redirection opened, so a later command in the
+    # same shell sees the data and the fd does not leak.
+    def close_redirect: (untyped io) -> untyped
+
+    def read_file: (untyped path) -> untyped
+
+    # A readable stream carrying a here-document body (a real fd, via a tempfile,
+    # so spawned children can read it).
+    def here_doc: (untyped body) -> untyped
+
+    def stdin: () -> untyped
+
+    def stdout: () -> untyped
+
+    def stderr: () -> untyped
+
+    # Interactive-REPL support: read one line of input (nil at EOF) and report
+    # whether standard input is a terminal.
+    def read_line: () -> untyped
+
+    def tty?: () -> untyped
+
+    # Home directory of a named user for ~user tilde expansion, or nil if there
+    # is no such user.
+    def home_dir: (untyped name) -> untyped
+  end
+end

@@ -1,0 +1,22 @@
+module Rush
+  module Expansion
+    # Expands $(( ... )): first apply parameter expansion and command
+    # substitution to the raw text (POSIX treats it like a double-quoted word),
+    # then evaluate the result as an integer arithmetic expression.
+    class ArithmeticExpander
+      @executor: untyped
+
+      @source: untyped
+
+      def initialize: (untyped executor, untyped source) -> void
+
+      def expand: () -> untyped
+
+      private
+
+      def expanded: () -> untyped
+
+      def scanned: () -> untyped
+    end
+  end
+end

@@ -1,0 +1,15 @@
+module Rush
+  module Builtins
+    # `eval [arg ...]` — join the arguments with spaces and run the result in
+    # the current shell, returning its status. The input is read command by
+    # command (SourceRunner), so an `alias` or function defined by one command
+    # shapes how the next is parsed. A redirection on eval applies to the parsed
+    # commands (executor.with_io), and exit/break/continue/return all propagate
+    # to the enclosing context. A syntax error is a special-builtin error: it
+    # aborts a non-interactive shell with status 2 (BuiltinError), after the
+    # complete commands before it have run.
+    class Eval < Base
+      def call: () -> untyped
+    end
+  end
+end

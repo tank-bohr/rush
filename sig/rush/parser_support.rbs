@@ -1,0 +1,58 @@
+module Rush
+  # The body of the racc-generated Rush::Parser (its `---- inner` block only
+  # `include`s this), kept in a normal linted/covered file. Rule actions call
+  # these factories; none contain node logic.
+  module ParserSupport
+    @lexer: untyped
+
+    def initialize: (untyped lexer) -> void
+
+    def parse: () -> untyped
+
+    def next_token: () -> untyped
+
+    def on_error: (untyped token_id, untyped value, untyped _stack) -> untyped
+
+    private
+
+    def make_list: (untyped entries) -> untyped
+
+    def pending_entry: (untyped and_or) -> ::Array[untyped | ";"]
+
+    def terminate_list: (untyped entries, untyped sep) -> untyped
+
+    def append_and_or: (untyped entries, untyped sep, untyped and_or) -> untyped
+
+    def make_and_or: (untyped left, untyped op, untyped right) -> untyped
+
+    def make_pipeline: (untyped commands, untyped negate) -> untyped
+
+    def make_if: (untyped condition, untyped consequent, untyped alternative) -> untyped
+
+    def make_brace_group: (untyped body) -> untyped
+
+    def make_subshell: (untyped body) -> untyped
+
+    def make_redirected: (untyped command, untyped redirects) -> untyped
+
+    def make_while: (untyped condition, untyped body) -> untyped
+
+    def make_until: (untyped condition, untyped body) -> untyped
+
+    def make_for: (untyped name, untyped words, untyped body) -> untyped
+
+    def make_case: (untyped word, untyped items) -> untyped
+
+    def make_case_item: (untyped patterns, untyped body) -> untyped
+
+    def make_function: (untyped word, untyped body) -> untyped
+
+    def make_simple_command: (untyped prefix, untyped word, untyped suffix) -> untyped
+
+    def make_redirect: (untyped kind, untyped target) -> untyped
+
+    def make_heredoc: (untyped holder) -> untyped
+
+    def with_io_number: (untyped redirect, untyped number) -> untyped
+  end
+end

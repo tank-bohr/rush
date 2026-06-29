@@ -1,0 +1,36 @@
+module Rush
+  class Lexer
+    # Reads the raw body of a command substitution from the shared scanner:
+    # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
+    # The body is re-parsed and executed at expansion time.
+    class SubstitutionReader
+      @scanner: untyped
+
+      @depth: untyped
+
+      DEPTH_DELTA: { "(" => 1, ")" => -1 }
+
+      def initialize: (untyped scanner) -> void
+
+      def parens: () -> untyped
+
+      def backticks: () -> untyped
+
+      # Read the body of $(( ... )) after the leading `((`, up to the matching
+      # `))`, allowing balanced inner parentheses.
+      def arithmetic: () -> untyped
+
+      private
+
+      def collect: (untyped body) -> untyped
+
+      def arith_char: () -> untyped
+
+      def arith_close: () -> (untyped | nil)
+
+      def paren_char: () -> untyped
+
+      def adjust: (untyped char) -> untyped
+    end
+  end
+end

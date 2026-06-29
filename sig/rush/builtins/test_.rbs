@@ -1,0 +1,21 @@
+module Rush
+  module Builtins
+    # `test EXPR` / `[ EXPR ]` — evaluate a conditional expression, returning
+    # success (0) when true and failure (1) when false. A malformed expression
+    # is reported on stderr with exit status 2. Invoked as `[`, the expression
+    # must be terminated by a closing `]`.
+    class Test < Base
+      def call: () -> untyped
+
+      private
+
+      def bracketed?: () -> untyped
+
+      def without_close: (untyped ops) -> untyped
+
+      def evaluate: (untyped ops) -> untyped
+
+      def report: (untyped message) -> untyped
+    end
+  end
+end

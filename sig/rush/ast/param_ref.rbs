@@ -1,0 +1,13 @@
+module Rush
+  module AST
+    # Parses the body of ${...}: a parameter name plus an optional operator — the
+    # default/assign/error/alternative forms (- = ? +, optionally ':'-prefixed),
+    # the prefix/suffix removal forms (# ## % %%), or the ${#name} length form
+    # (recognised before the others, since a leading # also names $#).
+    PARAM_BRACED: ::Regexp
+
+    # A parameter reference parsed from $name or ${...}. The operator word is
+    # expanded lazily at expansion time.
+    ParamRef: untyped
+  end
+end

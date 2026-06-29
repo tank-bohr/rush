@@ -1,0 +1,8 @@
+module Rush
+  module Builtins
+    # `pwd` — print the shell's logical working directory.
+    class Pwd < Base
+      def call: () -> untyped
+    end
+  end
+end

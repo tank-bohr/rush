@@ -1,0 +1,9 @@
+module Rush
+  # The shell's builtin commands and the default name -> implementation table.
+  module Builtins
+    # The builtins available in Slice 1. Later slices extend this table.
+    DEFAULTS: { ":" => untyped, "true" => untyped, "false" => untyped, "echo" => untyped, "exit" => untyped, "pwd" => untyped, "cd" => untyped, "break" => untyped, "continue" => untyped, "return" => untyped, "test" => untyped, "[" => untyped, "set" => untyped, "shift" => untyped, "export" => untyped, "unset" => untyped, "eval" => untyped, "read" => untyped, "printf" => untyped, "." => untyped, "readonly" => untyped, "exec" => untyped, "local" => untyped, "type" => untyped, "command" => untyped, "trap" => untyped, "kill" => untyped, "alias" => untyped, "unalias" => untyped, "hash" => untyped, "times" => untyped }
+
+    def self.default_registry: () -> untyped
+  end
+end

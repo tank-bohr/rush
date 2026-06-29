@@ -1,0 +1,23 @@
+module Rush
+  class SystemCalls
+    # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L), mixed
+    # into SystemCalls. Thin File delegations, like the rest of the syscall port.
+    module FileTests
+      def exist?: (untyped path) -> untyped
+
+      def file?: (untyped path) -> untyped
+
+      def directory?: (untyped path) -> untyped
+
+      def readable?: (untyped path) -> untyped
+
+      def writable?: (untyped path) -> untyped
+
+      def executable?: (untyped path) -> untyped
+
+      def file_nonempty?: (untyped path) -> untyped
+
+      def symlink?: (untyped path) -> untyped
+    end
+  end
+end

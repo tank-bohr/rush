@@ -1,0 +1,27 @@
+module Rush
+  # Runs an external program through the system port with the command's env and
+  # IoTable, translating the result: the OS exit/signal status, or POSIX 127
+  # (not found) / 126 (not executable).
+  class External
+    @executor: untyped
+
+    @argv: untyped
+
+    @io: untyped
+
+    @env: untyped
+
+    def initialize: (untyped executor, untyped argv, untyped io, untyped env) -> void
+
+    def call: () -> untyped
+
+    private
+
+    def system: () -> untyped
+
+    # close_others closes inherited fds >= 3 (e.g. pipeline pipe ends) in the child.
+    def spawn_options: () -> untyped
+
+    def error_status: (untyped error) -> untyped
+  end
+end

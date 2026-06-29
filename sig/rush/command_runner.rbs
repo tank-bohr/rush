@@ -1,0 +1,56 @@
+module Rush
+  # Runs a SimpleCommand: expand argv, evaluate redirections into a per-command
+  # IoTable, then either apply bare assignments (no command word) or dispatch to
+  # a builtin / external. Temporary-vs-persistent assignment scoping for special
+  # builtins is refined in Phase 2.
+  class CommandRunner
+    @executor: untyped
+
+    @command: untyped
+
+    @base_io: untyped
+
+    def initialize: (untyped executor, untyped command, ?untyped base_io) -> void
+
+    def call: () -> untyped
+
+    private
+
+    def trace: (untyped argv) -> (untyped | nil)
+
+    # No command word: perform redirections then assignments (POSIX order), and
+    # take the status of the last command substitution either ran (Status.success
+    # when none did), as published via the executor's cmd-sub channel.
+    # with_redirects opens/truncates the targets for their side effects, then
+    # flushes+closes them after the assignments so a later command sees the data.
+    def run_bare: () -> untyped
+
+    # POSIX command search: special builtin, then function (so a function may
+    # override a regular builtin), then regular builtin, then PATH. A redirect
+    # error leaves a regular command unrun with status 2 (RedirectError reaches
+    # Executor#run), but on a special builtin it aborts the shell (POSIX 2.8.1),
+    # so it is re-raised as a fatal BuiltinError.
+    def run_command: (untyped argv) -> untyped
+
+    def dispatch: (untyped argv, untyped io) -> untyped
+
+    # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
+    # dash, that fails the command (status 1) without killing the shell.
+    def builtin: (untyped argv, untyped io) -> untyped
+
+    def special?: (untyped name) -> untyped
+
+    # A function runs in the current shell, not a subshell. The call's redirects
+    # (if any) bind the whole body and are torn down when it returns — even an
+    # `exec` inside is scoped to them, as dash does. With no redirects the body
+    # shares the shell's io table so an `exec` inside *persists*, so wrap in
+    # with_io only when a redirect actually layered a new table over the base.
+    def run_function: (untyped argv, untyped io) -> untyped
+
+    def command_env: () -> untyped
+
+    def persist: (untyped assignment) -> untyped
+
+    def assigned: (untyped word) -> untyped
+  end
+end

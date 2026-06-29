@@ -1,0 +1,57 @@
+module Rush
+  module Expansion
+    module Arithmetic
+      # A Pratt (precedence-climbing) parser turning the tokens into the AST.
+      # Binary precedence is table-driven; the conditional operator (?:) binds
+      # loosest and is right-associative. Malformed input or leftover tokens
+      # raise a syntax error (matching dash's "expecting primary"/"expecting EOF").
+      class Parser
+        @tokens: untyped
+
+        @pos: untyped
+
+        PRECEDENCE: { "||" => 1, "&&" => 2, "|" => 3, "^" => 4, "&" => 5, "==" => 6, "!=" => 6, "<" => 7, "<=" => 7, ">" => 7, ">=" => 7, "<<" => 8, ">>" => 8, "+" => 9, "-" => 9, "*" => 10, "/" => 10, "%" => 10 }
+
+        UNARY: ::Array["+" | "-" | "!" | "~"]
+
+        ASSIGN: ::Array["=" | "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | "&=" | "^=" | "|="]
+
+        def initialize: (untyped tokens) -> void
+
+        def parse: () -> untyped
+
+        private
+
+        # Assignment binds loosest and is right-associative; its target must be a
+        # bare name (an lvalue), so e.g. `5 = 3` is a syntax error.
+        def assignment: () -> untyped
+
+        def conditional: () -> untyped
+
+        def binary: (untyped min) -> untyped
+
+        def fold: (untyped left) -> untyped
+
+        def combine: (untyped op, untyped left, untyped right) -> untyped
+
+        def unary: () -> untyped
+
+        def primary: () -> untyped
+
+        def grouped: () -> untyped
+
+        def peek: () -> untyped
+
+        def advance: () -> untyped
+
+        def take: () -> untyped
+
+        def accept?: (untyped token) -> (false | true)
+
+        def expect: (untyped token) -> untyped
+
+        def oops: () -> untyped
+      end
+    end
+  end
+end

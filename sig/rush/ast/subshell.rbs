@@ -1,0 +1,15 @@
+module Rush
+  module AST
+    # `( list )` — runs the list in a subshell (a forked child) so cd and
+    # variable changes do not affect the current shell. Its status is the list's.
+    class Subshell < Node
+      @body: untyped
+
+      attr_reader body: untyped
+
+      def initialize: (untyped body) -> void
+
+      def execute: (untyped executor) -> untyped
+    end
+  end
+end

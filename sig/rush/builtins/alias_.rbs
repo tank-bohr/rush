@@ -1,0 +1,32 @@
+module Rush
+  module Builtins
+    # `alias [name[=value]...]` defines or prints aliases. With no operands it
+    # lists every alias as a single-quoted `name=value` on stdout. An operand
+    # containing `=` past its first character defines (the name is everything
+    # before that `=`); a bare name prints that alias, or reports `alias: NAME not
+    # found` on stderr and yields status 1 while still processing the rest.
+    class Alias < Base
+      ASSIGN: ::Regexp
+
+      def call: () -> untyped
+
+      private
+
+      def handle: (untyped operand) -> untyped
+
+      def define: (untyped name, untyped value) -> untyped
+
+      def query: (untyped name) -> untyped
+
+      def list: () -> untyped
+
+      def show: (untyped name, untyped value) -> untyped
+
+      def single_quote: (untyped text) -> ::String
+
+      def keep: (untyped status, untyped result) -> untyped
+
+      def aliases: () -> untyped
+    end
+  end
+end

@@ -1,0 +1,22 @@
+module Rush
+  # Immutable result of running a command. $? can hold a value wider than a byte:
+  # dash keeps `return 300` as 300 in-process, and only wraps to 0-255 at a real
+  # process boundary (exit!/the shell's own exit, where the OS truncates). The
+  # operand is validated non-negative and <= INT_MAX before reaching here.
+  class Status
+    @exitstatus: untyped
+
+    attr_reader exitstatus: untyped
+
+    def initialize: (untyped exitstatus) -> void
+
+    def success?: () -> untyped
+
+    def self.success: () -> untyped
+
+    def self.failure: (?::Integer code) -> untyped
+
+    # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
+    def self.of: (untyped process_status) -> untyped
+  end
+end

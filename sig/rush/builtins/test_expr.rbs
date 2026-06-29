@@ -1,0 +1,74 @@
+module Rush
+  module Builtins
+    # Pure evaluator for `test`/`[` expressions. POSIX specifies the result by
+    # argument count (XCU `test`), so #evaluate peels the structural layers —
+    # a leading `!` negates the rest, a `( … )` wrapper drops to its contents —
+    # recursing until what is left is a primary it dispatches by arity (0 → false,
+    # 1 → non-empty, 2 → unary like -n/-f, 3 → binary like = / -eq). The one
+    # exception POSIX bakes in: at three arguments a binary primary outranks the
+    # `!`/`( )` reading, so it is tried first. String and integer primaries live
+    # here; file-test primaries arrive via @files. A malformed expression raises
+    # TestError, which the builtin maps to exit 2.
+    class TestExpr
+      @args: untyped
+
+      @files: untyped
+
+      PRIMARY: { 0 => :none?, 1 => :nonempty?, 2 => :unary }
+
+      STRING_UNARY: { "-n" => :nonempty?, "-z" => :empty? }
+
+      FILE_UNARY: { "-e" => :exist?, "-f" => :file?, "-d" => :directory?, "-r" => :readable?, "-w" => :writable?, "-x" => :executable?, "-s" => :file_nonempty?, "-h" => :symlink?, "-L" => :symlink? }
+
+      STRING: { "=" => :==, "!=" => :!= }
+
+      INTEGER: { "-eq" => :==, "-ne" => :!=, "-gt" => :>, "-ge" => :>=, "-lt" => :<, "-le" => :<= }
+
+      # A string that may name an integer for the numeric primaries: #value is its
+      # integer when it is a valid (optionally signed, blank-padded) decimal, else
+      # nil. Underscores and 0x are rejected, matching dash's strtol-strictness.
+      class MaybeInteger
+        @text: untyped
+
+        PATTERN: ::Regexp
+
+        def initialize: (untyped text) -> void
+
+        def valid?: () -> untyped
+
+        def value: () -> (untyped | nil)
+      end
+
+      def initialize: (untyped args, untyped files) -> void
+
+      def true?: () -> untyped
+
+      private
+
+      def evaluate: (untyped args) -> untyped
+
+      # A `( … )` wrapper drops to its contents at any length (dash recurses
+      # through groupings POSIX leaves unspecified past four arguments); empty
+      # `( )` peels to the no-argument test, which is false rather than an error.
+      def wrapped?: (untyped args) -> untyped
+
+      def primary: (untyped args) -> untyped
+
+      def none?: () -> false
+
+      def bad: (*untyped) -> untyped
+
+      def unary: (untyped op, untyped val) -> untyped
+
+      def nonempty?: (untyped val) -> untyped
+
+      def empty?: (untyped val) -> untyped
+
+      def binary?: (untyped op) -> untyped
+
+      def binary: (untyped lhs, untyped op, untyped rhs) -> untyped
+
+      def to_int: (untyped text) -> untyped
+    end
+  end
+end

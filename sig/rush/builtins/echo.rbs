@@ -1,0 +1,18 @@
+module Rush
+  module Builtins
+    # `echo [-n] [arg...]` — joins arguments with spaces and adds a trailing
+    # newline; `-n` suppresses it. XSI escape processing (\n, \t, \c, ...) is
+    # added in Phase 2.
+    class Echo < Base
+      def call: () -> untyped
+
+      private
+
+      def render: () -> untyped
+
+      def newline?: () -> untyped
+
+      def printed: () -> untyped
+    end
+  end
+end

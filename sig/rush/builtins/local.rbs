@@ -1,0 +1,19 @@
+module Rush
+  module Builtins
+    # `local name[=value] ...` — inside a function, mark each name as local so its
+    # prior value is restored when the function returns. A bare name keeps its
+    # current value (dash semantics); name=value also assigns. Used outside a
+    # function it is an error with status 2.
+    class Local < Base
+      def call: () -> untyped
+
+      private
+
+      def state: () -> untyped
+
+      def declare: (untyped operand) -> untyped
+
+      def not_in_function: () -> untyped
+    end
+  end
+end

@@ -1,0 +1,23 @@
+module Rush
+  module Expansion
+    module Arithmetic
+      # Evaluates an already parameter-expanded arithmetic string: tokenize,
+      # parse, walk the AST. A bare name resolves to its shell value parsed as an
+      # integer constant (unset or blank is 0); a non-numeric value is an error,
+      # as in dash. Recursion into a value as an *expression* is not done.
+      class Evaluator
+        @executor: untyped
+
+        def initialize: (untyped executor) -> void
+
+        def evaluate: (untyped source) -> untyped
+
+        def resolve: (untyped name) -> (0 | untyped)
+
+        # `name op= value`: for a compound operator, combine with the current
+        # value first (`+=` -> `+`); store the wrapped result and return it.
+        def assign: (untyped name, untyped op, untyped value) -> untyped
+      end
+    end
+  end
+end

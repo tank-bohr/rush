@@ -1,0 +1,19 @@
+module Rush
+  module Builtins
+    # `unset [-fv] name ...` — remove each name. The default (and -v) unsets a
+    # shell variable; -f unsets a function. Unsetting an absent name succeeds.
+    class Unset < Base
+      def call: () -> untyped
+
+      private
+
+      def names: () -> untyped
+
+      def function?: () -> untyped
+
+      def remove: (untyped name) -> untyped
+
+      def state: () -> untyped
+    end
+  end
+end

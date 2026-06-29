@@ -1,0 +1,25 @@
+module Rush
+  # Shell variables and the subset marked for export. The exported slice is what
+  # external children receive (see SystemCalls#spawn).
+  class Environment
+    @vars: untyped
+
+    @exported: untyped
+
+    @readonly: untyped
+
+    def initialize: (?untyped source) -> void
+
+    def get: (untyped name) -> untyped
+
+    def assign: (untyped name, untyped value) -> untyped
+
+    def export: (untyped name) -> untyped
+
+    def readonly: (untyped name) -> untyped
+
+    def unset: (untyped name) -> untyped
+
+    def exported: () -> untyped
+  end
+end

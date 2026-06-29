@@ -1,0 +1,24 @@
+module Rush
+  module AST
+    # `if cond; then body; [elif/else ...] fi`. Runs the condition list; on
+    # success runs the consequent, otherwise the alternative (an else List, a
+    # nested If for elif, or nil). With no matching branch the status is 0.
+    class If < Node
+      @condition: untyped
+
+      @consequent: untyped
+
+      @alternative: untyped
+
+      attr_reader condition: untyped
+
+      attr_reader consequent: untyped
+
+      attr_reader alternative: untyped
+
+      def initialize: (untyped condition, untyped consequent, untyped alternative) -> void
+
+      def execute: (untyped executor) -> untyped
+    end
+  end
+end

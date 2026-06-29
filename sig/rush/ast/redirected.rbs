@@ -1,0 +1,20 @@
+module Rush
+  module AST
+    # A compound command (group, subshell, loop, if, case) carrying redirections
+    # on the whole command: they build a base IoTable that every command in the
+    # body inherits, restored once the command finishes. Its status is the body's.
+    class Redirected < Node
+      @command: untyped
+
+      @redirects: untyped
+
+      attr_reader command: untyped
+
+      attr_reader redirects: untyped
+
+      def initialize: (untyped command, untyped redirects) -> void
+
+      def execute: (untyped executor) -> untyped
+    end
+  end
+end

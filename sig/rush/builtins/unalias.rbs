@@ -1,0 +1,20 @@
+module Rush
+  module Builtins
+    # `unalias name...` removes each named alias; `unalias -a` removes them all.
+    # A name with no alias is reported as `unalias: NAME not found` on stderr with
+    # status 1, but the remaining names are still processed.
+    class Unalias < Base
+      def call: () -> untyped
+
+      private
+
+      def remove_all: () -> untyped
+
+      def remove: (untyped name) -> untyped
+
+      def keep: (untyped status, untyped result) -> untyped
+
+      def aliases: () -> untyped
+    end
+  end
+end

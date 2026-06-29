@@ -1,0 +1,45 @@
+module Rush
+  module Expansion
+    # Tilde expansion (step 1): a leading unquoted `~` or `~name` in a word's
+    # first literal segment becomes $HOME or the named user's home directory. It
+    # is left untouched when there is no such user, or when HOME is unset for a
+    # bare `~`. This base handles the leading form; AssignmentTilde extends it to
+    # also expand after each unquoted colon, and NoTilde disables it entirely.
+    class TildeExpander
+      @executor: untyped
+
+      @segments: untyped
+
+      def initialize: (untyped executor, untyped segments) -> void
+
+      def expand: () -> untyped
+
+      private
+
+      def rewrite: (untyped text) -> untyped
+
+      def prefix: (untyped text) -> untyped
+
+      def split: (untyped body) -> untyped
+
+      def resolve: (untyped name) -> untyped
+    end
+
+    # Assignment context (PATH=~/bin:~root/x): the leading tilde plus one after
+    # each unquoted colon, so every colon-separated piece gets the ~ treatment.
+    class AssignmentTilde < TildeExpander
+      private
+
+      def rewrite: (untyped text) -> untyped
+    end
+
+    # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
+    class NoTilde
+      @segments: untyped
+
+      def initialize: (untyped _executor, untyped segments) -> void
+
+      def expand: () -> untyped
+    end
+  end
+end
