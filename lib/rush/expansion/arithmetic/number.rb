@@ -45,23 +45,35 @@ module Rush
           left - (divide(left, right) * right)
         end
 
+        # The #: types each lambda's parameters: Steep does not propagate a frozen
+        # hash's declared value type into bare `->()` literals, so without it the
+        # params stay untyped (and every operator body with them). See number.rbs.
         UNARY = {
-          '+' => ->(value) { value }, '-' => ->(value) { -value },
-          '!' => ->(value) { bool(value.zero?) }, '~' => ->(value) { ~value }
+          '+' => ->(value) { value }, #: ^(Integer) -> Integer
+          '-' => ->(value) { -value }, #: ^(Integer) -> Integer
+          '!' => ->(value) { bool(value.zero?) }, #: ^(Integer) -> Integer
+          '~' => ->(value) { ~value } #: ^(Integer) -> Integer
         }.freeze
 
         BINARY = {
-          '+' => ->(left, right) { left + right }, '-' => ->(left, right) { left - right },
-          '*' => ->(left, right) { left * right }, '/' => ->(left, right) { divide(left, right) },
-          '%' => ->(left, right) { modulo(left, right) },
+          '+' => ->(left, right) { left + right }, #: ^(Integer, Integer) -> Integer
+          '-' => ->(left, right) { left - right }, #: ^(Integer, Integer) -> Integer
+          '*' => ->(left, right) { left * right }, #: ^(Integer, Integer) -> Integer
+          '/' => ->(left, right) { divide(left, right) }, #: ^(Integer, Integer) -> Integer
+          '%' => ->(left, right) { modulo(left, right) }, #: ^(Integer, Integer) -> Integer
           # Shift counts are masked to 6 bits, matching x86-64 (and so dash) for
           # the out-of-range/negative counts that C leaves undefined.
-          '<<' => ->(left, right) { left << (right & 63) }, '>>' => ->(left, right) { left >> (right & 63) },
-          '&' => ->(left, right) { left & right }, '|' => ->(left, right) { left | right },
-          '^' => ->(left, right) { left ^ right },
-          '<' => ->(left, right) { bool(left < right) }, '<=' => ->(left, right) { bool(left <= right) },
-          '>' => ->(left, right) { bool(left > right) }, '>=' => ->(left, right) { bool(left >= right) },
-          '==' => ->(left, right) { bool(left == right) }, '!=' => ->(left, right) { bool(left != right) }
+          '<<' => ->(left, right) { left << (right & 63) }, #: ^(Integer, Integer) -> Integer
+          '>>' => ->(left, right) { left >> (right & 63) }, #: ^(Integer, Integer) -> Integer
+          '&' => ->(left, right) { left & right }, #: ^(Integer, Integer) -> Integer
+          '|' => ->(left, right) { left | right }, #: ^(Integer, Integer) -> Integer
+          '^' => ->(left, right) { left ^ right }, #: ^(Integer, Integer) -> Integer
+          '<' => ->(left, right) { bool(left < right) }, #: ^(Integer, Integer) -> Integer
+          '<=' => ->(left, right) { bool(left <= right) }, #: ^(Integer, Integer) -> Integer
+          '>' => ->(left, right) { bool(left > right) }, #: ^(Integer, Integer) -> Integer
+          '>=' => ->(left, right) { bool(left >= right) }, #: ^(Integer, Integer) -> Integer
+          '==' => ->(left, right) { bool(left == right) }, #: ^(Integer, Integer) -> Integer
+          '!=' => ->(left, right) { bool(left != right) } #: ^(Integer, Integer) -> Integer
         }.freeze
       end
     end

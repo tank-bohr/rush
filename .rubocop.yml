@@ -168,6 +168,16 @@ Style/TrailingCommaInBlockArgs: { Enabled: false }
 Gemspec/DevelopmentDependencies:
   Enabled: false
 
+# Steep/RBS inline annotations (`#: Type`) carry type information, not prose:
+# they need no leading space (the `#:` token is significant) and are excluded
+# from the line-length budget, like a sig declared elsewhere would be. Used to
+# type hash-of-lambda operator tables, whose param types Steep will not infer
+# from a frozen literal (see number.rb / parameter_forms.rb and docs/journal.md).
+Layout/LeadingCommentSpace:
+  AllowRBSInlineAnnotation: true
+Layout/LineLength:
+  AllowRBSInlineAnnotation: true
+
 # All method definitions use the def...end form; endless defs are disallowed so
 # the same kind of method never appears in two shapes.
 Style/EndlessMethod:
