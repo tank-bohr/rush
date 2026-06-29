@@ -3,25 +3,27 @@ module Rush
   # over a base table to produce a new one (`with`), so the shell's own streams
   # are never mutated and a command's redirections are scoped to that command.
   class IoTable
-    @streams: untyped
+    # fd -> stream; values are heterogeneous (IO/File/Tempfile/ClosedStream), so
+    # kept untyped until a shared stream interface is worth declaring.
+    @streams: Hash[Integer, untyped]
 
-    def initialize: (untyped streams) -> void
+    def initialize: (Hash[Integer, untyped] streams) -> void
 
-    def self.standard: (untyped system) -> untyped
+    def self.standard: (SystemCalls system) -> IoTable
 
-    def get: (untyped fd) -> untyped
+    def get: (Integer fd) -> untyped
 
-    def with: (untyped fd, untyped io) -> untyped
+    def with: (Integer fd, untyped io) -> IoTable
 
     # The bound streams, for diffing which a command's redirects freshly opened
     # (and so must close) against the base table it inherited.
-    def ios: () -> untyped
+    def ios: () -> Array[untyped]
 
     # Flush+close the streams this table opened over `base` (the ones a command's
     # redirects added), leaving inherited streams and pipe ends untouched.
-    def close_opened_over: (untyped base, untyped system) -> untyped
+    def close_opened_over: (IoTable base, SystemCalls system) -> void
 
     # A closed fd (ClosedStream) becomes :close so a spawned child closes it.
-    def to_spawn_options: () -> untyped
+    def to_spawn_options: () -> Hash[Integer, untyped]
   end
 end

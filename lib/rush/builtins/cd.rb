@@ -22,7 +22,9 @@ module Rush
 
       def update_pwd(dir)
         state = executor.state
-        state.scope.move_to(executor.system.expand_path(dir, state.scope.pwd))
+        # scope.pwd is non-nil here (seeded at startup); .to_s satisfies the
+        # String base of expand_path without changing behaviour on that path.
+        state.scope.move_to(executor.system.expand_path(dir, state.scope.pwd.to_s))
       end
 
       def report(message)

@@ -5,9 +5,9 @@ module Rush
     class Base
       @executor: Executor
 
-      @argv: untyped
+      @argv: Array[String]
 
-      @io: untyped
+      @io: IoTable
 
       # A non-negative decimal integer (optionally signed +, surrounding blanks);
       # the accepted form of an exit/return operand. dash parses it into a C int,
@@ -16,33 +16,35 @@ module Rush
 
       INT_MAX: 2147483647
 
-      def initialize: (untyped executor, untyped argv, untyped io) -> void
+      def initialize: (Executor executor, Array[String] argv, IoTable io) -> void
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      attr_reader executor: untyped
+      attr_reader executor: Executor
 
-      attr_reader argv: untyped
+      attr_reader argv: Array[String]
 
-      attr_reader io: untyped
+      attr_reader io: IoTable
 
-      def operands: () -> untyped
+      def operands: () -> Array[String]
 
-      def stdout: () -> untyped
+      # Optimistically IO: a redirected-closed fd is a ClosedStream that quacks
+      # like IO and raises EBADF on use (intended), so the IO surface is correct.
+      def stdout: () -> IO
 
-      def stderr: () -> untyped
+      def stderr: () -> IO
 
-      def success: () -> untyped
+      def success: () -> Status
 
-      def failure: (?::Integer code) -> untyped
+      def failure: (?Integer code) -> Status
 
       # Parse a numeric operand for a special builtin: an exit code for
       # exit/return (min 0), or a loop level for break/continue (min 1). dash
       # rejects a non-numeric, too-small or out-of-range value with a
       # special-builtin error (which aborts a non-interactive shell).
-      def numeric_operand: (untyped text, ?min: ::Integer) -> untyped
+      def numeric_operand: (String text, ?min: Integer) -> Integer
     end
   end
 end

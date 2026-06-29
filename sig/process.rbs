@@ -11,3 +11,11 @@ module Process
 
   def self.exit!: (?untyped status) -> bot
 end
+
+# rbs's Process::Tms lacks the member accessors (the `times` builtin reads them).
+class Process::Tms
+  def utime: () -> Float
+  def stime: () -> Float
+  def cutime: () -> Float
+  def cstime: () -> Float
+end
