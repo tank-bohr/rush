@@ -3,12 +3,12 @@ module Rush
   # (:errexit, :nounset, :xtrace, :noglob, :verbose): the set of those currently
   # on, with #set to flip one and #on? to query it.
   class Options
-    @enabled: untyped
+    @enabled: Set[Symbol]
 
     def initialize: () -> void
 
-    def set: (untyped name, untyped enabled) -> untyped
+    def set: (Symbol name, bool enabled) -> void
 
-    def on?: (untyped name) -> untyped
+    def on?: (Symbol name) -> bool
   end
 end

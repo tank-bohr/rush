@@ -6,61 +6,69 @@ module Rush
   class CommandLookup
     @executor: untyped
 
-    KEYWORDS: ::Array["!" | "{" | "}" | "case" | "do" | "done" | "elif" | "else" | "esac" | "fi" | "for" | "if" | "in" | "then" | "until" | "while"]
+    KEYWORDS: Array[String]
 
-    SPECIAL: ::Array[":" | "." | "break" | "continue" | "eval" | "exec" | "exit" | "export" | "readonly" | "return" | "set" | "shift" | "times" | "trap" | "unset"]
+    SPECIAL: Array[String]
 
-    RESOLVERS: ::Array[:as_keyword | :as_alias | :as_function | :as_special | :as_builtin | :as_file]
+    RESOLVERS: Array[Symbol]
 
     # A resolved lookup result: it is "known", and subclasses render the line
     # `type` (#describe) and `command -v` (#terse) print. Only an executable
     # caches its own location; the others leave the cache untouched.
     class Match
-      @name: untyped
+      @name: String
 
-      @detail: untyped
+      @detail: String?
 
-      def initialize: (untyped name, ?untyped? detail) -> void
+      def initialize: (String name, ?String? detail) -> void
 
-      def known?: () -> true
+      def known?: () -> bool
 
-      def cache_into: (untyped _cache) -> nil
+      # describe/terse form the Match protocol that #find's result is used through.
+      # Unknown leaves terse unimplemented — it is only called after a #known?
+      # guard, never on an Unknown (Steep can't narrow the union by #known?).
+      def describe: () -> String?
+
+      def terse: () -> String?
+
+      def cache_into: (untyped cache) -> void
 
       private
 
-      attr_reader name: untyped
+      attr_reader name: String
 
-      attr_reader detail: untyped
+      attr_reader detail: String?
     end
 
     # An unresolved name: not known, and nothing to describe.
     class Unknown < Match
-      def known?: () -> false
+      def known?: () -> bool
 
       def describe: () -> nil
     end
 
     # A keyword / function / special / regular builtin, named by a fixed label.
     class Labelled < Match
-      def describe: () -> ::String
+      def describe: () -> String
 
-      def terse: () -> untyped
+      def terse: () -> String
     end
 
     # A shell alias; `command -v` prints its definition.
     class Aliased < Match
-      def describe: () -> ::String
+      def describe: () -> String
 
-      def terse: () -> ::String
+      def terse: () -> String
     end
 
     # An external executable found on PATH (or used directly via a slash path).
     class Executable < Match
-      def describe: () -> ::String
+      def describe: () -> String
 
-      def terse: () -> untyped
+      # detail (the resolved path) is String? on the base Match, so terse is too.
+      def terse: () -> String?
 
-      def cache_into: (untyped cache) -> untyped
+      def cache_into: (untyped cache) -> void
     end
 
     def initialize: (untyped executor) -> void
@@ -68,34 +76,34 @@ module Rush
     # The Match for a name (Unknown if it resolves to nothing). An alias outranks
     # a function/builtin but not a reserved word; a PATH/slash file is the last
     # resort.
-    def find: (untyped name) -> untyped
+    def find: (String name) -> Match
 
     # The `type`/`command -V` description line for a name, or nil if unknown.
-    def describe: (untyped name) -> untyped
+    def describe: (String name) -> String?
 
     private
 
-    def as_keyword: (untyped name) -> untyped
+    def as_keyword: (String name) -> untyped
 
-    def as_alias: (untyped name) -> untyped
+    def as_alias: (String name) -> untyped
 
-    def as_function: (untyped name) -> untyped
+    def as_function: (String name) -> untyped
 
-    def as_special: (untyped name) -> untyped
+    def as_special: (String name) -> untyped
 
-    def as_builtin: (untyped name) -> untyped
+    def as_builtin: (String name) -> untyped
 
-    def as_file: (untyped name) -> untyped
+    def as_file: (String name) -> untyped
 
     def aliases: () -> untyped
 
     def functions: () -> untyped
 
-    def path_of: (untyped name) -> (nil | untyped)
+    def path_of: (String name) -> untyped
 
-    def join: (untyped dir, untyped name) -> (untyped | ::String)
+    def join: (String dir, String name) -> String
 
-    def executable?: (untyped path) -> untyped
+    def executable?: (String path) -> untyped
 
     def dirs: () -> untyped
   end

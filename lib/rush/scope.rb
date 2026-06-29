@@ -39,7 +39,9 @@ module Rush
     end
 
     def end_scope
-      @frames.pop.each { |name, value| restore(name, value) }
+      # pop is non-nil here (paired with begin_scope); .to_a pins its type to an
+      # array of pairs for the checker without changing behaviour on that path.
+      @frames.pop.to_a.each { |name, value| restore(name, value) }
     end
 
     def in_function?
@@ -47,7 +49,9 @@ module Rush
     end
 
     def declare_local(name)
-      frame = @frames.last
+      # last frame is non-nil here (only called inside a function); fetch(-1) pins
+      # its type to Hash for the checker and keeps the crash-if-empty invariant.
+      frame = @frames.fetch(-1)
       frame[name] = @environment.get(name) unless frame.key?(name)
     end
 

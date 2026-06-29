@@ -7,35 +7,35 @@ module Rush
   class Scope
     @environment: untyped
 
-    @frames: untyped
+    @frames: Array[Hash[String, String?]]
 
-    @pwd: untyped
+    @pwd: String?
 
-    attr_reader pwd: untyped
+    attr_reader pwd: String?
 
     def initialize: (untyped environment) -> void
 
     # Change the logical working directory, keeping $OLDPWD (the directory we
     # left) and $PWD (the one we entered) in step — the invariant cd relies on.
-    def move_to: (untyped pwd) -> untyped
+    def move_to: (String pwd) -> void
 
     # Seed the logical pwd from the OS at startup when $PWD was unset; unlike
     # #move_to this records no $OLDPWD/$PWD — there is no directory we came from.
-    def seed_pwd: (untyped path) -> (nil | untyped)
+    def seed_pwd: (String path) -> void
 
     # A function call brackets its body with begin/end_scope; declare_local
     # snapshots a variable so end_scope restores its prior value (or unsets it
     # when it had none).
-    def begin_scope: () -> untyped
+    def begin_scope: () -> void
 
-    def end_scope: () -> untyped
+    def end_scope: () -> void
 
-    def in_function?: () -> untyped
+    def in_function?: () -> bool
 
-    def declare_local: (untyped name) -> untyped
+    def declare_local: (String name) -> void
 
     private
 
-    def restore: (untyped name, untyped value) -> untyped
+    def restore: (String name, String? value) -> void
   end
 end
