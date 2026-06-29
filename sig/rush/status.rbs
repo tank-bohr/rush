@@ -15,10 +15,6 @@ module Rush
     def self.failure: (?Integer code) -> instance
 
     # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
-    # Param left untyped: with `::Process::Status`, Steep can't see that an
-    # absent #exitstatus implies a present #termsig (both are Integer?), so the
-    # `termsig + 128` branch trips Ruby::NoMethod on nil. Tightening this needs a
-    # nil-correlation decision (a finding for rush-211.5).
-    def self.of: (untyped process_status) -> instance
+    def self.of: (::Process::Status process_status) -> instance
   end
 end

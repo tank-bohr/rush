@@ -25,8 +25,11 @@ module Rush
     end
 
     # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
+    # termsig is Integer? to the type-checker (nil unless signalled); the signalled
+    # branch here is the only one reached when exitstatus is nil, so .to_i pins it
+    # to a plain Integer without changing behaviour on any reachable path.
     def self.of(process_status)
-      new(process_status.exitstatus || (process_status.termsig + 128))
+      new(process_status.exitstatus || (process_status.termsig.to_i + 128))
     end
   end
 end
