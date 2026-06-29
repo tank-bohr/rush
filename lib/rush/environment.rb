@@ -36,7 +36,9 @@ module Rush
     end
 
     def exported
-      @vars.slice(*@exported)
+      # *@exported.to_a: splat needs an Array (Set splats via to_a at runtime, but
+      # the checker won't); slice keeps @vars's own order, so this is unchanged.
+      @vars.slice(*@exported.to_a)
     end
   end
 end

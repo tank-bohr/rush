@@ -2,24 +2,24 @@ module Rush
   # Shell variables and the subset marked for export. The exported slice is what
   # external children receive (see SystemCalls#spawn).
   class Environment
-    @vars: untyped
+    @vars: Hash[String, String]
 
-    @exported: untyped
+    @exported: Set[String]
 
-    @readonly: untyped
+    @readonly: Set[String]
 
-    def initialize: (?untyped source) -> void
+    def initialize: (?Hash[String, String] source) -> void
 
-    def get: (untyped name) -> untyped
+    def get: (String name) -> String?
 
-    def assign: (untyped name, untyped value) -> untyped
+    def assign: (String name, _ToS value) -> String
 
-    def export: (untyped name) -> untyped
+    def export: (String name) -> void
 
-    def readonly: (untyped name) -> untyped
+    def readonly: (String name) -> void
 
-    def unset: (untyped name) -> untyped
+    def unset: (String name) -> void
 
-    def exported: () -> untyped
+    def exported: () -> Hash[String, String]
   end
 end

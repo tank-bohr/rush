@@ -5,28 +5,29 @@ module Rush
   # newline. It quacks like a Word (responds to #segments) so the expansion
   # pipeline expands the body as a single field at execution time.
   class HereDoc
-    @delimiter: untyped
+    @delimiter: String
 
-    @quoted: untyped
+    @quoted: bool
 
-    @strip: untyped
+    @strip: bool
 
-    @body: untyped
+    @body: AST::Word
 
-    attr_reader body: untyped
+    attr_reader body: AST::Word
 
-    attr_reader delimiter: untyped
+    attr_reader delimiter: String
 
-    attr_reader quoted: untyped
+    attr_reader quoted: bool
 
-    attr_reader strip: untyped
+    attr_reader strip: bool
 
-    def initialize: (delimiter: untyped, quoted: untyped, strip: untyped) -> void
+    def initialize: (delimiter: String, quoted: bool, strip: bool) -> void
 
     # The lexer fills the body — an AST::Word — once it has gathered the body
     # lines at the next newline; it is the only writer, so #body stays read-only.
-    def fill: (untyped body) -> untyped
+    def fill: (AST::Word body) -> void
 
+    # AST::Word is still an untyped skeleton, so #segments stays untyped for now.
     def segments: () -> untyped
   end
 end

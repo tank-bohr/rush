@@ -5,7 +5,7 @@ module Rush
   # $PWD/$OLDPWD. Both are managed mutations of the same environment, so they
   # live together here, off ShellState.
   class Scope
-    @environment: untyped
+    @environment: Environment
 
     @frames: Array[Hash[String, String?]]
 
@@ -13,7 +13,7 @@ module Rush
 
     attr_reader pwd: String?
 
-    def initialize: (untyped environment) -> void
+    def initialize: (Environment environment) -> void
 
     # Change the logical working directory, keeping $OLDPWD (the directory we
     # left) and $PWD (the one we entered) in step — the invariant cd relies on.

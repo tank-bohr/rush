@@ -6,18 +6,18 @@ module Rush
   # count. break/continue read #depth to clamp their level and #any? to no-op
   # when there is no enclosing loop.
   class LoopNesting
-    @depth: untyped
+    @depth: Integer
 
-    attr_reader depth: untyped
+    attr_reader depth: Integer
 
     def initialize: () -> void
 
-    def enter: () -> untyped
+    def enter: () -> void
 
-    def leave: () -> untyped
+    def leave: () -> void
 
-    def any?: () -> untyped
+    def any?: () -> bool
 
-    def without: () { () -> untyped } -> untyped
+    def without: [T] () { () -> T } -> T
   end
 end
