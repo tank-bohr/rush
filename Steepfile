@@ -15,7 +15,6 @@ target :lib do
 
   # --- deferred (each is a follow-up under rush-211.2) ---
   ignore 'lib/rush/parser.rb'                      # racc-generated; not hand-typed
-  ignore 'lib/rush/expansion/arithmetic/number.rb' # rubocop Style/SymbolProc wants lambda(&:-@)/(&:~), which Steep can't type; no form satisfies both
 
   library 'etc', 'forwardable', 'strscan', 'tempfile'
 

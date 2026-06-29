@@ -181,6 +181,14 @@ Style/EndlessMethod:
 Style/DataInheritance:
   Enabled: false
 
+# number.rb's operator table is uniformly explicit lambdas; for the two bare
+# unary operators this cop would force `lambda(&:-@)` / `lambda(&:~)`, which Steep
+# can't type (it sees lambda's block as 0-arity, Symbol#to_proc as 1-arity). Off
+# for that file so the table stays explicit and type-checks — see docs/journal.md.
+Style/SymbolProc:
+  Exclude:
+    - 'lib/rush/expansion/arithmetic/number.rb'
+
 Naming/MethodParameterName:
   AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's', 'op']
 

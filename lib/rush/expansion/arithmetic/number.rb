@@ -46,8 +46,8 @@ module Rush
         end
 
         UNARY = {
-          '+' => ->(value) { value }, '-' => lambda(&:-@),
-          '!' => ->(value) { bool(value.zero?) }, '~' => lambda(&:~)
+          '+' => ->(value) { value }, '-' => ->(value) { -value },
+          '!' => ->(value) { bool(value.zero?) }, '~' => ->(value) { ~value }
         }.freeze
 
         BINARY = {
