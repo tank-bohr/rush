@@ -27,7 +27,7 @@ module Rush
     # lines at the next newline; it is the only writer, so #body stays read-only.
     def fill: (AST::Word body) -> void
 
-    # AST::Word is still an untyped skeleton, so #segments stays untyped for now.
-    def segments: () -> untyped
+    # Quacks like AST::Word for the expansion pipeline: the body's segments.
+    def segments: () -> Array[AST::WordSegment]
   end
 end

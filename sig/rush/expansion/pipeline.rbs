@@ -16,30 +16,31 @@ module Rush
 
       # Argv expansion: expand each word to fields (splitting unquoted on IFS),
       # then expand each field's pathname patterns.
-      def expand: (Array[untyped] words) -> Array[String]
+      def expand: (Array[AST::Word] words) -> Array[String]
 
       # Assignment RHS / redirection target / operator word: one field, no split.
+      # The target may be an AST::Word or a HereDoc (both expose #segments).
       # Tilde expands at the leading position by default; assignment context also
       # expands after colons, and arithmetic opts out (~ is bitwise not there).
-      def expand_value: (untyped word, ?tilde: Symbol) -> String
+      def expand_value: (AST::Word | HereDoc word, ?tilde: Symbol) -> String
 
       private
 
-      def parts: (untyped word) -> Array[[ String, bool, bool ]]
+      def parts: (AST::Word word) -> Array[[ String, bool, bool ]]
 
-      def tilde_expand: (untyped segments, Symbol mode) -> Array[untyped]
+      def tilde_expand: (Array[AST::WordSegment] segments, Symbol mode) -> Array[AST::WordSegment]
 
       def glob: (Array[String] fields) -> Array[String]
 
-      def field_parts: (untyped segment) -> Array[[ String, bool, bool ]]
+      def field_parts: (AST::WordSegment segment) -> Array[[ String, bool, bool ]]
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
-      def escape_if_quoted: (untyped segment, String text) -> String
+      def escape_if_quoted: (AST::WordSegment segment, String text) -> String
 
       def escape: (String text) -> String
 
-      def splat_parts: (untyped segment) -> Array[[ String, bool, bool ]]
+      def splat_parts: (AST::WordSegment segment) -> Array[[ String, bool, bool ]]
 
       def ifs: () -> String?
     end

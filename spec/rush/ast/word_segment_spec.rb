@@ -5,6 +5,10 @@ RSpec.describe Rush::AST::WordSegment do
     Rush::AST::LiteralSegment.new(value, quoted)
   end
 
+  it 'requires subclasses to implement #expand' do
+    expect { described_class.new('x', false).expand(:executor) }.to raise_error(NotImplementedError)
+  end
+
   it 'equals and eql?-s a distinct segment of the same class, value and quoted flag' do
     twin = seg('x', false)
     expect(seg('x', false)).to eq(twin)

@@ -17,6 +17,12 @@ module Rush
         @quoted = quoted
       end
 
+      # Each concrete segment expands itself to a string (the segment-level
+      # counterpart of a command node's #execute); the base is abstract.
+      def expand(_executor)
+        raise NotImplementedError
+      end
+
       def literal_value
         nil
       end

@@ -18,6 +18,10 @@ module Rush
 
       def initialize: (untyped value, bool quoted) -> void
 
+      # Each concrete segment expands itself to a string; the base is abstract
+      # (raises), so every value flowing through the pipeline has #expand.
+      def expand: (Executor executor) -> String
+
       def literal_value: () -> untyped
 
       def splittable?: () -> bool
@@ -37,8 +41,6 @@ module Rush
     # Literal text. It expands to itself, can act as a bare name when unquoted,
     # and is never field-split.
     class LiteralSegment < WordSegment
-      def expand: (untyped _executor) -> untyped
-
       def literal_value: () -> untyped
     end
 
@@ -50,20 +52,16 @@ module Rush
 
     # $name / ${...}: value is the ParamRef.
     class ParamSegment < DynamicSegment
-      def expand: (Executor executor) -> String
-
       # $@ (always) and unquoted $* expand to one field per positional parameter.
       def splat?: () -> bool
     end
 
     # $(...) / `...`: value is the command-substitution source.
     class CommandSegment < DynamicSegment
-      def expand: (Executor executor) -> String
     end
 
     # $((...)): value is the arithmetic source.
     class ArithSegment < DynamicSegment
-      def expand: (Executor executor) -> String
     end
   end
 end
