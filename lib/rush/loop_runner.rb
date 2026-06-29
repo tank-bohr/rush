@@ -27,7 +27,10 @@ module Rush
     private
 
     def run_loop
-      status = Status.success
+      # T.let pins the loop variable's type: Status.success is now sig'd (Status),
+      # but #iterate is unsig'd (untyped), and Sorbet forbids a variable changing
+      # type across a loop (srb.help/7001). Steep ignores T.let (see sorbet_dsl.rbs).
+      status = T.let(Status.success, Status)
       status = iterate while proceed?
       status
     rescue BreakSignal => e

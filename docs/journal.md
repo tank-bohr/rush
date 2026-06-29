@@ -510,6 +510,36 @@ annotations on the same files. That bridge — and `sig {}` on the public API �
 The standing lesson holds: the second checker pays off not as a number but as a list of precise
 spots where it and the first disagree about Ruby.
 
+#### Sorbet — slice 3 (inline `sig {}`, and the bridge that lets Steep ignore it)
+The deliberate design: RBS in `sig/*.rbs` for Steep, inline `sig {}` for Sorbet — *over the same .rb
+files*. So the blocker isn't writing sigs, it's that Steep reads the same source and doesn't know the
+Sorbet DSL. The fix is a small RBS bridge (`sig/sorbet_dsl.rbs`): the trick is the **block self**.
+A `sig { returns(Integer) }` block, declared as `def sig: () { () [self: T::Private::DeclBuilder] ->
+void }`, runs (to Steep) against Sorbet's real builder type — so `params`/`returns`/`void` resolve as
+its methods and the *types inside the block are never cross-checked by Steep* (exactly the wanted
+independence). `[self: untyped]` did NOT work — Steep kept self as the enclosing class and flagged
+`returns`; a concrete builder class is what binds. A class using `sig {}` adds `extend T::Sig` in
+**both** its `.rb` (for sorbet-runtime) and its `.rbs` (so Steep finds `sig` on the singleton). `T`'s
+value surface (`T.unsafe/let/cast/must`, `T::Boolean`) is declared returning untyped — a sig block's
+*types* are Sorbet's, deliberately not Steep's.
+
+`Status` is the first class carrying real `sig {}` (proves it on both checkers + at runtime), and two
+findings fell out immediately:
+- **sorbet-runtime is a *runtime* type check — which RBS/Steep simply is not.** `Status.new("x")`
+  raises `TypeError` at runtime from the `sig`. Real capability, real cost: the suite injects
+  `instance_double(Process::Status)` into `Status.of`, which isn't `is_a?` the class, so runtime
+  validation rejects the double. Resolution: production keeps runtime validation; tests install
+  `T::Configuration.call_validation_error_handler = ->(*) {}` so doubles pass (the static `srb tc`
+  gate still covers types). The two type systems now differ in *kind*, not just notation — Sorbet
+  validates at the call, Steep only ahead of time.
+- **typing one class ripples into its callers' inference.** Giving `Status.success` a return type made
+  the loop runners' `status` variable `Status`, then the still-unsig'd `#iterate` reassigned it to
+  untyped — and Sorbet forbids a variable changing type across a loop/block (srb.help/7001). Fixed
+  with `T.let(Status.success, Status)` to pin it (Steep ignores `T.let` via the bridge). Gradual
+  typing isn't local: each sig you add is a small obligation on everything downstream.
+
+The bridge makes the rest of the `sig {}` rollout mechanical; it proceeds class by class.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files

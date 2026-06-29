@@ -1,6 +1,11 @@
 # typed: true
 # frozen_string_literal: true
 
+# sorbet-runtime backs the inline `sig {}` annotations (the second, independent
+# type system; see docs/journal.md Charter). Required once here so T::Sig is
+# available as the lib files load.
+require 'sorbet-runtime'
+
 require_relative 'rush/version'
 require_relative 'rush/errors'
 require_relative 'rush/status'

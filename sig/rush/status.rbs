@@ -4,6 +4,8 @@ module Rush
   # process boundary (exit!/the shell's own exit, where the OS truncates). The
   # operand is validated non-negative and <= INT_MAX before reaching here.
   class Status
+    extend T::Sig
+
     attr_reader exitstatus: Integer
 
     def initialize: (Integer exitstatus) -> void

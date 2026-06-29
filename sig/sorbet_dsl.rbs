@@ -1,0 +1,46 @@
+# RBS bridge so Steep tolerates the inline Sorbet `sig {}` DSL on the SAME source
+# Sorbet checks. The two type systems are independent (sig/*.rbs for Steep, inline
+# sig {} for Sorbet), but they share the .rb files, so Steep must not choke on the
+# Sorbet annotations: a `sig { ... }` block runs against Sorbet's DeclBuilder, so
+# params/returns/void/etc. resolve as its (untyped) methods, and T's value-level
+# surface is declared so references resolve. A class using `sig {}` also declares
+# `extend T::Sig` in its own .rbs (mirroring the `extend T::Sig` in the .rb). The
+# *types* in a sig block are Sorbet's and are deliberately not cross-checked by
+# Steep — drift between the two sig sets is expected (see docs/journal.md Charter).
+module T
+  module Sig
+    def sig: (?Symbol) { () [self: T::Private::DeclBuilder] -> void } -> void
+  end
+
+  module Private
+    # Sorbet's sig-block builder: every call returns self so they chain.
+    class DeclBuilder
+      def params: (**untyped) -> DeclBuilder
+
+      def returns: (untyped) -> DeclBuilder
+
+      def void: () -> DeclBuilder
+
+      def checked: (Symbol) -> DeclBuilder
+
+      def override: (?allow_incompatible: bool) -> DeclBuilder
+
+      def overridable: () -> DeclBuilder
+
+      def abstract: () -> DeclBuilder
+    end
+  end
+
+  # Value-level helpers (used in method bodies, so Steep sees them as real calls).
+  # The "type" argument is a Sorbet type expression, not an RBS type, so Steep
+  # can't carry it — these return untyped (Sorbet does the real narrowing).
+  def self.unsafe: (untyped) -> untyped
+
+  def self.let: (untyped value, untyped) -> untyped
+
+  def self.cast: (untyped value, untyped) -> untyped
+
+  def self.must: (untyped arg) -> untyped
+
+  Boolean: untyped
+end
