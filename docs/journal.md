@@ -357,6 +357,36 @@ coverage rather than uglify real code for the tool. (The independent Sorbet trac
 fine; that divergence is itself the experiment.) So the "refactor pleases both" lesson has a
 corollary: when the intersection is empty, code clarity wins and the weaker-fit instrument yields.
 
+#### Coercions move the proof from the checker to runtime — and structure beats coercion
+The single most important lesson of the typing work. When Steep flags `x.last[...]` or `match[1]`
+because a method's honest return is `T?` (`Array#last`, `MatchData#[]`, `String#[]` are all
+nilable), the easy fix is a **coercion** — `fetch(-1)`, `.to_s`, `.to_a` — that gives Steep a
+non-nil type. But a coercion does **not prove** the value is present; it *asserts* it, and so
+**shifts the proof obligation from the type-checker to runtime + the author's reasoning**. That is
+exactly what a type checker exists to prevent, so coercions deserve scrutiny, and they are not
+equal:
+
+- **Loud coercions don't hide anything.** `arr.fetch(-1)` raises `IndexError` if the array is
+  empty — same crash, same place, just not statically proven. The guarantee moved to a runtime
+  bounds-check; nothing is masked.
+- **Silent coercions can mask.** `maybe_nil.to_s` → `""`, `maybe_nil.to_a` → `[]`: if the invariant
+  is ever violated, a `nil` that *should* have surfaced becomes a benign-looking default and flows
+  on. These are the dangerous ones — a real bug would be hidden in runtime, unseen by the checker.
+
+Audit of this codebase's coercions found **no hidden bugs** — each sits on a genuinely unreachable
+or behaviour-identical `nil` path (a guard, an in-bounds slice, a total regex, a domain invariant
+like Process::Status having exactly one of exitstatus/termsig). But "unreachable by my reasoning"
+is weaker than "unreachable by construction", which is the real fix:
+
+**Structure beats coercion.** Where the invariant matters, restructure so the property is
+*structural* and the checker proves it for free, instead of asserting it with a coercion.
+`IfsScanner` held the in-progress field as `@fields.last` (typed `T?`, "non-empty here" only as a
+*positional* invariant — and in fact `result` can empty the array, so even "never empty" was
+false); it now holds it as a dedicated `@current` ivar, **always present by construction**. No
+`fetch(-1)`, no trust — `@current: Hash` is just true, and (bonus) it's self-state so reek is
+happy too. Coerce only where nil is truly unreachable and the coercion is a behaviour-preserving
+no-op on the real values; reach for a structural refactor the moment the invariant is load-bearing.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
