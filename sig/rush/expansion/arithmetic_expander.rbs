@@ -6,15 +6,15 @@ module Rush
     class ArithmeticExpander
       @executor: Executor
 
-      @source: untyped
+      @source: String
 
-      def initialize: (untyped executor, untyped source) -> void
+      def initialize: (Executor executor, String source) -> void
 
-      def expand: () -> untyped
+      def expand: () -> String
 
       private
 
-      def expanded: () -> untyped
+      def expanded: () -> String
 
       def scanned: () -> untyped
     end

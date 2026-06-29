@@ -9,41 +9,43 @@ module Rush
     # and a break-flagged part (the elements of $@/$*) anchor or force a field
     # regardless of IFS. A trailing empty, non-anchored field is dropped.
     class IfsScanner
-      @ws: untyped
+      @ws: Array[String]
 
-      @others: untyped
+      @others: Array[String]
 
-      @fields: untyped
+      @done: Array[Hash[Symbol, untyped]]
 
-      @pending: untyped
+      @current: Hash[Symbol, untyped]
 
-      @skip: untyped
+      @pending: bool
 
-      def initialize: (untyped whitespace, untyped others) -> void
+      @skip: bool
 
-      def run: (untyped parts) -> untyped
+      def initialize: (Array[String] whitespace, Array[String] others) -> void
+
+      def run: (Array[[ String, bool, bool ]] parts) -> Array[String]
 
       private
 
-      def field: () -> { text: untyped, real: false }
+      def field: () -> Hash[Symbol, untyped]
 
-      def consume: (untyped part) -> untyped
+      def consume: ([ String, bool, bool ] part) -> void
 
-      def step: (untyped char) -> untyped
+      def step: (String char) -> void
 
-      def pend: () -> untyped
+      def pend: () -> void
 
-      def ordinary: (untyped char) -> untyped
+      def ordinary: (String char) -> void
 
-      def literal: (untyped text) -> untyped
+      def literal: (String text) -> void
 
-      def flush: () -> untyped
+      def flush: () -> void
 
-      def open_field: () -> untyped
+      def open_field: () -> void
 
-      def result: () -> untyped
+      def result: () -> Array[String]
 
-      def drop_last?: () -> untyped
+      def drop_last?: () -> bool
     end
   end
 end

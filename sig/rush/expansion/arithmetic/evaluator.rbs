@@ -8,15 +8,15 @@ module Rush
       class Evaluator
         @executor: Executor
 
-        def initialize: (untyped executor) -> void
+        def initialize: (Executor executor) -> void
 
-        def evaluate: (untyped source) -> untyped
+        def evaluate: (String source) -> Integer
 
-        def resolve: (untyped name) -> (0 | untyped)
+        def resolve: (String name) -> Integer
 
         # `name op= value`: for a compound operator, combine with the current
         # value first (`+=` -> `+`); store the wrapped result and return it.
-        def assign: (untyped name, untyped op, untyped value) -> untyped
+        def assign: (String name, String op, Integer value) -> Integer
       end
     end
   end

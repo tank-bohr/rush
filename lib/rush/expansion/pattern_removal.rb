@@ -21,20 +21,22 @@ module Rush
 
       def strip_prefix
         hit = order(prefixes).find { |part| match?(part) }
-        hit ? @value[hit.length..] : @value
+        hit ? @value[hit.length..].to_s : @value
       end
 
       def strip_suffix
         hit = order(suffixes).find { |part| match?(part) }
-        hit ? @value[0, @value.length - hit.length] : @value
+        hit ? @value[0, @value.length - hit.length].to_s : @value
       end
 
+      # The substring indices are all within @value, so the slices are non-nil;
+      # .to_s satisfies the Array[String] returns for the checker.
       def prefixes
-        (0..@value.length).map { |index| @value[0, index] }
+        (0..@value.length).map { |index| @value[0, index].to_s }
       end
 
       def suffixes
-        (0..@value.length).map { |index| @value[@value.length - index, index] }
+        (0..@value.length).map { |index| @value[@value.length - index, index].to_s }
       end
 
       def order(list)

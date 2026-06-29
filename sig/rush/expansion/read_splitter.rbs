@@ -7,27 +7,27 @@ module Rush
     # coalesces, each non-whitespace IFS character delimits (generating empty
     # fields), a null IFS does not split.
     class ReadSplitter
-      @ifs: untyped
+      @ifs: Ifs
 
-      @count: untyped
+      @count: Integer
 
-      def initialize: (untyped ifs, untyped count) -> void
+      def initialize: (String? ifs, Integer count) -> void
 
-      def split: (untyped line) -> untyped
+      def split: (String line) -> Array[String]
 
       private
 
       # A field delimiter: one non-whitespace IFS char with any adjacent IFS
       # whitespace, or a run of IFS whitespace on its own.
-      def delimiter: () -> untyped
+      def delimiter: () -> Regexp
 
-      def leading: () -> ::Regexp
+      def leading: () -> Regexp
 
-      def trim_last: (untyped fields) -> untyped
+      def trim_last: (Array[String] fields) -> Array[String]
 
-      def ws: () -> ::String
+      def ws: () -> String
 
-      def pad: (untyped fields) -> untyped
+      def pad: (Array[String] fields) -> Array[String]
     end
   end
 end

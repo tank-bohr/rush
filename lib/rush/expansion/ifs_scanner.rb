@@ -10,11 +10,16 @@ module Rush
     # empty fields), while a single trailing delimiter is absorbed. Quoted text
     # and a break-flagged part (the elements of $@/$*) anchor or force a field
     # regardless of IFS. A trailing empty, non-anchored field is dropped.
+    #
+    # The field being built is held in @current (always present, by construction),
+    # with completed fields in @done — so the "there is always a current field"
+    # invariant is structural, not a runtime fact the reader/checker must infer.
     class IfsScanner
       def initialize(whitespace, others)
         @ws = whitespace
         @others = others
-        @fields = [field]
+        @done = []
+        @current = field
         @pending = false
         @skip = true
       end
@@ -49,14 +54,14 @@ module Rush
 
       def ordinary(char)
         flush
-        @fields.last[:text] << char
+        @current[:text] << char
         @skip = false
       end
 
       def literal(text)
         flush
-        @fields.last[:text] << text
-        @fields.last[:real] = true
+        @current[:text] << text
+        @current[:real] = true
         @skip = false
       end
 
@@ -66,17 +71,18 @@ module Rush
 
       def open_field
         @pending = false
-        @fields << field
+        @done << @current
+        @current = field
         @skip = true
       end
 
       def result
-        @fields.pop if drop_last?
-        @fields.map { |entry| entry[:text] }
+        fields = drop_last? ? @done : @done + [@current]
+        fields.map { |entry| entry[:text] }
       end
 
       def drop_last?
-        @fields.last[:text].empty? && !@fields.last[:real]
+        @current[:text].empty? && !@current[:real]
       end
     end
   end

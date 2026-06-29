@@ -4,31 +4,31 @@ module Rush
     # smallest (#/%) or largest (##/%%) prefix (#) or suffix (%) that matches the
     # glob pattern, leaving the value unchanged when nothing matches.
     class PatternRemoval
-      @system: untyped
+      @system: SystemCalls
 
-      @op: untyped
+      @op: String
 
-      @value: untyped
+      @value: String
 
-      @pattern: untyped
+      @pattern: String
 
-      def initialize: (untyped system, untyped op, untyped value, untyped pattern) -> void
+      def initialize: (SystemCalls system, String op, String value, String pattern) -> void
 
-      def call: () -> untyped
+      def call: () -> String
 
       private
 
-      def strip_prefix: () -> untyped
+      def strip_prefix: () -> String
 
-      def strip_suffix: () -> untyped
+      def strip_suffix: () -> String
 
-      def prefixes: () -> untyped
+      def prefixes: () -> Array[String]
 
-      def suffixes: () -> untyped
+      def suffixes: () -> Array[String]
 
-      def order: (untyped list) -> untyped
+      def order: (Array[String] list) -> Array[String]
 
-      def match?: (untyped part) -> untyped
+      def match?: (String part) -> bool
     end
   end
 end

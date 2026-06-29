@@ -5,27 +5,27 @@ module Rush
       # :op), skipping blanks. Operators are listed longest-first so multi-byte
       # ones win over their prefixes; any other leftover character is an error.
       class Tokenizer
-        @scanner: untyped
+        @scanner: StringScanner
 
-        OPERATORS: ::Array["<<=" | ">>=" | "<<" | ">>" | "<=" | ">=" | "==" | "!=" | "&&" | "||" | "+=" | "-=" | "*=" | "/=" | "%=" | "&=" | "^=" | "|=" | "+" | "-" | "*" | "/" | "%" | "<" | ">" | "&" | "^" | "|" | "~" | "!" | "(" | ")" | "?" | ":" | "="]
+        OPERATORS: Array[String]
 
-        OPERATOR: untyped
+        OPERATOR: Regexp
 
-        NUMBER: ::Regexp
+        NUMBER: Regexp
 
-        NAME: ::Regexp
+        NAME: Regexp
 
-        TOKENS: { num: untyped, name: untyped, op: untyped }
+        TOKENS: Hash[Symbol, Regexp]
 
-        def initialize: (untyped source) -> void
+        def initialize: (String source) -> void
 
-        def tokens: () -> untyped
+        def tokens: () -> Array[[ Symbol, String ]]
 
         private
 
-        def at_token?: () -> untyped
+        def at_token?: () -> bool
 
-        def next_token: () -> (::Array[untyped] | untyped)
+        def next_token: () -> [ Symbol, String ]
       end
     end
   end

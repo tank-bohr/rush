@@ -8,13 +8,13 @@ module Rush
     class GlobExpander
       @executor: Executor
 
-      def initialize: (untyped executor) -> void
+      def initialize: (Executor executor) -> void
 
-      def expand: (untyped field) -> (::Array[untyped] | untyped)
+      def expand: (String field) -> Array[String]
 
       private
 
-      def unescape: (untyped field) -> untyped
+      def unescape: (String field) -> String
     end
   end
 end
