@@ -5,23 +5,23 @@ module Rush
     # $((...)) arithmetic, and `...` backticks. #read returns nil for a lone `$`
     # that begins no valid reference, so the caller keeps it as a literal dollar.
     class DollarScanner
-      @scanner: untyped
+      @scanner: StringScanner
 
-      SIMPLE_PARAM: ::Regexp
+      SIMPLE_PARAM: Regexp
 
-      def initialize: (untyped scanner) -> void
+      def initialize: (StringScanner scanner) -> void
 
       # The segment for a `$...` at the scanner head (the `$` not yet consumed),
       # or nil when no valid reference follows.
-      def read: (quoted: untyped) -> untyped
+      def read: (quoted: bool) -> untyped
 
       # The command segment for a `` `...` `` at the scanner head.
-      def read_backtick: (quoted: untyped) -> untyped
+      def read_backtick: (quoted: bool) -> untyped
 
       private
 
       # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
-      def dollar_paren: (untyped quoted) -> untyped
+      def dollar_paren: (bool quoted) -> untyped
 
       def read_param_ref: () -> untyped
 

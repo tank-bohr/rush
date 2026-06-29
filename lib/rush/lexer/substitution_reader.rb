@@ -61,7 +61,8 @@ module Rush
       def paren_char
         raise IncompleteInput, 'unterminated $(' if @scanner.eos?
 
-        char = @scanner.getch
+        # not eos, so getch is non-nil; .to_s pins it to String for adjust/<<.
+        char = @scanner.getch.to_s
         adjust(char)
         @depth.zero? ? '' : char
       end

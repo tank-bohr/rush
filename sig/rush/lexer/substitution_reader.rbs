@@ -4,33 +4,33 @@ module Rush
     # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
     # The body is re-parsed and executed at expansion time.
     class SubstitutionReader
-      @scanner: untyped
+      @scanner: StringScanner
 
-      @depth: untyped
+      @depth: Integer
 
-      DEPTH_DELTA: { "(" => 1, ")" => -1 }
+      DEPTH_DELTA: Hash[String, Integer]
 
-      def initialize: (untyped scanner) -> void
+      def initialize: (StringScanner scanner) -> void
 
-      def parens: () -> untyped
+      def parens: () -> String
 
-      def backticks: () -> untyped
+      def backticks: () -> String?
 
       # Read the body of $(( ... )) after the leading `((`, up to the matching
       # `))`, allowing balanced inner parentheses.
-      def arithmetic: () -> untyped
+      def arithmetic: () -> String
 
       private
 
-      def collect: (untyped body) -> untyped
+      def collect: (String body) -> String
 
-      def arith_char: () -> untyped
+      def arith_char: () -> String?
 
-      def arith_close: () -> (untyped | nil)
+      def arith_close: () -> String?
 
-      def paren_char: () -> untyped
+      def paren_char: () -> String
 
-      def adjust: (untyped char) -> untyped
+      def adjust: (String char) -> void
     end
   end
 end

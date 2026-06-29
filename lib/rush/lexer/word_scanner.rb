@@ -54,7 +54,7 @@ module Rush
 
       def step
         handler = DISPATCH[@scanner.peek(1)]
-        handler ? send(handler) : (@literal << @scanner.scan(literal_pattern))
+        handler ? send(handler) : (@literal << @scanner.scan(literal_pattern).to_s)
       end
 
       def literal_pattern
