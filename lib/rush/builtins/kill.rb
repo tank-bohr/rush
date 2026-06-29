@@ -12,16 +12,18 @@ module Rush
     class Kill < Base
       def call
         return usage if operands.empty?
+        return list(operands.drop(1)) if operands.first == '-l'
 
-        operands.first == '-l' ? list(operands.drop(1)) : send_signal(*parse)
+        spec, pids = parse
+        send_signal(spec, pids)
       end
 
       private
 
       def parse
-        first = operands.first
-        return [operands[1], operands.drop(2)] if first == '-s'
-        return [first[1..], operands.drop(1)] if flag?(first)
+        first = operands.fetch(0)
+        return [operands[1].to_s, operands.drop(2)] if first == '-s'
+        return [first[1..].to_s, operands.drop(1)] if flag?(first)
 
         ['TERM', operands]
       end
@@ -56,7 +58,7 @@ module Rush
       end
 
       def list(args)
-        args.empty? ? list_all : list_one(args.first)
+        args.empty? ? list_all : list_one(args.fetch(0))
       end
 
       def list_all

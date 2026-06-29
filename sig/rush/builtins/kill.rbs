@@ -8,38 +8,41 @@ module Rush
     # bare `kill -l` lists the known names. A bad spec exits 2; a delivery that
     # fails (no such process) exits 1.
     class Kill < Base
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      # tuple, not Array: parse feeds `send_signal(*parse)`, a fixed-arity call.
-      def parse: () -> [ untyped, untyped ]
+      # tuple, not Array: parse is destructured into send_signal's two arguments.
+      def parse: () -> [ String, Array[String] ]
 
-      def flag?: (untyped arg) -> untyped
+      def flag?: (String arg) -> bool
 
-      def send_signal: (untyped spec, untyped pids) -> untyped
+      def send_signal: (String spec, Array[String] pids) -> Status
 
-      def resolve: (untyped spec) -> untyped
+      # A numeric spec goes straight to the OS (Integer); a name decodes to its
+      # canonical String, or nil when the spec is unknown.
+      def resolve: (String spec) -> (Integer | String)?
 
-      def deliver: (untyped signal, untyped pids) -> untyped
+      def deliver: (Integer | String signal, Array[String] pids) -> Status
 
-      def send_to: (untyped signal, untyped pid) -> untyped
+      # Returns the pid on success (truthy, for #reject), nil when delivery failed.
+      def send_to: (Integer | String signal, String pid) -> String?
 
-      def list: (untyped args) -> untyped
+      def list: (Array[String] args) -> Status
 
-      def list_all: () -> untyped
+      def list_all: () -> Status
 
-      def list_one: (untyped arg) -> untyped
+      def list_one: (String arg) -> Status
 
-      def adjust: (untyped num) -> untyped
+      def adjust: (Integer num) -> Integer
 
-      def ok: (untyped name) -> untyped
+      def ok: (String name) -> Status
 
-      def usage: () -> untyped
+      def usage: () -> Status
 
-      def bad: (untyped message) -> untyped
+      def bad: (String message) -> Status
 
-      def oops: (untyped message) -> nil
+      def oops: (String message) -> nil
     end
   end
 end
