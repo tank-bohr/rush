@@ -312,8 +312,14 @@ Findings worth not re-learning (the research payoff of running the tool hard):
     *enclosing module*, not the class — so `value`/`op`/`result` resolve against `Arithmetic` and
     fail. **Singleton** methods (`def self.x`) attribute correctly, which is why `param_ref` (all
     `self.`) types green but `nodes`/`pipeline_runner` (instance `def result`/`def last?`) do not.
-    Fully typing those needs the methods moved out of the block into a reopened `class X` — a code
-    restructure weighed against the elegance of the `do…end` form.
+    **Resolution (rush-211.6 closed).** Define each node as `class X < Data.define(:members)` and
+    put the methods in the class body. That's a single class definition (so `Style/Documentation`
+    is happy, unlike a `X = Data.define(...)` + reopened `class X`), Steep attributes the instance
+    methods to the node, and the crash is gone — `nodes`, `pipeline_runner` (Stage) and `param_ref`
+    all type and were un-ignored. One catch: rubocop's `Style/DataInheritance` *mandates* the
+    un-typeable `do…end` block form, so it's disabled — another rubocop-vs-steep conflict where the
+    cop yields to let the code be type-checked. Net: the Steep ignore list is down to just the
+    racc-generated `parser.rb` and `number.rb` (the `Style/SymbolProc` conflict) — both irreducible.
 - **rbs 4.0 core declares `spawn`/`exec`/`fork`/`exit!` only on `Kernel`, not `singleton(Process)`**
   — so `Process.spawn(...)` trips `Ruby::NoMethod` while `Process.waitpid2/pid/times/kill` resolve
   fine. A core-RBS modelling gap, not a rush bug.
