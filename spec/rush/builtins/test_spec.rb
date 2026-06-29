@@ -94,7 +94,20 @@ RSpec.describe Rush::Builtins::Test do
     expect(test('(', '-n', 'x', 'y').exitstatus).to eq(2)
   end
 
-  it 'reports more than four arguments with exit status 2' do
+  it 'recurses through ( ) groupings of any length, like dash' do
+    expect(test('(', 'a', '=', 'a', ')')).to be_success
+    expect(test('(', 'a', '=', 'b', ')')).not_to be_success
+    expect(test('(', '(', '-n', 'x', ')', ')')).to be_success
+    expect(test('!', '(', 'a', '=', 'b', ')')).to be_success
+    expect(test('(', '(', '(', 'a', ')', ')', ')')).to be_success
+  end
+
+  it 'treats an empty ( ) grouping as false rather than an error, like dash' do
+    expect(test('(', ')')).not_to be_success
+    expect(test('(', '(', ')', ')')).not_to be_success
+  end
+
+  it 'reports more than four ungrouped arguments with exit status 2' do
     expect(test('a', 'b', 'c', 'd', 'e').exitstatus).to eq(2)
   end
 

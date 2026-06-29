@@ -51,7 +51,6 @@ module Rush
       private
 
       def evaluate(args)
-        raise TestError, 'too many arguments' if args.size > 4
         return binary(*args) if args.size == 3 && binary?(args[1])
         return !evaluate(args[1..]) if args.first == '!'
         return evaluate(args[1...-1]) if wrapped?(args)
@@ -59,8 +58,11 @@ module Rush
         primary(args)
       end
 
+      # A `( … )` wrapper drops to its contents at any length (dash recurses
+      # through groupings POSIX leaves unspecified past four arguments); empty
+      # `( )` peels to the no-argument test, which is false rather than an error.
       def wrapped?(args)
-        args.size >= 3 && args.first == '(' && args.last == ')'
+        args.size >= 2 && args.first == '(' && args.last == ')'
       end
 
       def primary(args)
