@@ -52,8 +52,8 @@ module Rush
 
       def evaluate(args)
         return binary(args) if args.size == 3 && binary?(args[1])
-        return !evaluate(args[1..]) if args.first == '!'
-        return evaluate(args[1...-1]) if wrapped?(args)
+        return !evaluate(args.drop(1)) if args.first == '!'
+        return evaluate(args[1...-1].to_a) if wrapped?(args)
 
         primary(args)
       end
@@ -98,13 +98,14 @@ module Rush
 
       def binary(args)
         lhs, op, rhs = args
+        op = op.to_s
         return lhs.public_send(STRING.fetch(op), rhs) if STRING.key?(op)
 
         to_int(lhs).public_send(INTEGER.fetch(op), to_int(rhs))
       end
 
       def to_int(text)
-        MaybeInteger.new(text).value || raise(TestError, "#{text}: integer expected")
+        MaybeInteger.new(text.to_s).value || raise(TestError, "#{text}: integer expected")
       end
     end
   end

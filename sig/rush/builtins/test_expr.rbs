@@ -10,9 +10,9 @@ module Rush
     # here; file-test primaries arrive via @files. A malformed expression raises
     # TestError, which the builtin maps to exit 2.
     class TestExpr
-      @args: untyped
+      @args: Array[String]
 
-      @files: untyped
+      @files: SystemCalls
 
       PRIMARY: { 0 => :none?, 1 => :nonempty?, 2 => :unary }
 
@@ -28,47 +28,50 @@ module Rush
       # integer when it is a valid (optionally signed, blank-padded) decimal, else
       # nil. Underscores and 0x are rejected, matching dash's strtol-strictness.
       class MaybeInteger
-        @text: untyped
+        @text: String
 
         PATTERN: ::Regexp
 
-        def initialize: (untyped text) -> void
+        def initialize: (String text) -> void
 
-        def valid?: () -> untyped
+        def valid?: () -> bool
 
-        def value: () -> (untyped | nil)
+        def value: () -> Integer?
       end
 
-      def initialize: (untyped args, untyped files) -> void
+      def initialize: (Array[String] args, SystemCalls files) -> void
 
-      def true?: () -> untyped
+      def true?: () -> bool
 
       private
 
-      def evaluate: (untyped args) -> untyped
+      # The primaries dispatch by arity through #send/#public_send (a Symbol from
+      # the operator tables), so those calls are genuinely untyped; everything
+      # around them — argument peeling, the integer/string coercions — is typed.
+      def evaluate: (Array[String] args) -> bool
 
       # A `( … )` wrapper drops to its contents at any length (dash recurses
       # through groupings POSIX leaves unspecified past four arguments); empty
       # `( )` peels to the no-argument test, which is false rather than an error.
-      def wrapped?: (untyped args) -> untyped
+      def wrapped?: (Array[String] args) -> bool
 
-      def primary: (untyped args) -> untyped
+      def primary: (Array[String] args) -> bool
 
       def none?: () -> false
 
-      def bad: (*untyped) -> untyped
+      def bad: (*untyped) -> bot
 
-      def unary: (untyped op, untyped val) -> untyped
+      def unary: (String op, String val) -> bool
 
-      def nonempty?: (untyped val) -> untyped
+      def nonempty?: (String val) -> bool
 
-      def empty?: (untyped val) -> untyped
+      def empty?: (String val) -> bool
 
-      def binary?: (untyped op) -> untyped
+      def binary?: (String? op) -> bool
 
-      def binary: (untyped args) -> untyped
+      def binary: (Array[String] args) -> bool
 
-      def to_int: (untyped text) -> untyped
+      def to_int: (String? text) -> Integer
     end
   end
 end
