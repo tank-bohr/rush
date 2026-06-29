@@ -1,13 +1,22 @@
 module Rush
   module AST
-    # Parses the body of ${...}: a parameter name plus an optional operator — the
-    # default/assign/error/alternative forms (- = ? +, optionally ':'-prefixed),
-    # the prefix/suffix removal forms (# ## % %%), or the ${#name} length form
-    # (recognised before the others, since a leading # also names $#).
     PARAM_BRACED: ::Regexp
 
     # A parameter reference parsed from $name or ${...}. The operator word is
-    # expanded lazily at expansion time.
-    ParamRef: untyped
+    # expanded lazily at expansion time. (Data.define; members kept untyped — the
+    # AST is still being typed.)
+    class ParamRef < ::Data
+      attr_reader name: untyped
+      attr_reader op: untyped
+      attr_reader arg: untyped
+
+      def self.new: (name: untyped, op: untyped, arg: untyped) -> ParamRef
+
+      def self.simple: (untyped name) -> ParamRef
+
+      def self.parse: (untyped body) -> ParamRef
+
+      def self.length?: (untyped body) -> bool
+    end
   end
 end

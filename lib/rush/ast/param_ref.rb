@@ -18,8 +18,10 @@ module Rush
       def self.parse(body)
         return new(name: body[1..], op: '#len', arg: nil) if length?(body)
 
-        match = PARAM_BRACED.match(body)
-        new(name: match[1], op: match[2], arg: match[3])
+        # PARAM_BRACED's \A…\z with a trailing .* always matches; .to_a pins the
+        # MatchData? to an Array so the captures are reachable without a nil branch.
+        captures = PARAM_BRACED.match(body).to_a
+        new(name: captures[1], op: captures[2], arg: captures[3])
       end
 
       def self.length?(body)
