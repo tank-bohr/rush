@@ -10,7 +10,7 @@ module Rush
 
     @system: untyped
 
-    @executor: untyped
+    @executor: Executor
 
     def self.run: (untyped argv, ?system: untyped) -> untyped
 

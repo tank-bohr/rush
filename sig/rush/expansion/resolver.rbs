@@ -5,7 +5,7 @@ module Rush
     # shell variables. $- (options) and $! (last background pid) are placeholders
     # until set-options and job control land.
     class Resolver
-      @executor: untyped
+      @executor: Executor
 
       SPECIAL: { "?" => :status, "#" => :count, "$" => :pid, "0" => :shell_name, "@" => :positional_all, "*" => :positional_all, "-" => :options, "!" => :background }
 

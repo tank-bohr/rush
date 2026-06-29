@@ -3,7 +3,7 @@ module Rush
   # catching break/continue at the loop boundary (see LoopControlHandling). The
   # loop's status is the last body status (0 if the value list is empty).
   class ForRunner
-    @executor: untyped
+    @executor: Executor
 
     @name: untyped
 

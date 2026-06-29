@@ -6,7 +6,7 @@ module Rush
     # backslash-escaped upstream so they match literally; the backslashes are
     # removed here whenever no expansion takes their place.
     class GlobExpander
-      @executor: untyped
+      @executor: Executor
 
       def initialize: (untyped executor) -> void
 

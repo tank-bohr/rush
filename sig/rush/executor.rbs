@@ -4,51 +4,36 @@ module Rush
   # base IoTable, builtin registry, redirection registry and expander hang off it;
   # signal and trap handling live in the TrapRunner it owns.
   class Executor
-    @system: untyped
+    @system: SystemCalls
+    @state: ShellState
+    @builtins: Builtins::Registry
+    @redirections: Redirection::Registry
+    @expander: Expansion::Pipeline
+    @io: IoTable
+    @tested: bool
+    @trap_runner: TrapRunner
+    @cmd_sub_status: Status
 
-    @state: untyped
+    attr_reader system: SystemCalls
+    attr_reader state: ShellState
+    attr_reader builtins: Builtins::Registry
+    attr_reader redirections: Redirection::Registry
+    attr_reader expander: Expansion::Pipeline
+    attr_reader io: IoTable
+    attr_reader cmd_sub_status: Status
+    attr_reader trap_runner: TrapRunner
 
-    @builtins: untyped
-
-    @redirections: untyped
-
-    @expander: untyped
-
-    @io: untyped
-
-    @tested: untyped
-
-    @trap_runner: untyped
-
-    @cmd_sub_status: untyped
-
-    attr_reader system: untyped
-
-    attr_reader state: untyped
-
-    attr_reader builtins: untyped
-
-    attr_reader redirections: untyped
-
-    attr_reader expander: untyped
-
-    attr_reader io: untyped
-
-    attr_reader cmd_sub_status: untyped
-
-    attr_reader trap_runner: untyped
-
-    def initialize: (system: untyped, state: untyped, ?builtins: untyped) -> void
+    def initialize: (system: SystemCalls, state: ShellState, ?builtins: Builtins::Registry) -> void
 
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
     # command unrun with status 2; the shell carries on (RedirectError).
-    def run: (untyped node) -> untyped
+    def run: (untyped node) -> Status
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
-    def replace_io: (untyped table) -> untyped
+    def replace_io: (IoTable table) -> void
 
-    def run_simple: (untyped command) -> untyped
+    def run_simple: (untyped command) -> Status
 
     # Apply the redirects on top of a base IoTable, yield the result, then
     # flush+close the files those redirects opened (POSIX: a later command in the
@@ -57,10 +42,10 @@ module Rush
     # Exception: redirect-only `exec` commits the table as the shell's base
     # (replace_io), so it now equals @io — leave those files open so they persist
     # for the rest of the shell rather than closing them out from under it.
-    def with_redirects: (untyped redirects, ?untyped base) { (untyped) -> untyped } -> untyped
+    def with_redirects: [T] (untyped redirects, ?IoTable base) { (untyped io) -> T } -> T
 
     # Run a compound command with its redirects bound for the whole body.
-    def run_redirected: (untyped command, untyped redirects) -> untyped
+    def run_redirected: (untyped command, untyped redirects) -> Status
 
     # The exit status of the last command substitution performed while a simple
     # command is being built. Reset to success at the start of each command so a
@@ -68,36 +53,36 @@ module Rush
     # substitution sets it (POSIX 2.9.1: such a command takes the status of the
     # last command substitution). Kept off last_status so a later $? in the same
     # command still sees the previous command's status, as dash does.
-    def reset_cmd_sub_status: () -> untyped
+    def reset_cmd_sub_status: () -> void
 
-    def record_cmd_sub_status: (untyped status) -> untyped
+    def record_cmd_sub_status: (Status status) -> void
 
     # Run a block with a different base IoTable (command substitution / future
     # `exec`), restoring the previous one afterwards.
-    def with_io: (untyped io) { () -> untyped } -> untyped
+    def with_io: [T] (IoTable io) { () -> T } -> T
 
     # Run a block in a "tested" context (errexit suppressed): the condition of
     # if/while/until, the non-final part of an && / || list, a negated pipeline,
     # and an async (&) command. `untested` is the inverse — command substitution
     # starts a fresh errexit context regardless of the caller's. Both restore on
     # exit, so the flag follows the call tree.
-    def tested: () { (?) -> untyped } -> untyped
+    def tested: [T] () { () -> T } -> T
 
-    def untested: () { (?) -> untyped } -> untyped
+    def untested: [T] () { () -> T } -> T
 
     # Evaluate an if/while/until condition: run the command in a tested context
     # (so a failing condition never trips errexit) and report whether it succeeded.
-    def succeeds?: (untyped command) -> untyped
+    def succeeds?: (untyped command) -> bool
 
     # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
     # outside a tested context aborts the shell with that status.
-    def exit_on_error: (untyped status) -> untyped
+    def exit_on_error: (Status status) -> Status
 
     private
 
-    def scoped_tested: (untyped value) { () -> untyped } -> untyped
+    def scoped_tested: [T] (bool value) { () -> T } -> T
 
-    def abort_on?: (untyped status) -> untyped
+    def abort_on?: (Status status) -> bool
 
     def redirect_into: (untyped redirect, untyped io) -> untyped
   end

@@ -4,7 +4,7 @@ module Rush
   # and adopts that status. fork/exit! are the one irreducible wrapper (covered
   # by subprocess specs); the child-side `run_body` is tested directly.
   class SubshellRunner
-    @executor: untyped
+    @executor: Executor
 
     @body: untyped
 

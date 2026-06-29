@@ -4,7 +4,7 @@ module Rush
   # is opened so `local` declarations are undone on return. `return` unwinds to
   # here as a ReturnSignal.
   class FunctionRunner
-    @executor: untyped
+    @executor: Executor
 
     @state: untyped
 

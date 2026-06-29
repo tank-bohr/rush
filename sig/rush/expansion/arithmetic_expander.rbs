@@ -4,7 +4,7 @@ module Rush
     # substitution to the raw text (POSIX treats it like a double-quoted word),
     # then evaluate the result as an integer arithmetic expression.
     class ArithmeticExpander
-      @executor: untyped
+      @executor: Executor
 
       @source: untyped
 

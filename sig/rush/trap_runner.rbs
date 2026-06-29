@@ -5,7 +5,7 @@ module Rush
   # bodies are parsed and run back through the executor, so this collaborates with
   # it rather than re-implementing execution.
   class TrapRunner
-    @executor: untyped
+    @executor: Executor
 
     @state: untyped
 

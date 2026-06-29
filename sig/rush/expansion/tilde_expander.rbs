@@ -6,7 +6,7 @@ module Rush
     # bare `~`. This base handles the leading form; AssignmentTilde extends it to
     # also expand after each unquoted colon, and NoTilde disables it entirely.
     class TildeExpander
-      @executor: untyped
+      @executor: Executor
 
       @segments: untyped
 

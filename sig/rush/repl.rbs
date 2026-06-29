@@ -9,7 +9,7 @@ module Rush
   class Repl
     @system: untyped
 
-    @executor: untyped
+    @executor: Executor
 
     @reader: untyped
 

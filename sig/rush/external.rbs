@@ -3,7 +3,7 @@ module Rush
   # IoTable, translating the result: the OS exit/signal status, or POSIX 127
   # (not found) / 126 (not executable).
   class External
-    @executor: untyped
+    @executor: Executor
 
     @argv: untyped
 

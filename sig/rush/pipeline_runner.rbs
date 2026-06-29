@@ -8,7 +8,7 @@ module Rush
   # `start_stage` is the one irreducible fork/exit wrapper; the child-side
   # `run_stage` (and its fd setup) is tested directly.
   class PipelineRunner
-    @executor: untyped
+    @executor: Executor
 
     @commands: untyped
 

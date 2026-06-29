@@ -4,7 +4,7 @@ module Rush
   # searching PATH (or used directly when the name contains a slash). #find runs
   # an ordered list of resolvers and returns the first Match (Unknown if none).
   class CommandLookup
-    @executor: untyped
+    @executor: Executor
 
     KEYWORDS: Array[String]
 

@@ -8,7 +8,7 @@ module Rush
   # non-empty command, so empty input is status 0 while $? stays live for the
   # commands themselves (POSIX: eval and dot inherit the current $?).
   class SourceRunner
-    @executor: untyped
+    @executor: Executor
 
     @lines: untyped
 
