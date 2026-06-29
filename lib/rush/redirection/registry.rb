@@ -29,7 +29,7 @@ module Rush
 
     def self.default_registry
       Registry.new.tap do |registry|
-        DEFAULTS.each { |kind, (mode, fd)| registry.register(kind, FileRedirect.new(mode, fd)) }
+        DEFAULTS.each { |kind, spec| registry.register(kind, FileRedirect.new(spec[0], spec[1])) }
         DUPS.each { |kind, fd| registry.register(kind, DupRedirect.new(fd)) }
         registry.register(:heredoc, HereDocRedirect.new)
       end

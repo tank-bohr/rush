@@ -14,8 +14,9 @@ module Rush
     # stage count. The fd topology — which pipe end feeds this stage (input) and
     # which it feeds (output), and so which ends to keep open (ends) — derives
     # from all three, so the runner threads a single Stage rather than the
-    # (index, pipes) pair through every per-stage step.
-    Stage = Data.define(:index, :pipes, :count) do
+    # (index, pipes) pair through every per-stage step. Its methods live in a
+    # reopened class (not the Data.define block) so Steep can type them.
+    class Stage < Data.define(:index, :pipes, :count)
       def last?
         index == count - 1
       end

@@ -173,6 +173,14 @@ Gemspec/DevelopmentDependencies:
 Style/EndlessMethod:
   EnforcedStyle: disallow
 
+# This cop wants `Data.define(...) do ... end`, but Steep attributes an instance
+# method defined in that block to the *enclosing module*, not the class, so the
+# block form can't be type-checked. We use `class X < Data.define(...)` instead
+# (the methods then attribute to the node and Steep types them) — see the RBS
+# typing notes in docs/journal.md.
+Style/DataInheritance:
+  Enabled: false
+
 Naming/MethodParameterName:
   AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's', 'op']
 

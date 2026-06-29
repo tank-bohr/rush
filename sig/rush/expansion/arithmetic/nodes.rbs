@@ -1,32 +1,66 @@
 module Rush
   module Expansion
     module Arithmetic
-      # The arithmetic AST. Each node computes against an Evaluator (`ctx`), which
-      # resolves variable names. And/Or and the conditional short-circuit so a
-      # branch that is not taken never runs (matching dash, where `0 && 1/0` is 0).
-      Num: untyped
+      # The arithmetic AST. Declared as real Data classes; #result lives in a
+      # reopened class (see the .rb) so Steep attributes it to the node. Node
+      # members and the inter-node results stay untyped (the AST holds AST; Number
+      # is still untyped), ctx is the Evaluator.
+      class Num < ::Data
+        attr_reader value: untyped
+        def self.new: (untyped value) -> Num
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # A variable reference; resolves its name through the evaluator.
-      Var: untyped
+      class Var < ::Data
+        attr_reader name: untyped
+        def self.new: (untyped name) -> Var
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # A unary operation (+ - ! ~) on one operand.
-      Unary: untyped
+      class Unary < ::Data
+        attr_reader op: untyped
+        attr_reader operand: untyped
+        def self.new: (untyped op, untyped operand) -> Unary
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # A binary arithmetic / bitwise / comparison operation on two operands.
-      Binary: untyped
+      class Binary < ::Data
+        attr_reader op: untyped
+        attr_reader left: untyped
+        attr_reader right: untyped
+        def self.new: (untyped op, untyped left, untyped right) -> Binary
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # Logical &&: short-circuits, so the right operand runs only when the left is non-zero.
-      And: untyped
+      class And < ::Data
+        attr_reader left: untyped
+        attr_reader right: untyped
+        def self.new: (untyped left, untyped right) -> And
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # Logical ||: short-circuits, so the right operand runs only when the left is zero.
-      Or: untyped
+      class Or < ::Data
+        attr_reader left: untyped
+        attr_reader right: untyped
+        def self.new: (untyped left, untyped right) -> Or
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # The ?: conditional: only the taken branch is evaluated.
-      Cond: untyped
+      class Cond < ::Data
+        attr_reader test: untyped
+        attr_reader truthy: untyped
+        attr_reader falsy: untyped
+        def self.new: (untyped test, untyped truthy, untyped falsy) -> Cond
+        def result: (Evaluator ctx) -> untyped
+      end
 
-      # The right-hand side is evaluated before the target is read, so a nested
-      # assignment in the rhs (e.g. `a += a += 1`) takes effect first.
-      Assign: untyped
+      class Assign < ::Data
+        attr_reader name: untyped
+        attr_reader op: untyped
+        attr_reader rhs: untyped
+        def self.new: (untyped name, untyped op, untyped rhs) -> Assign
+        def result: (Evaluator ctx) -> untyped
+      end
     end
   end
 end

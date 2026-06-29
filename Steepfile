@@ -15,13 +15,6 @@ target :lib do
 
   # --- deferred (each is a follow-up under rush-211.2) ---
   ignore 'lib/rush/parser.rb'                      # racc-generated; not hand-typed
-  # Steep attributes instance methods defined inside a `Data.define do...end` block
-  # to the *enclosing module*, not the node class, so `value`/`op`/`result` resolve
-  # against Arithmetic and fail. Fixing needs the methods moved out of the block
-  # into a reopened class (a code restructure decision) — see rush-211.6.
-  ignore 'lib/rush/expansion/arithmetic/nodes.rb'
-  ignore 'lib/rush/pipeline_runner.rb'            # Data.define Stage block (same instance-method attribution issue) + main class
-  ignore 'lib/rush/redirection/registry.rb'       # nested block-param destructuring over heterogeneous hash crashes Steep 2.0.0
   ignore 'lib/rush/expansion/arithmetic/number.rb' # rubocop Style/SymbolProc wants lambda(&:-@)/(&:~), which Steep can't type; no form satisfies both
 
   library 'etc', 'forwardable', 'strscan', 'tempfile'
