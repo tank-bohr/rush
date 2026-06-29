@@ -335,6 +335,17 @@ lesson: a type fix is not done until the *whole* gate is green; one quality tool
 can be another's smell, and the resolution is usually a refactor that pleases both, not a
 suppression in either.
 
+**Sometimes no shape pleases both.** `Number::UNARY` maps operators to callables; for the plain
+unary operators the idiomatic value is `lambda(&:-@)` / `lambda(&:~)` — which **rubocop
+`Style/SymbolProc` mandates**, but which **Steep can't type** (it sees `lambda`'s block as
+zero-arity and `Symbol#to_proc` as one-arity). The escape forms each lose: `->(v) { -v }` /
+`->(v) { ~v }` are themselves `Style/SymbolProc` offenses; `->(v) { v ^ -1 }` satisfies both but is
+write-only. With no readable form in the intersection, the call is to **keep the idiomatic,
+rubocop-blessed code and `ignore` the file in Steep** — i.e. let the two type-checkers disagree on
+coverage rather than uglify real code for the tool. (The independent Sorbet track may type it
+fine; that divergence is itself the experiment.) So the "refactor pleases both" lesson has a
+corollary: when the intersection is empty, code clarity wins and the weaker-fit instrument yields.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
