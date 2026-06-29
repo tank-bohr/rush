@@ -33,7 +33,7 @@ module Rush
       end
 
       def advance(args, index)
-        arg = args[index]
+        arg = args.fetch(index)
         return apply_long(arg[0], args[index + 1]) if arg[1..] == 'o'
 
         apply(arg)
@@ -43,7 +43,7 @@ module Rush
       def positionals(args, index)
         return if index == args.size
 
-        args[index] == '--' ? args[(index + 1)..] : args[index..]
+        args[index] == '--' ? args.drop(index + 1) : args.drop(index)
       end
 
       def option?(flag)
@@ -56,7 +56,7 @@ module Rush
       end
 
       def apply_long(sign, name)
-        toggle(LONG[name], sign)
+        toggle(name && LONG[name], sign)
         2
       end
 

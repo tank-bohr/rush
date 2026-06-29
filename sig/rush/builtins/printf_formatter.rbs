@@ -7,15 +7,15 @@ module Rush
     # non-number is reported via the ok flag and treated as 0, a missing one as
     # 0 silently). %b and octal escapes arrive in a later slice. Returns [text, ok].
     class PrintfFormatter
-      @args: untyped
+      @args: Array[String]
 
-      @cursor: untyped
+      @cursor: Integer
 
-      @consumed: untyped
+      @consumed: Integer
 
-      @ok: untyped
+      @ok: bool
 
-      RUBY_CONV: { "i" => "d", "u" => "d" }
+      RUBY_CONV: ::Hash[String, String]
 
       NUMERIC: ::Array["d" | "i" | "o" | "u" | "x" | "X"]
 
@@ -30,40 +30,40 @@ module Rush
 
         LITERAL: ::Regexp
 
-        def emit: (untyped formatter) -> untyped
+        def emit: (PrintfFormatter formatter) -> String
 
         private
 
-        def piece: (untyped formatter) -> untyped
+        def piece: (PrintfFormatter formatter) -> String
 
-        def conversion: (untyped formatter) -> untyped
+        def conversion: (PrintfFormatter formatter) -> String
 
-        def escape: () -> untyped
+        def escape: () -> String
       end
 
-      def initialize: (untyped args) -> void
+      def initialize: (Array[String] args) -> void
 
-      def render: (untyped template) -> ::Array[untyped]
+      def render: (String template) -> [ String, bool ]
 
       # Render one %conversion (called back from Template): %% is a literal %, a
       # numeric/char/string conversion consumes and formats the next argument.
-      def convert: (untyped flags, untyped conv) -> ("%" | untyped)
+      def convert: (String flags, String conv) -> String
 
       private
 
-      def last_pass?: () -> untyped
+      def last_pass?: () -> bool
 
-      def one_pass: (untyped template) -> untyped
+      def one_pass: (String template) -> String
 
-      def numeric: (untyped flags, untyped conv, untyped arg) -> untyped
+      def numeric: (String flags, String conv, String? arg) -> String
 
-      def to_int: (untyped arg) -> (0 | untyped)
+      def to_int: (String? arg) -> Integer
 
-      def invalid: () -> 0
+      def invalid: () -> Integer
 
-      def take: () -> untyped
+      def take: () -> String?
 
-      def first_char: (untyped arg) -> untyped
+      def first_char: (String? arg) -> String
     end
   end
 end

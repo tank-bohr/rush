@@ -10,25 +10,25 @@ module Rush
 
       LONG: { "errexit" => :errexit, "nounset" => :nounset, "xtrace" => :xtrace, "noglob" => :noglob, "verbose" => :verbose }
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def strip_options: (untyped args) -> (nil | untyped)
+      def strip_options: (Array[String] args) -> Array[String]?
 
-      def consume_options: (untyped args) -> untyped
+      def consume_options: (Array[String] args) -> Integer
 
-      def advance: (untyped args, untyped index) -> (untyped | 1)
+      def advance: (Array[String] args, Integer index) -> Integer
 
-      def positionals: (untyped args, untyped index) -> (nil | untyped)
+      def positionals: (Array[String] args, Integer index) -> Array[String]?
 
-      def option?: (untyped flag) -> untyped
+      def option?: (String? flag) -> bool
 
-      def apply: (untyped flag) -> untyped
+      def apply: (String flag) -> void
 
-      def apply_long: (untyped sign, untyped name) -> 2
+      def apply_long: (String? sign, String? name) -> Integer
 
-      def toggle: (untyped option, untyped sign) -> untyped
+      def toggle: (Symbol? option, String? sign) -> void
     end
   end
 end

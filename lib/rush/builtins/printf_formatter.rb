@@ -36,13 +36,15 @@ module Rush
           return conversion(formatter) if peek(1) == '%'
           return escape if peek(1) == '\\'
 
-          scan(LITERAL)
+          # Not at %, \\ or eos, so LITERAL (/[^%\\]+/) always matches here; .to_s
+          # only quiets scan's nominal String? (a nil would loop forever, can't happen).
+          scan(LITERAL).to_s
         end
 
         def conversion(formatter)
-          return getch unless scan(SPEC)
+          return getch.to_s unless scan(SPEC)
 
-          formatter.convert(self[1], self[2])
+          formatter.convert(self[1].to_s, self[2].to_s)
         end
 
         def escape
@@ -97,9 +99,10 @@ module Rush
       end
 
       def to_int(arg)
-        return 0 if arg.to_s.empty?
+        text = arg.to_s
+        return 0 if text.empty?
 
-        Integer(arg, exception: false) || invalid
+        Integer(text, exception: false) || invalid
       end
 
       def invalid
