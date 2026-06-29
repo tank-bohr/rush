@@ -386,6 +386,28 @@ correct *declared* type isn't a checked type; gradual typing only bites where th
 re-derives the value, and lambdas-in-frozen-literals are a blind spot you close at the value, not
 the signature.
 
+#### Slice 2 — the runner layer, and "untyped is about the *receiver*"
+A second pass drove typed-call **82.9% → ~93%** by typing the layers the spine drives but that were
+still on the prototype `untyped`-everything sigs: the runner layer (CLI, CommandRunner, External,
+Function/Source/Trap/Pipeline runners, Repl, ProgramReader), the arithmetic cluster (a `node` union
+alias gave the AST a real recursive type; the Pratt parser typed to 100%), and a batch of builtins
+(set, printf_formatter, kill, test/[). Two boundary annotations did outsized work: `Parser#parse ->
+AST::List` (the grammar's start rule) cascades to every parse caller, and a base `WordSegment#expand`
+(abstract, like `Node#execute`) made every segment in the expansion pipeline known to expand.
+
+The reframing that made the tail tractable: **`steep stats` counts a call as untyped when its
+*receiver* is untyped, not when it returns `untyped`.** `test_expr` looked irreducible — it
+dispatches primaries by arity through `send`/`public_send` — but those receivers are `self` / typed
+operands, so the calls are *typed*; what was untyped was the argument peeling around them. Typing
+`@args`/`@files` took the file 58% → 100% with the dynamic dispatch untouched. So the lever is
+almost always "what ivar/param/collaborator is still `untyped`", not "this method is too dynamic".
+What genuinely stays untyped is narrow and honest: a value payload deliberately left open
+(`WordSegment#value`, `Builtins::Registry`'s class table, `TILDE_EXPANDERS`), and the racc glue
+(`parser_support`'s factories mutate racc's untyped value stack). Steep also has handy precision
+where it counts — tuple destructuring (`a, b = waitpid2(pid)` types `b` as `Process::Status`), and
+`x.class` as `singleton(X)` — but *not* across repeated method calls (`peek && PRECEDENCE[peek]`
+needs `peek` bound to a local first; narrowing is for locals, not re-invocations).
+
 #### Coercions move the proof from the checker to runtime — and structure beats coercion
 The single most important lesson of the typing work. When Steep flags `x.last[...]` or `match[1]`
 because a method's honest return is `T?` (`Array#last`, `MatchData#[]`, `String#[]` are all
