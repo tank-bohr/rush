@@ -4,10 +4,13 @@ module Rush
   # single-level signal stops here and yields the last command status. Hosts must
   # expose @executor.
   module LoopControlHandling
+    # Provided by the host runner (LoopRunner / ForRunner) this is mixed into.
+    @executor: Executor
+
     private
 
-    def unwind: (untyped signal) -> untyped
+    def unwind: (LoopControl signal) -> Status
 
-    def relay: (untyped signal) -> (untyped | nil)
+    def relay: (LoopControl signal) -> LoopControl?
   end
 end
