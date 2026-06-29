@@ -50,13 +50,13 @@ module Rush
 
         def binary(min)
           left = unary
-          left = fold(left) while (power = PRECEDENCE[peek]) && power >= min
+          left = fold(left) while (tok = peek) && (power = PRECEDENCE[tok]) && power >= min
           left
         end
 
         def fold(left)
           op = advance
-          combine(op, left, binary(PRECEDENCE[op] + 1))
+          combine(op, left, binary(PRECEDENCE.fetch(op) + 1))
         end
 
         def combine(op, left, right)
@@ -97,7 +97,7 @@ module Rush
 
         def take
           oops if @pos >= @tokens.size
-          @tokens[@pos].tap { @pos += 1 }
+          @tokens.fetch(@pos).tap { @pos += 1 }
         end
 
         def accept?(token)

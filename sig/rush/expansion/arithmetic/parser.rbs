@@ -6,51 +6,53 @@ module Rush
       # loosest and is right-associative. Malformed input or leftover tokens
       # raise a syntax error (matching dash's "expecting primary"/"expecting EOF").
       class Parser
-        @tokens: untyped
+        @tokens: Array[[ Symbol, String ]]
 
-        @pos: untyped
+        @pos: Integer
 
-        PRECEDENCE: { "||" => 1, "&&" => 2, "|" => 3, "^" => 4, "&" => 5, "==" => 6, "!=" => 6, "<" => 7, "<=" => 7, ">" => 7, ">=" => 7, "<<" => 8, ">>" => 8, "+" => 9, "-" => 9, "*" => 10, "/" => 10, "%" => 10 }
+        PRECEDENCE: Hash[String, Integer]
 
-        UNARY: ::Array["+" | "-" | "!" | "~"]
+        UNARY: Array[String]
 
-        ASSIGN: ::Array["=" | "+=" | "-=" | "*=" | "/=" | "%=" | "<<=" | ">>=" | "&=" | "^=" | "|="]
+        ASSIGN: Array[String]
 
-        def initialize: (untyped tokens) -> void
+        def initialize: (Array[[ Symbol, String ]] tokens) -> void
 
-        def parse: () -> untyped
+        def parse: () -> node
 
         private
 
         # Assignment binds loosest and is right-associative; its target must be a
         # bare name (an lvalue), so e.g. `5 = 3` is a syntax error.
-        def assignment: () -> untyped
+        def assignment: () -> node
 
-        def conditional: () -> untyped
+        def conditional: () -> node
 
-        def binary: (untyped min) -> untyped
+        def binary: (Integer min) -> node
 
-        def fold: (untyped left) -> untyped
+        def fold: (node left) -> node
 
-        def combine: (untyped op, untyped left, untyped right) -> untyped
+        def combine: (String op, node left, node right) -> node
 
-        def unary: () -> untyped
+        def unary: () -> node
 
-        def primary: () -> untyped
+        def primary: () -> node
 
-        def grouped: () -> untyped
+        def grouped: () -> node
 
-        def peek: () -> untyped
+        # The next token's text, or nil past the end (so the precedence loop and the
+        # accept?/lookahead helpers stop cleanly at EOF).
+        def peek: () -> String?
 
-        def advance: () -> untyped
+        def advance: () -> String
 
-        def take: () -> untyped
+        def take: () -> [ Symbol, String ]
 
-        def accept?: (untyped token) -> (false | true)
+        def accept?: (String token) -> bool
 
-        def expect: (untyped token) -> untyped
+        def expect: (String token) -> void
 
-        def oops: () -> untyped
+        def oops: () -> bot
       end
     end
   end
