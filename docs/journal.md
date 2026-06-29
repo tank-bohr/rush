@@ -326,6 +326,15 @@ the protocol** — `CommandLookup::Match` declares `describe`/`terse` so `find -
 Deliberately **not** used: inline `#:` assertions — they pollute the code and, being RBS comments,
 could be read by the Sorbet track too, crossing the two streams we keep independent.
 
+**Instruments can contradict each other.** Typing `TestExpr#binary(*args)` for Steep by spelling
+out `binary(args[0], args[1], args[2])` (Steep won't splat a variable Array into a fixed arity)
+added two `args` references and tripped **reek**'s FeatureEnvy on `#evaluate`. The fix satisfies
+both: pass the array and destructure *inside* `#binary` (`lhs, op, rhs = args`) — `#evaluate`'s
+arg-reference count returns to baseline (reek green) and there is no splat (Steep green). General
+lesson: a type fix is not done until the *whole* gate is green; one quality tool's preferred shape
+can be another's smell, and the resolution is usually a refactor that pleases both, not a
+suppression in either.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
