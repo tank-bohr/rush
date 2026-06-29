@@ -9,7 +9,7 @@ module Rush
     %i[write print puts << printf gets read readline each_line readpartial].each do |method|
       # Kernel.raise (not bare raise): Steep can't resolve the receiver of a bare
       # raise inside a class-level define_method block (its self is untyped there).
-      define_method(method) { |*| Kernel.raise(Errno::EBADF) }
+      define_method(method) { |*_| Kernel.raise(Errno::EBADF) }
     end
 
     def close

@@ -71,6 +71,24 @@ detectors:
     exclude:
       - Rush::Expansion::ParameterExpander#unset_or_null?
 
+  # The arithmetic nodes and the pipeline Stage are `X = Data.define(...)` with
+  # behaviour in a reopened `class X` — the one Data shape both Steep and Sorbet
+  # accept (Sorbet rejects `class X < Data.define(...)`). reek sees both the
+  # assignment and the reopen as a class named X, so one comment can't satisfy it;
+  # RuboCop's Style/Documentation holds the doc gate for these (comment on the
+  # reopen) instead. See docs/journal.md.
+  IrresponsibleModule:
+    exclude:
+      - Rush::Expansion::Arithmetic::Num
+      - Rush::Expansion::Arithmetic::Var
+      - Rush::Expansion::Arithmetic::Unary
+      - Rush::Expansion::Arithmetic::Binary
+      - Rush::Expansion::Arithmetic::And
+      - Rush::Expansion::Arithmetic::Or
+      - Rush::Expansion::Arithmetic::Cond
+      - Rush::Expansion::Arithmetic::Assign
+      - Rush::PipelineRunner::Stage
+
   # on_error duck-types the heterogeneous token racc hands back (no shared type).
   ManualDispatch:
     exclude:
@@ -87,10 +105,15 @@ detectors:
       - Rush::ParserSupport
 
   # Only `e` is accepted — RuboCop's Naming/RescuedExceptionsVariableName forces
-  # that name for rescues; everything else is spelled out.
+  # that name for rescues; everything else is spelled out. ClosedStream is exempt:
+  # its define_method blocks take a `|*_|` splat (every read/write raises EBADF
+  # ignoring its args) — the splat must be named because Sorbet (srb.help/3012)
+  # forbids an anonymous block splat, and `_` is the intentionally-unused marker.
   UncommunicativeVariableName:
     accept:
       - /^e$/
+    exclude:
+      - Rush::ClosedStream
   UncommunicativeMethodName:
     accept:
       - waitpid2

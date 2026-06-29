@@ -438,6 +438,46 @@ false); it now holds it as a dedicated `@current` ivar, **always present by cons
 happy too. Coerce only where nil is truly unreachable and the coercion is a behaviour-preserving
 no-op on the real values; reach for a structural refactor the moment the invariant is load-bearing.
 
+#### Sorbet — slice 1 (the second checker boots, and the first real drift)
+The second, independent checker (rush-211.4): `sorbet` (static `srb`) + `sorbet-runtime` (a real
+runtime dependency, the accepted trade for inline `sig {}`), a `sorbet/config`, and a `sorbet` rake
+task wired into the default gate **next to** `steep` — two type checks over one codebase, as the
+charter wants. Sorbet 0.6.13320 runs fine on Ruby 4.0. Baseline is `# typed: false` (Sorbet's
+default): even there it resolves constants and rejects a few structural forms, so getting to *green*
+already surfaced findings — and that is the point, not a number.
+
+**Invoke the binary, not `srb tc`.** The `srb` wrapper auto-loads every gem-shipped `rbi/` in the
+bundle — and prism's ships a self-inconsistent one (`Prism::LexCompat::Result` doesn't exist in
+1.9.0) that errors before our code is even read; `--ignore` doesn't suppress it (the wrapper adds
+those RBIs outside the ignore path). The raw `sorbet-static` binary (located via its gem,
+`libexec/sorbet`) reads only `sorbet/config` → no phantom gem-RBI noise. The rake task calls it
+directly.
+
+**The first genuine cross-checker drift: `Data.define`.** Steep and Sorbet have *opposite*
+requirements for a Data class with methods, and neither's preferred form is the other's:
+- `class X < Data.define(:a)` — **Steep's** chosen form (slice 1). **Sorbet rejects it** outright
+  ("Superclasses must only contain constant literals", srb.help/4002).
+- `X = Data.define(:a) do def m; end end` (block) — **Sorbet accepts** it; **Steep can't type** the
+  block methods (attributed to the enclosing module — the original slice-1 finding).
+- `X = Data.define(:a)` + reopened `class X; def m; end; end` (assignment + reopen) — **both accept
+  it.** This is the resolution: the two checkers' constraints *intersect* to a single form, and it's
+  arguably cleaner than either's favourite. A nice charter result — the second checker didn't just
+  duplicate the first, it *narrowed* the design.
+
+That form isn't free, though: it ripples into the linters, because reek and RuboCop disagree about
+where a reopened-class's doc comment lives. reek's `IrresponsibleModule` sees **two** definitions of
+`X` (the `Data.define` assignment *and* the `class X` reopen) and wants a comment on each — one
+comment can't satisfy it. RuboCop's `Style/Documentation` wants the comment on the reopen and is
+content with one. So for these classes the usual split is inverted: RuboCop holds the doc gate
+(comment on the reopen) and reek's `IrresponsibleModule` exempts them (`.reek.yml`). Two more small
+Sorbet⟂linter frictions, same flavour: an anonymous block splat `{ |*| … }` (ClosedStream's EBADF
+stubs) is fine for RuboCop but Sorbet forbids it (srb.help/3012) — naming it `|*_|` satisfies Sorbet
+but trips reek's `UncommunicativeVariableName` (the project accepts only `e`), so ClosedStream is
+exempted there. **Lesson so far:** adding a second type system to existing code mostly costs you at
+the *structural* seams (class shape, splat syntax) the first system and the linters had already
+pinned — and each clash is a small, real piece of "how these tools see Ruby differently", which is
+exactly what this project is for. (Inline `sig {}` and raising `# typed:` levels: next slice.)
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files

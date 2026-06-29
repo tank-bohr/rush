@@ -60,6 +60,12 @@ Metrics/CollectionLiteralLength:
 # Per-class/module descriptive comments are the project norm, double-guarded on
 # purpose: this cop gives editor/LSP feedback, reek's IrresponsibleModule holds
 # the gate. The one concern we deliberately enforce with both tools.
+#
+# The `X = Data.define(...)` + reopened `class X` nodes are the exception to the
+# split: reek sees both the assignment and the reopen as classes and can't be
+# satisfied by one comment, so for those classes this cop holds the doc gate (the
+# comment lives on the reopen) and reek's IrresponsibleModule exempts them
+# (.reek.yml). See docs/journal.md.
 Style/Documentation:
   Enabled: true
 

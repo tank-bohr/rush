@@ -1,0 +1,6 @@
+--dir
+./lib
+--dir
+./exe
+--ignore=/vendor/
+--ignore=/lib/rush/parser.rb

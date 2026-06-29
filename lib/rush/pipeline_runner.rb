@@ -10,13 +10,15 @@ module Rush
   # `start_stage` is the one irreducible fork/exit wrapper; the child-side
   # `run_stage` (and its fd setup) is tested directly.
   class PipelineRunner
+    Stage = Data.define(:index, :pipes, :count)
     # One stage of the pipeline: its position plus the shared pipe array and the
     # stage count. The fd topology — which pipe end feeds this stage (input) and
     # which it feeds (output), and so which ends to keep open (ends) — derives
     # from all three, so the runner threads a single Stage rather than the
     # (index, pipes) pair through every per-stage step. Its methods live in a
-    # reopened class (not the Data.define block) so Steep can type them.
-    class Stage < Data.define(:index, :pipes, :count)
+    # reopened class (assignment form, not `class < Data.define` and not the
+    # define block) — the one Data shape both Steep and Sorbet accept.
+    class Stage
       def last?
         index == count - 1
       end

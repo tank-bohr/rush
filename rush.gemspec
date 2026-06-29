@@ -32,6 +32,12 @@ Gem::Specification.new do |spec|
   # runtime that the generated parser requires, so a single dependency covers both.
   spec.add_dependency 'racc', '~> 1.7', '>= 1.7.3'
 
+  # The inline `sig {}` Sorbet annotations need sorbet-runtime at load time, so it
+  # is a real runtime dependency (the deliberate trade for the second, inline type
+  # system — see rush-211.4 and docs/journal.md "Charter"). The static `srb`
+  # checker (the `sorbet` gem) is dev-only.
+  spec.add_dependency 'sorbet-runtime', '~> 0.5'
+
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rbs', '~> 4.0'
   spec.add_development_dependency 'reek', '~> 6.5'
@@ -40,5 +46,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop-performance', '~> 1.23'
   spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
   spec.add_development_dependency 'simplecov', '~> 0.22'
+  spec.add_development_dependency 'sorbet', '~> 0.5'
   spec.add_development_dependency 'steep', '~> 2.0'
 end

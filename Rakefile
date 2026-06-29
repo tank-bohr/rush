@@ -25,5 +25,15 @@ task :steep do
   sh 'steep check'
 end
 
-desc 'Full pipeline: compile -> rubocop -> reek -> steep -> spec (+ coverage gate)'
-task default: %i[compile rubocop reek steep spec]
+desc 'Type-check gate (Sorbet over inline sig {}; independent of Steep — see docs/journal.md)'
+task :sorbet do
+  # Sorbet is the second, independent type checker (inline sig {} + sorbet/config).
+  # Run the sorbet-static binary directly, not `srb tc`: the `srb` wrapper auto-loads
+  # every gem-shipped RBI in the bundle (some, e.g. prism's, are self-inconsistent
+  # and error) — noise unrelated to our code. The binary reads sorbet/config from cwd.
+  bin = File.join(Gem::Specification.find_by_name('sorbet-static').full_gem_path, 'libexec', 'sorbet')
+  sh bin
+end
+
+desc 'Full pipeline: compile -> rubocop -> reek -> steep -> sorbet -> spec (+ coverage gate)'
+task default: %i[compile rubocop reek steep sorbet spec]
