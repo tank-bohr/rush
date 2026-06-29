@@ -310,6 +310,22 @@ Findings worth not re-learning (the research payoff of running the tool hard):
   `sig/rush/parser.rbs` lets the rest resolve the `Parser` constant. `ParserSupport`'s host methods
   (`do_parse`/`token_to_str`, from `Racc::Parser`) are unmodelled, so that file is deferred too.
 
+#### Tightening pattern: value-level invariants under a 100% coverage gate
+Recurring across the hand-typing batches (`Status.of`, `Scope#declare_local`/`#end_scope`,
+`CommandLookup#verify`, `Environment#exported`): the code is correct because of an invariant the
+type system can't see — *absent exitstatus ⟹ present termsig*, *the popped frame is non-nil
+because it's paired with begin_scope*, *terse is only called behind a `known?` guard*. Steep flags
+these as `NoMethod`-on-`nil` (or on a union member). The **coverage gate shapes the fix**: the
+obvious nil-guards (`x || default`, `x&.m`, `return unless x`) all add a branch whose
+invariant-false side is unreachable → it can never be covered → the 100% gate fails. So instead
+**pin the type with a branchless, behaviour-preserving coercion on the only reachable path**:
+`termsig.to_i`, `@frames.fetch(-1)` (keeps crash-if-empty), `@frames.pop.to_a`, `*set.to_a` for a
+splat Steep won't widen. Where the gap is a guarded union (not nil), model the **abstract base as
+the protocol** — `CommandLookup::Match` declares `describe`/`terse` so `find -> Match` covers the
+`known?`-guarded call (RBS-only methods need no implementation, like `Positional`'s delegators).
+Deliberately **not** used: inline `#:` assertions — they pollute the code and, being RBS comments,
+could be read by the Sorbet track too, crossing the two streams we keep independent.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
