@@ -5,46 +5,46 @@ module Rush
   class PipelineRunner
     @executor: Executor
 
-    @commands: untyped
+    @commands: Array[AST::Node]
 
     # One stage: position + the shared pipe array + the stage count. Its methods
-    # live in a reopened class (see the .rb) so Steep can type them; pipes stay
-    # untyped (raw IO.pipe pairs).
+    # live in a reopened class (see the .rb) so Steep can type them; each pipe is
+    # a [read, write] IO pair from SystemCalls#pipe.
     class Stage < ::Data
       attr_reader index: Integer
-      attr_reader pipes: untyped
+      attr_reader pipes: Array[[ IO, IO ]]
       attr_reader count: Integer
 
-      def self.new: (Integer index, untyped pipes, Integer count) -> Stage
+      def self.new: (Integer index, Array[[ IO, IO ]] pipes, Integer count) -> Stage
 
       def last?: () -> bool
 
-      def input: () -> untyped
+      def input: () -> IO?
 
-      def output: () -> untyped
+      def output: () -> IO?
 
-      def ends: () -> Array[untyped]
+      def ends: () -> Array[IO]
 
       # Layer this stage's pipe ends over the base IoTable.
       def io: (IoTable base) -> IoTable
     end
 
-    def initialize: (Executor executor, untyped commands) -> void
+    def initialize: (Executor executor, Array[AST::Node] commands) -> void
 
     def call: () -> Status
 
     private
 
-    def build_pipes: () -> untyped
+    def build_pipes: () -> Array[[ IO, IO ]]
 
-    def start_stage: (Stage stage) -> untyped
+    def start_stage: (Stage stage) -> Integer?
 
     def run_stage: (Stage stage) -> Status
 
     def close_unused: (Stage stage) -> void
 
-    def close_all: (untyped pipes) -> void
+    def close_all: (Array[[ IO, IO ]] pipes) -> void
 
-    def wait: (untyped pids) -> Status
+    def wait: (Array[Integer?] pids) -> Status
   end
 end

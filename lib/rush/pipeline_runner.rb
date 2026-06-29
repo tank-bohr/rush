@@ -22,11 +22,11 @@ module Rush
       end
 
       def input
-        index.positive? ? pipes[index - 1].first : nil
+        index.positive? ? pipes.fetch(index - 1).first : nil
       end
 
       def output
-        last? ? nil : pipes[index].last
+        last? ? nil : pipes.fetch(index).last
       end
 
       def ends
@@ -67,7 +67,7 @@ module Rush
 
     def run_stage(stage)
       close_unused(stage)
-      @executor.with_io(stage.io(@executor.io)) { @executor.run(@commands[stage.index]) }
+      @executor.with_io(stage.io(@executor.io)) { @executor.run(@commands.fetch(stage.index)) }
     end
 
     def close_unused(stage)
@@ -80,7 +80,10 @@ module Rush
     end
 
     def wait(pids)
-      pids.map { |pid| Status.of(@executor.system.waitpid2(pid).last) }.last
+      # fork returns the child pid in the parent (nil only in the child, which
+      # exit!s and never reaches here), so compact only quiets the nominal
+      # Integer?; a pipeline always has >= 2 stages, so fetch(-1) has a status.
+      pids.compact.map { |pid| Status.of(@executor.system.waitpid2(pid).last) }.fetch(-1)
     end
   end
 end
