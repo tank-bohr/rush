@@ -4,19 +4,21 @@ module Rush
   # process boundary (exit!/the shell's own exit, where the OS truncates). The
   # operand is validated non-negative and <= INT_MAX before reaching here.
   class Status
-    @exitstatus: untyped
+    attr_reader exitstatus: Integer
 
-    attr_reader exitstatus: untyped
+    def initialize: (Integer exitstatus) -> void
 
-    def initialize: (untyped exitstatus) -> void
+    def success?: () -> bool
 
-    def success?: () -> untyped
+    def self.success: () -> instance
 
-    def self.success: () -> untyped
-
-    def self.failure: (?::Integer code) -> untyped
+    def self.failure: (?Integer code) -> instance
 
     # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
-    def self.of: (untyped process_status) -> untyped
+    # Param left untyped: with `::Process::Status`, Steep can't see that an
+    # absent #exitstatus implies a present #termsig (both are Integer?), so the
+    # `termsig + 128` branch trips Ruby::NoMethod on nil. Tightening this needs a
+    # nil-correlation decision (a finding for rush-211.5).
+    def self.of: (untyped process_status) -> instance
   end
 end

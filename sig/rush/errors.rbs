@@ -40,21 +40,17 @@ module Rush
 
   # Control-flow signal: `exit` unwinds to the top level carrying a status code.
   class ExitSignal < Error
-    @code: untyped
+    attr_reader code: Integer
 
-    attr_reader code: untyped
-
-    def initialize: (untyped code) -> void
+    def initialize: (Integer code) -> void
   end
 
   # Loop control: `break`/`continue` unwind to the enclosing loop, carrying the
   # number of loop levels to act on.
   class LoopControl < Error
-    @count: untyped
+    attr_reader count: Integer
 
-    attr_reader count: untyped
-
-    def initialize: (untyped count) -> void
+    def initialize: (Integer count) -> void
   end
 
   # `break N`: unwind out of N enclosing loop levels.
@@ -67,10 +63,8 @@ module Rush
 
   # Control-flow signal: `return` unwinds to the enclosing function call.
   class ReturnSignal < Error
-    @code: untyped
+    attr_reader code: Integer
 
-    attr_reader code: untyped
-
-    def initialize: (untyped code) -> void
+    def initialize: (Integer code) -> void
   end
 end

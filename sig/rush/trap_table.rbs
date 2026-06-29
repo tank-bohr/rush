@@ -3,17 +3,17 @@ module Rush
   # An action is the command string to run when the signal fires; "" means the
   # signal is ignored. Resetting a signal drops its entry, restoring the default.
   class TrapTable
-    @actions: untyped
+    @actions: Hash[String, String]
 
     def initialize: () -> void
 
-    def set: (untyped name, untyped action) -> untyped
+    def set: (String name, String action) -> String
 
-    def clear: (untyped name) -> untyped
+    def clear: (String name) -> String?
 
-    def action: (untyped name) -> untyped
+    def action: (String name) -> String?
 
     # [name, action] pairs ordered by signal number, for `trap` with no operands.
-    def listing: () -> untyped
+    def listing: () -> Array[[String, String]]
   end
 end

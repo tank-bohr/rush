@@ -3,22 +3,22 @@ module Rush
   # splices in when the name appears in command position (POSIX 2.3.1). The
   # `alias` builtin validates names; the table just stores what it is given.
   class AliasTable
-    @aliases: untyped
+    @aliases: Hash[String, String]
 
     def initialize: () -> void
 
-    def define: (untyped name, untyped value) -> untyped
+    def define: (String name, String value) -> String
 
-    def remove: (untyped name) -> untyped
+    def remove: (String name) -> String?
 
-    def value: (untyped name) -> untyped
+    def value: (String name) -> String?
 
-    def key?: (untyped name) -> untyped
+    def key?: (String name) -> bool
 
-    def clear: () -> untyped
+    def clear: () -> void
 
     # name => value pairs sorted by name, for `alias` with no operands. dash lists
     # in hash order; rush sorts for a deterministic, testable listing.
-    def listing: () -> untyped
+    def listing: () -> Array[[String, String]]
   end
 end

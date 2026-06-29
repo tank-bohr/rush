@@ -4,16 +4,26 @@ module Rush
   # caller's are restored on return. Reads ($1, $#, $@, the for-loop word list)
   # delegate to the underlying array.
   class Positional
-    @values: untyped
+    @values: Array[String]
 
     extend Forwardable
 
-    def initialize: (?untyped values) -> void
+    # def_delegators :@values — reads delegated to the underlying array.
+    def ==: (untyped other) -> bool
+    def []: (Integer index) -> String?
+    def size: () -> Integer
+    def empty?: () -> bool
+    def join: (?String? separator) -> String
+    def map: [U] () { (String value) -> U } -> Array[U]
+    def each: () { (String value) -> void } -> Array[String]
+    def to_a: () -> Array[String]
 
-    def replace: (untyped values) -> untyped
+    def initialize: (?Array[String] values) -> void
 
-    def shift: (untyped count) -> untyped
+    def replace: (Array[String] values) -> void
 
-    def with: (untyped values) { () -> untyped } -> untyped
+    def shift: (Integer count) -> void
+
+    def with: [T] (Array[String] values) { () -> T } -> T
   end
 end

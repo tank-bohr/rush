@@ -1,17 +1,18 @@
 module Rush
   # Name -> function body (an AST node), defined by function definitions and
-  # looked up during command dispatch.
+  # looked up during command dispatch. The body stays `untyped` until the AST
+  # nodes are typed (they are Data.define classes; see rush-211.5/211.6).
   class FunctionTable
-    @functions: untyped
+    @functions: Hash[String, untyped]
 
     def initialize: () -> void
 
-    def define: (untyped name, untyped body) -> untyped
+    def define: (String name, untyped body) -> untyped
 
-    def undefine: (untyped name) -> untyped
+    def undefine: (String name) -> untyped
 
-    def fetch: (untyped name) -> untyped
+    def fetch: (String name) -> untyped
 
-    def key?: (untyped name) -> untyped
+    def key?: (String name) -> bool
   end
 end
