@@ -6,32 +6,32 @@ module Rush
     # `<<-` form, and parses the body for expansion unless the delimiter was
     # quoted (a quoted delimiter makes the body literal).
     class HeredocReader
-      @scanner: untyped
+      @scanner: StringScanner
 
-      @interactive: untyped
+      @interactive: bool
 
-      def initialize: (untyped scanner, interactive: untyped) -> void
+      def initialize: (StringScanner scanner, interactive: bool) -> void
 
       # Fill each holder, in the order the `<<`s appeared, with its body.
-      def fill: (untyped holders) -> untyped
+      def fill: (Array[HereDoc] holders) -> void
 
       private
 
-      def read: (untyped holder) -> untyped
+      def read: (HereDoc holder) -> AST::Word
 
-      def gather: (untyped holder, untyped out) -> untyped
+      def gather: (HereDoc holder, String out) -> String
 
-      def heredoc_line: (untyped holder) -> (nil | untyped)
+      def heredoc_line: (HereDoc holder) -> String?
 
-      def delimiter?: (untyped holder, untyped line) -> untyped
+      def delimiter?: (HereDoc holder, String line) -> bool
 
-      def strip_tabs: (untyped holder, untyped line) -> untyped
+      def strip_tabs: (HereDoc holder, String line) -> String
 
       # A quoted delimiter (<<'EOF') makes the body literal; an unquoted one is
       # parsed for expansion ($var, $(...), `...`), applied later at execution.
-      def build_body: (untyped holder, untyped text) -> untyped
+      def build_body: (HereDoc holder, String text) -> AST::Word
 
-      def literal_word: (untyped text) -> untyped
+      def literal_word: (String text) -> AST::Word
     end
   end
 end

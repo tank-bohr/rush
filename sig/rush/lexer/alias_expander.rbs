@@ -8,40 +8,42 @@ module Rush
     # first word of a replacement, so `b` -> `hello` -> `world` chains. It also
     # owns the stack of input scanners pushed beneath the replacements being read.
     class AliasExpander
+      # @table (AliasTable?) and @active (the [name, value] recursion stack) stay
+      # untyped: their cross-method/paired-stack invariants aren't worth coercing.
       @table: untyped
 
       @active: untyped
 
-      @parents: untyped
+      @parents: Array[StringScanner]
 
-      @check_next: untyped
+      @check_next: bool
 
       def initialize: (untyped table) -> void
 
       # The replacement text when `word` is an alias eligible to expand here, else
       # nil. Eligible means command position or a pending trailing-blank carry.
-      def expand: (untyped word, untyped command_position) -> (nil | untyped)
+      def expand: (AST::Word word, bool command_position) -> String?
 
       # Stash the scanner a replacement was spliced over; restore it once the
       # replacement is fully read, dropping the alias from the active set and, if
       # its value ended in a blank, marking the following word eligible too (OR so
       # an inner blank-ending alias still chains past an outer one).
-      def push: (untyped scanner) -> untyped
+      def push: (StringScanner scanner) -> void
 
-      def nested?: () -> untyped
+      def nested?: () -> bool
 
-      def pop: () -> untyped
+      def pop: () -> StringScanner?
 
       # A real (non-spliced) token was emitted: spend the one-shot carry.
-      def spend: () -> untyped
+      def spend: () -> void
 
       private
 
       # Eligible position: aliases are defined and the word sits in command
       # position, or a pending trailing-blank carry makes it eligible here.
-      def eligible?: (untyped command_position) -> untyped
+      def eligible?: (bool command_position) -> bool
 
-      def enter: (untyped name) -> (nil | untyped)
+      def enter: (untyped name) -> String?
     end
   end
 end

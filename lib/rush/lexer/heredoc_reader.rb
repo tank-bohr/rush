@@ -32,7 +32,9 @@ module Rush
       end
 
       def heredoc_line(holder)
-        line = @scanner.scan(/[^\n]*\n?/)
+        # scan of [^\n]*\n? always matches (possibly ""); .to_s pins it to String
+        # for delimiter?/strip_tabs (the empty-line return still ends gather).
+        line = @scanner.scan(/[^\n]*\n?/).to_s
         raise IncompleteInput, 'unterminated here-document' if line.to_s.empty? && @interactive
         return if line.to_s.empty? || delimiter?(holder, line)
 

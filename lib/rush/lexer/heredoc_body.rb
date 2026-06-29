@@ -34,7 +34,7 @@ module Rush
         return backtick if char == '`'
         return escape if char == '\\'
 
-        @literal << @scanner.scan(RUN)
+        @literal << @scanner.scan(RUN).to_s
       end
 
       def dollar
@@ -74,7 +74,7 @@ module Rush
 
       def escape
         @scanner.getch
-        char = @scanner.getch
+        char = @scanner.getch.to_s
         @literal << (ESCAPABLE.include?(char) ? char : "\\#{char}")
       end
 

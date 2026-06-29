@@ -8,43 +8,43 @@ module Rush
     # $-and-backtick shape with WordScanner; a common extractor can wait until the
     # Phase 2 ${} forms land.)
     class HeredocBody
-      @scanner: untyped
+      @scanner: StringScanner
 
-      @segments: untyped
+      @segments: Array[untyped]
 
-      @literal: untyped
+      @literal: String
 
-      RUN: ::Regexp
+      RUN: Regexp
 
-      PARAM: ::Regexp
+      PARAM: Regexp
 
-      ESCAPABLE: ::Array["$" | "`" | "\\"]
+      ESCAPABLE: Array[String]
 
-      def initialize: (untyped text) -> void
+      def initialize: (String text) -> void
 
-      def scan: () -> untyped
+      def scan: () -> AST::Word
 
       private
 
-      def step: () -> untyped
+      def step: () -> void
 
-      def dollar: () -> untyped
+      def dollar: () -> void
 
-      def command_sub: () -> untyped
+      def command_sub: () -> void
 
-      def backtick: () -> untyped
+      def backtick: () -> void
 
-      def param: () -> untyped
+      def param: () -> void
 
       def read_ref: () -> untyped
 
       def braced: () -> untyped
 
-      def escape: () -> untyped
+      def escape: () -> void
 
-      def push: (untyped segment) -> untyped
+      def push: (untyped segment) -> void
 
-      def flush: () -> (nil | untyped)
+      def flush: () -> void
     end
   end
 end
