@@ -7,41 +7,41 @@ module Rush
     class ParameterExpander
       @executor: Executor
 
-      @ref: untyped
+      @ref: AST::ParamRef
 
       # Operators handled here rather than by the FORMS lambdas: the ${#p} length
       # and the # ## % %% pattern-removal forms.
-      SPECIAL: { "#len" => :length, "#" => :strip, "##" => :strip, "%" => :strip, "%%" => :strip }
+      SPECIAL: Hash[String, Symbol]
 
-      def initialize: (untyped executor, untyped ref) -> void
+      def initialize: (Executor executor, AST::ParamRef ref) -> void
 
-      def expand: () -> untyped
+      def expand: () -> String
 
       # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is
       # an error (special parameters like $@ are exempt).
-      def plain: () -> untyped
+      def plain: () -> String
 
-      def value: () -> untyped
+      def value: () -> String?
 
-      def unset_or_null?: () -> untyped
+      def unset_or_null?: () -> bool
 
-      def arg: () -> untyped
+      def arg: () -> String
 
-      def assign: (untyped text) -> untyped
+      def assign: (String text) -> String
 
-      def raise_unset: () -> untyped
+      def raise_unset: () -> bot
 
       private
 
-      def length: () -> untyped
+      def length: () -> String
 
-      def strip: () -> untyped
+      def strip: () -> String
 
-      def unbound?: () -> untyped
+      def unbound?: () -> bool
 
-      def colon?: () -> untyped
+      def colon?: () -> bool
 
-      def message: () -> ("parameter null or not set" | untyped)
+      def message: () -> String
 
       def sub_word: (untyped text) -> untyped
     end

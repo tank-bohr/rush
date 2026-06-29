@@ -7,33 +7,33 @@ module Rush
     class Resolver
       @executor: Executor
 
-      SPECIAL: { "?" => :status, "#" => :count, "$" => :pid, "0" => :shell_name, "@" => :positional_all, "*" => :positional_all, "-" => :options, "!" => :background }
+      SPECIAL: Hash[String, Symbol]
 
-      def initialize: (untyped executor) -> void
+      def initialize: (Executor executor) -> void
 
-      def resolve: (untyped name) -> untyped
+      def resolve: (String name) -> String?
 
       private
 
-      def state: () -> untyped
+      def state: () -> ShellState
 
-      def status: () -> untyped
+      def status: () -> String
 
-      def count: () -> untyped
+      def count: () -> String
 
-      def pid: () -> untyped
+      def pid: () -> String
 
-      def shell_name: () -> untyped
+      def shell_name: () -> String
 
-      def positional_all: () -> untyped
+      def positional_all: () -> String
 
-      def separator: () -> untyped
+      def separator: () -> String
 
-      def options: () -> ""
+      def options: () -> String
 
       def background: () -> nil
 
-      def positional: (untyped index) -> untyped
+      def positional: (Integer index) -> String?
     end
   end
 end

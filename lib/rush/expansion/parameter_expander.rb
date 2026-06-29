@@ -39,7 +39,7 @@ module Rush
       end
 
       def unset_or_null?
-        colon? ? value.nil? || value.empty? : value.nil?
+        colon? ? value.nil? || value.to_s.empty? : value.nil?
       end
 
       def arg

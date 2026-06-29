@@ -17,7 +17,7 @@ module Rush
       end
 
       def resolve(name)
-        return send(SPECIAL[name]) if SPECIAL.key?(name)
+        return send(SPECIAL.fetch(name)) if SPECIAL.key?(name)
         return positional(name.to_i) if name.match?(/\A\d+\z/)
 
         state.environment.get(name)

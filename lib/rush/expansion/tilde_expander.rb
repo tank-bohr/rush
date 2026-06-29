@@ -18,7 +18,7 @@ module Rush
         text = head&.literal_value
         return @segments unless text
 
-        [head.with_value(rewrite(text))] + @segments[1..]
+        [head.with_value(rewrite(text))] + @segments[1..].to_a
       end
 
       private
@@ -30,14 +30,16 @@ module Rush
       def prefix(text)
         return text unless text.start_with?('~')
 
-        name, rest = split(text[1..])
+        name, rest = split(text[1..].to_s)
         home = resolve(name)
         home ? home + rest : text
       end
 
       def split(body)
         slash = body.index('/')
-        slash ? [body[0...slash], body[slash..]] : [body, '']
+        # slash is a valid index when present, so the slices are non-nil; .to_s
+        # satisfies the [String, String] return without changing behaviour.
+        slash ? [body[0...slash].to_s, body[slash..].to_s] : [body, '']
       end
 
       def resolve(name)

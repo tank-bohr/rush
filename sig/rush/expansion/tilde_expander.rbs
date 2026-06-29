@@ -8,21 +8,21 @@ module Rush
     class TildeExpander
       @executor: Executor
 
-      @segments: untyped
+      @segments: Array[untyped]
 
-      def initialize: (untyped executor, untyped segments) -> void
+      def initialize: (Executor executor, Array[untyped] segments) -> void
 
-      def expand: () -> untyped
+      def expand: () -> Array[untyped]
 
       private
 
-      def rewrite: (untyped text) -> untyped
+      def rewrite: (String text) -> String
 
-      def prefix: (untyped text) -> untyped
+      def prefix: (String text) -> String
 
-      def split: (untyped body) -> untyped
+      def split: (String body) -> [ String, String ]
 
-      def resolve: (untyped name) -> untyped
+      def resolve: (String name) -> String?
     end
 
     # Assignment context (PATH=~/bin:~root/x): the leading tilde plus one after
@@ -30,16 +30,16 @@ module Rush
     class AssignmentTilde < TildeExpander
       private
 
-      def rewrite: (untyped text) -> untyped
+      def rewrite: (String text) -> String
     end
 
     # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
     class NoTilde
-      @segments: untyped
+      @segments: Array[untyped]
 
-      def initialize: (untyped _executor, untyped segments) -> void
+      def initialize: (untyped _executor, Array[untyped] segments) -> void
 
-      def expand: () -> untyped
+      def expand: () -> Array[untyped]
     end
   end
 end
