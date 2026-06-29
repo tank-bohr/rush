@@ -367,6 +367,25 @@ edge: an empty intersection doesn't force *clarity vs types* — usually the rub
 mis-fitting Ruby-3-era code, and yielding the cop keeps **both** clean. After this the Steep ignore
 list is just the racc-generated `parser.rb` — every hand-written file is checked.
 
+#### Steep won't infer lambda params inside a *frozen* hash literal
+Un-ignoring `number.rb` exposed a deeper gap than the `SymbolProc` clash: even with `UNARY`/`BINARY`
+declared `Hash[String, ^(Integer) -> Integer]` in the sig, every operator body was *untyped*
+(`number.rb` sat at 64%). The cause is expected-type propagation: Steep pushes a declared value type
+into a bare `->(v) { … }` literal only when the literal is in a position it checks *against* that
+type. `X = { k => ->(v){…} }.freeze` is not such a position — `Hash#freeze` is typed `() -> self`,
+so Steep infers the `{…}` receiver **bottom-up first** (params untyped) and only then matches the
+`.freeze` result to `X`'s type; it never re-checks the lambdas against the value type. An *un-frozen*
+literal (`X = { … }`) does propagate and types fully — but constants must stay frozen
+(`Style/MutableConstant`), and a trailing `#: Hash[…]` on the whole `.freeze` doesn't push inward
+either. The fix that keeps `freeze` **and** types the bodies is a per-lambda inline annotation,
+one lambda per line: `k => ->(v) { … } #: ^(Integer) -> Integer`. This took `number.rb` 64→98% and
+`parameter_forms.rb` (the `${}` `FORMS` table, same shape) 6→100%. RuboCop 1.88 treats `#:` as
+first-class: `AllowRBSInlineAnnotation` on `Layout/LeadingCommentSpace` (no leading space) and
+`Layout/LineLength` (excluded from the budget) — enabling support, not disabling a cop. Lesson: a
+correct *declared* type isn't a checked type; gradual typing only bites where the checker actually
+re-derives the value, and lambdas-in-frozen-literals are a blind spot you close at the value, not
+the signature.
+
 #### Coercions move the proof from the checker to runtime — and structure beats coercion
 The single most important lesson of the typing work. When Steep flags `x.last[...]` or `match[1]`
 because a method's honest return is `T?` (`Array#last`, `MatchData#[]`, `String#[]` are all
