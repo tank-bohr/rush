@@ -540,6 +540,40 @@ findings fell out immediately:
 
 The bridge makes the rest of the `sig {}` rollout mechanical; it proceeds class by class.
 
+#### Sorbet — slice 4 (the full rollout, and what a second checker is *for*)
+`sig {}` now covers the whole codebase: **110 classes carry `extend T::Sig` and ~690 `sig {}`
+blocks**, 116 files at `# typed: true`, 5 at `# typed: false`, full gate green. Where a file's RBS is
+already untyped (e.g. `command_substitution`, most thin builtins, the `*_runner` shells), the Sorbet
+sig faithfully mirrors that with `T.untyped` — the two sig sets track each other, including their
+gaps. The rollout was done cluster by cluster (value objects → AST → lexer → expansion → builtins →
+spine), each gated fully green before commit; the gate (not trust) is what keeps the sigs honest —
+a wrong sig fails `srb tc` *or* sorbet-runtime *or* a spec.
+
+The payoff is the list of places the two checkers genuinely diverge — each a small truth about how
+they read Ruby:
+- **`Integer(x, exception: false)`** — Sorbet's RBI types it non-nil, so the nil branch is "dead
+  code" (7006); rbs models the nilable. (Two files stay `# typed: false` for it.)
+- **`File.writable?`** — Sorbet's stdlib RBI mistypes it `T.nilable(Integer)` (it returns Boolean,
+  unlike its siblings `readable?`/`executable?`); needed a `!!`.
+- **`Base#stdout`/`#stderr`** — RBS says `IO`; Sorbet's *runtime* `is_a?(IO)` would reject the
+  `ClosedStream` (from `>&-`) that quacks like IO, so the Sorbet sig is `T.untyped`. The sig sets
+  diverge on purpose — runtime validation forces a looser nominal type than static checking needs.
+- **literal-symbol narrowing** — `parse -> AST::List | :eof`: Steep narrows on `== :eof`, Sorbet
+  can't (it widens `:eof` to `Symbol`), so the call sites need `T.cast(program, AST::List)`.
+- **`x && y` returning the falsy operand** — harmless to Steep, but sorbet-runtime rejects the `nil`
+  against a `bool` sig at the call; rewritten as ternary / `!!` throughout.
+- **abstract methods** — typing `CommandLookup#find -> Match` exposed that `Match#describe`/`#terse`
+  were only on subclasses; added base raises (the `Node#execute` precedent).
+
+Two systematic costs of *inline* sigs (recorded so future code follows the pattern): (1) a sig'd
+block method must name its block `&blk` (the sig references it), which collides with RuboCop's
+anonymous-forwarding preference — resolved once in config (`Naming/BlockForwarding: explicit`,
+`Style/ArgumentsForwarding: UseAnonymousForwarding: false`) rather than per-method; (2) `sig {}` lines
+inflate class length, so two large classes (Executor, WordScanner) carry an inline
+`Metrics/ClassLength` disable (annotation, not logic). rush-211.4's core is met: two independent type
+systems, in two notations, checking the same code, with their disagreements catalogued rather than
+reconciled.
+
 ### mutant — usable, on-demand only
 mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, no signup) and
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
