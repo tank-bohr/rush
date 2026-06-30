@@ -10,6 +10,8 @@ module Rush
       # :op), skipping blanks. Operators are listed longest-first so multi-byte
       # ones win over their prefixes; any other leftover character is an error.
       class Tokenizer
+        extend T::Sig
+
         OPERATORS = [
           '<<=', '>>=',
           '<<', '>>', '<=', '>=', '==', '!=', '&&', '||', '+=', '-=', '*=', '/=', '%=', '&=', '^=', '|=',
@@ -20,10 +22,12 @@ module Rush
         NAME = /[A-Za-z_]\w*/
         TOKENS = { num: NUMBER, name: NAME, op: OPERATOR }.freeze
 
+        sig { params(source: String).void }
         def initialize(source)
           @scanner = StringScanner.new(source)
         end
 
+        sig { returns(T::Array[[Symbol, String]]) }
         def tokens
           result = []
           result << next_token while at_token?
@@ -32,11 +36,13 @@ module Rush
 
         private
 
+        sig { returns(T::Boolean) }
         def at_token?
           @scanner.skip(/\s+/)
           !@scanner.eos?
         end
 
+        sig { returns([Symbol, String]) }
         def next_token
           # matched is non-nil right after a successful scan; .to_s satisfies the
           # [Symbol, String] token tuple.

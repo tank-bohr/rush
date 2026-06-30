@@ -4,6 +4,8 @@ module Rush
     # delimiter sets (an Ifs value) to IfsScanner, which applies the three POSIX
     # cases.
     class FieldSplitter
+      extend T::Sig
+
       @ifs: Ifs
 
       def initialize: (String? ifs) -> void

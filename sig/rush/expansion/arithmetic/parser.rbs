@@ -6,6 +6,8 @@ module Rush
       # loosest and is right-associative. Malformed input or leftover tokens
       # raise a syntax error (matching dash's "expecting primary"/"expecting EOF").
       class Parser
+        extend T::Sig
+
         @tokens: Array[[ Symbol, String ]]
 
         @pos: Integer

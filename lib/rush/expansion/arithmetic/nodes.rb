@@ -18,6 +18,9 @@ module Rush
       Num = Data.define(:value)
       # A literal integer.
       class Num
+        extend T::Sig
+
+        sig { params(_ctx: Evaluator).returns(Integer) }
         def result(_ctx)
           value
         end
@@ -26,6 +29,9 @@ module Rush
       Var = Data.define(:name)
       # A variable reference; resolves its name through the evaluator.
       class Var
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           ctx.resolve(name)
         end
@@ -34,6 +40,9 @@ module Rush
       Unary = Data.define(:op, :operand)
       # A unary operation (+ - ! ~) on one operand.
       class Unary
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           Number.unary(op, operand.result(ctx))
         end
@@ -42,6 +51,9 @@ module Rush
       Binary = Data.define(:op, :left, :right)
       # A binary arithmetic / bitwise / comparison operation on two operands.
       class Binary
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           Number.binary(op, left.result(ctx), right.result(ctx))
         end
@@ -50,6 +62,9 @@ module Rush
       And = Data.define(:left, :right)
       # Logical &&: short-circuits, so the right operand runs only when the left is non-zero.
       class And
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           left.result(ctx).zero? ? 0 : Number.bool(!right.result(ctx).zero?)
         end
@@ -58,6 +73,9 @@ module Rush
       Or = Data.define(:left, :right)
       # Logical ||: short-circuits, so the right operand runs only when the left is zero.
       class Or
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           left.result(ctx).zero? ? Number.bool(!right.result(ctx).zero?) : 1
         end
@@ -66,6 +84,9 @@ module Rush
       Cond = Data.define(:test, :truthy, :falsy)
       # The ?: conditional: only the taken branch is evaluated.
       class Cond
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           test.result(ctx).zero? ? falsy.result(ctx) : truthy.result(ctx)
         end
@@ -75,6 +96,9 @@ module Rush
       # The right-hand side is evaluated before the target is read, so a nested
       # assignment in the rhs (e.g. `a += a += 1`) takes effect first.
       class Assign
+        extend T::Sig
+
+        sig { params(ctx: Evaluator).returns(Integer) }
         def result(ctx)
           ctx.assign(name, op, rhs.result(ctx))
         end

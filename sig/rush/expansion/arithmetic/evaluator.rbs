@@ -6,6 +6,8 @@ module Rush
       # integer constant (unset or blank is 0); a non-numeric value is an error,
       # as in dash. Recursion into a value as an *expression* is not done.
       class Evaluator
+        extend T::Sig
+
         @executor: Executor
 
         def initialize: (Executor executor) -> void

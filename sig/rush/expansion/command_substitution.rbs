@@ -5,6 +5,8 @@ module Rush
     # trailing newlines (POSIX). spawn_child/run_child are the irreducible
     # fork/exit wrapper; `capture` (the child-side run) is tested directly.
     class CommandSubstitution
+      extend T::Sig
+
       @executor: Executor
 
       @source: untyped

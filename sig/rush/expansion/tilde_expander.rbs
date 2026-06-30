@@ -6,6 +6,8 @@ module Rush
     # bare `~`. This base handles the leading form; AssignmentTilde extends it to
     # also expand after each unquoted colon, and NoTilde disables it entirely.
     class TildeExpander
+      extend T::Sig
+
       @executor: Executor
 
       @segments: Array[untyped]
@@ -28,6 +30,8 @@ module Rush
     # Assignment context (PATH=~/bin:~root/x): the leading tilde plus one after
     # each unquoted colon, so every colon-separated piece gets the ~ treatment.
     class AssignmentTilde < TildeExpander
+      extend T::Sig
+
       private
 
       def rewrite: (String text) -> String
@@ -35,6 +39,8 @@ module Rush
 
     # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
     class NoTilde
+      extend T::Sig
+
       @segments: Array[untyped]
 
       def initialize: (untyped _executor, Array[untyped] segments) -> void

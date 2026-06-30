@@ -5,6 +5,8 @@ module Rush
     # <space><tab><newline>; a null IFS (the empty string) leaves both sets empty,
     # so no character delimits.
     class Ifs
+      extend T::Sig
+
       @ifs: String?
 
       @chars: Array[String]

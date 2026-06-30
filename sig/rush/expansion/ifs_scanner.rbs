@@ -9,6 +9,8 @@ module Rush
     # and a break-flagged part (the elements of $@/$*) anchor or force a field
     # regardless of IFS. A trailing empty, non-anchored field is dropped.
     class IfsScanner
+      extend T::Sig
+
       @ws: Array[String]
 
       @others: Array[String]

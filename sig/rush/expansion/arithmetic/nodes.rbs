@@ -9,6 +9,8 @@ module Rush
 
       # A literal integer.
       class Num < ::Data
+        extend T::Sig
+
         attr_reader value: Integer
         def self.new: (Integer value) -> Num
         def result: (Evaluator ctx) -> Integer
@@ -16,6 +18,8 @@ module Rush
 
       # A variable reference; resolves its name through the evaluator.
       class Var < ::Data
+        extend T::Sig
+
         attr_reader name: String
         def self.new: (String name) -> Var
         def result: (Evaluator ctx) -> Integer
@@ -23,6 +27,8 @@ module Rush
 
       # A unary operation (+ - ! ~) on one operand.
       class Unary < ::Data
+        extend T::Sig
+
         attr_reader op: String
         attr_reader operand: node
         def self.new: (String op, node operand) -> Unary
@@ -31,6 +37,8 @@ module Rush
 
       # A binary arithmetic / bitwise / comparison operation on two operands.
       class Binary < ::Data
+        extend T::Sig
+
         attr_reader op: String
         attr_reader left: node
         attr_reader right: node
@@ -39,6 +47,8 @@ module Rush
       end
 
       class And < ::Data
+        extend T::Sig
+
         attr_reader left: node
         attr_reader right: node
         def self.new: (node left, node right) -> And
@@ -46,6 +56,8 @@ module Rush
       end
 
       class Or < ::Data
+        extend T::Sig
+
         attr_reader left: node
         attr_reader right: node
         def self.new: (node left, node right) -> Or
@@ -53,6 +65,8 @@ module Rush
       end
 
       class Cond < ::Data
+        extend T::Sig
+
         attr_reader test: node
         attr_reader truthy: node
         attr_reader falsy: node
@@ -61,6 +75,8 @@ module Rush
       end
 
       class Assign < ::Data
+        extend T::Sig
+
         attr_reader name: String
         attr_reader op: String
         attr_reader rhs: node

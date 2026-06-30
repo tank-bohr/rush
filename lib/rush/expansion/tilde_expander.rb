@@ -9,11 +9,15 @@ module Rush
     # bare `~`. This base handles the leading form; AssignmentTilde extends it to
     # also expand after each unquoted colon, and NoTilde disables it entirely.
     class TildeExpander
+      extend T::Sig
+
+      sig { params(executor: Executor, segments: T::Array[T.untyped]).void }
       def initialize(executor, segments)
         @executor = executor
         @segments = segments
       end
 
+      sig { returns(T::Array[T.untyped]) }
       def expand
         head = @segments.first
         text = head&.literal_value
@@ -24,10 +28,12 @@ module Rush
 
       private
 
+      sig { params(text: String).returns(String) }
       def rewrite(text)
         prefix(text)
       end
 
+      sig { params(text: String).returns(String) }
       def prefix(text)
         return text unless text.start_with?('~')
 
@@ -36,6 +42,7 @@ module Rush
         home ? home + rest : text
       end
 
+      sig { params(body: String).returns([String, String]) }
       def split(body)
         slash = body.index('/')
         # slash is a valid index when present, so the slices are non-nil; .to_s
@@ -43,6 +50,7 @@ module Rush
         slash ? [body[0...slash].to_s, body[slash..].to_s] : [body, '']
       end
 
+      sig { params(name: String).returns(T.nilable(String)) }
       def resolve(name)
         return @executor.state.environment.get('HOME') if name.empty?
 
@@ -53,8 +61,11 @@ module Rush
     # Assignment context (PATH=~/bin:~root/x): the leading tilde plus one after
     # each unquoted colon, so every colon-separated piece gets the ~ treatment.
     class AssignmentTilde < TildeExpander
+      extend T::Sig
+
       private
 
+      sig { params(text: String).returns(String) }
       def rewrite(text)
         text.split(':', -1).map { |piece| prefix(piece) }.join(':')
       end
@@ -62,10 +73,14 @@ module Rush
 
     # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.
     class NoTilde
+      extend T::Sig
+
+      sig { params(_executor: T.untyped, segments: T::Array[T.untyped]).void }
       def initialize(_executor, segments)
         @segments = segments
       end
 
+      sig { returns(T::Array[T.untyped]) }
       def expand
         @segments
       end

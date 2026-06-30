@@ -5,6 +5,8 @@ module Rush
     # shell variables. $- (options) and $! (last background pid) are placeholders
     # until set-options and job control land.
     class Resolver
+      extend T::Sig
+
       @executor: Executor
 
       SPECIAL: Hash[String, Symbol]

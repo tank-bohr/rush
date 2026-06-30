@@ -10,15 +10,19 @@ module Rush
     # forced field break between them ($* always joins to a scalar). Quoted
     # metacharacters are backslash-escaped so they survive splitting and glob.
     class Pipeline
+      extend T::Sig
+
       # Tilde expansion strategy per mode (its value is a word's segment list).
       TILDE_EXPANDERS = { none: NoTilde, leading: TildeExpander, assignment: AssignmentTilde }.freeze
 
+      sig { params(executor: Executor).void }
       def initialize(executor)
         @executor = executor
       end
 
       # Argv expansion: expand each word to fields (splitting unquoted on IFS),
       # then expand each field's pathname patterns.
+      sig { params(words: T::Array[AST::Word]).returns(T::Array[String]) }
       def expand(words)
         words.flat_map { |word| glob(FieldSplitter.new(ifs).split(parts(word))) }
       end
@@ -26,24 +30,29 @@ module Rush
       # Assignment RHS / redirection target / operator word: one field, no split.
       # Tilde expands at the leading position by default; assignment context also
       # expands after colons, and arithmetic opts out (~ is bitwise not there).
+      sig { params(word: T.any(AST::Word, HereDoc), tilde: Symbol).returns(String) }
       def expand_value(word, tilde: :leading)
         tilde_expand(word.segments, tilde).map { |segment| segment.expand(@executor) }.join
       end
 
       private
 
+      sig { params(word: AST::Word).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
       def parts(word)
         tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
       end
 
+      sig { params(segments: T::Array[AST::WordSegment], mode: Symbol).returns(T::Array[AST::WordSegment]) }
       def tilde_expand(segments, mode)
         TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
       end
 
+      sig { params(fields: T::Array[String]).returns(T::Array[String]) }
       def glob(fields)
         fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
       end
 
+      sig { params(segment: AST::WordSegment).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
       def field_parts(segment)
         return splat_parts(segment) if segment.splat?
 
@@ -52,14 +61,17 @@ module Rush
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
+      sig { params(segment: AST::WordSegment, text: String).returns(String) }
       def escape_if_quoted(segment, text)
         segment.quoted ? escape(text) : text
       end
 
+      sig { params(text: String).returns(String) }
       def escape(text)
         text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
       end
 
+      sig { params(segment: AST::WordSegment).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
       def splat_parts(segment)
         split = !segment.quoted
         @executor.state.positional.map.with_index do |element, index|
@@ -67,6 +79,7 @@ module Rush
         end
       end
 
+      sig { returns(T.nilable(String)) }
       def ifs
         @executor.state.environment.get('IFS')
       end

@@ -16,6 +16,9 @@ module Rush
     # with completed fields in @done — so the "there is always a current field"
     # invariant is structural, not a runtime fact the reader/checker must infer.
     class IfsScanner
+      extend T::Sig
+
+      sig { params(whitespace: T::Array[String], others: T::Array[String]).void }
       def initialize(whitespace, others)
         @ws = whitespace
         @others = others
@@ -25,6 +28,7 @@ module Rush
         @skip = true
       end
 
+      sig { params(parts: T::Array[[String, T::Boolean, T::Boolean]]).returns(T::Array[String]) }
       def run(parts)
         parts.each { |part| consume(part) }
         result
@@ -32,16 +36,19 @@ module Rush
 
       private
 
+      sig { returns(T::Hash[Symbol, T.untyped]) }
       def field
         { text: +'', real: false }
       end
 
+      sig { params(part: [String, T::Boolean, T::Boolean]).void }
       def consume(part)
         text, splittable, brk = part
         open_field if brk
         splittable ? text.each_char { |char| step(char) } : literal(text)
       end
 
+      sig { params(char: String).void }
       def step(char)
         return pend if @ws.include?(char)
         return open_field if @others.include?(char)
@@ -49,16 +56,19 @@ module Rush
         ordinary(char)
       end
 
+      sig { void }
       def pend
         (@pending = true unless @skip)
       end
 
+      sig { params(char: String).void }
       def ordinary(char)
         flush
         @current[:text] << char
         @skip = false
       end
 
+      sig { params(text: String).void }
       def literal(text)
         flush
         @current[:text] << text
@@ -66,10 +76,12 @@ module Rush
         @skip = false
       end
 
+      sig { void }
       def flush
         (open_field if @pending)
       end
 
+      sig { void }
       def open_field
         @pending = false
         @done << @current
@@ -77,11 +89,13 @@ module Rush
         @skip = true
       end
 
+      sig { returns(T::Array[String]) }
       def result
         fields = drop_last? ? @done : @done + [@current]
         fields.map { |entry| entry[:text] }
       end
 
+      sig { returns(T::Boolean) }
       def drop_last?
         @current[:text].empty? && !@current[:real]
       end

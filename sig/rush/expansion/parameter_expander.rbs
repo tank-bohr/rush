@@ -5,6 +5,8 @@ module Rush
     # ${x:-$y} works) by re-scanning it into a Word and running it back through
     # the expansion pipeline.
     class ParameterExpander
+      extend T::Sig
+
       @executor: Executor
 
       @ref: AST::ParamRef

@@ -4,6 +4,8 @@ module Rush
     # smallest (#/%) or largest (##/%%) prefix (#) or suffix (%) that matches the
     # glob pattern, leaving the value unchanged when nothing matches.
     class PatternRemoval
+      extend T::Sig
+
       @system: SystemCalls
 
       @op: String

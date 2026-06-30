@@ -7,6 +7,8 @@ module Rush
     # forced field break between them ($* always joins to a scalar). Quoted
     # metacharacters are backslash-escaped so they survive splitting and glob.
     class Pipeline
+      extend T::Sig
+
       @executor: Executor
 
       # Tilde expansion strategy per mode (its value is a word's segment list).

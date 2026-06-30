@@ -5,6 +5,8 @@ module Rush
       # :op), skipping blanks. Operators are listed longest-first so multi-byte
       # ones win over their prefixes; any other leftover character is an error.
       class Tokenizer
+        extend T::Sig
+
         @scanner: StringScanner
 
         OPERATORS: Array[String]

@@ -7,6 +7,8 @@ module Rush
     # coalesces, each non-whitespace IFS character delimits (generating empty
     # fields), a null IFS does not split.
     class ReadSplitter
+      extend T::Sig
+
       @ifs: Ifs
 
       @count: Integer

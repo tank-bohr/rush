@@ -6,6 +6,8 @@ module Rush
     # backslash-escaped upstream so they match literally; the backslashes are
     # removed here whenever no expansion takes their place.
     class GlobExpander
+      extend T::Sig
+
       @executor: Executor
 
       def initialize: (Executor executor) -> void
