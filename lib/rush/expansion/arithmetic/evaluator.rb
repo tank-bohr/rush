@@ -23,8 +23,11 @@ module Rush
 
         sig { params(name: String).returns(Integer) }
         def resolve(name)
-          value = @executor.state.environment.get(name)
-          return 0 if value.to_s.strip.empty?
+          # .to_s at the source coerces the nilable shell value (unset -> "") once,
+          # so `value` is a String downstream and Number.parse can take a real String
+          # rather than untyped — without an extra `value` reference that trips reek.
+          value = @executor.state.environment.get(name).to_s
+          return 0 if value.strip.empty?
 
           Number.parse(value)
         end

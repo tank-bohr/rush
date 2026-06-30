@@ -6,13 +6,16 @@ module Rush
       # and the unary/binary operator tables the evaluator dispatches through.
       # Comparison and logical results are 1 or 0. Never uses Kernel#eval.
       module Number
+        extend T::Sig
+
         LIMIT: Integer
 
         # Parse an integer constant (decimal, 0-octal or 0x-hex, optional sign and
-        # surrounding blanks), as both literals and variable values are read.
-        # text/op are untyped: callers pass shell values (String?) and node members,
-        # and typing them String would force a .to_s that trips reek FeatureEnvy.
-        def self?.parse: (untyped text) -> Integer
+        # surrounding blanks), as both literals and variable values are read. text
+        # is String: the tokenizer hands a String, and the evaluator narrows its
+        # shell value to String before calling (see Evaluator#resolve). op stays
+        # untyped — it is the operator key the node tables are fetched by.
+        def self?.parse: (String text) -> Integer
 
         def self?.unary: (untyped op, Integer value) -> Integer
 
