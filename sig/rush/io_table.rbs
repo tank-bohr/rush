@@ -3,6 +3,8 @@ module Rush
   # over a base table to produce a new one (`with`), so the shell's own streams
   # are never mutated and a command's redirections are scoped to that command.
   class IoTable
+    extend T::Sig
+
     # fd -> stream; values are heterogeneous (IO/File/Tempfile/ClosedStream), so
     # kept untyped until a shared stream interface is worth declaring.
     @streams: Hash[Integer, untyped]

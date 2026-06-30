@@ -3,6 +3,8 @@ module Rush
   # An action is the command string to run when the signal fires; "" means the
   # signal is ignored. Resetting a signal drops its entry, restoring the default.
   class TrapTable
+    extend T::Sig
+
     @actions: Hash[String, String]
 
     def initialize: () -> void

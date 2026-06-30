@@ -2,6 +2,8 @@ module Rush
   # Name -> function body (an AST node), defined by function definitions and
   # looked up during command dispatch.
   class FunctionTable
+    extend T::Sig
+
     @functions: Hash[String, AST::Node]
 
     def initialize: () -> void

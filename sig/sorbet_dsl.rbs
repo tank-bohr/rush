@@ -28,6 +28,8 @@ module T
       def overridable: () -> DeclBuilder
 
       def abstract: () -> DeclBuilder
+
+      def type_parameters: (*Symbol) -> DeclBuilder
     end
   end
 
@@ -42,5 +44,29 @@ module T
 
   def self.must: (untyped arg) -> untyped
 
+  # Sorbet type constructors referenced inside sig {} blocks and method bodies.
+  # All return untyped — Steep doesn't interpret Sorbet type expressions; it just
+  # needs the names to resolve without NoMethod / UnknownConstant diagnostics.
+  def self.nilable: (untyped) -> untyped
+
+  def self.untyped: () -> untyped
+
+  def self.proc: () -> untyped
+
+  def self.type_parameter: (Symbol) -> untyped
+
+  def self.self_type: () -> untyped
+
+  def self.attached_class: () -> untyped
+
+  def self.any: (*untyped) -> untyped
+
+  def self.all: (*untyped) -> untyped
+
   Boolean: untyped
+  # Generic type references: T::Array[X], T::Hash[K,V], T::Boolean.
+  # Declared as untyped so that subscript calls (T::Array[String]) resolve
+  # to untyped without Steep emitting UnknownConstant diagnostics.
+  Array: untyped
+  Hash: untyped
 end

@@ -9,9 +9,42 @@ module Rush
   # LoopNesting, Options, Positional, the function/alias/trap tables and the
   # command-location cache.
   class ShellState
-    attr_reader :environment, :functions, :traps, :aliases, :command_hash, :name, :scope, :loops,
-                :options, :last_status, :positional
+    extend T::Sig
 
+    sig { returns(Environment) }
+    attr_reader :environment
+
+    sig { returns(FunctionTable) }
+    attr_reader :functions
+
+    sig { returns(TrapTable) }
+    attr_reader :traps
+
+    sig { returns(AliasTable) }
+    attr_reader :aliases
+
+    sig { returns(T::Hash[String, String]) }
+    attr_reader :command_hash
+
+    sig { returns(String) }
+    attr_reader :name
+
+    sig { returns(Scope) }
+    attr_reader :scope
+
+    sig { returns(LoopNesting) }
+    attr_reader :loops
+
+    sig { returns(Options) }
+    attr_reader :options
+
+    sig { returns(Status) }
+    attr_reader :last_status
+
+    sig { returns(Positional) }
+    attr_reader :positional
+
+    sig { params(environment: Environment, name: String).void }
     def initialize(environment: Environment.new, name: 'rush')
       @environment = environment
       @name = name
@@ -27,6 +60,7 @@ module Rush
     end
 
     # The last command's exit status ($?), recorded after each command runs.
+    sig { params(status: Status).returns(Status) }
     def record_status(status)
       @last_status = status
     end

@@ -9,28 +9,37 @@ module Rush
   # caller's are restored on return. Reads ($1, $#, $@, the for-loop word list)
   # delegate to the underlying array.
   class Positional
+    extend T::Sig
     extend Forwardable
 
     def_delegators :@values, :==, :[], :size, :empty?, :join, :map, :each, :to_a
 
+    sig { params(values: T::Array[String]).void }
     def initialize(values = [])
       @values = values
     end
 
+    sig { params(values: T::Array[String]).void }
     def replace(values)
       @values = values
     end
 
+    sig { params(count: Integer).void }
     def shift(count)
       @values = @values.drop(count)
     end
 
-    def with(values)
-      saved = @values
+    sig do
+      type_parameters(:U)
+        .params(values: T::Array[String], blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def with(values, &blk) # rubocop:disable Naming/BlockForwarding
+      saved = T.let(@values, T::Array[String])
       @values = values
       yield
     ensure
-      @values = saved
+      @values = T.must(saved)
     end
   end
 end

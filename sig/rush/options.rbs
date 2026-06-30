@@ -3,6 +3,8 @@ module Rush
   # (:errexit, :nounset, :xtrace, :noglob, :verbose): the set of those currently
   # on, with #set to flip one and #on? to query it.
   class Options
+    extend T::Sig
+
     @enabled: Set[Symbol]
 
     def initialize: () -> void

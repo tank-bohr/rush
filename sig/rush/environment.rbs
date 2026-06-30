@@ -2,6 +2,8 @@ module Rush
   # Shell variables and the subset marked for export. The exported slice is what
   # external children receive (see SystemCalls#spawn).
   class Environment
+    extend T::Sig
+
     @vars: Hash[String, String]
 
     @exported: Set[String]

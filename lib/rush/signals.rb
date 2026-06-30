@@ -7,6 +7,8 @@ module Rush
   # prefix, and 0/EXIT denote the pseudo-signal that fires when the shell exits.
   # An unknown spec resolves to nil so `trap` can report "bad trap" (dash parity).
   module Signals
+    extend T::Sig
+
     module_function
 
     EXIT = 'EXIT'
@@ -20,6 +22,7 @@ module Rush
     }.freeze
     NAMES = NUMBERS.invert.freeze
 
+    sig { params(spec: String).returns(T.nilable(String)) }
     def decode(spec)
       return NUMBERS[spec.to_i] if spec.match?(/\A\d+\z/)
 
@@ -27,6 +30,7 @@ module Rush
       NAMES.key?(name) ? name : nil
     end
 
+    sig { params(name: String).returns(Integer) }
     def number(name)
       NAMES.fetch(name)
     end

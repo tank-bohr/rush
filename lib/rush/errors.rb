@@ -35,8 +35,12 @@ module Rush
 
   # Control-flow signal: `exit` unwinds to the top level carrying a status code.
   class ExitSignal < Error
+    extend T::Sig
+
+    sig { returns(Integer) }
     attr_reader :code
 
+    sig { params(code: Integer).void }
     def initialize(code)
       @code = code
       super("exit #{code}")
@@ -46,8 +50,12 @@ module Rush
   # Loop control: `break`/`continue` unwind to the enclosing loop, carrying the
   # number of loop levels to act on.
   class LoopControl < Error
+    extend T::Sig
+
+    sig { returns(Integer) }
     attr_reader :count
 
+    sig { params(count: Integer).void }
     def initialize(count)
       @count = count
       super('loop control')
@@ -61,8 +69,12 @@ module Rush
 
   # Control-flow signal: `return` unwinds to the enclosing function call.
   class ReturnSignal < Error
+    extend T::Sig
+
+    sig { returns(Integer) }
     attr_reader :code
 
+    sig { params(code: Integer).void }
     def initialize(code)
       @code = code
       super("return #{code}")

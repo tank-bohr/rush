@@ -6,6 +6,8 @@ module Rush
   # count. break/continue read #depth to clamp their level and #any? to no-op
   # when there is no enclosing loop.
   class LoopNesting
+    extend T::Sig
+
     @depth: Integer
 
     attr_reader depth: Integer

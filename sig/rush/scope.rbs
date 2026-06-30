@@ -5,6 +5,8 @@ module Rush
   # $PWD/$OLDPWD. Both are managed mutations of the same environment, so they
   # live together here, off ShellState.
   class Scope
+    extend T::Sig
+
     @environment: Environment
 
     @frames: Array[Hash[String, String?]]

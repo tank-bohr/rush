@@ -9,30 +9,42 @@ module Rush
   # count. break/continue read #depth to clamp their level and #any? to no-op
   # when there is no enclosing loop.
   class LoopNesting
+    extend T::Sig
+
+    sig { returns(Integer) }
     attr_reader :depth
 
+    sig { void }
     def initialize
       @depth = 0
     end
 
+    sig { void }
     def enter
       @depth += 1
     end
 
+    sig { void }
     def leave
       @depth -= 1
     end
 
+    sig { returns(T::Boolean) }
     def any?
       @depth.positive?
     end
 
-    def without
-      saved = @depth
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def without(&blk) # rubocop:disable Naming/BlockForwarding
+      saved = T.let(@depth, Integer)
       @depth = 0
       yield
     ensure
-      @depth = saved
+      @depth = T.must(saved)
     end
   end
 end

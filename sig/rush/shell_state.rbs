@@ -6,6 +6,8 @@ module Rush
   # LoopNesting, Options, Positional, the function/alias/trap tables and the
   # command-location cache.
   class ShellState
+    extend T::Sig
+
     @environment: Environment
     @name: String
     @scope: Scope

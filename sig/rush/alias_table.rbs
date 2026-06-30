@@ -3,6 +3,8 @@ module Rush
   # splices in when the name appears in command position (POSIX 2.3.1). The
   # `alias` builtin validates names; the table just stores what it is given.
   class AliasTable
+    extend T::Sig
+
     @aliases: Hash[String, String]
 
     def initialize: () -> void

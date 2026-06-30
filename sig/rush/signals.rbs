@@ -4,6 +4,8 @@ module Rush
   # prefix, and 0/EXIT denote the pseudo-signal that fires when the shell exits.
   # An unknown spec resolves to nil so `trap` can report "bad trap" (dash parity).
   module Signals
+    extend T::Sig
+
     EXIT: String
 
     NUMBERS: Hash[Integer, String]

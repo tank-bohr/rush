@@ -4,6 +4,8 @@ module Rush
   # caller's are restored on return. Reads ($1, $#, $@, the for-loop word list)
   # delegate to the underlying array.
   class Positional
+    extend T::Sig
+
     @values: Array[String]
 
     extend Forwardable
