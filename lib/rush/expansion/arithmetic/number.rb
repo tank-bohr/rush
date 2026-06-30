@@ -28,11 +28,10 @@ module Rush
           Kernel.raise(ExpansionError, "arithmetic: invalid number #{text.inspect}")
         end
 
-        # op is String, not the literal set ("+"|"-"|"!"|"~"): it is a token the
-        # parser validates at runtime (UNARY.include? then UNARY.fetch), never
-        # statically narrowed — `advance` returns String — so neither checker can
-        # reach the union without an unchecked cast. RBS *can* spell string-literal
-        # unions (Sorbet cannot), but here there is no narrowing point to feed one.
+        # op is String here, the literal operator set ("+"|"-"|"!"|"~") in the RBS
+        # sig: Sorbet has no string-literal types, so String is the strongest it can
+        # say. Steep reaches the union because Parser#unary narrows the token via the
+        # typed UNARY table (Array[unary_op]) — a materialised drift, see number.rbs.
         sig { params(op: String, value: Integer).returns(Integer) }
         def unary(op, value)
           wrap(UNARY.fetch(op).call(value))

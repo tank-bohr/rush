@@ -14,7 +14,7 @@ module Rush
 
         PRECEDENCE: Hash[String, Integer]
 
-        UNARY: Array[String]
+        UNARY: Array[unary_op]
 
         ASSIGN: Array[String]
 

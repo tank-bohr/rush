@@ -86,9 +86,17 @@ module Rush
 
         sig { returns(T.any(Num, Var, Unary, Binary, And, Or, Cond, Assign)) }
         def unary
-          return Unary.new(advance, unary) if UNARY.include?(peek)
+          # `find` (not `include?`) hands back the matching UNARY element, so under
+          # Steep — where UNARY is Array[unary_op] — `op` carries the literal
+          # operator type into Unary.new instead of a bare scanned String. This is
+          # the narrowing point that makes the RBS literal union reachable; Sorbet,
+          # with no string-literal types, still sees String. See docs/journal.md.
+          token = peek
+          op = UNARY.find { |candidate| candidate == token }
+          return primary unless op
 
-          primary
+          advance
+          Unary.new(op, unary)
         end
 
         sig { returns(T.any(Num, Var, Unary, Binary, And, Or, Cond, Assign)) }

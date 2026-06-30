@@ -7,6 +7,12 @@ module Rush
       # themselves nodes (the AST holds AST), captured by the `node` union.
       type node = Num | Var | Unary | Binary | And | Or | Cond | Assign
 
+      # The four unary operator tokens as a string-literal union. The parser
+      # narrows the scanned token to this via the typed UNARY table, so the type
+      # rides the value into Unary#op and Number.unary. RBS can spell this set;
+      # Sorbet (no string-literal types) types the same op as String — a drift.
+      type unary_op = "+" | "-" | "!" | "~"
+
       # A literal integer.
       class Num < ::Data
         extend T::Sig
@@ -29,9 +35,9 @@ module Rush
       class Unary < ::Data
         extend T::Sig
 
-        attr_reader op: String
+        attr_reader op: unary_op
         attr_reader operand: node
-        def self.new: (String op, node operand) -> Unary
+        def self.new: (unary_op op, node operand) -> Unary
         def result: (Evaluator ctx) -> Integer
       end
 

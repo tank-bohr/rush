@@ -16,14 +16,15 @@ module Rush
         # shell value to String before calling (see Evaluator#resolve).
         def self?.parse: (String text) -> Integer
 
-        # op is String, not the literal set ("+" | "-" | "!" | "~"): RBS *can*
-        # spell string-literal unions where Sorbet cannot, but the value is a
-        # parser token validated only at runtime (UNARY.include? then .fetch) and
-        # never statically narrowed (Parser#advance returns String), so there is no
-        # narrowing point to feed a union without an unchecked cast. String is the
-        # honest maximum for both checkers — a drift that does not materialise.
-        def self?.unary: (String op, Integer value) -> Integer
+        # unary's op is the exact operator set: Parser#unary narrows the scanned
+        # token through the typed UNARY table (Array[unary_op]), so the literal
+        # union — which RBS can spell and Sorbet cannot — flows all the way here
+        # and is checked statically. The inline Sorbet sig types the same op as
+        # String (no string-literal types): a materialised drift, see journal.
+        def self?.unary: (unary_op op, Integer value) -> Integer
 
+        # binary's op stays String: its second caller, Evaluator#assign, passes a
+        # computed op.chop, which no typed table narrows to the literal union.
         def self?.binary: (String op, Integer left, Integer right) -> Integer
 
         def self?.wrap: (Integer num) -> Integer
