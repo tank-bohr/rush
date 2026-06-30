@@ -80,7 +80,7 @@ module Rush
                 blk: T.proc.params(io: T.untyped).returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def with_redirects(redirects, base = @io, &blk) # rubocop:disable Naming/BlockForwarding
+    def with_redirects(redirects, base = @io, &blk)
       io = redirects.reduce(base) { |acc, redirect| redirect_into(redirect, acc) }
       yield io
     ensure
@@ -116,7 +116,7 @@ module Rush
         .params(io: IoTable, blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def with_io(io, &blk) # rubocop:disable Naming/BlockForwarding
+    def with_io(io, &blk)
       previous = @io
       @io = io
       yield
@@ -134,8 +134,8 @@ module Rush
         .params(blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def tested(&blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
-      scoped_tested(true, &blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
+    def tested(&blk)
+      scoped_tested(true, &blk)
     end
 
     sig do
@@ -143,8 +143,8 @@ module Rush
         .params(blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def untested(&blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
-      scoped_tested(false, &blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
+    def untested(&blk)
+      scoped_tested(false, &blk)
     end
 
     # Evaluate an if/while/until condition: run the command in a tested context
@@ -170,7 +170,7 @@ module Rush
         .params(value: T::Boolean, blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def scoped_tested(value, &blk) # rubocop:disable Naming/BlockForwarding
+    def scoped_tested(value, &blk)
       previous = @tested
       @tested = value
       yield

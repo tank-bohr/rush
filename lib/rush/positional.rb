@@ -34,7 +34,7 @@ module Rush
         .params(values: T::Array[String], blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def with(values, &blk) # rubocop:disable Naming/BlockForwarding
+    def with(values, &blk)
       saved = T.let(@values, T::Array[String])
       @values = values
       yield

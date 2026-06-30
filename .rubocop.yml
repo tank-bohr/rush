@@ -208,6 +208,16 @@ Style/SymbolProc:
 Naming/MethodParameterName:
   AllowedNames: ['io', 'fd', 'n', 'r', 'w', 'm', 's', 'op']
 
+# Inline Sorbet sigs declare a method's block as a named parameter
+# (`params(blk: T.proc...)`), so any method with a sig'd block must name it `&blk`
+# and forward it explicitly — anonymous block forwarding (`&`) and `...` are
+# incompatible with that. Enforce the named form project-wide so the two stay
+# consistent (and so there's no per-method disable). See docs/journal.md.
+Naming/BlockForwarding:
+  EnforcedStyle: explicit
+Style/ArgumentsForwarding:
+  UseAnonymousForwarding: false
+
 RSpec/ExampleLength:
   Max: 12
 

@@ -39,7 +39,7 @@ module Rush
         .params(blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def without(&blk) # rubocop:disable Naming/BlockForwarding
+    def without(&blk)
       saved = T.let(@depth, Integer)
       @depth = 0
       yield

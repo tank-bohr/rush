@@ -68,7 +68,7 @@ module Rush
         .params(code: Integer, blk: T.proc.returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def with_exiting(code, &blk) # rubocop:disable Naming/BlockForwarding
+    def with_exiting(code, &blk)
       @exiting = code
       yield
     ensure

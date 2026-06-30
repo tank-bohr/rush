@@ -175,7 +175,7 @@ class FakeSystemCalls
     [StringIO.new, StringIO.new]
   end
 
-  def fork(&)
+  def fork
     nil
   end
 

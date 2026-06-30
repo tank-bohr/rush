@@ -64,8 +64,8 @@ module Rush
     # exit! flushes the standard streams first: $stdout is unbuffered only when a
     # tty, so a forked child running a builtin would otherwise lose its output.
     # :nocov:
-    def fork(&)
-      Process.fork(&)
+    def fork(&blk)
+      Process.fork(&blk)
     end
 
     def exit!(code)
