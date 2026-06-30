@@ -6,42 +6,58 @@ module Rush
     # Base for builtins. Subclasses implement #call returning a Status. Streams
     # come from the per-command IoTable so redirections apply to builtins too.
     class Base
+      extend T::Sig
+
       # A non-negative decimal integer (optionally signed +, surrounding blanks);
       # the accepted form of an exit/return operand. dash parses it into a C int,
       # so a value past INT_MAX overflows and is rejected like a non-numeric one.
       NUMERIC_OPERAND = /\A\s*\+?\d+\s*\z/
       INT_MAX = 2_147_483_647
 
+      sig { params(executor: Executor, argv: T::Array[String], io: IoTable).void }
       def initialize(executor, argv, io)
         @executor = executor
         @argv = argv
         @io = io
       end
 
+      sig { returns(Status) }
       def call
         raise NotImplementedError
       end
 
       private
 
-      attr_reader :executor, :argv, :io
+      sig { returns(Executor) }
+      attr_reader :executor
 
+      sig { returns(T::Array[String]) }
+      attr_reader :argv
+
+      sig { returns(IoTable) }
+      attr_reader :io
+
+      sig { returns(T::Array[String]) }
       def operands
         argv.drop(1)
       end
 
+      sig { returns(T.untyped) }
       def stdout
         io.get(1)
       end
 
+      sig { returns(T.untyped) }
       def stderr
         io.get(2)
       end
 
+      sig { returns(Status) }
       def success
         Status.success
       end
 
+      sig { params(code: Integer).returns(Status) }
       def failure(code = 1)
         Status.failure(code)
       end
@@ -50,6 +66,7 @@ module Rush
       # exit/return (min 0), or a loop level for break/continue (min 1). dash
       # rejects a non-numeric, too-small or out-of-range value with a
       # special-builtin error (which aborts a non-interactive shell).
+      sig { params(text: String, min: Integer).returns(Integer) }
       def numeric_operand(text, min: 0)
         value = text.to_i
         return value if text.match?(NUMERIC_OPERAND) && value.between?(min, INT_MAX)

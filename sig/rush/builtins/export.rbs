@@ -4,6 +4,8 @@ module Rush
     # of subsequently executed commands, assigning the value first when one is
     # given. (The `-p` listing form arrives with the variable-printing slice.)
     class Export < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

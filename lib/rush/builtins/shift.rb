@@ -23,7 +23,7 @@ module Rush
       end
 
       def count
-        operands.empty? ? 1 : numeric_operand(operands.first)
+        operands.empty? ? 1 : numeric_operand(T.must(operands.first))
       end
     end
   end

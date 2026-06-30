@@ -14,6 +14,9 @@ module Rush
     # missing operand is a plain usage error that does not abort. PATH search for
     # an unqualified name arrives later.
     class Dot < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         return usage if operands.empty?
 
@@ -24,6 +27,7 @@ module Rush
 
       private
 
+      sig { params(path: T.untyped).returns(T.untyped) }
       def source(path)
         text = executor.system.read_file(path)
         executor.with_io(io) { run_text(text) }
@@ -31,12 +35,14 @@ module Rush
         raise BuiltinError, ".: #{e.message}"
       end
 
+      sig { params(text: T.untyped).returns(T.untyped) }
       def run_text(text)
         SourceRunner.new(executor, text).run
       rescue ReturnSignal => e
         Status.new(e.code)
       end
 
+      sig { returns(T.untyped) }
       def usage
         stderr.puts('rush: .: filename argument required')
         failure(2)

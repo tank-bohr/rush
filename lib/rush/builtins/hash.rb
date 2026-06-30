@@ -14,6 +14,9 @@ module Rush
     # records one. Observable only via `<cmd>; hash` and noted in the journal — the
     # cache is otherwise bit-for-bit consistent with dash.
     class Hash < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         return reset if operands.first == '-r'
         return list if operands.empty?
@@ -23,20 +26,24 @@ module Rush
 
       private
 
+      sig { returns(T.untyped) }
       def cache
         executor.state.command_hash
       end
 
+      sig { returns(T.untyped) }
       def reset
         cache.clear
         success
       end
 
+      sig { returns(T.untyped) }
       def list
         cache.sort.each { |_name, path| stdout.puts(path) }
         success
       end
 
+      sig { params(names: T.untyped).returns(T.untyped) }
       def remember(names)
         missing = names.reject { |name| known?(name) }
         missing.each { |name| stderr.puts("rush: hash: #{name}: not found") }
@@ -45,6 +52,7 @@ module Rush
 
       # Whether the name is a known command; a resolvable PATH command is also
       # cached (a slash path or a builtin / function is known but not cached).
+      sig { params(name: T.untyped).returns(T.untyped) }
       def known?(name)
         return true if name.include?('/')
 

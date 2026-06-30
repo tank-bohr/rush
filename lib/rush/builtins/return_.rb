@@ -13,7 +13,7 @@ module Rush
       private
 
       def code
-        operands.first ? numeric_operand(operands.first) : executor.state.last_status.exitstatus
+        operands.first ? numeric_operand(T.must(operands.first)) : executor.state.last_status.exitstatus
       end
     end
   end

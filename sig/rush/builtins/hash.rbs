@@ -11,6 +11,8 @@ module Rush
     # records one. Observable only via `<cmd>; hash` and noted in the journal — the
     # cache is otherwise bit-for-bit consistent with dash.
     class Hash < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

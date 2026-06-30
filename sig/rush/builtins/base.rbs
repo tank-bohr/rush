@@ -3,6 +3,8 @@ module Rush
     # Base for builtins. Subclasses implement #call returning a Status. Streams
     # come from the per-command IoTable so redirections apply to builtins too.
     class Base
+      extend T::Sig
+
       @executor: Executor
 
       @argv: Array[String]

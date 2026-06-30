@@ -12,6 +12,9 @@ module Rush
     # aborts a non-interactive shell with status 2 (BuiltinError), after the
     # complete commands before it have run.
     class Eval < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         executor.with_io(io) { SourceRunner.new(executor, operands.join(' ')).run }
       rescue ParseError => e

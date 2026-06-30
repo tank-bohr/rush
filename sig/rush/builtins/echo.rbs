@@ -4,6 +4,8 @@ module Rush
     # newline; `-n` suppresses it. XSI escape processing (\n, \t, \c, ...) is
     # added in Phase 2.
     class Echo < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

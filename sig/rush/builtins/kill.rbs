@@ -8,6 +8,8 @@ module Rush
     # bare `kill -l` lists the known names. A bad spec exits 2; a delivery that
     # fails (no such process) exits 1.
     class Kill < Base
+      extend T::Sig
+
       def call: () -> Status
 
       private

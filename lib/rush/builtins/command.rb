@@ -8,6 +8,9 @@ module Rush
     # how name resolves — the name itself for a keyword/function/builtin, or the
     # PATH for an external — and exits 127 when it is unknown.
     class Command < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         return verify(operands[1]) if operands.first == '-v'
         return verbose(operands[1]) if operands.first == '-V'
@@ -17,6 +20,7 @@ module Rush
 
       private
 
+      sig { params(name: T.untyped).returns(T.untyped) }
       def verify(name)
         match = CommandLookup.new(executor).find(name)
         return failure(127) unless match.known?
@@ -25,12 +29,14 @@ module Rush
         success
       end
 
+      sig { params(name: T.untyped).returns(T.untyped) }
       def verbose(name)
         line = name && CommandLookup.new(executor).describe(name)
         stdout.puts(line || "#{name}: not found")
         line ? success : failure(127)
       end
 
+      sig { params(args: T.untyped).returns(T.untyped) }
       def run(args)
         return success if args.empty?
 
@@ -40,6 +46,7 @@ module Rush
         External.new(executor, args, io, exported_env).call
       end
 
+      sig { returns(T.untyped) }
       def exported_env
         executor.state.environment.exported
       end

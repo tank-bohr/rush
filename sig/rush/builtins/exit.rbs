@@ -5,6 +5,8 @@ module Rush
     # status normally, or the shell's terminating status inside the EXIT trap).
     # A non-numeric n is a special-builtin error.
     class Exit < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

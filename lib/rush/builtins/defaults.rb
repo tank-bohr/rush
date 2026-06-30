@@ -4,6 +4,8 @@
 module Rush
   # The shell's builtin commands and the default name -> implementation table.
   module Builtins
+    extend T::Sig
+
     # The builtins available in Slice 1. Later slices extend this table.
     DEFAULTS = {
       ':' => Colon, 'true' => True, 'false' => False,
@@ -17,6 +19,7 @@ module Rush
       'hash' => Hash, 'times' => Times
     }.freeze
 
+    sig { returns(T.untyped) }
     def self.default_registry
       Registry.new.tap { |registry| DEFAULTS.each { |name, klass| registry.register(name, klass) } }
     end

@@ -9,8 +9,11 @@ module Rush
     # before that `=`); a bare name prints that alias, or reports `alias: NAME not
     # found` on stderr and yields status 1 while still processing the rest.
     class Alias < Base
+      extend T::Sig
+
       ASSIGN = /\A(.+?)=(.*)\z/m
 
+      sig { returns(T.untyped) }
       def call
         return list if operands.empty?
 
@@ -19,16 +22,19 @@ module Rush
 
       private
 
+      sig { params(operand: T.untyped).returns(T.untyped) }
       def handle(operand)
         match = ASSIGN.match(operand)
         match ? define(match[1], match[2]) : query(operand)
       end
 
+      sig { params(name: T.untyped, value: T.untyped).returns(T.untyped) }
       def define(name, value)
         aliases.define(name, value)
         success
       end
 
+      sig { params(name: T.untyped).returns(T.untyped) }
       def query(name)
         value = aliases.value(name)
         return show(name, value) if value
@@ -37,24 +43,29 @@ module Rush
         failure(1)
       end
 
+      sig { returns(T.untyped) }
       def list
         aliases.listing.each { |name, value| show(name, value) }
         success
       end
 
+      sig { params(name: T.untyped, value: T.untyped).returns(T.untyped) }
       def show(name, value)
         stdout.puts(single_quote("#{name}=#{value}"))
         success
       end
 
+      sig { params(text: T.untyped).returns(String) }
       def single_quote(text)
         "'#{text.gsub("'", %q('"'"'))}'"
       end
 
+      sig { params(status: T.untyped, result: T.untyped).returns(T.untyped) }
       def keep(status, result)
         status.success? ? result : status
       end
 
+      sig { returns(T.untyped) }
       def aliases
         executor.state.aliases
       end

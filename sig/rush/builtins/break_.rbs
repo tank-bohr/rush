@@ -7,6 +7,8 @@ module Rush
     # clamped, so `break 5` in two loops exits both (POSIX 2.9.5 "break"). The
     # level (>= 1) is validated even with no loop, so `break abc` still aborts.
     class Break < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

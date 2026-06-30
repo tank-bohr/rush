@@ -6,6 +6,8 @@ module Rush
     # no enclosing loop it is a no-op; a level past the actual nesting is clamped.
     # The level (>= 1) is validated even with no loop, so `continue abc` aborts.
     class Continue < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

@@ -5,6 +5,9 @@ module Rush
   module Builtins
     # `:` — the null command; expands its arguments and always succeeds.
     class Colon < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         success
       end

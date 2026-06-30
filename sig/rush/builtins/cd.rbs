@@ -3,6 +3,8 @@ module Rush
     # `cd [dir]` — change the working directory, maintaining a *logical* PWD
     # (not Dir.pwd, which resolves symlinks) plus OLDPWD. Defaults to $HOME.
     class Cd < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

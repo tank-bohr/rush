@@ -5,6 +5,8 @@ module Rush
     # how name resolves — the name itself for a keyword/function/builtin, or the
     # PATH for an external — and exits 127 when it is unknown.
     class Command < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

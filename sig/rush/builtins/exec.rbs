@@ -5,6 +5,8 @@ module Rush
     # process with it (applying the redirections first). A failed exec aborts the
     # shell with 127 (not found) or 126 (not executable), matching dash.
     class Exec < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

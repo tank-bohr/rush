@@ -6,6 +6,8 @@ module Rush
     # before that `=`); a bare name prints that alias, or reports `alias: NAME not
     # found` on stderr and yields status 1 while still processing the rest.
     class Alias < Base
+      extend T::Sig
+
       ASSIGN: ::Regexp
 
       def call: () -> untyped

@@ -10,6 +10,9 @@ module Rush
     # clamped, so `break 5` in two loops exits both (POSIX 2.9.5 "break"). The
     # level (>= 1) is validated even with no loop, so `break abc` still aborts.
     class Break < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         level = validated
         executor.state.record_status(success)
@@ -20,10 +23,13 @@ module Rush
 
       private
 
+      sig { returns(T.untyped) }
       def validated
-        operands.first ? numeric_operand(operands.first, min: 1) : 1
+        first = operands.first
+        first ? numeric_operand(first, min: 1) : 1
       end
 
+      sig { params(level: T.untyped).returns(T.untyped) }
       def clamped(level)
         [level, executor.state.loops.depth].min
       end

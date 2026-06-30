@@ -11,6 +11,8 @@ module Rush
     # missing operand is a plain usage error that does not abort. PATH search for
     # an unqualified name arrives later.
     class Dot < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private
