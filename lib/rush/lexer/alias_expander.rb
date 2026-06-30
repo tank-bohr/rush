@@ -11,6 +11,9 @@ module Rush
     # first word of a replacement, so `b` -> `hello` -> `world` chains. It also
     # owns the stack of input scanners pushed beneath the replacements being read.
     class AliasExpander
+      extend T::Sig
+
+      sig { params(table: T.untyped).void }
       def initialize(table)
         @table = table
         @active = []
@@ -20,6 +23,7 @@ module Rush
 
       # The replacement text when `word` is an alias eligible to expand here, else
       # nil. Eligible means command position or a pending trailing-blank carry.
+      sig { params(word: AST::Word, command_position: T::Boolean).returns(T.nilable(String)) }
       def expand(word, command_position)
         name = word.literal_name
         return unless name && eligible?(command_position)
@@ -31,14 +35,17 @@ module Rush
       # replacement is fully read, dropping the alias from the active set and, if
       # its value ended in a blank, marking the following word eligible too (OR so
       # an inner blank-ending alias still chains past an outer one).
+      sig { params(scanner: StringScanner).void }
       def push(scanner)
         @parents.push(scanner)
       end
 
+      sig { returns(T::Boolean) }
       def nested?
         @parents.any?
       end
 
+      sig { returns(T.nilable(StringScanner)) }
       def pop
         _name, value = @active.pop
         @check_next = true if value.end_with?(' ', "\t")
@@ -46,6 +53,7 @@ module Rush
       end
 
       # A real (non-spliced) token was emitted: spend the one-shot carry.
+      sig { void }
       def spend
         @check_next = false
       end
@@ -54,10 +62,12 @@ module Rush
 
       # Eligible position: aliases are defined and the word sits in command
       # position, or a pending trailing-blank carry makes it eligible here.
+      sig { params(command_position: T::Boolean).returns(T::Boolean) }
       def eligible?(command_position)
-        @table && (command_position || @check_next)
+        !!(@table && (command_position || @check_next))
       end
 
+      sig { params(name: T.untyped).returns(T.nilable(String)) }
       def enter(name)
         value = @table.value(name)
         return if !value || @active.any? { |active, _value| active == name }

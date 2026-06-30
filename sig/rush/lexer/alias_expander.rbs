@@ -8,6 +8,8 @@ module Rush
     # first word of a replacement, so `b` -> `hello` -> `world` chains. It also
     # owns the stack of input scanners pushed beneath the replacements being read.
     class AliasExpander
+      extend T::Sig
+
       # @table (AliasTable?) and @active (the [name, value] recursion stack) stay
       # untyped: their cross-method/paired-stack invariants aren't worth coercing.
       @table: untyped

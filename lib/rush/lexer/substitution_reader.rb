@@ -7,18 +7,23 @@ module Rush
     # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
     # The body is re-parsed and executed at expansion time.
     class SubstitutionReader
+      extend T::Sig
+
       DEPTH_DELTA = { '(' => 1, ')' => -1 }.freeze
 
+      sig { params(scanner: StringScanner).void }
       def initialize(scanner)
         @scanner = scanner
         @depth = 0
       end
 
+      sig { returns(String) }
       def parens
         @depth = 1
         (+'').tap { |body| body << paren_char until @depth.zero? }
       end
 
+      sig { returns(T.nilable(String)) }
       def backticks
         body = @scanner.scan(/[^`]*/)
         raise IncompleteInput, 'unterminated `' unless @scanner.scan('`')
@@ -28,6 +33,7 @@ module Rush
 
       # Read the body of $(( ... )) after the leading `((`, up to the matching
       # `))`, allowing balanced inner parentheses.
+      sig { returns(String) }
       def arithmetic
         @depth = 0
         collect(+'')
@@ -35,6 +41,7 @@ module Rush
 
       private
 
+      sig { params(body: String).returns(String) }
       def collect(body)
         char = arith_char
         return body unless char
@@ -42,6 +49,7 @@ module Rush
         collect(body << char)
       end
 
+      sig { returns(T.nilable(String)) }
       def arith_char
         raise IncompleteInput, 'unterminated $((' if @scanner.eos?
 
@@ -52,6 +60,7 @@ module Rush
         char
       end
 
+      sig { returns(T.nilable(String)) }
       def arith_close
         return ')'.tap { @depth -= 1 } if @depth.nonzero?
         raise(ParseError, 'arithmetic: malformed') unless @scanner.scan(')')
@@ -59,6 +68,7 @@ module Rush
         nil
       end
 
+      sig { returns(String) }
       def paren_char
         raise IncompleteInput, 'unterminated $(' if @scanner.eos?
 
@@ -68,6 +78,7 @@ module Rush
         @depth.zero? ? '' : char
       end
 
+      sig { params(char: String).void }
       def adjust(char)
         @depth += DEPTH_DELTA.fetch(char, 0)
       end

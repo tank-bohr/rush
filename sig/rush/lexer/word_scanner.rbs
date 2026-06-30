@@ -5,6 +5,8 @@ module Rush
     # segments for $name / ${...}. Handles the three quoting forms; command
     # substitution and arithmetic arrive in later slices.
     class WordScanner
+      extend T::Sig
+
       @scanner: StringScanner
 
       @terminator: Regexp?

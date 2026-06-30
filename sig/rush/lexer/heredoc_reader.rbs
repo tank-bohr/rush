@@ -6,6 +6,8 @@ module Rush
     # `<<-` form, and parses the body for expansion unless the delimiter was
     # quoted (a quoted delimiter makes the body literal).
     class HeredocReader
+      extend T::Sig
+
       @scanner: StringScanner
 
       @interactive: bool

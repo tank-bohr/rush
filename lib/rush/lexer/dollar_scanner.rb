@@ -8,14 +8,18 @@ module Rush
     # $((...)) arithmetic, and `...` backticks. #read returns nil for a lone `$`
     # that begins no valid reference, so the caller keeps it as a literal dollar.
     class DollarScanner
+      extend T::Sig
+
       SIMPLE_PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
 
+      sig { params(scanner: StringScanner).void }
       def initialize(scanner)
         @scanner = scanner
       end
 
       # The segment for a `$...` at the scanner head (the `$` not yet consumed),
       # or nil when no valid reference follows.
+      sig { params(quoted: T::Boolean).returns(T.untyped) }
       def read(quoted:)
         @scanner.getch
         return dollar_paren(quoted) if @scanner.peek(1) == '('
@@ -25,6 +29,7 @@ module Rush
       end
 
       # The command segment for a `` `...` `` at the scanner head.
+      sig { params(quoted: T::Boolean).returns(T.untyped) }
       def read_backtick(quoted:)
         @scanner.getch # `
         AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, quoted)
@@ -33,6 +38,7 @@ module Rush
       private
 
       # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
+      sig { params(quoted: T::Boolean).returns(T.untyped) }
       def dollar_paren(quoted)
         @scanner.getch # opening (
         reader = SubstitutionReader.new(@scanner)
@@ -42,6 +48,7 @@ module Rush
         AST::ArithSegment.new(reader.arithmetic, quoted)
       end
 
+      sig { returns(T.untyped) }
       def read_param_ref
         return braced_ref if @scanner.peek(1) == '{'
 
@@ -49,6 +56,7 @@ module Rush
         name && AST::ParamRef.simple(name)
       end
 
+      sig { returns(T.untyped) }
       def braced_ref
         @scanner.getch
         body = @scanner.scan(/[^}]*/)

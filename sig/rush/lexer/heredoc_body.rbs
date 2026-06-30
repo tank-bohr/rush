@@ -8,6 +8,8 @@ module Rush
     # $-and-backtick shape with WordScanner; a common extractor can wait until the
     # Phase 2 ${} forms land.)
     class HeredocBody
+      extend T::Sig
+
       @scanner: StringScanner
 
       @segments: Array[untyped]

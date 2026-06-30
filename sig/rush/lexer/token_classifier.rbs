@@ -5,6 +5,8 @@ module Rush
     # unquoted NAME= prefix), or a plain WORD. The assignment value keeps its
     # quoted segments (x="a b").
     class TokenClassifier
+      extend T::Sig
+
       @word: AST::Word
 
       @state: LexState

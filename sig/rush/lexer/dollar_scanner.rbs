@@ -5,6 +5,8 @@ module Rush
     # $((...)) arithmetic, and `...` backticks. #read returns nil for a lone `$`
     # that begins no valid reference, so the caller keeps it as a literal dollar.
     class DollarScanner
+      extend T::Sig
+
       @scanner: StringScanner
 
       SIMPLE_PARAM: Regexp

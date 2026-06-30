@@ -11,16 +11,20 @@ module Rush
     # $-and-backtick shape with WordScanner; a common extractor can wait until the
     # Phase 2 ${} forms land.)
     class HeredocBody
+      extend T::Sig
+
       RUN = /[^$\\`]+/
       PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
       ESCAPABLE = ['$', '`', '\\'].freeze
 
+      sig { params(text: String).void }
       def initialize(text)
         @scanner = StringScanner.new(text)
         @segments = []
         @literal = +''
       end
 
+      sig { returns(AST::Word) }
       def scan
         step until @scanner.eos?
         flush
@@ -29,6 +33,7 @@ module Rush
 
       private
 
+      sig { void }
       def step
         char = @scanner.peek(1)
         return dollar if char == '$'
@@ -38,26 +43,31 @@ module Rush
         @literal << @scanner.scan(RUN).to_s
       end
 
+      sig { void }
       def dollar
         @scanner.getch
         @scanner.peek(1) == '(' ? command_sub : param
       end
 
+      sig { void }
       def command_sub
         @scanner.getch
         push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).parens, false))
       end
 
+      sig { void }
       def backtick
         @scanner.getch
         push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, false))
       end
 
+      sig { void }
       def param
         ref = read_ref
         ref ? push(AST::ParamSegment.new(ref, false)) : (@literal << '$')
       end
 
+      sig { returns(T.untyped) }
       def read_ref
         return braced if @scanner.peek(1) == '{'
 
@@ -65,6 +75,7 @@ module Rush
         name && AST::ParamRef.simple(name)
       end
 
+      sig { returns(T.untyped) }
       def braced
         @scanner.getch
         body = @scanner.scan(/[^}]*/)
@@ -73,17 +84,20 @@ module Rush
         AST::ParamRef.parse(body)
       end
 
+      sig { void }
       def escape
         @scanner.getch
         char = @scanner.getch.to_s
         @literal << (ESCAPABLE.include?(char) ? char : "\\#{char}")
       end
 
+      sig { params(segment: T.untyped).void }
       def push(segment)
         flush
         @segments << segment
       end
 
+      sig { void }
       def flush
         return if @literal.empty?
 

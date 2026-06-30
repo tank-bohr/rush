@@ -18,11 +18,14 @@ module Rush
   # WORD/ASSIGNMENT_WORD (classified against LexState, which advances after each
   # token to track command position — the seed of POSIX Grammar Rules 1-9).
   class Lexer
+    extend T::Sig
+
     BLANK = /[ \t]+/
     COMMENT = /#[^\n]*/
     IO_NUMBER = /\d+(?=[<>])/
     HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
+    sig { params(source: String, interactive: T::Boolean, aliases: T.nilable(AliasTable)).void }
     def initialize(source, interactive: false, aliases: nil)
       @scanner = StringScanner.new(source)
       @aliases = AliasExpander.new(aliases)
@@ -32,10 +35,12 @@ module Rush
       @heredocs = []
     end
 
+    sig { returns(Integer) }
     def location
       @scanner.charpos
     end
 
+    sig { returns([T.untyped, T.untyped]) }
     def next_token
       drain
       return [false, false] if @scanner.eos?
@@ -46,6 +51,7 @@ module Rush
 
     private
 
+    sig { params(token: [T.untyped, T.untyped]).returns([T.untyped, T.untyped]) }
     def emit(token)
       @state.advance(token.first)
       @aliases.spend
@@ -54,6 +60,7 @@ module Rush
 
     # Skip blanks and comments; when the current frame is an exhausted alias
     # replacement, restore the input beneath it and keep skipping.
+    sig { void }
     def drain
       skip_insignificant
       return unless @scanner.eos? && @aliases.nested?
@@ -62,26 +69,31 @@ module Rush
       drain
     end
 
+    sig { void }
     def skip_insignificant
       loop { break unless @scanner.skip(BLANK) || @scanner.skip(COMMENT) }
     end
 
+    sig { returns(T.nilable([T.untyped, T.untyped])) }
     def scan_token
       return heredoc_newline if @scanner.scan("\n")
 
       io_number || operator || word
     end
 
+    sig { returns(T.nilable([T.untyped, T.untyped])) }
     def io_number
       digits = @scanner.scan(IO_NUMBER)
-      digits && [:IO_NUMBER, digits.to_i]
+      digits ? [:IO_NUMBER, digits.to_i] : nil
     end
 
+    sig { returns(T.nilable([T.untyped, T.untyped])) }
     def operator
       matched = @scanner.scan(OperatorTable::PATTERN)
-      matched && operator_token(matched)
+      matched ? operator_token(matched) : nil
     end
 
+    sig { params(matched: String).returns([T.untyped, T.untyped]) }
     def operator_token(matched)
       symbol = OperatorTable::OPERATORS[matched]
       @awaiting = HEREDOC_OPS[symbol]
@@ -91,6 +103,7 @@ module Rush
     # Classify the word, then (only a plain WORD, never a reserved word or a
     # here-document delimiter) splice its alias replacement in its place; a splice
     # returns nil so next_token re-reads from the new frame.
+    sig { returns(T.nilable([T.untyped, T.untyped])) }
     def word
       scanned = WordScanner.next_word(@scanner)
       token = TokenClassifier.new(scanned, @state).call
@@ -98,22 +111,26 @@ module Rush
       value ? splice(value) : finish(token)
     end
 
+    sig { params(token: [T.untyped, T.untyped], word: T.untyped).returns(T.nilable(String)) }
     def alias_for(token, word)
       return if @awaiting || token.first != :WORD || !@state.command_mode?
 
       @aliases.expand(word, @state.expects_command?)
     end
 
+    sig { params(value: String).returns(NilClass) }
     def splice(value)
       @aliases.push(@scanner)
       @scanner = StringScanner.new(value)
       nil
     end
 
+    sig { params(token: [T.untyped, T.untyped]).returns([T.untyped, T.untyped]) }
     def finish(token)
       @awaiting ? delimiter(token.last) : token
     end
 
+    sig { params(word: T.untyped).returns([T.untyped, T.untyped]) }
     def delimiter(word)
       holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
                            quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip)
@@ -124,6 +141,7 @@ module Rush
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
+    sig { returns([T.untyped, T.untyped]) }
     def heredoc_newline
       HeredocReader.new(@scanner, interactive: @interactive).fill(@heredocs)
       @heredocs = []

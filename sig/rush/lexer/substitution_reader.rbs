@@ -4,6 +4,8 @@ module Rush
     # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
     # The body is re-parsed and executed at expansion time.
     class SubstitutionReader
+      extend T::Sig
+
       @scanner: StringScanner
 
       @depth: Integer

@@ -4,6 +4,8 @@ module Rush
   # WORD/ASSIGNMENT_WORD (classified against LexState, which advances after each
   # token to track command position — the seed of POSIX Grammar Rules 1-9).
   class Lexer
+    extend T::Sig
+
     @scanner: StringScanner
 
     @aliases: AliasExpander

@@ -5,6 +5,8 @@ module Rush
     # pattern / `esac` positions. Modes are a single token (not a stack), so
     # `for`/`case` nested *directly* inside a case body are not tracked.
     class LexState
+      extend T::Sig
+
       @command_position: bool
 
       @expect_filename: bool

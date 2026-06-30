@@ -8,6 +8,8 @@ module Rush
     # pattern / `esac` positions. Modes are a single token (not a stack), so
     # `for`/`case` nested *directly* inside a case body are not tracked.
     class LexState
+      extend T::Sig
+
       REDIRECT_OPS = ['<', '>', :DGREAT, :LESSGREAT, :CLOBBER].freeze
       INTRODUCERS = [
         :NEWLINE, ';', '&', '|', '(', ')', :AND_IF, :OR_IF,
@@ -24,12 +26,14 @@ module Rush
         [:case_pat, ')'] => :case_body, %i[case_body DSEMI] => :case_arm
       }.freeze
 
+      sig { void }
       def initialize
         @command_position = true
         @expect_filename = false
         @mode = :normal
       end
 
+      sig { returns(T::Boolean) }
       def expects_command?
         @command_position && !@expect_filename
       end
@@ -38,34 +42,42 @@ module Rush
       # the normal mode and a case arm's command list. The for-header and case
       # subject/pattern modes do not expand aliases, even when a newline resets
       # command position.
+      sig { returns(T::Boolean) }
       def command_mode?
         @mode == :normal || @mode == :case_body
       end
 
+      sig { returns(T::Boolean) }
       def for_name?
         @mode == :for_name
       end
 
+      sig { returns(T::Boolean) }
       def for_in?
         @mode == :for_in
       end
 
+      sig { returns(T::Boolean) }
       def case_subject?
         @mode == :case_subject
       end
 
+      sig { returns(T::Boolean) }
       def case_in?
         @mode == :case_in
       end
 
+      sig { returns(T::Boolean) }
       def case_arm?
         @mode == :case_arm
       end
 
+      sig { returns(T::Boolean) }
       def case_pat?
         @mode == :case_pat
       end
 
+      sig { params(symbol: T.untyped).void }
       def advance(symbol)
         @mode = TRANSITIONS.fetch([@mode, symbol], @mode)
         return @expect_filename = true if REDIRECT_OPS.include?(symbol)
@@ -77,11 +89,13 @@ module Rush
 
       private
 
+      sig { void }
       def reset
         @command_position = true
         @expect_filename = false
       end
 
+      sig { void }
       def consume_word
         @expect_filename ? (@expect_filename = false) : (@command_position = false)
       end
