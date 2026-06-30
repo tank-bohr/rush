@@ -4,6 +4,8 @@ module Rush
     # A name with no alias is reported as `unalias: NAME not found` on stderr with
     # status 1, but the remaining names are still processed.
     class Unalias < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

@@ -5,6 +5,8 @@ module Rush
     # is reported on stderr with exit status 2. Invoked as `[`, the expression
     # must be terminated by a closing `]`.
     class Test < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

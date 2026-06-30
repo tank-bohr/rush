@@ -7,6 +7,8 @@ module Rush
     # it, so `trap INT` resets INT (matching dash). A spec that names no signal is
     # reported as "trap: SPEC: bad trap" and stops processing with status 1.
     class Trap < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

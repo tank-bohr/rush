@@ -8,6 +8,9 @@ module Rush
     # is reported on stderr with exit status 2. Invoked as `[`, the expression
     # must be terminated by a closing `]`.
     class Test < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         evaluate(bracketed? ? without_close(operands) : operands)
       rescue TestError => e
@@ -16,10 +19,12 @@ module Rush
 
       private
 
+      sig { returns(T.untyped) }
       def bracketed?
         argv.first == '['
       end
 
+      sig { params(ops: T.untyped).returns(T.untyped) }
       def without_close(ops)
         *body, close = ops
         raise TestError, "missing `]'" unless close == ']'
@@ -27,10 +32,12 @@ module Rush
         body
       end
 
+      sig { params(ops: T.untyped).returns(T.untyped) }
       def evaluate(ops)
         TestExpr.new(ops, executor.system).true? ? success : failure
       end
 
+      sig { params(message: T.untyped).returns(T.untyped) }
       def report(message)
         stderr.puts("rush: #{argv.first}: #{message}")
         failure(2)

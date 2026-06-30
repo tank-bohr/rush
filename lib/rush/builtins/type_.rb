@@ -7,6 +7,9 @@ module Rush
     # function, special or regular builtin, or the executable found in PATH.
     # Exit status 127 if any name is unknown (the message still goes to stdout).
     class Type < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         unknown = operands.reject { |name| report(name) }
         unknown.empty? ? success : failure(127)
@@ -14,6 +17,7 @@ module Rush
 
       private
 
+      sig { params(name: T.untyped).returns(T.untyped) }
       def report(name)
         line = CommandLookup.new(executor).describe(name)
         stdout.puts(line || "#{name}: not found")

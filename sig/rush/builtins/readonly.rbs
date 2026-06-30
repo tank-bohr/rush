@@ -4,6 +4,8 @@ module Rush
     # name read only, so a later assignment or unset aborts (see ReadonlyError).
     # (The `-p` listing form arrives with the variable-printing slice.)
     class Readonly < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

@@ -3,6 +3,8 @@ module Rush
     # `return [n]` — return from the current function with status n (default: the
     # last command's status). A non-numeric n is a special-builtin error.
     class Return < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

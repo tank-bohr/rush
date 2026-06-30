@@ -5,6 +5,8 @@ module Rush
     # current value (dash semantics); name=value also assigns. Used outside a
     # function it is an error with status 2.
     class Local < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

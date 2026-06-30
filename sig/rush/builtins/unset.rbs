@@ -3,6 +3,8 @@ module Rush
     # `unset [-fv] name ...` — remove each name. The default (and -v) unsets a
     # shell variable; -f unsets a function. Unsetting an absent name succeeds.
     class Unset < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

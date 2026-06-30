@@ -5,6 +5,8 @@ module Rush
     # trailing newline of its own. A present non-numeric argument to a numeric
     # conversion is reported and treated as 0 (exit status 1).
     class Printf < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

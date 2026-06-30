@@ -2,6 +2,8 @@ module Rush
   module Builtins
     # O(1) name -> builtin class lookup, populated by Builtins.default_registry.
     class Registry
+      extend T::Sig
+
       @builtins: untyped
 
       def initialize: () -> void

@@ -8,6 +8,9 @@ module Rush
     # `<min>m<sec>s <min>m<sec>s` with six-decimal seconds (POSIX, matching dash).
     # The values are non-deterministic, so behaviour is verified by format.
     class Times < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         tms = executor.system.times
         stdout.puts("#{clock(tms.utime)} #{clock(tms.stime)}")
@@ -17,6 +20,7 @@ module Rush
 
       private
 
+      sig { params(seconds: T.untyped).returns(T.untyped) }
       def clock(seconds)
         minutes, secs = seconds.divmod(60)
         format('%<min>dm%<sec>fs', min: minutes, sec: secs)

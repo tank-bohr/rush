@@ -9,6 +9,9 @@ module Rush
     # non-numeric / negative operand ("Illegal number"), and asking to shift more
     # than $# ("can't shift that many"). Extra operands past the first are ignored.
     class Shift < Base
+      extend T::Sig
+
+      sig { returns(T.untyped) }
       def call
         raise BuiltinError, "shift: can't shift that many" if count > state.positional.size
 
@@ -18,10 +21,12 @@ module Rush
 
       private
 
+      sig { returns(T.untyped) }
       def state
         executor.state
       end
 
+      sig { returns(T.untyped) }
       def count
         operands.empty? ? 1 : numeric_operand(T.must(operands.first))
       end

@@ -2,6 +2,8 @@ module Rush
   module Builtins
     # `pwd` — print the shell's logical working directory.
     class Pwd < Base
+      extend T::Sig
+
       def call: () -> untyped
     end
   end

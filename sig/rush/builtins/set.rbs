@@ -6,6 +6,8 @@ module Rush
     # unchanged; an unknown option is ignored. Options: -e/errexit, -u/nounset,
     # -x/xtrace, -f/noglob, -v/verbose.
     class Set < Base
+      extend T::Sig
+
       OPTIONS: { "e" => :errexit, "u" => :nounset, "x" => :xtrace, "f" => :noglob, "v" => :verbose }
 
       LONG: { "errexit" => :errexit, "nounset" => :nounset, "xtrace" => :xtrace, "noglob" => :noglob, "verbose" => :verbose }

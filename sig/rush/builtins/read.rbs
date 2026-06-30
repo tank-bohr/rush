@@ -5,6 +5,8 @@ module Rush
     # Without -r a backslash escapes the next character. Returns non-zero at end
     # of file (clearing the variables); with no variable operand it is an error.
     class Read < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private

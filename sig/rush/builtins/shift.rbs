@@ -6,6 +6,8 @@ module Rush
     # non-numeric / negative operand ("Illegal number"), and asking to shift more
     # than $# ("can't shift that many"). Extra operands past the first are ignored.
     class Shift < Base
+      extend T::Sig
+
       def call: () -> untyped
 
       private
