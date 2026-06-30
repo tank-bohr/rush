@@ -28,12 +28,17 @@ module Rush
           Kernel.raise(ExpansionError, "arithmetic: invalid number #{text.inspect}")
         end
 
-        sig { params(op: T.untyped, value: Integer).returns(Integer) }
+        # op is String, not the literal set ("+"|"-"|"!"|"~"): it is a token the
+        # parser validates at runtime (UNARY.include? then UNARY.fetch), never
+        # statically narrowed — `advance` returns String — so neither checker can
+        # reach the union without an unchecked cast. RBS *can* spell string-literal
+        # unions (Sorbet cannot), but here there is no narrowing point to feed one.
+        sig { params(op: String, value: Integer).returns(Integer) }
         def unary(op, value)
           wrap(UNARY.fetch(op).call(value))
         end
 
-        sig { params(op: T.untyped, left: Integer, right: Integer).returns(Integer) }
+        sig { params(op: String, left: Integer, right: Integer).returns(Integer) }
         def binary(op, left, right)
           wrap(BINARY.fetch(op).call(left, right))
         end
@@ -43,7 +48,7 @@ module Rush
           ((num + LIMIT) % (LIMIT << 1)) - LIMIT
         end
 
-        sig { params(flag: T.untyped).returns(Integer) }
+        sig { params(flag: T::Boolean).returns(Integer) }
         def bool(flag)
           flag ? 1 : 0
         end

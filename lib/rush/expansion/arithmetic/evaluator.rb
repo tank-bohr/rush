@@ -36,7 +36,7 @@ module Rush
         # value first (`+=` -> `+`); store the wrapped result and return it.
         sig { params(name: String, op: String, value: Integer).returns(Integer) }
         def assign(name, op, value)
-          result = op == '=' ? value : Number.binary(op[0..-2], resolve(name), value)
+          result = op == '=' ? value : Number.binary(op.chop, resolve(name), value)
           @executor.state.environment.assign(name, result.to_s)
           result
         end

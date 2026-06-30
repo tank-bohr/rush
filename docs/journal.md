@@ -560,6 +560,16 @@ they read Ruby:
   diverge on purpose — runtime validation forces a looser nominal type than static checking needs.
 - **literal-symbol narrowing** — `parse -> AST::List | :eof`: Steep narrows on `== :eof`, Sorbet
   can't (it widens `:eof` to `Symbol`), so the call sites need `T.cast(program, AST::List)`.
+- **string-literal union types (a drift that *doesn't* materialise)** — RBS can spell
+  `("+" | "-" | "!" | "~")`; Sorbet has no string-literal types at all. So `Number#unary`'s `op`
+  *looked* like a place RBS could out-type Sorbet. It can't: `op` is a parser token validated only at
+  runtime (`UNARY.include?` then `.fetch`), and `Parser#advance` returns plain `String` with no
+  static narrowing anywhere, so feeding a union would need an unchecked `cast` — an escape no better
+  than `T.unsafe`. Both checkers land on `String`, the honest maximum. The lesson: a literal type is
+  worth more than `String` only where the value is *statically* narrow; a runtime-validated token is
+  not, so the more-expressive notation buys nothing here. (Tightened `unary`/`binary` `op` and
+  `bool`'s `flag` off `untyped` in the same pass; `Evaluator#assign` slices `op.chop`, not
+  `op[0..-2]`, so the operator key is a non-nil `String`.)
 - **`x && y` returning the falsy operand** — harmless to Steep, but sorbet-runtime rejects the `nil`
   against a `bool` sig at the call; rewritten as ternary / `!!` throughout.
 - **abstract methods** — typing `CommandLookup#find -> Match` exposed that `Match#describe`/`#terse`
