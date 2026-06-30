@@ -6,8 +6,11 @@ module Rush
   # LoopControlHandling). The loop's status is the last body status (0 if the
   # body never runs).
   class LoopRunner
+    extend T::Sig
+
     include LoopControlHandling
 
+    sig { params(executor: T.untyped, condition: T.untyped, body: T.untyped, sense: T.untyped).void }
     def initialize(executor, condition, body, sense)
       @executor = executor
       @condition = condition
@@ -17,6 +20,7 @@ module Rush
 
     # Bracket the loop so break/continue see the right nesting depth (see
     # LoopNesting#enter via state.loops); leave runs even when break unwinds.
+    sig { returns(T.untyped) }
     def call
       @executor.state.loops.enter
       run_loop
@@ -26,6 +30,7 @@ module Rush
 
     private
 
+    sig { returns(T.untyped) }
     def run_loop
       # T.let pins the loop variable's type: Status.success is now sig'd (Status),
       # but #iterate is unsig'd (untyped), and Sorbet forbids a variable changing
@@ -37,11 +42,13 @@ module Rush
       unwind(e)
     end
 
+    sig { returns(T.untyped) }
     def proceed?
       met = @executor.succeeds?(@condition)
       @sense == :while ? met : !met
     end
 
+    sig { returns(T.untyped) }
     def iterate
       @executor.run(@body)
     rescue ContinueSignal => e

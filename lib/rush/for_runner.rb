@@ -6,8 +6,11 @@ module Rush
   # catching break/continue at the loop boundary (see LoopControlHandling). The
   # loop's status is the last body status (0 if the value list is empty).
   class ForRunner
+    extend T::Sig
+
     include LoopControlHandling
 
+    sig { params(executor: T.untyped, name: T.untyped, values: T.untyped, body: T.untyped).void }
     def initialize(executor, name, values, body)
       @executor = executor
       @name = name
@@ -17,6 +20,7 @@ module Rush
 
     # Bracket the loop so break/continue see the right nesting depth (see
     # LoopNesting#enter via state.loops); leave runs even when break unwinds.
+    sig { returns(T.untyped) }
     def call
       @executor.state.loops.enter
       run_loop
@@ -26,6 +30,7 @@ module Rush
 
     private
 
+    sig { returns(T.untyped) }
     def run_loop
       # T.let pins the loop variable's type (see LoopRunner#run_loop): Sorbet forbids
       # a variable changing type across a block (srb.help/7001) and the sig'd
@@ -37,6 +42,7 @@ module Rush
       unwind(e)
     end
 
+    sig { params(value: T.untyped).returns(T.untyped) }
     def iterate(value)
       @executor.state.environment.assign(@name, value)
       @executor.run(@body)

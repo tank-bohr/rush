@@ -7,16 +7,20 @@ module Rush
   # IoTable#to_spawn_options maps it to :close so a spawned child gets the fd
   # closed too; close/flush are no-ops (it owns nothing).
   class ClosedStream
+    extend T::Sig
+
     %i[write print puts << printf gets read readline each_line readpartial].each do |method|
       # Kernel.raise (not bare raise): Steep can't resolve the receiver of a bare
       # raise inside a class-level define_method block (its self is untyped there).
       define_method(method) { |*_| Kernel.raise(Errno::EBADF) }
     end
 
+    sig { returns(NilClass) }
     def close
       nil
     end
 
+    sig { returns(T.self_type) }
     def flush
       self
     end

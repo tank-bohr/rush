@@ -45,4 +45,10 @@ RSpec.describe Rush::CommandLookup do
     state.aliases.define('if', 'echo')
     expect(lookup.describe('if')).to eq('if is a shell keyword')
   end
+
+  it 'requires Match subclasses to implement #describe and #terse' do
+    base = Rush::CommandLookup::Match.new('x')
+    expect { base.describe }.to raise_error(NotImplementedError)
+    expect { base.terse }.to raise_error(NotImplementedError)
+  end
 end

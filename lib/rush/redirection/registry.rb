@@ -4,16 +4,23 @@
 module Rush
   # I/O redirection: the per-kind appliers and the registry that dispatches to them.
   module Redirection
+    extend T::Sig
+
     # O(1) redirection-kind -> applier lookup, populated by default_registry.
     class Registry
+      extend T::Sig
+
+      sig { void }
       def initialize
         @appliers = {}
       end
 
+      sig { params(kind: Symbol, applier: T.untyped).void }
       def register(kind, applier)
         @appliers[kind] = applier
       end
 
+      sig { params(kind: Symbol).returns(T.untyped) }
       def fetch(kind)
         @appliers[kind]
       end
@@ -28,6 +35,7 @@ module Rush
     # Default fd for the dup operators: 1 for >&, 0 for <&.
     DUPS = { dup_out: 1, dup_in: 0 }.freeze
 
+    sig { returns(Registry) }
     def self.default_registry
       Registry.new.tap do |registry|
         DEFAULTS.each { |kind, spec| registry.register(kind, FileRedirect.new(spec[0], spec[1])) }

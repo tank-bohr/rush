@@ -3,6 +3,8 @@ module Rush
     # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L), mixed
     # into SystemCalls. Thin File delegations, like the rest of the syscall port.
     module FileTests
+      extend T::Sig
+
       def exist?: (String path) -> bool
 
       def file?: (String path) -> bool

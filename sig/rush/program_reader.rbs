@@ -8,6 +8,8 @@ module Rush
   # input a pending buffer gets one final, non-interactive parse so an
   # unterminated here-document still runs with the body so far, exactly like dash.
   class ProgramReader
+    extend T::Sig
+
     # Called with whether a partial program is already buffered (the prompt picks
     # PS1 vs PS2 from it); returns the next source line, or nil at end of input.
     @next_line: ^(bool buffered) -> String?

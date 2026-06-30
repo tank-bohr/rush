@@ -5,6 +5,8 @@ module Rush
   # newline. It quacks like a Word (responds to #segments) so the expansion
   # pipeline expands the body as a single field at execution time.
   class HereDoc
+    extend T::Sig
+
     @delimiter: String
 
     @quoted: bool

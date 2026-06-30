@@ -3,6 +3,8 @@ module Rush
   # IoTable, translating the result: the OS exit/signal status, or POSIX 127
   # (not found) / 126 (not executable).
   class External
+    extend T::Sig
+
     @executor: Executor
 
     @argv: Array[String]

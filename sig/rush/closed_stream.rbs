@@ -4,6 +4,8 @@ module Rush
   # IoTable#to_spawn_options maps it to :close so a spawned child gets the fd
   # closed too; close/flush are no-ops (it owns nothing).
   class ClosedStream
+    extend T::Sig
+
     def close: () -> nil
 
     def flush: () -> self

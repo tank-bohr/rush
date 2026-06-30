@@ -3,6 +3,8 @@ module Rush
   # LoopControlHandling). The loop's status is the last body status (0 if the
   # body never runs).
   class LoopRunner
+    extend T::Sig
+
     @executor: Executor
 
     @condition: untyped

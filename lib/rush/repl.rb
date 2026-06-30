@@ -10,15 +10,19 @@ module Rush
   # Line editing/history, PS1/PS2 customisation and job control are deferred to
   # Phase 4.
   class Repl
+    extend T::Sig
+
     PS1 = '$ '
     PS2 = '> '
 
+    sig { params(system: SystemCalls).void }
     def initialize(system)
       @system = system
       @executor = Executor.new(system: system, state: ShellState.new)
       @reader = ProgramReader.new(aliases: @executor.state.aliases) { |continuation| prompt_line(continuation) }
     end
 
+    sig { returns(Integer) }
     def run
       terminate(session)
     rescue ExitSignal => e
@@ -27,26 +31,30 @@ module Rush
 
     private
 
+    sig { returns(Integer) }
     def session
       loop { break unless continue? }
       @executor.state.last_status.exitstatus
     end
 
     # The EXIT trap fires as the session ends, on Ctrl-D or `exit` alike.
+    sig { params(code: Integer).returns(Integer) }
     def terminate(code)
       @executor.trap_runner.run_exit_trap(code)
     end
 
+    sig { returns(T::Boolean) }
     def continue?
       program = read_program
       return false if program == :eof
 
-      run_program(program) unless program == :error
+      run_program(T.cast(program, AST::List)) unless program == :error
       true
     end
 
     # A real syntax error reports and resumes the session; the next turn starts
     # fresh at PS1 (the reader discards the broken buffer per next_program call).
+    sig { returns(T.any(AST::List, Symbol)) }
     def read_program
       @reader.next_program
     rescue ParseError => e
@@ -54,11 +62,13 @@ module Rush
       :error
     end
 
+    sig { params(continuation: T::Boolean).returns(T.nilable(String)) }
     def prompt_line(continuation)
       @system.stderr.print(continuation ? PS2 : PS1)
       @system.read_line
     end
 
+    sig { params(program: AST::List).void }
     def run_program(program)
       @executor.run(program)
     rescue ReturnSignal
@@ -67,6 +77,7 @@ module Rush
       report(e)
     end
 
+    sig { params(error: StandardError).void }
     def report(error)
       @system.stderr.puts("rush: #{error.message}")
     end

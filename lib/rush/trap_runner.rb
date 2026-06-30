@@ -8,6 +8,9 @@ module Rush
   # bodies are parsed and run back through the executor, so this collaborates with
   # it rather than re-implementing execution.
   class TrapRunner
+    extend T::Sig
+
+    sig { params(executor: Executor).void }
     def initialize(executor)
       @executor = executor
       @state = executor.state
@@ -17,6 +20,7 @@ module Rush
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
     # shell exits with: the given code, unless the trap itself runs `exit`. $?
     # inside the trap is that same code (POSIX 2.14), so it is published first.
+    sig { params(code: Integer).returns(Integer) }
     def run_exit_trap(code)
       action = @state.traps.action(Signals::EXIT)
       return code unless action
@@ -28,17 +32,20 @@ module Rush
     # The status a bare `exit` reports: while the EXIT trap runs, the status the
     # shell is terminating with (POSIX), not the trap body's last $?; otherwise
     # the last command's status.
+    sig { returns(Integer) }
     def exiting_status
       @exiting || @state.last_status.exitstatus
     end
 
     # Record a trap and (for real signals, not EXIT) install its disposition so a
     # delivered signal runs the action / is ignored / restores the default.
+    sig { params(name: String, action: String).void }
     def set(name, action)
       @state.traps.set(name, action)
       install_signal(name, action) unless name == Signals::EXIT
     end
 
+    sig { params(name: String).void }
     def reset(name)
       @state.traps.clear(name)
       install_signal(name, :default) unless name == Signals::EXIT
@@ -46,6 +53,7 @@ module Rush
 
     private
 
+    sig { params(action: String, code: Integer).returns(Integer) }
     def fire_exit(action, code)
       with_exiting(code) { fire(action) }
       code
@@ -55,13 +63,19 @@ module Rush
 
     # Publish `code` as the status a bare `exit` in the action reports, cleared
     # afterwards so a bare exit elsewhere falls back to the last command status.
-    def with_exiting(code)
+    sig do
+      type_parameters(:U)
+        .params(code: Integer, blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def with_exiting(code, &blk) # rubocop:disable Naming/BlockForwarding
       @exiting = code
       yield
     ensure
       @exiting = nil
     end
 
+    sig { params(action: String).void }
     def fire(action)
       @executor.run(Parser.new(Lexer.new(action, aliases: @state.aliases)).parse)
     rescue ParseError, ExpansionError, ReadonlyError, LoopControl, ReturnSignal
@@ -69,6 +83,7 @@ module Rush
     end
 
     # An untrappable signal (KILL/STOP) raises; keep the table entry like dash.
+    sig { params(name: String, action: T.any(String, Symbol)).void }
     def install_signal(name, action)
       @executor.system.trap_signal(name, disposition(action)) { fire_signal(name) }
     rescue ArgumentError, SystemCallError
@@ -77,12 +92,14 @@ module Rush
 
     # '' ignores the signal, :default restores it; a command string installs the
     # handler block (nil disposition), matching SystemCalls#trap_signal.
+    sig { params(action: T.any(String, Symbol)).returns(T.nilable(String)) }
     def disposition(action)
       { '' => 'IGNORE', :default => 'DEFAULT' }[action]
     end
 
     # Run a delivered signal's action, restoring $? so the interrupted code is
     # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.
+    sig { params(name: String).void }
     def fire_signal(name)
       saved = @state.last_status
       fire(@state.traps.action(name).to_s)

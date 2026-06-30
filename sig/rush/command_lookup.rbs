@@ -4,6 +4,8 @@ module Rush
   # searching PATH (or used directly when the name contains a slash). #find runs
   # an ordered list of resolvers and returns the first Match (Unknown if none).
   class CommandLookup
+    extend T::Sig
+
     @executor: Executor
 
     KEYWORDS: Array[String]
@@ -16,6 +18,8 @@ module Rush
     # `type` (#describe) and `command -v` (#terse) print. Only an executable
     # caches its own location; the others leave the cache untouched.
     class Match
+      extend T::Sig
+
       @name: String
 
       @detail: String?
@@ -42,6 +46,8 @@ module Rush
 
     # An unresolved name: not known, and nothing to describe.
     class Unknown < Match
+      extend T::Sig
+
       def known?: () -> bool
 
       def describe: () -> nil
@@ -49,6 +55,8 @@ module Rush
 
     # A keyword / function / special / regular builtin, named by a fixed label.
     class Labelled < Match
+      extend T::Sig
+
       def describe: () -> String
 
       def terse: () -> String
@@ -56,6 +64,8 @@ module Rush
 
     # A shell alias; `command -v` prints its definition.
     class Aliased < Match
+      extend T::Sig
+
       def describe: () -> String
 
       def terse: () -> String
@@ -63,6 +73,8 @@ module Rush
 
     # An external executable found on PATH (or used directly via a slash path).
     class Executable < Match
+      extend T::Sig
+
       def describe: () -> String
 
       # detail (the resolved path) is String? on the base Match, so terse is too.

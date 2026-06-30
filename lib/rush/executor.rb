@@ -6,9 +6,34 @@ module Rush
   # state, with all OS access funneled through the injected SystemCalls port. The
   # base IoTable, builtin registry, redirection registry and expander hang off it;
   # signal and trap handling live in the TrapRunner it owns.
-  class Executor
-    attr_reader :system, :state, :builtins, :redirections, :expander, :io, :cmd_sub_status, :trap_runner
+  class Executor # rubocop:disable Metrics/ClassLength
+    extend T::Sig
 
+    sig { returns(SystemCalls) }
+    attr_reader :system
+
+    sig { returns(ShellState) }
+    attr_reader :state
+
+    sig { returns(Builtins::Registry) }
+    attr_reader :builtins
+
+    sig { returns(Redirection::Registry) }
+    attr_reader :redirections
+
+    sig { returns(Expansion::Pipeline) }
+    attr_reader :expander
+
+    sig { returns(IoTable) }
+    attr_reader :io
+
+    sig { returns(Status) }
+    attr_reader :cmd_sub_status
+
+    sig { returns(TrapRunner) }
+    attr_reader :trap_runner
+
+    sig { params(system: SystemCalls, state: ShellState, builtins: Builtins::Registry).void }
     def initialize(system:, state:, builtins: Builtins.default_registry)
       @system = system
       @state = state
@@ -23,6 +48,7 @@ module Rush
 
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
     # command unrun with status 2; the shell carries on (RedirectError).
+    sig { params(node: AST::Node).returns(Status) }
     def run(node)
       @state.record_status(node.execute(self))
     rescue RedirectError
@@ -31,10 +57,12 @@ module Rush
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
+    sig { params(table: IoTable).void }
     def replace_io(table)
       @io = table
     end
 
+    sig { params(command: AST::SimpleCommand).returns(Status) }
     def run_simple(command)
       CommandRunner.new(self, command).call
     end
@@ -46,7 +74,13 @@ module Rush
     # Exception: redirect-only `exec` commits the table as the shell's base
     # (replace_io), so it now equals @io — leave those files open so they persist
     # for the rest of the shell rather than closing them out from under it.
-    def with_redirects(redirects, base = @io)
+    sig do
+      type_parameters(:U)
+        .params(redirects: T::Array[AST::Redirect], base: IoTable,
+                blk: T.proc.params(io: T.untyped).returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def with_redirects(redirects, base = @io, &blk) # rubocop:disable Naming/BlockForwarding
       io = redirects.reduce(base) { |acc, redirect| redirect_into(redirect, acc) }
       yield io
     ensure
@@ -54,6 +88,7 @@ module Rush
     end
 
     # Run a compound command with its redirects bound for the whole body.
+    sig { params(command: AST::Node, redirects: T::Array[AST::Redirect]).returns(Status) }
     def run_redirected(command, redirects)
       with_redirects(redirects) { |io| with_io(io) { run(command) } }
     end
@@ -64,17 +99,24 @@ module Rush
     # substitution sets it (POSIX 2.9.1: such a command takes the status of the
     # last command substitution). Kept off last_status so a later $? in the same
     # command still sees the previous command's status, as dash does.
+    sig { void }
     def reset_cmd_sub_status
       @cmd_sub_status = Status.success
     end
 
+    sig { params(status: Status).void }
     def record_cmd_sub_status(status)
       @cmd_sub_status = status
     end
 
     # Run a block with a different base IoTable (command substitution / future
     # `exec`), restoring the previous one afterwards.
-    def with_io(io)
+    sig do
+      type_parameters(:U)
+        .params(io: IoTable, blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def with_io(io, &blk) # rubocop:disable Naming/BlockForwarding
       previous = @io
       @io = io
       yield
@@ -87,22 +129,34 @@ module Rush
     # and an async (&) command. `untested` is the inverse — command substitution
     # starts a fresh errexit context regardless of the caller's. Both restore on
     # exit, so the flag follows the call tree.
-    def tested(&)
-      scoped_tested(true, &)
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def tested(&blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
+      scoped_tested(true, &blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
     end
 
-    def untested(&)
-      scoped_tested(false, &)
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def untested(&blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
+      scoped_tested(false, &blk) # rubocop:disable Naming/BlockForwarding,Style/ArgumentsForwarding
     end
 
     # Evaluate an if/while/until condition: run the command in a tested context
     # (so a failing condition never trips errexit) and report whether it succeeded.
+    sig { params(command: AST::Node).returns(T::Boolean) }
     def succeeds?(command)
       tested { run(command) }.success?
     end
 
     # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
     # outside a tested context aborts the shell with that status.
+    sig { params(status: Status).returns(Status) }
     def exit_on_error(status)
       raise ExitSignal, status.exitstatus if abort_on?(status)
 
@@ -111,7 +165,12 @@ module Rush
 
     private
 
-    def scoped_tested(value)
+    sig do
+      type_parameters(:U)
+        .params(value: T::Boolean, blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def scoped_tested(value, &blk) # rubocop:disable Naming/BlockForwarding
       previous = @tested
       @tested = value
       yield
@@ -119,10 +178,12 @@ module Rush
       @tested = previous
     end
 
+    sig { params(status: Status).returns(T::Boolean) }
     def abort_on?(status)
-      @state.options.on?(:errexit) && !@tested && !status.success?
+      !!(@state.options.on?(:errexit) && !@tested && !status.success?)
     end
 
+    sig { params(redirect: AST::Redirect, io: IoTable).returns(T.untyped) }
     def redirect_into(redirect, io)
       redirections.fetch(redirect.kind).apply(redirect, expander.expand_value(redirect.target), io, system)
     end

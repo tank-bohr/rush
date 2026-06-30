@@ -6,6 +6,8 @@ module Rush
     # that is neither a number nor `-`, or a number whose fd is not open, is a
     # "bad fd number" — a special-builtin error that aborts the shell with 2.
     class DupRedirect
+      extend T::Sig
+
       @default_fd: untyped
 
       def initialize: (untyped default_fd) -> void

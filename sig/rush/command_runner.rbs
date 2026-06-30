@@ -4,6 +4,8 @@ module Rush
   # a builtin / external. Temporary-vs-persistent assignment scoping for special
   # builtins is refined in Phase 2.
   class CommandRunner
+    extend T::Sig
+
     @executor: Executor
 
     @command: AST::SimpleCommand

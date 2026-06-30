@@ -4,6 +4,8 @@ module Rush
   # single-level signal stops here and yields the last command status. Hosts must
   # expose @executor.
   module LoopControlHandling
+    extend T::Sig
+
     # Provided by the host runner (LoopRunner / ForRunner) this is mixed into.
     @executor: Executor
 

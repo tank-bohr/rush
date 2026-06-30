@@ -3,6 +3,8 @@ module Rush
   # forked, the parent's pipe ends closed, then waitpid for all. The pipeline's
   # status is the last stage's.
   class PipelineRunner
+    extend T::Sig
+
     @executor: Executor
 
     @commands: Array[AST::Node]
@@ -11,6 +13,8 @@ module Rush
     # live in a reopened class (see the .rb) so Steep can type them; each pipe is
     # a [read, write] IO pair from SystemCalls#pipe.
     class Stage < ::Data
+      extend T::Sig
+
       attr_reader index: Integer
       attr_reader pipes: Array[[ IO, IO ]]
       attr_reader count: Integer

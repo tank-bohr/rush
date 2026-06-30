@@ -7,6 +7,8 @@ module Rush
   # Line editing/history, PS1/PS2 customisation and job control are deferred to
   # Phase 4.
   class Repl
+    extend T::Sig
+
     @system: SystemCalls
 
     @executor: Executor

@@ -6,6 +6,8 @@ module Rush
   # earlier commands run — and flush their output — before a later syntax error,
   # and a fatal error fires the EXIT trap, both matching dash.
   class CLI
+    extend T::Sig
+
     @argv: Array[String]
 
     @system: SystemCalls

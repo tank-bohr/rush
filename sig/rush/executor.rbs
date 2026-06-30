@@ -4,6 +4,8 @@ module Rush
   # base IoTable, builtin registry, redirection registry and expander hang off it;
   # signal and trap handling live in the TrapRunner it owns.
   class Executor
+    extend T::Sig
+
     @system: SystemCalls
     @state: ShellState
     @builtins: Builtins::Registry

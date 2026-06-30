@@ -4,6 +4,8 @@ module Rush
     # fd, returning a new IoTable. Covers <, >, >>, <> and >|, which differ only
     # in open mode and default fd.
     class FileRedirect
+      extend T::Sig
+
       @mode: untyped
 
       @default_fd: untyped

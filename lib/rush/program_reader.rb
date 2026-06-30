@@ -11,6 +11,12 @@ module Rush
   # input a pending buffer gets one final, non-interactive parse so an
   # unterminated here-document still runs with the body so far, exactly like dash.
   class ProgramReader
+    extend T::Sig
+
+    sig do
+      params(aliases: T.nilable(AliasTable),
+             next_line: T.proc.params(buffered: T::Boolean).returns(T.nilable(String))).void
+    end
     def initialize(aliases: nil, &next_line)
       @next_line = next_line
       @aliases = aliases
@@ -20,6 +26,7 @@ module Rush
     # The next complete program, or :eof. Raises ParseError on a real syntax
     # error, so the caller decides policy: batch aborts, the REPL reports and
     # resumes.
+    sig { returns(T.any(AST::List, Symbol)) }
     def next_program
       @buffer = +''
       loop do
@@ -30,6 +37,7 @@ module Rush
 
     private
 
+    sig { returns(T.any(AST::List, Symbol)) }
     def read_more
       line = @next_line.call(!@buffer.empty?)
       return finish unless line
@@ -37,12 +45,14 @@ module Rush
       attempt(@buffer << line)
     end
 
+    sig { params(source: String).returns(T.any(AST::List, Symbol)) }
     def attempt(source)
       Parser.new(Lexer.new(source, interactive: true, aliases: @aliases)).parse
     rescue IncompleteInput
       :more
     end
 
+    sig { returns(T.any(AST::List, Symbol)) }
     def finish
       return :eof if @buffer.empty?
 
