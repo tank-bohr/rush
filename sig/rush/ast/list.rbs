@@ -17,6 +17,8 @@ module Rush
     # lands with the fork slice; for now it is parsed and recorded but run
     # synchronously.
     class List < Node
+      extend T::Sig
+
       @entries: Array[ListEntry]
 
       attr_reader entries: Array[ListEntry]

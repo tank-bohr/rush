@@ -4,6 +4,8 @@ module Rush
     # command runs in-process (so builtins affect the shell); a multi-stage
     # pipeline forks each stage via PipelineRunner. Negation inverts the status.
     class Pipeline < Node
+      extend T::Sig
+
       @commands: Array[Node]
 
       @negate: bool

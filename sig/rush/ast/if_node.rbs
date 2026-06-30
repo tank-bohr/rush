@@ -4,6 +4,8 @@ module Rush
     # success runs the consequent, otherwise the alternative (an else List, a
     # nested If for elif, or nil). With no matching branch the status is 0.
     class If < Node
+      extend T::Sig
+
       @condition: Node
 
       @consequent: Node

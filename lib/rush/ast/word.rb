@@ -7,17 +7,22 @@ module Rush
     # the segments into fields; `literal_text` is the simple concatenation used
     # for error messages and (unquoted) assignment-name detection.
     class Word < Node
+      extend T::Sig
+
       attr_reader :segments
 
+      sig { params(segments: T::Array[WordSegment]).void }
       def initialize(segments)
         super()
         @segments = segments
       end
 
+      sig { params(text: String).returns(Word) }
       def self.literal(text)
         new([LiteralSegment.new(text, false)])
       end
 
+      sig { returns(String) }
       def literal_text
         segments.map(&:value).join
       end
@@ -25,6 +30,7 @@ module Rush
       # The text when this word is a bare name — one unquoted literal segment, no
       # quoting or substitution — else nil. Used for reserved words, NAME=, and
       # alias substitution, all of which only apply to a plain literal word.
+      sig { returns(T.nilable(String)) }
       def literal_name
         (segments.first.literal_value if segments.one?)
       end

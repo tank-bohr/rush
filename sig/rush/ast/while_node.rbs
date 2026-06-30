@@ -2,6 +2,8 @@ module Rush
   module AST
     # `while cond; do body; done` — runs the body while the condition succeeds.
     class While < Node
+      extend T::Sig
+
       @condition: Node
 
       @body: Node

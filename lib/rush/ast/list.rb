@@ -13,19 +13,24 @@ module Rush
     # lands with the fork slice; for now it is parsed and recorded but run
     # synchronously.
     class List < Node
+      extend T::Sig
+
       attr_reader :entries
 
+      sig { params(entries: T::Array[ListEntry]).void }
       def initialize(entries)
         super()
         @entries = entries
       end
 
+      sig { params(executor: Executor).returns(Status) }
       def execute(executor)
         entries.reduce(executor.state.last_status) { |_status, entry| run_entry(executor, entry) }
       end
 
       # A blank or comment-only program runs no command; SourceRunner skips it
       # when tracking eval/dot's result status.
+      sig { returns(T::Boolean) }
       def empty?
         entries.empty?
       end
@@ -33,6 +38,7 @@ module Rush
       private
 
       # An async (&) command is exempt from errexit, so it runs in a tested context.
+      sig { params(executor: Executor, entry: ListEntry).returns(Status) }
       def run_entry(executor, entry)
         return executor.tested { executor.run(entry.and_or) } if entry.async
 

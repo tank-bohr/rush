@@ -4,6 +4,8 @@ module Rush
     # are expanded (and field-split); with no `in` clause the loop iterates over
     # the positional parameters ($@).
     class For < Node
+      extend T::Sig
+
       @name: String
 
       @words: Array[Word]?

@@ -88,6 +88,7 @@ detectors:
       - Rush::Expansion::Arithmetic::Cond
       - Rush::Expansion::Arithmetic::Assign
       - Rush::PipelineRunner::Stage
+      - Rush::AST::ParamRef
 
   # on_error duck-types the heterogeneous token racc hands back (no shared type).
   ManualDispatch:

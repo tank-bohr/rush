@@ -10,14 +10,18 @@ module Rush
     # body of the first arm with a pattern (fnmatch glob) that matches it; no
     # match yields status 0. There is no fall-through.
     class Case < Node
+      extend T::Sig
+
       attr_reader :word, :items
 
+      sig { params(word: Word, items: T::Array[CaseItem]).void }
       def initialize(word, items)
         super()
         @word = word
         @items = items
       end
 
+      sig { params(executor: Executor).returns(Status) }
       def execute(executor)
         subject = executor.expander.expand_value(word)
         item = items.find { |candidate| matches?(executor, candidate, subject) }
@@ -26,6 +30,7 @@ module Rush
 
       private
 
+      sig { params(executor: Executor, item: CaseItem, subject: String).returns(T::Boolean) }
       def matches?(executor, item, subject)
         item.patterns.any? { |pattern| executor.system.fnmatch(executor.expander.expand_value(pattern), subject) }
       end

@@ -4,6 +4,8 @@ module Rush
     # current shell environment. (Redirections on the group arrive with the
     # fd-management slice.)
     class BraceGroup < Node
+      extend T::Sig
+
       @body: Node
 
       attr_reader body: Node

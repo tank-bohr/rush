@@ -2,6 +2,8 @@ module Rush
   module AST
     # `until cond; do body; done` — runs the body until the condition succeeds.
     class Until < Node
+      extend T::Sig
+
       @condition: Node
 
       @body: Node

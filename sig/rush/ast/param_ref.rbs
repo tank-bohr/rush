@@ -6,6 +6,8 @@ module Rush
     # expanded lazily at expansion time. (Data.define; members kept untyped — the
     # AST is still being typed.)
     class ParamRef < ::Data
+      extend T::Sig
+
       attr_reader name: untyped
       attr_reader op: untyped
       attr_reader arg: untyped

@@ -3,6 +3,8 @@ module Rush
     # `( list )` — runs the list in a subshell (a forked child) so cd and
     # variable changes do not affect the current shell. Its status is the list's.
     class Subshell < Node
+      extend T::Sig
+
       @body: Node
 
       attr_reader body: Node

@@ -3,6 +3,8 @@ module Rush
     # Base for every AST node. Subclasses implement #execute(executor) so the
     # executor dispatches polymorphically and never switches on node type.
     class Node
+      extend T::Sig
+
       def execute: (Executor executor) -> Status
     end
   end

@@ -9,13 +9,19 @@ module Rush
     # (recognised before the others, since a leading # also names $#).
     PARAM_BRACED = /\A(\w+|[@*#?$!0-])(:?[-=?+]|\#{1,2}|%{1,2})?(.*)\z/m
 
+    ParamRef = Data.define(:name, :op, :arg)
+
     # A parameter reference parsed from $name or ${...}. The operator word is
     # expanded lazily at expansion time.
-    ParamRef = Data.define(:name, :op, :arg) do
+    class ParamRef
+      extend T::Sig
+
+      sig { params(name: T.untyped).returns(ParamRef) }
       def self.simple(name)
         new(name: name, op: nil, arg: nil)
       end
 
+      sig { params(body: T.untyped).returns(ParamRef) }
       def self.parse(body)
         return new(name: body[1..], op: '#len', arg: nil) if length?(body)
 
@@ -25,6 +31,7 @@ module Rush
         new(name: captures[1], op: captures[2], arg: captures[3])
       end
 
+      sig { params(body: T.untyped).returns(T::Boolean) }
       def self.length?(body)
         body.start_with?('#') && body.length > 1
       end

@@ -3,6 +3,8 @@ module Rush
     # `name() compound-command` — registers the body in the function table and
     # succeeds. The body runs (in the current shell) when the name is invoked.
     class FunctionDef < Node
+      extend T::Sig
+
       @name: String
 
       @body: Node

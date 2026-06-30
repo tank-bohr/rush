@@ -7,8 +7,11 @@ module Rush
     # command runs in-process (so builtins affect the shell); a multi-stage
     # pipeline forks each stage via PipelineRunner. Negation inverts the status.
     class Pipeline < Node
+      extend T::Sig
+
       attr_reader :commands, :negate
 
+      sig { params(commands: T::Array[Node], negate: T::Boolean).void }
       def initialize(commands, negate)
         super()
         @commands = commands
@@ -17,6 +20,7 @@ module Rush
 
       # A negated pipeline (`! cmd`) is exempt from errexit and runs its stages in
       # a tested context; otherwise the leaf status is the errexit check point.
+      sig { params(executor: Executor).returns(Status) }
       def execute(executor)
         return invert(executor.tested { run_stages(executor) }) if negate
 
@@ -25,10 +29,12 @@ module Rush
 
       private
 
+      sig { params(executor: Executor).returns(Status) }
       def run_stages(executor)
-        commands.one? ? executor.run(commands.first) : PipelineRunner.new(executor, commands).call
+        commands.one? ? executor.run(T.must(commands.first)) : PipelineRunner.new(executor, commands).call
       end
 
+      sig { params(status: Status).returns(Status) }
       def invert(status)
         status.success? ? Status.failure : Status.success
       end

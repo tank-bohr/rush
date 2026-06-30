@@ -3,6 +3,8 @@ module Rush
     # `name=val ... cmd arg ... >file` — variable assignments, argv words and
     # redirections (in source order within each group).
     class SimpleCommand < Node
+      extend T::Sig
+
       @assignments: Array[Assignment]
 
       @words: Array[Word]

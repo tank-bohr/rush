@@ -3,6 +3,8 @@ module Rush
     # `pipeline && pipeline` / `pipeline || pipeline`, left-associative. Runs the
     # left side, then the right side only when the operator's short-circuit allows.
     class AndOr < Node
+      extend T::Sig
+
       @left: Node
 
       @op: Symbol

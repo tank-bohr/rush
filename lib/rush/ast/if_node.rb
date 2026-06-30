@@ -7,8 +7,11 @@ module Rush
     # success runs the consequent, otherwise the alternative (an else List, a
     # nested If for elif, or nil). With no matching branch the status is 0.
     class If < Node
+      extend T::Sig
+
       attr_reader :condition, :consequent, :alternative
 
+      sig { params(condition: Node, consequent: Node, alternative: T.nilable(Node)).void }
       def initialize(condition, consequent, alternative)
         super()
         @condition = condition
@@ -16,6 +19,7 @@ module Rush
         @alternative = alternative
       end
 
+      sig { params(executor: Executor).returns(Status) }
       def execute(executor)
         return executor.run(consequent) if executor.succeeds?(condition)
 

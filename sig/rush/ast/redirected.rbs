@@ -4,6 +4,8 @@ module Rush
     # on the whole command: they build a base IoTable that every command in the
     # body inherits, restored once the command finishes. Its status is the body's.
     class Redirected < Node
+      extend T::Sig
+
       @command: Node
 
       @redirects: Array[Redirect]
