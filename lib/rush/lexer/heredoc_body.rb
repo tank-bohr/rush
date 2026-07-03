@@ -13,7 +13,6 @@ module Rush
     class HeredocBody
       extend T::Sig
 
-      RUN = /[^$\\`]+/
       PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
       ESCAPABLE = ['$', '`', '\\'].freeze
 
@@ -26,26 +25,33 @@ module Rush
 
       sig { returns(AST::Word) }
       def scan
-        step until @scanner.eos?
-        flush
-        AST::Word.new(@segments)
+        loop do
+          char = @scanner.getch
+          return build unless char
+
+          step(char)
+        end
       end
 
       private
 
-      sig { void }
-      def step
-        char = @scanner.peek(1)
+      sig { returns(AST::Word) }
+      def build
+        flush
+        AST::Word.new(@segments)
+      end
+
+      sig { params(char: String).void }
+      def step(char)
         return dollar if char == '$'
         return backtick if char == '`'
         return escape if char == '\\'
 
-        @literal << @scanner.scan(RUN).to_s
+        @literal << char
       end
 
       sig { void }
       def dollar
-        @scanner.getch
         @scanner.peek(1) == '(' ? command_sub : param
       end
 
@@ -57,7 +63,6 @@ module Rush
 
       sig { void }
       def backtick
-        @scanner.getch
         push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, false))
       end
 
@@ -86,9 +91,12 @@ module Rush
 
       sig { void }
       def escape
-        @scanner.getch
-        char = @scanner.getch.to_s
-        @literal << (ESCAPABLE.include?(char) ? char : "\\#{char}")
+        @literal << escaped(@scanner.getch)
+      end
+
+      sig { params(char: T.nilable(String)).returns(String) }
+      def escaped(char)
+        char && ESCAPABLE.include?(char) ? char : "\\#{char}"
       end
 
       sig { params(segment: T.untyped).void }

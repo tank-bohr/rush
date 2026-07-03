@@ -16,8 +16,6 @@ module Rush
 
       @literal: String
 
-      RUN: Regexp
-
       PARAM: Regexp
 
       ESCAPABLE: Array[String]
@@ -28,7 +26,9 @@ module Rush
 
       private
 
-      def step: () -> void
+      def build: () -> AST::Word
+
+      def step: (String char) -> void
 
       def dollar: () -> void
 
@@ -43,6 +43,8 @@ module Rush
       def braced: () -> untyped
 
       def escape: () -> void
+
+      def escaped: (String? char) -> String
 
       def push: (untyped segment) -> void
 
