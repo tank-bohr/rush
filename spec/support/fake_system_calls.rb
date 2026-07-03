@@ -79,11 +79,11 @@ class FakeSystemCalls
   end
 
   def trap_block(name)
-    @trap_blocks[name]
+    @trap_blocks.fetch(name, nil)
   end
 
   def home_dir(name)
-    @homes[name]
+    @homes.fetch(name, nil)
   end
 
   # Register an in-memory node for the file-test predicates below.
@@ -196,6 +196,7 @@ class FakeSystemCalls
   private
 
   def node(path, key)
-    @nodes.fetch(path, {})[key]
+    attrs = @nodes.fetch(path, {})
+    attrs.fetch(key, nil)
   end
 end

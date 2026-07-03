@@ -95,8 +95,8 @@ module Rush
 
     sig { params(matched: String).returns([T.untyped, T.untyped]) }
     def operator_token(matched)
-      symbol = OperatorTable::OPERATORS[matched]
-      @awaiting = HEREDOC_OPS[symbol]
+      symbol = OperatorTable::OPERATORS.fetch(matched)
+      @awaiting = HEREDOC_OPS.fetch(symbol, nil)
       [symbol, matched]
     end
 

@@ -16,7 +16,7 @@ module Rush
 
     sig { params(name: String).returns(T.nilable(String)) }
     def get(name)
-      @vars[name]
+      @vars.fetch(name, nil)
     end
 
     sig { params(name: String, value: T.untyped).returns(String) }

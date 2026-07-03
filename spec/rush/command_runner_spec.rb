@@ -82,7 +82,7 @@ RSpec.describe Rush::CommandRunner do
     allow(system).to receive(:close_redirect)
     redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f'), io_number: nil)
     run(simple(words: [word('exec')], redirects: [redirect]))
-    expect(executor.io.get(1)).to be(system.files['/f'])
+    expect(executor.io.get(1)).to be(system.files.fetch('/f'))
     expect(system).not_to have_received(:close_redirect)
   end
 
@@ -90,7 +90,7 @@ RSpec.describe Rush::CommandRunner do
     state.functions.define('f', Rush::AST::SimpleCommand.new([], [word('echo'), word('body')], []))
     redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f.txt'), io_number: nil)
     run(simple(words: [word('f')], redirects: [redirect]))
-    expect(system.files['/f.txt'].string).to eq("body\n")
+    expect(system.files.fetch('/f.txt').string).to eq("body\n")
     expect(system.stdout.string).to be_empty
   end
 

@@ -23,6 +23,6 @@ RSpec.describe Rush::IoTable do
 
   it 'maps a closed stream to :close in spawn options' do
     table = described_class.standard(system).with(2, Rush::ClosedStream.new)
-    expect(table.to_spawn_options[2]).to eq(:close)
+    expect(table.to_spawn_options.fetch(2)).to eq(:close)
   end
 end

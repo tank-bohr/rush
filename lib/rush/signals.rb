@@ -24,7 +24,7 @@ module Rush
 
     sig { params(spec: String).returns(T.nilable(String)) }
     def decode(spec)
-      return NUMBERS[spec.to_i] if spec.match?(/\A\d+\z/)
+      return NUMBERS.fetch(spec.to_i, nil) if spec.match?(/\A\d+\z/)
 
       name = spec.upcase
       NAMES.key?(name) ? name : nil

@@ -25,7 +25,7 @@ module Rush
 
     sig { params(name: String).returns(T.nilable(String)) }
     def value(name)
-      @aliases[name]
+      @aliases.fetch(name, nil)
     end
 
     sig { params(name: String).returns(T::Boolean) }

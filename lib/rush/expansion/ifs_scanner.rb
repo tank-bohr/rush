@@ -64,14 +64,14 @@ module Rush
       sig { params(char: String).void }
       def ordinary(char)
         flush
-        @current[:text] << char
+        @current.fetch(:text) << char
         @skip = false
       end
 
       sig { params(text: String).void }
       def literal(text)
         flush
-        @current[:text] << text
+        @current.fetch(:text) << text
         @current[:real] = true
         @skip = false
       end
@@ -92,12 +92,12 @@ module Rush
       sig { returns(T::Array[String]) }
       def result
         fields = drop_last? ? @done : @done + [@current]
-        fields.map { |entry| entry[:text] }
+        fields.map { |entry| entry.fetch(:text) }
       end
 
       sig { returns(T::Boolean) }
       def drop_last?
-        @current[:text].empty? && !@current[:real]
+        @current.fetch(:text).empty? && !@current.fetch(:real)
       end
     end
   end

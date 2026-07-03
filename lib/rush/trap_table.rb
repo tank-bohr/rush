@@ -25,7 +25,7 @@ module Rush
 
     sig { params(name: String).returns(T.nilable(String)) }
     def action(name)
-      @actions[name]
+      @actions.fetch(name, nil)
     end
 
     # [name, action] pairs ordered by signal number, for `trap` with no operands.

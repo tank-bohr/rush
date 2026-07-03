@@ -63,12 +63,12 @@ module Rush
       sig { params(flag: String).void }
       def apply(flag)
         sign, *letters = flag.chars
-        letters.each { |char| toggle(OPTIONS[char], sign) }
+        letters.each { |char| toggle(OPTIONS.fetch(char, nil), sign) }
       end
 
       sig { params(sign: T.nilable(String), name: T.nilable(String)).returns(Integer) }
       def apply_long(sign, name)
-        toggle(name && LONG[name], sign)
+        toggle(name && LONG.fetch(name, nil), sign)
         2
       end
 

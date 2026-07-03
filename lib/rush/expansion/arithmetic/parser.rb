@@ -58,7 +58,7 @@ module Rush
         sig { params(min: Integer).returns(T.any(Num, Var, Unary, Binary, And, Or, Cond, Assign)) }
         def binary(min)
           left = unary
-          left = fold(left) while (tok = peek) && (power = PRECEDENCE[tok]) && power >= min
+          left = fold(left) while (tok = peek) && (power = PRECEDENCE.fetch(tok, nil)) && power >= min
           left
         end
 

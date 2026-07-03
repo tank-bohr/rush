@@ -32,7 +32,7 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
   it 'redirects builtin output to a file' do
     _out, code, system = run('echo saved > /tmp/out')
     expect(code).to eq(0)
-    expect(system.files['/tmp/out'].string).to eq("saved\n")
+    expect(system.files.fetch('/tmp/out').string).to eq("saved\n")
   end
 
   it 'removes quotes and keeps quoted blanks within one argument' do
@@ -189,7 +189,7 @@ RSpec.describe 'rush end-to-end (Phase 1, Slice 1)' do
   it 'applies exec redirections permanently to the shell' do
     _out, code, system = run('exec > /log; echo one; echo two')
     expect(code).to eq(0)
-    expect(system.files['/log'].string).to eq("one\ntwo\n")
+    expect(system.files.fetch('/log').string).to eq("one\ntwo\n")
   end
 
   it 'computes parameter length and strips prefixes and suffixes' do

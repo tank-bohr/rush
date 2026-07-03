@@ -76,7 +76,7 @@ module Rush
 
       sig { params(char: String).void }
       def step(char)
-        handler = DISPATCH[char]
+        handler = DISPATCH.fetch(char, nil)
         handler ? send(handler) : (@literal << char)
       end
 

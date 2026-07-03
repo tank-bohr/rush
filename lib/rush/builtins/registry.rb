@@ -19,7 +19,7 @@ module Rush
 
       sig { params(name: T.untyped).returns(T.untyped) }
       def fetch(name)
-        @builtins[name]
+        @builtins.fetch(name, nil)
       end
 
       sig { params(name: T.untyped).returns(T.untyped) }

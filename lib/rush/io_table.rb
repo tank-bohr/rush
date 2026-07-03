@@ -20,7 +20,7 @@ module Rush
 
     sig { params(fd: Integer).returns(T.untyped) }
     def get(fd)
-      @streams[fd]
+      @streams.fetch(fd, nil)
     end
 
     sig { params(fd: Integer, io: T.untyped).returns(IoTable) }

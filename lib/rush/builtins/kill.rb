@@ -85,7 +85,7 @@ module Rush
       sig { params(arg: String).returns(Status) }
       def list_one(arg)
         num = arg.match?(/\A\d+\z/) ? adjust(arg.to_i) : 0
-        name = num.positive? ? Signals::NUMBERS[num] : nil
+        name = num.positive? ? Signals::NUMBERS.fetch(num, nil) : nil
         name ? ok(name) : bad("#{arg}: invalid signal specification")
       end
 

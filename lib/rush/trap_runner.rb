@@ -94,7 +94,7 @@ module Rush
     # handler block (nil disposition), matching SystemCalls#trap_signal.
     sig { params(action: T.any(String, Symbol)).returns(T.nilable(String)) }
     def disposition(action)
-      { '' => 'IGNORE', :default => 'DEFAULT' }[action]
+      { '' => 'IGNORE', :default => 'DEFAULT' }.fetch(action, nil)
     end
 
     # Run a delivered signal's action, restoring $? so the interrupted code is
