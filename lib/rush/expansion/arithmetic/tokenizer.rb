@@ -44,12 +44,11 @@ module Rush
 
         sig { returns([Symbol, String]) }
         def next_token
-          TOKENS.each do |kind, pattern|
-            text = @scanner.scan(pattern)
-            return [kind, text] if text
-          end
-
-          raise ExpansionError, "arithmetic: unexpected #{@scanner.rest.inspect}"
+          TOKENS.lazy
+                .map { |kind, pattern| [kind, @scanner.scan(pattern)] }
+                .find(
+                  -> { raise ExpansionError, "arithmetic: unexpected #{@scanner.rest.inspect}" }
+                ) { |_kind, found| found }
         end
       end
     end
