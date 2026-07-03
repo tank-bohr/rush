@@ -80,7 +80,7 @@ module Rush
       sig { params(table: T::Hash[String, Symbol]).returns(T.nilable(Symbol)) }
       def lookup(table)
         name = @word.literal_name
-        name ? table[name] : nil
+        name ? table.fetch(name, nil) : nil
       end
 
       sig { returns(T.nilable(String)) }
