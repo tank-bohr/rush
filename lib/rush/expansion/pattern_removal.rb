@@ -27,25 +27,25 @@ module Rush
       sig { returns(String) }
       def strip_prefix
         hit = order(prefixes).find { |part| match?(part) }
-        hit ? @value[hit.length..].to_s : @value
+        hit ? @value.delete_prefix(hit) : @value
       end
 
       sig { returns(String) }
       def strip_suffix
         hit = order(suffixes).find { |part| match?(part) }
-        hit ? @value[0, @value.length - hit.length].to_s : @value
+        hit ? @value.delete_suffix(hit) : @value
       end
 
-      # The substring indices are all within @value, so the slices are non-nil;
-      # .to_s satisfies the Array[String] returns for the checker.
       sig { returns(T::Array[String]) }
       def prefixes
-        (0..@value.length).map { |index| @value[0, index].to_s }
+        current = +''
+        @value.each_char.with_object(['']) { |char, result| result << (current += char) }
       end
 
       sig { returns(T::Array[String]) }
       def suffixes
-        (0..@value.length).map { |index| @value[@value.length - index, index].to_s }
+        current = +''
+        @value.each_char.reverse_each.with_object(['']) { |char, result| result << (current = char + current) }
       end
 
       sig { params(list: T::Array[String]).returns(T::Array[String]) }

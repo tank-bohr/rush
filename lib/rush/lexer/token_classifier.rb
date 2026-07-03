@@ -99,7 +99,8 @@ module Rush
       sig { params(name: String).returns(T.untyped) }
       def assignment_value(name)
         head = @word.segments.first
-        remainder = AST::LiteralSegment.new(head.value[(name.length + 1)..], false)
+        literal = head.literal_value
+        remainder = AST::LiteralSegment.new(literal.delete_prefix("#{name}="), false)
         AST::Word.new([remainder] + @word.segments.drop(1))
       end
     end

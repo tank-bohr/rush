@@ -29,7 +29,7 @@ module Rush
       def parse
         first = operands.fetch(0)
         return [operands[1].to_s, operands.drop(2)] if first == '-s'
-        return [first[1..].to_s, operands.drop(1)] if flag?(first)
+        return [first.delete_prefix('-'), operands.drop(1)] if flag?(first)
 
         ['TERM', operands]
       end

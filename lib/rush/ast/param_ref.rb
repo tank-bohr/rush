@@ -23,7 +23,7 @@ module Rush
 
       sig { params(body: T.untyped).returns(ParamRef) }
       def self.parse(body)
-        return new(name: body[1..], op: '#len', arg: nil) if length?(body)
+        return new(name: body.delete_prefix('#'), op: '#len', arg: nil) if length?(body)
 
         # PARAM_BRACED's \A…\z with a trailing .* always matches; .to_a pins the
         # MatchData? to an Array so the captures are reachable without a nil branch.

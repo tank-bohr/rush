@@ -28,7 +28,7 @@ module Rush
         return plain unless op
         return send(SPECIAL.fetch(op)) if SPECIAL.key?(op)
 
-        Parameter::FORMS.fetch(op[-1]).call(self)
+        Parameter::FORMS.fetch(op.delete_prefix(':')).call(self)
       end
 
       # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is

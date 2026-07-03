@@ -119,7 +119,7 @@ module Rush
       end
 
       def first_char(arg)
-        arg.to_s[0].to_s
+        arg.to_s.each_char.first.to_s
       end
     end
   end

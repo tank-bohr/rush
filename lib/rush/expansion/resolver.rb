@@ -63,7 +63,7 @@ module Rush
       sig { returns(String) }
       def separator
         ifs = state.environment.get('IFS')
-        ifs ? ifs[0].to_s : ' '
+        ifs ? ifs.each_char.first.to_s : ' '
       end
 
       sig { returns(String) }

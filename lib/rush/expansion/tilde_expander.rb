@@ -37,17 +37,15 @@ module Rush
       def prefix(text)
         return text unless text.start_with?('~')
 
-        name, rest = split(text[1..].to_s)
+        name, rest = split(text.delete_prefix('~'))
         home = resolve(name)
         home ? home + rest : text
       end
 
       sig { params(body: String).returns([String, String]) }
       def split(body)
-        slash = body.index('/')
-        # slash is a valid index when present, so the slices are non-nil; .to_s
-        # satisfies the [String, String] return without changing behaviour.
-        slash ? [body[0...slash].to_s, body[slash..].to_s] : [body, '']
+        name, slash, rest = body.partition('/')
+        slash.empty? ? [body, ''] : [name, slash + rest]
       end
 
       sig { params(name: String).returns(T.nilable(String)) }

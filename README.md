@@ -18,16 +18,14 @@ with one feedback wire (the parser nudges lexer state for POSIX Grammar Rules
 redirections, parameter-expansion forms, …); polymorphism (`node.execute(executor)`)
 replaces every type switch.
 
-See `~/.claude/plans/shell-sorted-robin.md` for the full design and phase plan.
-
 ## Requirements
 
-- **Ruby 4.0.5** (managed by `asdf`; pinned in `.tool-versions`).
+- **Ruby 4.0.5** (pinned in `.tool-versions`).
 - `dash` for the differential test oracle (optional; the differential group
   skips when no oracle is present, falling back to `bash --posix`).
 
 ```sh
-asdf install            # installs Ruby 4.0.5 from .tool-versions
+mise install            # installs Ruby 4.0.5 from .tool-versions
 bundle install          # dev/runtime gems into vendor/bundle
 ```
 
@@ -36,7 +34,7 @@ bundle install          # dev/runtime gems into vendor/bundle
 `rake` runs the whole pipeline in order:
 
 ```
-compile (racc) → rubocop → metrics (Sandi Metz limits) → rspec (+ coverage gate)
+compile (racc) → rubocop → rspec (+ coverage gate)
 ```
 
 ```sh

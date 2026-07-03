@@ -41,7 +41,8 @@ module Rush
       sig { params(args: T::Array[String], index: Integer).returns(Integer) }
       def advance(args, index)
         arg = args.fetch(index)
-        return apply_long(arg[0], args[index + 1]) if arg[1..] == 'o'
+        sign, *letters = arg.chars
+        return apply_long(sign, args[index + 1]) if letters.join == 'o'
 
         apply(arg)
         1
