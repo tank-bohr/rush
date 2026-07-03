@@ -37,6 +37,8 @@ module Rush
 
       def reserved: () -> Symbol?
 
+      def lookup: (Hash[String, Symbol] table) -> Symbol?
+
       def assignment_name: () -> String?
 
       def capture: (untyped value) -> String?

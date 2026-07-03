@@ -95,7 +95,7 @@ module Rush
 
     sig { returns(String) }
     def source
-      return @argv[1].to_s if @argv.first == '-c'
+      return @argv.fetch(1, '') if @argv.first == '-c'
 
       @system.stdin.read
     end

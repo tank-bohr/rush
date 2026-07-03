@@ -28,7 +28,7 @@ module Rush
       sig { returns([String, T::Array[String]]) }
       def parse
         first = operands.fetch(0)
-        return [operands[1].to_s, operands.drop(2)] if first == '-s'
+        return [operands.fetch(1, ''), operands.drop(2)] if first == '-s'
         return [first.delete_prefix('-'), operands.drop(1)] if flag?(first)
 
         ['TERM', operands]

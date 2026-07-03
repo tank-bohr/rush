@@ -69,12 +69,18 @@ module Rush
 
       sig { returns(T.nilable(Symbol)) }
       def for_header
-        FOR_IN[@word.literal_name.to_s]
+        lookup(FOR_IN)
       end
 
       sig { returns(T.nilable(Symbol)) }
       def reserved
-        RESERVED[@word.literal_name.to_s] if @state.expects_command?
+        lookup(RESERVED) if @state.expects_command?
+      end
+
+      sig { params(table: T::Hash[String, Symbol]).returns(T.nilable(Symbol)) }
+      def lookup(table)
+        name = @word.literal_name
+        name ? table[name] : nil
       end
 
       sig { returns(T.nilable(String)) }
