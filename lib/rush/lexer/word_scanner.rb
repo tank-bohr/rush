@@ -13,8 +13,6 @@ module Rush
       extend T::Sig
 
       TERMINATOR = /[ \t\n;&|<>()]/
-      LITERAL_RUN = /[^'"\\$` \t\n;&|<>()]+/
-      WHOLE_LITERAL = /[^'"\\$`]+/ # operator-word mode: only quotes / $ / ` are special
       DOUBLE_LITERAL = /[^"$\\`]+/
       DOUBLE_SPECIAL = ['"', '\\', '$', '`'].freeze
       DISPATCH = {
@@ -48,32 +46,42 @@ module Rush
 
       sig { returns(AST::Word) }
       def scan
-        step until ended?
-        flush
-        AST::Word.new(@segments)
+        loop do
+          char = @scanner.getch or return build
+          return rewind_then_build if terminates?(char)
+
+          step(char)
+        end
       end
 
       private
 
-      sig { returns(T::Boolean) }
-      def ended?
-        @scanner.eos? || (@terminator ? @scanner.peek(1).match?(@terminator) : false)
+      sig { returns(AST::Word) }
+      def build
+        flush
+        AST::Word.new(@segments)
       end
 
-      sig { void }
-      def step
-        handler = DISPATCH[@scanner.peek(1)]
-        handler ? send(handler) : (@literal << @scanner.scan(literal_pattern).to_s)
+      sig { params(char: String).returns(T::Boolean) }
+      def terminates?(char)
+        terminator = @terminator
+        terminator ? char.match?(terminator) : false
       end
 
-      sig { returns(Regexp) }
-      def literal_pattern
-        @terminator ? LITERAL_RUN : WHOLE_LITERAL
+      sig { returns(AST::Word) }
+      def rewind_then_build
+        @scanner.unscan
+        build
+      end
+
+      sig { params(char: String).void }
+      def step(char)
+        handler = DISPATCH[char]
+        handler ? send(handler) : (@literal << char)
       end
 
       sig { void }
       def single_quote
-        @scanner.getch
         content = @scanner.scan(/[^']*/)
         raise IncompleteInput, 'unterminated single quote' unless @scanner.scan("'")
 
@@ -82,7 +90,6 @@ module Rush
 
       sig { void }
       def double_quote
-        @scanner.getch
         push('', quoted: true) if @scanner.peek(1) == '"' # "" yields one empty field
         double_step until end_double?
         raise IncompleteInput, 'unterminated double quote' if @scanner.eos?
@@ -115,6 +122,7 @@ module Rush
       # into the current literal run when bare, a quoted literal segment in "...".
       sig { void }
       def dollar
+        @scanner.unscan
         segment = DollarScanner.new(@scanner).read(quoted: false)
         segment ? add(segment) : (@literal << '$')
       end
@@ -127,12 +135,12 @@ module Rush
 
       sig { void }
       def backtick
+        @scanner.unscan
         add(DollarScanner.new(@scanner).read_backtick(quoted: false))
       end
 
       sig { void }
       def escape
-        @scanner.getch
         char = @scanner.getch
         push(char, quoted: true) if char && char != "\n"
       end

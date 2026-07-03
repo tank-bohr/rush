@@ -25,6 +25,12 @@ module Rush
 
       def heredoc_line: (HereDoc holder) -> String?
 
+      def eof_line: () -> String?
+
+      def read_line: () -> String
+
+      def rest_line: () -> String
+
       def delimiter?: (HereDoc holder, String line) -> bool
 
       def strip_tabs: (HereDoc holder, String line) -> String

@@ -137,6 +137,10 @@ RSpec.describe Rush::Lexer do
       expect(tokens("cat <<EOF\nonly\n")[2].last.body.literal_text).to eq("only\n")
     end
 
+    it 'keeps a final unterminated here-document line without a trailing newline' do
+      expect(tokens("cat <<EOF\nonly")[2].last.body.literal_text).to eq('only')
+    end
+
     it 'signals incomplete input for an unterminated here-document when interactive' do
       lexer = described_class.new("cat <<EOF\nbody\n", interactive: true)
       expect { loop { break if lexer.next_token == [false, false] } }.to raise_error(Rush::IncompleteInput)

@@ -44,9 +44,10 @@ module Rush
 
         sig { returns([Symbol, String]) }
         def next_token
-          # matched is non-nil right after a successful scan; .to_s satisfies the
-          # [Symbol, String] token tuple.
-          TOKENS.each { |kind, pattern| return [kind, @scanner.matched.to_s] if @scanner.scan(pattern) }
+          TOKENS.each do |kind, pattern|
+            text = @scanner.scan(pattern)
+            return [kind, text] if text
+          end
 
           raise ExpansionError, "arithmetic: unexpected #{@scanner.rest.inspect}"
         end

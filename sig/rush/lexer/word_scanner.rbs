@@ -17,10 +17,6 @@ module Rush
 
       TERMINATOR: Regexp
 
-      LITERAL_RUN: Regexp
-
-      WHOLE_LITERAL: Regexp
-
       DOUBLE_LITERAL: Regexp
 
       DOUBLE_SPECIAL: Array[String]
@@ -37,11 +33,13 @@ module Rush
 
       private
 
-      def ended?: () -> bool
+      def build: () -> AST::Word
 
-      def step: () -> void
+      def terminates?: (String char) -> bool
 
-      def literal_pattern: () -> Regexp
+      def rewind_then_build: () -> AST::Word
+
+      def step: (String char) -> void
 
       def single_quote: () -> void
 

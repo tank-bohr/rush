@@ -40,13 +40,27 @@ module Rush
 
       sig { params(holder: HereDoc).returns(T.nilable(String)) }
       def heredoc_line(holder)
-        # scan of [^\n]*\n? always matches (possibly ""); .to_s pins it to String
-        # for delimiter?/strip_tabs (the empty-line return still ends gather).
-        line = @scanner.scan(/[^\n]*\n?/).to_s
-        raise IncompleteInput, 'unterminated here-document' if line.to_s.empty? && @interactive
-        return if line.to_s.empty? || delimiter?(holder, line)
+        return eof_line if @scanner.eos?
+
+        line = read_line
+        return if delimiter?(holder, line)
 
         strip_tabs(holder, line)
+      end
+
+      sig { returns(T.nilable(String)) }
+      def eof_line
+        raise IncompleteInput, 'unterminated here-document' if @interactive
+      end
+
+      sig { returns(String) }
+      def read_line
+        @scanner.scan_until(/\n/) || rest_line
+      end
+
+      sig { returns(String) }
+      def rest_line
+        @scanner.rest.tap { @scanner.terminate }
       end
 
       sig { params(holder: HereDoc, line: String).returns(T::Boolean) }
