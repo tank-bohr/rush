@@ -17,10 +17,11 @@ knowledge lives in `docs/` and the backlog lives in beads (see "Where things liv
 `bundle exec rake` must be **fully green** before any commit. It runs, in order:
 
 1. **racc compile** — regenerate the parser from `grammar/shell.y`
-2. **rubocop** (style + metrics; limits in `.rubocop.yml`)
-3. **metrics** (Sandi Metz limits via rubocop Metrics cops)
-4. **reek** (code-smell ratchet; config + rationale in `.reek.yml`)
-5. **rspec** (+ 100% line/branch coverage gate)
+2. **rubocop** (style/static checks; config in `.rubocop.yml`)
+3. **reek** (code-smell ratchet; config + rationale in `.reek.yml`)
+4. **steep** (RBS type-check gate; config in `Steepfile`)
+5. **sorbet** (inline `sig {}` type-check gate; config in `sorbet/config`)
+6. **rspec** (+ 100% line/branch coverage gate)
 
 ```bash
 bundle exec rake             # the full green gate
@@ -34,8 +35,8 @@ Work proceeds in numbered **slices**. Each slice is **exactly one commit on `mai
 
 - Commit message: `Phase N (Slice Xy): <summary>`, with a body explaining the change
   and how it was verified.
-- End every commit message with:
-  `Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>`
+- End every AI-authored commit message with a `Co-Authored-By:` trailer naming the
+  actual model/agent that produced the slice; do not reuse another model's signature.
 - A slice lands only when `bundle exec rake` is green **and** the behaviour is verified
   against the **dash** oracle — the differential corpus in `spec/integration/differential_spec.rb`
   plus ad-hoc fuzzing — comparing **`[stdout, exitstatus]`** (stderr ignored). Where dash is
