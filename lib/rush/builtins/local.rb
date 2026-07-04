@@ -27,9 +27,9 @@ module Rush
 
       sig { params(operand: T.untyped).returns(T.untyped) }
       def declare(operand)
-        parsed = AssignmentOperand.parse(operand)
-        state.scope.declare_local(parsed.name)
-        parsed.assign_to(state.environment)
+        assignment = AssignmentOperand.new(operand, state.environment)
+        state.scope.declare_local(assignment.name)
+        assignment.assign
       end
 
       sig { returns(T.untyped) }
