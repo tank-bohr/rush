@@ -9,7 +9,7 @@ module Rush
     class Echo < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         stdout.write(render)
         success
@@ -17,18 +17,18 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(String) }
       def render
         body = printed.join(' ')
         newline? ? "#{body}\n" : body
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Boolean) }
       def newline?
         operands.first != '-n'
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Array[String]) }
       def printed
         newline? ? operands : operands.drop(1)
       end

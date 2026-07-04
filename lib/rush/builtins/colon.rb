@@ -7,7 +7,7 @@ module Rush
     class Colon < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         success
       end

@@ -10,7 +10,7 @@ module Rush
 
     include LoopControlHandling
 
-    sig { params(executor: T.untyped, name: T.untyped, values: T.untyped, body: T.untyped).void }
+    sig { params(executor: Executor, name: String, values: T::Array[String], body: AST::Node).void }
     def initialize(executor, name, values, body)
       @executor = executor
       @name = name
@@ -20,14 +20,14 @@ module Rush
 
     # Bracket the loop so break/continue see the right nesting depth; leave runs
     # even when break unwinds.
-    sig { returns(T.untyped) }
+    sig { returns(Status) }
     def call
       @executor.state.with_loop { run_loop }
     end
 
     private
 
-    sig { returns(T.untyped) }
+    sig { returns(Status) }
     def run_loop
       # T.let pins the loop variable's type (see LoopRunner#run_loop): Sorbet forbids
       # a variable changing type across a block (srb.help/7001) and the sig'd
@@ -39,7 +39,7 @@ module Rush
       unwind(e)
     end
 
-    sig { params(value: T.untyped).returns(T.untyped) }
+    sig { params(value: String).returns(Status) }
     def iterate(value)
       @executor.state.variables.assign(@name, value)
       @executor.run(@body)

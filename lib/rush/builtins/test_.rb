@@ -10,7 +10,7 @@ module Rush
     class Test < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         evaluate(bracketed? ? without_close(operands) : operands)
       rescue TestError => e
@@ -19,12 +19,12 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Boolean) }
       def bracketed?
         argv.first == '['
       end
 
-      sig { params(ops: T.untyped).returns(T.untyped) }
+      sig { params(ops: T::Array[String]).returns(T::Array[String]) }
       def without_close(ops)
         *body, close = ops
         raise TestError, "missing `]'" unless close == ']'
@@ -32,12 +32,12 @@ module Rush
         body
       end
 
-      sig { params(ops: T.untyped).returns(T.untyped) }
+      sig { params(ops: T::Array[String]).returns(Status) }
       def evaluate(ops)
         TestExpr.new(ops, executor.system).true? ? success : failure
       end
 
-      sig { params(message: T.untyped).returns(T.untyped) }
+      sig { params(message: String).returns(Status) }
       def report(message)
         stderr.puts("rush: #{argv.first}: #{message}")
         failure(2)

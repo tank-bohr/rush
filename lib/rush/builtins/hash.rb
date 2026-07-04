@@ -16,7 +16,7 @@ module Rush
     class Hash < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return reset if operands.first == '-r'
         return list if operands.empty?
@@ -26,24 +26,24 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Hash[String, String]) }
       def cache
         executor.state.command_hash
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def reset
         cache.clear
         success
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def list
         cache.sort.each { |_name, path| stdout.puts(path) }
         success
       end
 
-      sig { params(names: T.untyped).returns(T.untyped) }
+      sig { params(names: T::Array[String]).returns(Status) }
       def remember(names)
         missing = names.reject { |name| known?(name) }
         missing.each { |name| stderr.puts("rush: hash: #{name}: not found") }
@@ -52,7 +52,7 @@ module Rush
 
       # Whether the name is a known command; a resolvable PATH command is also
       # cached (a slash path or a builtin / function is known but not cached).
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).returns(T::Boolean) }
       def known?(name)
         return true if name.include?('/')
 

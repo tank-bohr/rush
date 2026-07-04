@@ -9,7 +9,7 @@ module Rush
     class Unalias < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return remove_all if operands.first == '-a'
 
@@ -18,13 +18,13 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def remove_all
         aliases.clear
         success
       end
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).returns(Status) }
       def remove(name)
         return success if aliases.remove(name)
 
@@ -32,12 +32,12 @@ module Rush
         failure(1)
       end
 
-      sig { params(status: T.untyped, result: T.untyped).returns(T.untyped) }
+      sig { params(status: Status, result: Status).returns(Status) }
       def keep(status, result)
         status.success? ? result : status
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(AliasTable) }
       def aliases
         executor.state.aliases
       end

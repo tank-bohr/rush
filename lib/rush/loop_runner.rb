@@ -10,7 +10,7 @@ module Rush
 
     include LoopControlHandling
 
-    sig { params(executor: T.untyped, condition: T.untyped, body: T.untyped, sense: T.untyped).void }
+    sig { params(executor: Executor, condition: AST::Node, body: AST::Node, sense: Symbol).void }
     def initialize(executor, condition, body, sense)
       @executor = executor
       @condition = condition
@@ -20,14 +20,14 @@ module Rush
 
     # Bracket the loop so break/continue see the right nesting depth; leave runs
     # even when break unwinds.
-    sig { returns(T.untyped) }
+    sig { returns(Status) }
     def call
       @executor.state.with_loop { run_loop }
     end
 
     private
 
-    sig { returns(T.untyped) }
+    sig { returns(Status) }
     def run_loop
       # T.let pins the loop variable's type: Status.success is now sig'd (Status),
       # but #iterate is unsig'd (untyped), and Sorbet forbids a variable changing
@@ -39,13 +39,13 @@ module Rush
       unwind(e)
     end
 
-    sig { returns(T.untyped) }
+    sig { returns(T::Boolean) }
     def proceed?
       met = @executor.succeeds?(@condition)
       @sense == :while ? met : !met
     end
 
-    sig { returns(T.untyped) }
+    sig { returns(Status) }
     def iterate
       @executor.run(@body)
     rescue ContinueSignal => e

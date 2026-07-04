@@ -11,12 +11,12 @@ module Rush
     class DupRedirect
       extend T::Sig
 
-      sig { params(default_fd: T.untyped).void }
+      sig { params(default_fd: Integer).void }
       def initialize(default_fd)
         @default_fd = default_fd
       end
 
-      sig { params(redirect: T.untyped, target: T.untyped, io: T.untyped, _system: T.untyped).returns(T.untyped) }
+      sig { params(redirect: AST::Redirect, target: String, io: IoTable, _system: SystemCalls).returns(IoTable) }
       def apply(redirect, target, io, _system)
         fd = redirect.io_number || @default_fd
         io.with(fd, target == '-' ? ClosedStream.new : source(io, target))
@@ -28,7 +28,7 @@ module Rush
       # (unset, or already closed by an earlier n>&-) is a non-fatal redirect
       # error (status 2, shell continues); a non-number is a special-builtin
       # error (aborts the shell).
-      sig { params(io: T.untyped, target: T.untyped).returns(T.untyped) }
+      sig { params(io: IoTable, target: String).returns(T.untyped) }
       def source(io, target)
         stream = io.get(numeric(target))
         raise RedirectError, "#{target}: fd not open" if !stream || stream.is_a?(ClosedStream)
@@ -36,7 +36,7 @@ module Rush
         stream
       end
 
-      sig { params(target: T.untyped).returns(T.untyped) }
+      sig { params(target: String).returns(Integer) }
       def numeric(target)
         Integer(target, 10)
       rescue ArgumentError

@@ -10,7 +10,7 @@ module Rush
     class Local < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return not_in_function unless state.variables.in_function?
 
@@ -20,17 +20,17 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(ShellState) }
       def state
         executor.state
       end
 
-      sig { params(operand: T.untyped).returns(T.untyped) }
+      sig { params(operand: String).void }
       def declare(operand)
         state.variables.declare_local_operand(operand)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def not_in_function
         stderr.puts('rush: local: not in a function')
         failure(2)

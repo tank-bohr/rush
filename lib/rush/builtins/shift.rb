@@ -11,7 +11,7 @@ module Rush
     class Shift < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         raise BuiltinError, "shift: can't shift that many" if count > state.positional.size
 
@@ -21,12 +21,12 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(ShellState) }
       def state
         executor.state
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Integer) }
       def count
         operands.empty? ? 1 : numeric_operand(T.must(operands.first))
       end

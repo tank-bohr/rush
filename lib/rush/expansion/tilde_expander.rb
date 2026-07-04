@@ -11,13 +11,13 @@ module Rush
     class TildeExpander
       extend T::Sig
 
-      sig { params(executor: Executor, segments: T::Array[T.untyped]).void }
+      sig { params(executor: Executor, segments: T::Array[AST::WordSegment[T.untyped]]).void }
       def initialize(executor, segments)
         @executor = executor
         @segments = segments
       end
 
-      sig { returns(T::Array[T.untyped]) }
+      sig { returns(T::Array[AST::WordSegment[T.untyped]]) }
       def expand
         head = @segments.first
         text = head&.literal_value
@@ -73,12 +73,12 @@ module Rush
     class NoTilde
       extend T::Sig
 
-      sig { params(_executor: T.untyped, segments: T::Array[T.untyped]).void }
+      sig { params(_executor: Executor, segments: T::Array[AST::WordSegment[T.untyped]]).void }
       def initialize(_executor, segments)
         @segments = segments
       end
 
-      sig { returns(T::Array[T.untyped]) }
+      sig { returns(T::Array[AST::WordSegment[T.untyped]]) }
       def expand
         @segments
       end

@@ -7,7 +7,7 @@ module Rush
     class Pwd < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         stdout.puts(executor.state.variables.pwd)
         success

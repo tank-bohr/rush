@@ -79,6 +79,8 @@ module T
 
   def self.all: (*untyped) -> untyped
 
+  def self.class_of: (untyped) -> untyped
+
   Boolean: untyped
 
   # Generic type references: T::Array[X], T::Hash[K,V], T::Boolean.

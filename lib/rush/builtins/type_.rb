@@ -9,7 +9,7 @@ module Rush
     class Type < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         unknown = operands.reject { |name| report(name) }
         unknown.empty? ? success : failure(127)
@@ -17,7 +17,7 @@ module Rush
 
       private
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).returns(T.nilable(String)) }
       def report(name)
         line = CommandLookup.new(executor).describe(name)
         stdout.puts(line || "#{name}: not found")

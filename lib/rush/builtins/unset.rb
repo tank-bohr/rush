@@ -8,7 +8,7 @@ module Rush
     class Unset < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         names.each { |name| remove(name) }
         success
@@ -16,22 +16,22 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Array[String]) }
       def names
         operands.first&.start_with?('-') ? operands.drop(1) : operands
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Boolean) }
       def function?
         operands.first == '-f'
       end
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).void }
       def remove(name)
         function? ? state.functions.undefine(name) : state.variables.unset(name)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(ShellState) }
       def state
         executor.state
       end

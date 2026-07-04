@@ -12,17 +12,17 @@ module Rush
         @builtins = {}
       end
 
-      sig { params(name: String, klass: T.untyped).void }
+      sig { params(name: String, klass: T.class_of(Base)).void }
       def register(name, klass)
         @builtins[name] = klass
       end
 
-      sig { params(name: String).returns(T.untyped) }
+      sig { params(name: String).returns(T.class_of(Base)) }
       def fetch(name)
         @builtins.fetch(name)
       end
 
-      sig { params(name: T.nilable(String)).returns(T.untyped) }
+      sig { params(name: T.nilable(String)).returns(T.nilable(T.class_of(Base))) }
       def lookup(name)
         return unless name
 

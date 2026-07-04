@@ -14,7 +14,7 @@ module Rush
     class Eval < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         executor.with_io(io) { SourceRunner.new(executor, operands.join(' ')).run }
       rescue ParseError => e

@@ -10,20 +10,20 @@ module Rush
     class Exec < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         operands.empty? ? redirect_shell : replace_process
       end
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def redirect_shell
         executor.replace_io(io)
         success
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T.noreturn) }
       def replace_process
         executor.system.exec(variables.exported, operands, options)
       rescue Errno::ENOENT
@@ -32,18 +32,18 @@ module Rush
         abort_exec('Permission denied', 126)
       end
 
-      sig { params(reason: T.untyped, code: T.untyped).returns(T.untyped) }
+      sig { params(reason: String, code: Integer).returns(T.noreturn) }
       def abort_exec(reason, code)
         stderr.puts("rush: #{operands.first}: #{reason}")
         raise ExitSignal, code
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Hash[T.any(Integer, Symbol), T.untyped]) }
       def options
         io.to_spawn_options.merge(close_others: true)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(ShellVariables) }
       def variables
         executor.state.variables
       end

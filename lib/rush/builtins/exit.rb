@@ -10,14 +10,14 @@ module Rush
     class Exit < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(T.noreturn) }
       def call
         raise ExitSignal, code
       end
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(Integer) }
       def code
         operands.empty? ? executor.trap_runner.exiting_status : numeric_operand(T.must(operands.first))
       end

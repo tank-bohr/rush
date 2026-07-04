@@ -19,7 +19,7 @@ module Rush
       'hash' => Hash, 'times' => Times
     }.freeze
 
-    sig { returns(T.untyped) }
+    sig { returns(Registry) }
     def self.default_registry
       Registry.new.tap { |registry| DEFAULTS.each { |name, klass| registry.register(name, klass) } }
     end

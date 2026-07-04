@@ -7,7 +7,7 @@ module Rush
     class False < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         failure
       end

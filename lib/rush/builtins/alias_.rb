@@ -11,7 +11,7 @@ module Rush
     class Alias < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return list if operands.empty?
 
@@ -20,19 +20,19 @@ module Rush
 
       private
 
-      sig { params(operand: T.untyped).returns(T.untyped) }
+      sig { params(operand: String).returns(Status) }
       def handle(operand)
         name, sep, value = operand.partition('=')
         sep.empty? || name.empty? ? query(operand) : define(name, value)
       end
 
-      sig { params(name: T.untyped, value: T.untyped).returns(T.untyped) }
+      sig { params(name: String, value: String).returns(Status) }
       def define(name, value)
         aliases.define(name, value)
         success
       end
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).returns(Status) }
       def query(name)
         value = aliases.value(name)
         return show(name, value) if value
@@ -41,29 +41,29 @@ module Rush
         failure(1)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def list
         aliases.listing.each { |name, value| show(name, value) }
         success
       end
 
-      sig { params(name: T.untyped, value: T.untyped).returns(T.untyped) }
+      sig { params(name: String, value: String).returns(Status) }
       def show(name, value)
         stdout.puts(single_quote("#{name}=#{value}"))
         success
       end
 
-      sig { params(text: T.untyped).returns(String) }
+      sig { params(text: String).returns(String) }
       def single_quote(text)
         "'#{text.gsub("'", %q('"'"'))}'"
       end
 
-      sig { params(status: T.untyped, result: T.untyped).returns(T.untyped) }
+      sig { params(status: Status, result: Status).returns(Status) }
       def keep(status, result)
         status.success? ? result : status
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(AliasTable) }
       def aliases
         executor.state.aliases
       end

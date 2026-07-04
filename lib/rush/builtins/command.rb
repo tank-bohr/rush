@@ -10,7 +10,7 @@ module Rush
     class Command < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return verify(operands[1]) if operands.first == '-v'
         return verbose(operands[1]) if operands.first == '-V'
@@ -20,7 +20,7 @@ module Rush
 
       private
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: T.nilable(String)).returns(Status) }
       def verify(name)
         match = CommandLookup.new(executor).find(name)
         return failure(127) unless match.known?
@@ -29,14 +29,14 @@ module Rush
         success
       end
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: T.nilable(String)).returns(Status) }
       def verbose(name)
         line = name && CommandLookup.new(executor).describe(name)
         stdout.puts(line || "#{name}: not found")
         line ? success : failure(127)
       end
 
-      sig { params(args: T.untyped).returns(T.untyped) }
+      sig { params(args: T::Array[String]).returns(Status) }
       def run(args)
         return success if args.empty?
 
@@ -46,7 +46,7 @@ module Rush
         External.new(executor, args, io, exported_env).call
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Hash[String, String]) }
       def exported_env
         executor.state.variables.exported
       end

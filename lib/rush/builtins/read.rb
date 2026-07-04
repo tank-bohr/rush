@@ -10,7 +10,7 @@ module Rush
     class Read < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return usage_error if names.empty?
 
@@ -21,33 +21,33 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Boolean) }
       def raw?
         operands.first == '-r'
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T::Array[String]) }
       def names
         raw? ? operands.drop(1) : operands
       end
 
-      sig { params(line: T.untyped).returns(T.untyped) }
+      sig { params(line: T.nilable(String)).returns(String) }
       def cook(line)
         line ? strip_escapes(line.chomp) : ''
       end
 
-      sig { params(text: T.untyped).returns(T.untyped) }
+      sig { params(text: String).returns(String) }
       def strip_escapes(text)
         raw? ? text : text.gsub(/\\(.)/m, '\1').delete_suffix('\\')
       end
 
-      sig { params(line: T.untyped).returns(T.untyped) }
+      sig { params(line: String).void }
       def assign(line)
         fields = Expansion::ReadSplitter.new(ifs, names.size).split(line)
         names.each_with_index { |name, index| executor.state.variables.assign(name, fields.fetch(index)) }
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T.nilable(String)) }
       def ifs
         executor.state.variables.get('IFS')
       end
@@ -57,7 +57,7 @@ module Rush
         io.get(0)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def usage_error
         stderr.puts('rush: read: arg count')
         failure(2)

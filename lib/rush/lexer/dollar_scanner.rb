@@ -30,7 +30,7 @@ module Rush
       end
 
       # The command segment for a `` `...` `` at the scanner head.
-      sig { params(quoted: T::Boolean).returns(T.untyped) }
+      sig { params(quoted: T::Boolean).returns(AST::CommandSegment) }
       def read_backtick(quoted:)
         @scanner.getch # `
         AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, quoted)
@@ -39,7 +39,7 @@ module Rush
       private
 
       # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
-      sig { params(quoted: T::Boolean).returns(T.untyped) }
+      sig { params(quoted: T::Boolean).returns(AST::DynamicSegment[String]) }
       def dollar_paren(quoted)
         @scanner.getch # opening (
         reader = SubstitutionReader.new(@scanner)
@@ -57,7 +57,7 @@ module Rush
         name && AST::ParamRef.simple(name)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(AST::ParamRef) }
       def braced_ref
         @scanner.getch
         body = @scanner.scan(/[^}]*/) || ''

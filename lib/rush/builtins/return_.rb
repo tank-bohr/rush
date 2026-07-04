@@ -8,14 +8,14 @@ module Rush
     class Return < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(T.noreturn) }
       def call
         raise ReturnSignal, code
       end
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(Integer) }
       def code
         operands.first ? numeric_operand(T.must(operands.first)) : executor.state.last_status.exitstatus
       end

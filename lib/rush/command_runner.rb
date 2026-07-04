@@ -61,7 +61,7 @@ module Rush
       raise
     end
 
-    sig { params(argv: T::Array[String], io: T.untyped).returns(Status) }
+    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def dispatch(argv, io)
       name = argv.fetch(0)
       return builtin(argv, io) if special?(name)
@@ -73,7 +73,7 @@ module Rush
 
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
     # dash, that fails the command (status 1) without killing the shell.
-    sig { params(argv: T::Array[String], io: T.untyped).returns(Status) }
+    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def builtin(argv, io)
       @executor.builtins.fetch(argv.fetch(0)).new(@executor, argv, io).call
     rescue Errno::EBADF
@@ -90,7 +90,7 @@ module Rush
     # `exec` inside is scoped to them, as dash does. With no redirects the body
     # shares the shell's io table so an `exec` inside *persists*, so wrap in
     # with_io only when a redirect actually layered a new table over the base.
-    sig { params(argv: T::Array[String], io: T.untyped).returns(Status) }
+    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def run_function(argv, io)
       body = @executor.state.functions.fetch(argv.fetch(0))
       run = -> { FunctionRunner.new(@executor, body, argv.drop(1)).call }

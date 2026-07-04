@@ -29,7 +29,7 @@ module Rush
         @executor.expander.expand_value(scanned, tilde: :none)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(AST::Word) }
       def scanned
         Lexer::WordScanner.entire(@source)
       end

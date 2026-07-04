@@ -8,7 +8,7 @@ module Rush
     class HereDocRedirect
       extend T::Sig
 
-      sig { params(redirect: T.untyped, body: T.untyped, io: T.untyped, system: T.untyped).returns(T.untyped) }
+      sig { params(redirect: AST::Redirect, body: String, io: IoTable, system: SystemCalls).returns(IoTable) }
       def apply(redirect, body, io, system)
         io.with(redirect.io_number || 0, system.here_doc(body))
       end

@@ -9,7 +9,7 @@ module Rush
     class FileRedirect
       extend T::Sig
 
-      sig { params(mode: T.untyped, default_fd: T.untyped).void }
+      sig { params(mode: T.any(String, Integer), default_fd: Integer).void }
       def initialize(mode, default_fd)
         @mode = mode
         @default_fd = default_fd
@@ -20,7 +20,7 @@ module Rush
       # is left unrun with status 2 (RedirectError), or — on a special builtin —
       # aborts the shell, the escalation being handled one level up in
       # CommandRunner where the command word is known.
-      sig { params(redirect: T.untyped, target: T.untyped, io: T.untyped, system: T.untyped).returns(T.untyped) }
+      sig { params(redirect: AST::Redirect, target: String, io: IoTable, system: SystemCalls).returns(IoTable) }
       def apply(redirect, target, io, system)
         io.with(redirect.io_number || @default_fd, system.open_file(target, @mode))
       rescue SystemCallError

@@ -11,7 +11,7 @@ module Rush
     class Continue < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         level = validated
         executor.state.record_status(success)
@@ -22,13 +22,13 @@ module Rush
 
       private
 
-      sig { returns(T.untyped) }
+      sig { returns(Integer) }
       def validated
         first = operands.first
         first ? numeric_operand(first, min: 1) : 1
       end
 
-      sig { params(level: T.untyped).returns(T.untyped) }
+      sig { params(level: Integer).returns(Integer) }
       def clamped(level)
         [level, executor.state.loops.depth].min
       end

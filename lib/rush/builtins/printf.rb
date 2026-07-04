@@ -10,7 +10,7 @@ module Rush
     class Printf < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return usage if operands.empty?
 
@@ -21,13 +21,13 @@ module Rush
 
       private
 
-      sig { params(valid: T.untyped).returns(T.untyped) }
+      sig { params(valid: T::Boolean).returns(Status) }
       def report(valid)
         stderr.puts('rush: printf: expected numeric value') unless valid
         valid ? success : failure
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def usage
         stderr.puts('rush: printf: usage: printf format [arguments]')
         failure(2)

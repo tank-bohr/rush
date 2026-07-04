@@ -8,7 +8,7 @@ module Rush
     class Cd < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         target = operands.first || executor.state.variables.get('HOME')
         target ? change_to(target) : report('HOME not set')
@@ -16,7 +16,7 @@ module Rush
 
       private
 
-      sig { params(dir: T.untyped).returns(T.untyped) }
+      sig { params(dir: String).returns(Status) }
       def change_to(dir)
         executor.system.chdir(dir)
         update_pwd(dir)
@@ -25,13 +25,13 @@ module Rush
         report("#{dir}: No such file or directory")
       end
 
-      sig { params(dir: T.untyped).returns(T.untyped) }
+      sig { params(dir: String).void }
       def update_pwd(dir)
         variables = executor.state.variables
         variables.move_to(executor.system.expand_path(dir, variables.current_pwd))
       end
 
-      sig { params(message: T.untyped).returns(T.untyped) }
+      sig { params(message: String).returns(Status) }
       def report(message)
         stderr.puts("rush: cd: #{message}")
         failure

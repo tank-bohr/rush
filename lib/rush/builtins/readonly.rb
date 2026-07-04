@@ -9,7 +9,7 @@ module Rush
     class Readonly < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         operands.each { |operand| declare(operand) }
         success
@@ -17,7 +17,7 @@ module Rush
 
       private
 
-      sig { params(operand: T.untyped).returns(T.untyped) }
+      sig { params(operand: String).void }
       def declare(operand)
         executor.state.variables.readonly_operand(operand)
       end
