@@ -38,6 +38,11 @@ module Rush
       @pwd = path
     end
 
+    sig { returns(String) }
+    def current_pwd
+      @pwd || raise(Error, 'internal invariant: PWD not seeded')
+    end
+
     # A function call brackets its body with begin/end_scope; declare_local
     # snapshots a variable so end_scope restores its prior value (or unsets it
     # when it had none).

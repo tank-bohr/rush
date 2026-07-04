@@ -25,6 +25,8 @@ module Rush
     # #move_to this records no $OLDPWD/$PWD — there is no directory we came from.
     def seed_pwd: (String path) -> void
 
+    def current_pwd: () -> String
+
     # A function call brackets its body with begin/end_scope; declare_local
     # snapshots a variable so end_scope restores its prior value (or unsets it
     # when it had none).

@@ -28,9 +28,7 @@ module Rush
       sig { params(dir: T.untyped).returns(T.untyped) }
       def update_pwd(dir)
         state = executor.state
-        # scope.pwd is non-nil here (seeded at startup); .to_s satisfies the
-        # String base of expand_path without changing behaviour on that path.
-        state.scope.move_to(executor.system.expand_path(dir, state.scope.pwd.to_s))
+        state.scope.move_to(executor.system.expand_path(dir, state.scope.current_pwd))
       end
 
       sig { params(message: T.untyped).returns(T.untyped) }
