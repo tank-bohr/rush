@@ -6,6 +6,7 @@ RSpec.describe Rush::ShellState do
     expect(state.name).to eq('rush')
     expect(state.last_status).to be_success
     expect(state.variables).to be_a(Rush::ShellVariables)
+    expect(state.parameters).to be_a(Rush::ShellParameters)
   end
 
   it 'accepts an injected environment and name' do

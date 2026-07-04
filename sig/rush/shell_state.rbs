@@ -14,6 +14,7 @@ module Rush
     @loops: LoopNesting
     @options: Options
     @positional: Positional
+    @parameters: ShellParameters
     @function_frame: FunctionFrame
     @functions: FunctionTable
     @aliases: AliasTable
@@ -29,6 +30,7 @@ module Rush
     attr_reader options: Options
     attr_reader last_status: Status
     attr_reader positional: Positional
+    attr_reader parameters: ShellParameters
 
     def initialize: (?environment: Environment, ?name: String) -> void
 

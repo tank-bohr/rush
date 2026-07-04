@@ -1,41 +1,16 @@
 module Rush
   module Expansion
-    # Resolves a parameter name to its current value (or nil when unset): the
-    # special parameters, the positional parameters ($1, $2, ...), and ordinary
-    # shell variables. $- (options) and $! (last background pid) are placeholders
-    # until set-options and job control land.
+    # Resolves a parameter name through ShellState's parameter namespace. The
+    # shell state owns variables, special parameters and positionals; the
+    # executor supplies process-specific data such as $$.
     class Resolver
       extend T::Sig
 
       @executor: Executor
 
-      SPECIAL: Hash[String, Symbol]
-
       def initialize: (Executor executor) -> void
 
       def resolve: (String name) -> String?
-
-      private
-
-      def state: () -> ShellState
-
-      def status: () -> String
-
-      def count: () -> String
-
-      def pid: () -> String
-
-      def shell_name: () -> String
-
-      def positional_all: () -> String
-
-      def separator: () -> String
-
-      def options: () -> String
-
-      def background: () -> nil
-
-      def positional: (Integer index) -> String?
     end
   end
 end

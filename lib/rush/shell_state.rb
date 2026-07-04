@@ -40,6 +40,9 @@ module Rush
     sig { returns(Positional) }
     attr_reader :positional
 
+    sig { returns(ShellParameters) }
+    attr_reader :parameters
+
     sig { params(environment: Environment, name: String).void }
     def initialize(environment: Environment.new, name: 'rush')
       @name = name
@@ -49,6 +52,9 @@ module Rush
       @loops = LoopNesting.new
       @options = Options.new
       @positional = Positional.new
+      @parameters = ShellParameters.new(
+        variables: @variables, positional: @positional, name: @name, status: -> { @last_status }
+      )
       @function_frame = FunctionFrame.new(variables: @variables, loops: @loops, positional: @positional)
       @functions = FunctionTable.new
       @aliases = AliasTable.new

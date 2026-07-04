@@ -1,0 +1,42 @@
+module Rush
+  # Resolves shell parameters from the namespaces a shell exposes: ordinary
+  # variables, special parameters ($?, $#, $$, $0, $@/$*, $-, $!), and positional
+  # parameters ($1, $2, ...). Process-specific values, such as $$, are supplied
+  # per call so the namespace stays part of ShellState while SystemCalls remains
+  # outside it.
+  class ShellParameters
+    extend T::Sig
+
+    @variables: ShellVariables
+
+    @positional: Positional
+
+    @name: String
+
+    @status: ^() -> Status
+
+    def initialize: (variables: ShellVariables, positional: Positional, name: String, status: ^() -> Status) -> void
+
+    def resolve: (String parameter, pid: Integer pid) -> String?
+
+    private
+
+    def special_parameters: () -> Hash[String, ^() -> String?]
+
+    def status: () -> String
+
+    def count: () -> String
+
+    def positional_all: () -> String
+
+    def separator: () -> String
+
+    def options: () -> String
+
+    def background: () -> nil
+
+    def ordinary_or_positional: (String parameter) -> String?
+
+    def positional: (Integer index) -> String?
+  end
+end
