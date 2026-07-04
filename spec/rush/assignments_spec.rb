@@ -19,9 +19,10 @@ RSpec.describe Rush::Assignments do
     expect(variables.get('NAME')).to eq('')
   end
 
-  it 'runs the hook after parsing and before assignment' do
-    seen = nil
-    assignments.apply('x=local') { |name| seen = [name, variables.get(name)] }
-    expect([seen, variables.get('x')]).to eq([%w[x global], 'local'])
+  it 'declares a local name before assigning it' do
+    variables.begin_scope
+    assignments.apply_local('x=local')
+    variables.end_scope
+    expect(variables.get('x')).to eq('global')
   end
 end

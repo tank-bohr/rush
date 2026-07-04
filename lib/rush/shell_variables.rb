@@ -50,7 +50,7 @@ module Rush
 
     sig { params(text: String).void }
     def declare_local_operand(text)
-      Assignments.new(self).apply(text) { |name| declare_local(name) }
+      Assignments.new(self).apply_local(text)
     end
   end
 end

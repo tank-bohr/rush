@@ -10,7 +10,9 @@ module Rush
 
     def initialize: (ShellVariables variables) -> void
 
-    def apply: (String text) ?{ (String name) -> void } -> String
+    def apply: (String text) -> String
+
+    def apply_local: (String text) -> String
 
     private
 

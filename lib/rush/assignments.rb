@@ -14,12 +14,17 @@ module Rush
       @variables = variables
     end
 
-    sig do
-      params(text: String, before_assign: T.nilable(T.proc.params(name: String).void)).returns(String)
-    end
-    def apply(text, &before_assign)
+    sig { params(text: String).returns(String) }
+    def apply(text)
       name, value = parse(text)
-      before_assign&.call(name)
+      assign(name, value)
+      name
+    end
+
+    sig { params(text: String).returns(String) }
+    def apply_local(text)
+      name, value = parse(text)
+      @variables.declare_local(name)
       assign(name, value)
       name
     end
