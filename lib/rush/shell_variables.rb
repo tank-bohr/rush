@@ -40,33 +40,17 @@ module Rush
 
     sig { params(text: String).void }
     def export_operand(text)
-      operand = AssignmentOperand.new(text)
-      name = operand.name
-      assign_optional(name, operand.value)
-      export(name)
+      export(Assignments.new(self).apply(text))
     end
 
     sig { params(text: String).void }
     def readonly_operand(text)
-      operand = AssignmentOperand.new(text)
-      name = operand.name
-      assign_optional(name, operand.value)
-      readonly(name)
+      readonly(Assignments.new(self).apply(text))
     end
 
     sig { params(text: String).void }
     def declare_local_operand(text)
-      operand = AssignmentOperand.new(text)
-      name = operand.name
-      declare_local(name)
-      assign_optional(name, operand.value)
-    end
-
-    private
-
-    sig { params(name: String, value: T.nilable(String)).void }
-    def assign_optional(name, value)
-      assign(name, value) if value
+      Assignments.new(self).apply(text) { |name| declare_local(name) }
     end
   end
 end

@@ -1,0 +1,21 @@
+module Rush
+  # Applies `name[=value]` declaration operands to shell variables. A missing `=`
+  # leaves the variable unchanged; `name=` assigns the empty string. Callers may
+  # pass a block to run after parsing the name but before assignment, which lets
+  # `local` snapshot the old value first.
+  class Assignments
+    extend T::Sig
+
+    @variables: ShellVariables
+
+    def initialize: (ShellVariables variables) -> void
+
+    def apply: (String text) ?{ (String name) -> void } -> String
+
+    private
+
+    def parse: (String text) -> [String, String?]
+
+    def assign: (String name, String? value) -> void
+  end
+end

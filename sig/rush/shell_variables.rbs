@@ -22,9 +22,5 @@ module Rush
     def readonly_operand: (String text) -> void
 
     def declare_local_operand: (String text) -> void
-
-    private
-
-    def assign_optional: (String name, String? value) -> void
   end
 end

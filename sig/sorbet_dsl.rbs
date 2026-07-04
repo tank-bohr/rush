@@ -18,6 +18,8 @@ module T
       def params: (**untyped) -> ProcBuilder
 
       def returns: (untyped) -> ProcBuilder
+
+      def void: () -> ProcBuilder
     end
 
     # Sorbet's sig-block builder: every call returns self so they chain.
