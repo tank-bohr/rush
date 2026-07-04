@@ -98,15 +98,14 @@ module Rush
       end
 
       def binary(args)
-        lhs, op, rhs = args
-        op = op.to_s
+        args => [lhs, op, rhs]
         return lhs.public_send(STRING.fetch(op), rhs) if STRING.key?(op)
 
         to_int(lhs).public_send(INTEGER.fetch(op), to_int(rhs))
       end
 
       def to_int(text)
-        MaybeInteger.new(text.to_s).value || raise(TestError, "#{text}: integer expected")
+        MaybeInteger.new(text).value || raise(TestError, "#{text}: integer expected")
       end
     end
   end

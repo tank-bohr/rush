@@ -71,7 +71,7 @@ module Rush
 
       def binary: (Array[String] args) -> bool
 
-      def to_int: (String? text) -> Integer
+      def to_int: (String text) -> Integer
     end
   end
 end
