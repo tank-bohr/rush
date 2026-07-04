@@ -40,7 +40,7 @@ module Rush
       def run(args)
         return success if args.empty?
 
-        builtin = executor.builtins.fetch(args.first)
+        builtin = executor.builtins.lookup(args.fetch(0))
         return builtin.new(executor, args, io).call if builtin
 
         External.new(executor, args, io, exported_env).call

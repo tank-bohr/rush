@@ -3,22 +3,25 @@ module Rush
     PARAM_BRACED: ::Regexp
 
     # A parameter reference parsed from $name or ${...}. The operator word is
-    # expanded lazily at expansion time. (Data.define; members kept untyped — the
-    # AST is still being typed.)
+    # expanded lazily at expansion time.
     class ParamRef < ::Data
       extend T::Sig
 
       attr_reader name: String
-      attr_reader op: untyped
-      attr_reader arg: untyped
+      attr_reader op: String?
+      attr_reader arg: String?
 
-      def self.new: (name: untyped, op: untyped, arg: untyped) -> ParamRef
+      def self.new: (name: String, op: String?, arg: String?) -> ParamRef
 
       def self.simple: (String name) -> ParamRef
 
       def self.parse: (String body) -> ParamRef
 
       def self.length?: (String body) -> bool
+
+      def self.braced_match: (String body) -> MatchData
+
+      def self.braced_name: (MatchData match) -> String
     end
   end
 end

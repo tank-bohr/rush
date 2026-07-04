@@ -18,12 +18,42 @@ module Rush
     class IfsScanner
       extend T::Sig
 
+      # One output field under construction: its text and whether quoted input or
+      # $@/$* anchoring made it real even when the text is empty.
+      class Field
+        extend T::Sig
+
+        sig { returns(String) }
+        attr_reader :text
+
+        sig { void }
+        def initialize
+          @text = +''
+          @real = false
+        end
+
+        sig { params(text: String).void }
+        def append(text)
+          @text << text
+        end
+
+        sig { void }
+        def mark_real
+          @real = true
+        end
+
+        sig { returns(T::Boolean) }
+        def empty_unreal?
+          @text.empty? && !@real
+        end
+      end
+
       sig { params(whitespace: T::Array[String], others: T::Array[String]).void }
       def initialize(whitespace, others)
         @ws = whitespace
         @others = others
         @done = []
-        @current = field
+        @current = Field.new
         @pending = false
         @skip = true
       end
@@ -35,11 +65,6 @@ module Rush
       end
 
       private
-
-      sig { returns(T::Hash[Symbol, T.untyped]) }
-      def field
-        { text: +'', real: false }
-      end
 
       sig { params(part: [String, T::Boolean, T::Boolean]).void }
       def consume(part)
@@ -64,15 +89,15 @@ module Rush
       sig { params(char: String).void }
       def ordinary(char)
         flush
-        @current.fetch(:text) << char
+        @current.append(char)
         @skip = false
       end
 
       sig { params(text: String).void }
       def literal(text)
         flush
-        @current.fetch(:text) << text
-        @current[:real] = true
+        @current.append(text)
+        @current.mark_real
         @skip = false
       end
 
@@ -85,19 +110,19 @@ module Rush
       def open_field
         @pending = false
         @done << @current
-        @current = field
+        @current = Field.new
         @skip = true
       end
 
       sig { returns(T::Array[String]) }
       def result
         fields = drop_last? ? @done : @done + [@current]
-        fields.map { |entry| entry.fetch(:text) }
+        fields.map(&:text)
       end
 
       sig { returns(T::Boolean) }
       def drop_last?
-        @current.fetch(:text).empty? && !@current.fetch(:real)
+        @current.empty_unreal?
       end
     end
   end

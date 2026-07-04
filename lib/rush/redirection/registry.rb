@@ -22,7 +22,7 @@ module Rush
 
       sig { params(kind: Symbol).returns(T.untyped) }
       def fetch(kind)
-        @appliers.fetch(kind, nil)
+        @appliers.fetch(kind)
       end
     end
 

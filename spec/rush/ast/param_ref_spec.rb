@@ -11,6 +11,10 @@ RSpec.describe Rush::AST::ParamRef do
     expect([ref.name, ref.op]).to eq(['name', nil])
   end
 
+  it 'rejects an empty braced reference' do
+    expect { described_class.parse('') }.to raise_error(Rush::ExpansionError, 'bad substitution')
+  end
+
   it 'parses an operator and its word' do
     ref = described_class.parse('x:-default')
     expect([ref.name, ref.op, ref.arg]).to eq(['x', ':-', 'default'])

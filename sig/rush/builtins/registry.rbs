@@ -1,16 +1,22 @@
 module Rush
   module Builtins
     # O(1) name -> builtin class lookup, populated by Builtins.default_registry.
+    interface _BuiltinClass
+      def new: (Executor executor, Array[String] argv, IoTable io) -> Base
+    end
+
     class Registry
       extend T::Sig
 
-      @builtins: ::Hash[String?, untyped]
+      @builtins: ::Hash[String, _BuiltinClass]
 
       def initialize: () -> void
 
-      def register: (String name, untyped klass) -> untyped
+      def register: (String name, _BuiltinClass klass) -> void
 
-      def fetch: (String? name) -> untyped
+      def fetch: (String name) -> _BuiltinClass
+
+      def lookup: (String? name) -> _BuiltinClass?
 
       def key?: (String? name) -> bool
     end

@@ -60,7 +60,7 @@ module Rush
       sig { returns(T.untyped) }
       def braced_ref
         @scanner.getch
-        body = @scanner.scan(/[^}]*/)
+        body = @scanner.scan(/[^}]*/) || ''
         raise IncompleteInput, 'unterminated ${' unless @scanner.scan('}')
 
         AST::ParamRef.parse(body)

@@ -14,7 +14,7 @@ module Rush
 
       # Operators handled here rather than by the FORMS lambdas: the ${#p} length
       # and the # ## % %% pattern-removal forms.
-      SPECIAL = { '#len' => :length, '#' => :strip, '##' => :strip, '%' => :strip, '%%' => :strip }.freeze
+      PATTERN_REMOVAL = ['#', '##', '%', '%%'].freeze
 
       sig { params(executor: Executor, ref: AST::ParamRef).void }
       def initialize(executor, ref)
@@ -26,7 +26,8 @@ module Rush
       def expand
         op = @ref.op
         return plain unless op
-        return send(SPECIAL.fetch(op)) if SPECIAL.key?(op)
+        return length if op == '#len'
+        return strip(op) if PATTERN_REMOVAL.include?(op)
 
         Parameter::FORMS.fetch(op.delete_prefix(':')).call(self)
       end
@@ -62,7 +63,7 @@ module Rush
 
       sig { returns(String) }
       def arg
-        @executor.expander.expand_value(sub_word(@ref.arg))
+        @executor.expander.expand_value(sub_word(argument))
       end
 
       sig { params(text: String).returns(String) }
@@ -83,9 +84,9 @@ module Rush
         value_text.length.to_s
       end
 
-      sig { returns(String) }
-      def strip
-        PatternRemoval.new(@executor.system, @ref.op, value_text, arg).call
+      sig { params(op: String).returns(String) }
+      def strip(op)
+        PatternRemoval.new(@executor.system, op, value_text, arg).call
       end
 
       sig { returns(T::Boolean) }
@@ -95,12 +96,18 @@ module Rush
 
       sig { returns(T::Boolean) }
       def colon?
-        @ref.op.start_with?(':')
+        op = @ref.op
+        !!(op && op.start_with?(':'))
       end
 
       sig { returns(String) }
       def message
-        @ref.arg.empty? ? 'parameter null or not set' : arg
+        argument.empty? ? 'parameter null or not set' : arg
+      end
+
+      sig { returns(String) }
+      def argument
+        @ref.arg || ''
       end
 
       sig { params(text: T.untyped).returns(T.untyped) }

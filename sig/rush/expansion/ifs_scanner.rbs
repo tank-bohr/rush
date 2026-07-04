@@ -11,13 +11,31 @@ module Rush
     class IfsScanner
       extend T::Sig
 
+      class Field
+        extend T::Sig
+
+        @text: String
+
+        @real: bool
+
+        attr_reader text: String
+
+        def initialize: () -> void
+
+        def append: (String text) -> void
+
+        def mark_real: () -> void
+
+        def empty_unreal?: () -> bool
+      end
+
       @ws: Array[String]
 
       @others: Array[String]
 
-      @done: Array[Hash[Symbol, untyped]]
+      @done: Array[Field]
 
-      @current: Hash[Symbol, untyped]
+      @current: Field
 
       @pending: bool
 
@@ -28,8 +46,6 @@ module Rush
       def run: (Array[[ String, bool, bool ]] parts) -> Array[String]
 
       private
-
-      def field: () -> Hash[Symbol, untyped]
 
       def consume: ([ String, bool, bool ] part) -> void
 

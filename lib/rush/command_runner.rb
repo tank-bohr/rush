@@ -75,7 +75,7 @@ module Rush
     # dash, that fails the command (status 1) without killing the shell.
     sig { params(argv: T::Array[String], io: T.untyped).returns(Status) }
     def builtin(argv, io)
-      @executor.builtins.fetch(argv.first).new(@executor, argv, io).call
+      @executor.builtins.fetch(argv.fetch(0)).new(@executor, argv, io).call
     rescue Errno::EBADF
       Status.new(1)
     end

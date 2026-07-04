@@ -12,19 +12,26 @@ module Rush
         @builtins = {}
       end
 
-      sig { params(name: T.untyped, klass: T.untyped).returns(T.untyped) }
+      sig { params(name: String, klass: T.untyped).void }
       def register(name, klass)
         @builtins[name] = klass
       end
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: String).returns(T.untyped) }
       def fetch(name)
+        @builtins.fetch(name)
+      end
+
+      sig { params(name: T.nilable(String)).returns(T.untyped) }
+      def lookup(name)
+        return unless name
+
         @builtins.fetch(name, nil)
       end
 
-      sig { params(name: T.untyped).returns(T.untyped) }
+      sig { params(name: T.nilable(String)).returns(T::Boolean) }
       def key?(name)
-        @builtins.key?(name)
+        !!(name && @builtins.key?(name))
       end
     end
   end

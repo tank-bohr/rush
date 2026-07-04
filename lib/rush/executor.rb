@@ -77,14 +77,15 @@ module Rush
     sig do
       type_parameters(:U)
         .params(redirects: T::Array[AST::Redirect], base: IoTable,
-                blk: T.proc.params(io: T.untyped).returns(T.type_parameter(:U)))
+                blk: T.proc.params(io: IoTable).returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
     def with_redirects(redirects, base = @io, &blk)
-      io = redirects.reduce(base) { |acc, redirect| redirect_into(redirect, acc) }
+      io = base
+      redirects.each { |redirect| io = redirect_into(redirect, io) }
       yield io
     ensure
-      io&.close_opened_over(base, system) unless io.equal?(@io)
+      close_redirect_io(io, base)
     end
 
     # Run a compound command with its redirects bound for the whole body.
@@ -183,7 +184,12 @@ module Rush
       !!(@state.options.on?(:errexit) && !@tested && !status.success?)
     end
 
-    sig { params(redirect: AST::Redirect, io: IoTable).returns(T.untyped) }
+    sig { params(io: IoTable, base: IoTable).void }
+    def close_redirect_io(io, base)
+      io.close_opened_over(base, system) unless io.equal?(@io)
+    end
+
+    sig { params(redirect: AST::Redirect, io: IoTable).returns(IoTable) }
     def redirect_into(redirect, io)
       redirections.fetch(redirect.kind).apply(redirect, expander.expand_value(redirect.target), io, system)
     end

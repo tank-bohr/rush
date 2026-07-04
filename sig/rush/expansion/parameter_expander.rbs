@@ -13,7 +13,7 @@ module Rush
 
       # Operators handled here rather than by the FORMS lambdas: the ${#p} length
       # and the # ## % %% pattern-removal forms.
-      SPECIAL: Hash[String, Symbol]
+      PATTERN_REMOVAL: Array[String]
 
       def initialize: (Executor executor, AST::ParamRef ref) -> void
 
@@ -39,13 +39,15 @@ module Rush
 
       def length: () -> String
 
-      def strip: () -> String
+      def strip: (String op) -> String
 
       def unbound?: () -> bool
 
       def colon?: () -> bool
 
       def message: () -> String
+
+      def argument: () -> String
 
       def sub_word: (String text) -> AST::Word
     end

@@ -4,16 +4,20 @@ module Rush
     extend T::Sig
 
     # O(1) redirection-kind -> applier lookup, populated by default_registry.
+    interface _Applier
+      def apply: (AST::Redirect redirect, String target, IoTable io, SystemCalls system) -> IoTable
+    end
+
     class Registry
       extend T::Sig
 
-      @appliers: Hash[Symbol, untyped]
+      @appliers: Hash[Symbol, _Applier]
 
       def initialize: () -> void
 
-      def register: (Symbol kind, untyped applier) -> void
+      def register: (Symbol kind, _Applier applier) -> void
 
-      def fetch: (Symbol kind) -> untyped
+      def fetch: (Symbol kind) -> _Applier
     end
 
     # <> opens read-write and creates the file (POSIX), unlike the string modes.

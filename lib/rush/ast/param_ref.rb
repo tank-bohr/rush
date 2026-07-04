@@ -16,25 +16,35 @@ module Rush
     class ParamRef
       extend T::Sig
 
-      sig { params(name: T.untyped).returns(ParamRef) }
+      sig { params(name: String).returns(ParamRef) }
       def self.simple(name)
         new(name: name, op: nil, arg: nil)
       end
 
-      sig { params(body: T.untyped).returns(ParamRef) }
+      sig { params(body: String).returns(ParamRef) }
       def self.parse(body)
         return new(name: body.delete_prefix('#'), op: '#len', arg: nil) if length?(body)
 
-        # PARAM_BRACED's \A…\z with a trailing .* always matches; .to_a pins the
-        # MatchData? to an Array so the captures are reachable without a nil branch.
-        captures = PARAM_BRACED.match(body).to_a
-        new(name: captures[1], op: captures[2], arg: captures[3])
+        match = braced_match(body)
+        new(name: braced_name(match), op: match[2], arg: match[3])
       end
 
-      sig { params(body: T.untyped).returns(T::Boolean) }
+      sig { params(body: String).returns(T::Boolean) }
       def self.length?(body)
         body.start_with?('#') && body.length > 1
       end
+
+      sig { params(body: String).returns(MatchData) }
+      def self.braced_match(body)
+        PARAM_BRACED.match(body) || raise(ExpansionError, 'bad substitution')
+      end
+      private_class_method :braced_match
+
+      sig { params(match: MatchData).returns(String) }
+      def self.braced_name(match)
+        match[1] || raise(ExpansionError, 'bad substitution')
+      end
+      private_class_method :braced_name
     end
   end
 end

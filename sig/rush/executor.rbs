@@ -86,6 +86,8 @@ module Rush
 
     def abort_on?: (Status status) -> bool
 
+    def close_redirect_io: (IoTable io, IoTable base) -> void
+
     def redirect_into: (AST::Redirect redirect, IoTable io) -> IoTable
   end
 end
