@@ -4,6 +4,7 @@ module Rush
   # Scope. Environment and Scope remain storage details behind this API.
   class ShellVariables
     extend T::Sig
+    extend Forwardable
 
     @environment: Environment
 
