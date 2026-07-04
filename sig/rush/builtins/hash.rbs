@@ -13,21 +13,21 @@ module Rush
     class Hash < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def cache: () -> untyped
+      def cache: () -> ::Hash[String, String]
 
-      def reset: () -> untyped
+      def reset: () -> Status
 
-      def list: () -> untyped
+      def list: () -> Status
 
-      def remember: (untyped names) -> untyped
+      def remember: (Array[String] names) -> Status
 
       # Whether the name is a known command; a resolvable PATH command is also
       # cached (a slash path or a builtin / function is known but not cached).
-      def known?: (untyped name) -> (true | untyped)
+      def known?: (String name) -> bool
     end
   end
 end

@@ -1,0 +1,22 @@
+module Rush
+  # Parsed `name[=value]` operands used by declaration builtins (`export`,
+  # `readonly`, `local`). A missing `=` leaves value unset (nil); `name=` is a
+  # present assignment to the empty string.
+  class AssignmentOperand
+    extend T::Sig
+
+    @name: String
+
+    @value: String?
+
+    attr_reader name: String
+
+    attr_reader value: String?
+
+    def initialize: (String name, String? value) -> void
+
+    def self.parse: (String text) -> AssignmentOperand
+
+    def assign_to: (Environment environment) -> void
+  end
+end

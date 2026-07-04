@@ -14,7 +14,7 @@ module Rush
       extend T::Sig
 
       PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
-      ESCAPABLE = ['$', '`', '\\'].freeze
+      ESCAPES = { '$' => '$', '`' => '`', '\\' => '\\' }.freeze
 
       sig { params(text: String).void }
       def initialize(text)
@@ -91,12 +91,7 @@ module Rush
 
       sig { void }
       def escape
-        @literal << escaped(@scanner.getch)
-      end
-
-      sig { params(char: T.nilable(String)).returns(String) }
-      def escaped(char)
-        char && ESCAPABLE.include?(char) ? char : "\\#{char}"
+        @literal << EscapeTable.render(@scanner.getch, ESCAPES)
       end
 
       sig { params(segment: T.untyped).void }

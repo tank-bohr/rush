@@ -18,7 +18,7 @@ module Rush
 
       PARAM: Regexp
 
-      ESCAPABLE: Array[String]
+      ESCAPES: Hash[String, String]
 
       def initialize: (String text) -> void
 
@@ -43,8 +43,6 @@ module Rush
       def braced: () -> untyped
 
       def escape: () -> void
-
-      def escaped: (String? char) -> String
 
       def push: (untyped segment) -> void
 

@@ -6,13 +6,13 @@ module Rush
     class Export < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def declare: (untyped operand) -> untyped
+      def declare: (String operand) -> void
 
-      def environment: () -> untyped
+      def environment: () -> Environment
     end
   end
 end

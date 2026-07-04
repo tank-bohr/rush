@@ -8,27 +8,25 @@ module Rush
     class Alias < Base
       extend T::Sig
 
-      ASSIGN: ::Regexp
-
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def handle: (untyped operand) -> untyped
+      def handle: (String operand) -> Status
 
-      def define: (untyped name, untyped value) -> untyped
+      def define: (String name, String value) -> Status
 
-      def query: (untyped name) -> untyped
+      def query: (String name) -> Status
 
-      def list: () -> untyped
+      def list: () -> Status
 
-      def show: (untyped name, untyped value) -> untyped
+      def show: (String name, String value) -> Status
 
-      def single_quote: (untyped text) -> ::String
+      def single_quote: (String text) -> ::String
 
-      def keep: (untyped status, untyped result) -> untyped
+      def keep: (Status status, Status result) -> Status
 
-      def aliases: () -> untyped
+      def aliases: () -> AliasTable
     end
   end
 end

@@ -1,0 +1,11 @@
+module Rush
+  # Renders a backslash escape from a small table. Missing trailing characters
+  # become a literal backslash; unknown escapes keep the backslash plus character.
+  module EscapeTable
+    extend T::Sig
+
+    def self.render: (String? char, Hash[String, String] table) -> String
+
+    def render: (String? char, Hash[String, String] table) -> String
+  end
+end

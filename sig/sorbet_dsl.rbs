@@ -66,9 +66,15 @@ module T
   def self.all: (*untyped) -> untyped
 
   Boolean: untyped
+
   # Generic type references: T::Array[X], T::Hash[K,V], T::Boolean.
-  # Declared as untyped so that subscript calls (T::Array[String]) resolve
-  # to untyped without Steep emitting UnknownConstant diagnostics.
-  Array: untyped
-  Hash: untyped
+  # They are Sorbet type expressions at runtime; for Steep, the singleton []
+  # methods simply make those value-level sig-block calls typed.
+  class Array
+    def self.[]: (*untyped) -> untyped
+  end
+
+  class Hash
+    def self.[]: (*untyped) -> untyped
+  end
 end

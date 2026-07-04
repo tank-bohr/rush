@@ -7,25 +7,25 @@ module Rush
     class Read < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def raw?: () -> untyped
+      def raw?: () -> bool
 
-      def names: () -> untyped
+      def names: () -> Array[String]
 
-      def cook: (untyped line) -> (untyped | "")
+      def cook: (String? line) -> String
 
-      def strip_escapes: (untyped text) -> untyped
+      def strip_escapes: (String text) -> String
 
-      def assign: (untyped line) -> untyped
+      def assign: (String line) -> void
 
-      def ifs: () -> untyped
+      def ifs: () -> String?
 
-      def stdin: () -> untyped
+      def stdin: () -> IO
 
-      def usage_error: () -> untyped
+      def usage_error: () -> Status
     end
   end
 end

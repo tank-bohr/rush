@@ -23,6 +23,8 @@ require_relative 'rush/shell_state'
 require_relative 'rush/closed_stream'
 require_relative 'rush/io_table'
 require_relative 'rush/here_doc'
+require_relative 'rush/assignment_operand'
+require_relative 'rush/escape_table'
 
 require_relative 'rush/ast/node'
 require_relative 'rush/ast/word_segment'

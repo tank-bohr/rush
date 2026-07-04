@@ -49,10 +49,7 @@ module Rush
         end
 
         def escape
-          char = getch
-          return '\\' unless char
-
-          ESCAPES.fetch(char) { "\\#{char}" }
+          EscapeTable.render(getch, ESCAPES)
         end
       end
 

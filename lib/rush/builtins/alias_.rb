@@ -11,8 +11,6 @@ module Rush
     class Alias < Base
       extend T::Sig
 
-      ASSIGN = /\A(.+?)=(.*)\z/m
-
       sig { returns(T.untyped) }
       def call
         return list if operands.empty?
@@ -24,8 +22,8 @@ module Rush
 
       sig { params(operand: T.untyped).returns(T.untyped) }
       def handle(operand)
-        match = ASSIGN.match(operand)
-        match ? define(match[1], match[2]) : query(operand)
+        name, sep, value = operand.partition('=')
+        sep.empty? || name.empty? ? query(operand) : define(name, value)
       end
 
       sig { params(name: T.untyped, value: T.untyped).returns(T.untyped) }

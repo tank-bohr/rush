@@ -27,9 +27,9 @@ module Rush
 
       sig { params(operand: T.untyped).returns(T.untyped) }
       def declare(operand)
-        name, value = operand.split('=', 2)
-        state.scope.declare_local(name)
-        state.environment.assign(name, value) if value
+        parsed = AssignmentOperand.parse(operand)
+        state.scope.declare_local(parsed.name)
+        parsed.assign_to(state.environment)
       end
 
       sig { returns(T.untyped) }

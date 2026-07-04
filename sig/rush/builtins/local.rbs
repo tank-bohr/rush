@@ -7,15 +7,15 @@ module Rush
     class Local < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def state: () -> untyped
+      def state: () -> ShellState
 
-      def declare: (untyped operand) -> untyped
+      def declare: (String operand) -> void
 
-      def not_in_function: () -> untyped
+      def not_in_function: () -> Status
     end
   end
 end
