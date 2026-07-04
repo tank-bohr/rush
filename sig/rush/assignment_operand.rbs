@@ -1,11 +1,10 @@
 module Rush
-  # A parsed `name[=value]` operand bound to the environment it may assign. A
-  # missing `=` leaves value unset (nil); `name=` is a present assignment to the
-  # empty string. `local` can snapshot #name before calling #assign.
+  # Parsed `name[=value]` operands used by declaration builtins (`export`,
+  # `readonly`, `local`). A missing `=` leaves value unset (nil); `name=` is a
+  # present assignment to the empty string. The parsed name is needed before
+  # assignment for `local`, which must snapshot the old value first.
   class AssignmentOperand
     extend T::Sig
-
-    @environment: Environment
 
     @name: String
 
@@ -13,9 +12,9 @@ module Rush
 
     attr_reader name: String
 
-    def initialize: (String text, Environment environment) -> void
+    def initialize: (String text) -> void
 
-    def assign: () -> void
+    def assign_to: (Environment environment) -> void
 
     private
 

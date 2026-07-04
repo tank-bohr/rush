@@ -19,8 +19,8 @@ module Rush
 
       sig { params(operand: T.untyped).returns(T.untyped) }
       def declare(operand)
-        assignment = AssignmentOperand.new(operand, environment)
-        assignment.assign
+        assignment = AssignmentOperand.new(operand)
+        assignment.assign_to(environment)
         environment.readonly(assignment.name)
       end
 

@@ -2,27 +2,27 @@
 # frozen_string_literal: true
 
 module Rush
-  # A parsed `name[=value]` operand bound to the environment it may assign. A
-  # missing `=` leaves value unset (nil); `name=` is a present assignment to the
-  # empty string. `local` can snapshot #name before calling #assign.
+  # Parsed `name[=value]` operands used by declaration builtins (`export`,
+  # `readonly`, `local`). A missing `=` leaves value unset (nil); `name=` is a
+  # present assignment to the empty string. The parsed name is needed before
+  # assignment for `local`, which must snapshot the old value first.
   class AssignmentOperand
     extend T::Sig
 
     sig { returns(String) }
     attr_reader :name
 
-    sig { params(text: String, environment: Environment).void }
-    def initialize(text, environment)
-      @environment = environment
+    sig { params(text: String).void }
+    def initialize(text)
       @name = text
       @value = nil
       parse(text) if text.include?('=')
     end
 
-    sig { void }
-    def assign
+    sig { params(environment: Environment).void }
+    def assign_to(environment)
       assigned = @value
-      @environment.assign(name, assigned) if assigned
+      environment.assign(name, assigned) if assigned
     end
 
     private
