@@ -1,0 +1,15 @@
+module Rush
+  class Lexer
+    # Small typed adapter for the StringScanner one-character lookahead pattern
+    # shared by the shell word scanners.
+    module ScannerPredicates
+      extend T::Sig
+
+      @scanner: StringScanner
+
+      private
+
+      def peek?: (String char) -> bool
+    end
+  end
+end

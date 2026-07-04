@@ -20,6 +20,8 @@ module Rush
       # quoting or substitution — else nil. Used for reserved words, NAME=, and
       # alias substitution, all of which only apply to a plain literal word.
       def literal_name: () -> String?
+
+      def first_literal_value: () -> String?
     end
   end
 end

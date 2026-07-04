@@ -10,7 +10,7 @@ module Rush
 
       @depth: Integer
 
-      DEPTH_DELTA: Hash[String, Integer]
+      DEPTH_DELTA: Hash[String?, Integer]
 
       def initialize: (StringScanner scanner) -> void
 
@@ -28,11 +28,13 @@ module Rush
 
       def arith_char: () -> String?
 
+      def adjust_arithmetic: (String? token) -> String?
+
       def arith_close: () -> String?
 
       def paren_char: () -> String
 
-      def adjust: (String char) -> void
+      def adjust: (String unit) -> void
     end
   end
 end

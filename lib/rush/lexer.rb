@@ -4,6 +4,8 @@
 require 'strscan'
 require_relative 'lexer/operator_table'
 require_relative 'lexer/lex_state'
+require_relative 'lexer/scanner_predicates'
+require_relative 'lexer/token_predicates'
 require_relative 'lexer/substitution_reader'
 require_relative 'lexer/dollar_scanner'
 require_relative 'lexer/word_scanner'
@@ -19,6 +21,7 @@ module Rush
   # token to track command position — the seed of POSIX Grammar Rules 1-9).
   class Lexer
     extend T::Sig
+    include TokenPredicates
 
     BLANK = /[ \t]+/
     COMMENT = /#[^\n]*/
@@ -84,7 +87,7 @@ module Rush
     sig { returns(T.nilable([T.untyped, T.untyped])) }
     def io_number
       digits = @scanner.scan(IO_NUMBER)
-      digits ? [:IO_NUMBER, digits.to_i] : nil
+      digits ? [:IO_NUMBER, Integer(digits, 10)] : nil
     end
 
     sig { returns(T.nilable([T.untyped, T.untyped])) }
@@ -107,21 +110,21 @@ module Rush
     def word
       scanned = WordScanner.next_word(@scanner)
       token = TokenClassifier.new(scanned, @state).call
-      value = alias_for(token, scanned)
-      value ? splice(value) : finish(token)
+      replacement = alias_for(token, scanned)
+      replacement ? splice(replacement) : finish(token)
     end
 
-    sig { params(token: [T.untyped, T.untyped], word: T.untyped).returns(T.nilable(String)) }
+    sig { params(token: [T.untyped, T.untyped], word: AST::Word).returns(T.nilable(AliasExpander::Replacement)) }
     def alias_for(token, word)
-      return if @awaiting || token.first != :WORD || !@state.command_mode?
+      return if @awaiting || !word_token?(token) || !@state.command_mode?
 
       @aliases.expand(word, @state.expects_command?)
     end
 
-    sig { params(value: String).returns(NilClass) }
-    def splice(value)
-      @aliases.push(@scanner)
-      @scanner = StringScanner.new(value)
+    sig { params(replacement: AliasExpander::Replacement).returns(NilClass) }
+    def splice(replacement)
+      @aliases.push(replacement, @scanner)
+      @scanner = StringScanner.new(replacement.value)
       nil
     end
 

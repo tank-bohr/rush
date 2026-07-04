@@ -9,6 +9,7 @@ module Rush
     # Phase 2 ${} forms land.)
     class HeredocBody
       extend T::Sig
+      include ScannerPredicates
 
       @scanner: StringScanner
 

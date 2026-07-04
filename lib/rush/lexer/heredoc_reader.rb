@@ -60,7 +60,9 @@ module Rush
 
       sig { returns(String) }
       def rest_line
-        @scanner.rest.tap { @scanner.terminate }
+        line = @scanner.rest
+        @scanner.terminate
+        line
       end
 
       sig { params(holder: HereDoc, line: String).returns(T::Boolean) }

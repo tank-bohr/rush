@@ -14,10 +14,10 @@ module Rush
     extend T::Sig
 
     sig do
-      params(aliases: T.nilable(AliasTable),
+      params(aliases: AliasTable,
              next_line: T.proc.params(buffered: T::Boolean).returns(T.nilable(String))).void
     end
-    def initialize(aliases: nil, &next_line)
+    def initialize(aliases: AliasTable.new, &next_line)
       @next_line = next_line
       @aliases = aliases
       @buffer = +''

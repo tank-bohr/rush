@@ -34,6 +34,11 @@ module Rush
       def literal_name
         (segments.first.literal_value if segments.one?)
       end
+
+      sig { returns(T.nilable(String)) }
+      def first_literal_value
+        segments.fetch(0).literal_value
+      end
     end
   end
 end

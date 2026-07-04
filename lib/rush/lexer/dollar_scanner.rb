@@ -9,6 +9,7 @@ module Rush
     # that begins no valid reference, so the caller keeps it as a literal dollar.
     class DollarScanner
       extend T::Sig
+      include ScannerPredicates
 
       SIMPLE_PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
 
@@ -22,7 +23,7 @@ module Rush
       sig { params(quoted: T::Boolean).returns(T.untyped) }
       def read(quoted:)
         @scanner.getch
-        return dollar_paren(quoted) if @scanner.peek(1) == '('
+        return dollar_paren(quoted) if peek?('(')
 
         ref = read_param_ref
         ref && AST::ParamSegment.new(ref, quoted)
@@ -42,7 +43,7 @@ module Rush
       def dollar_paren(quoted)
         @scanner.getch # opening (
         reader = SubstitutionReader.new(@scanner)
-        return AST::CommandSegment.new(reader.parens, quoted) unless @scanner.peek(1) == '('
+        return AST::CommandSegment.new(reader.parens, quoted) unless peek?('(')
 
         @scanner.getch # second (
         AST::ArithSegment.new(reader.arithmetic, quoted)
@@ -50,7 +51,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def read_param_ref
-        return braced_ref if @scanner.peek(1) == '{'
+        return braced_ref if peek?('{')
 
         name = @scanner.scan(SIMPLE_PARAM)
         name && AST::ParamRef.simple(name)

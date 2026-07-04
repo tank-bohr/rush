@@ -6,6 +6,7 @@ module Rush
     # that begins no valid reference, so the caller keeps it as a literal dollar.
     class DollarScanner
       extend T::Sig
+      include ScannerPredicates
 
       @scanner: StringScanner
 

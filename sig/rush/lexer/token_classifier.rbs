@@ -7,6 +7,21 @@ module Rush
     class TokenClassifier
       extend T::Sig
 
+      class AssignmentHead
+        extend T::Sig
+
+        attr_reader name: String
+        attr_reader literal: String
+
+        def initialize: (String name, String literal) -> void
+
+        def assignment: (Array[AST::WordSegment] tail) -> AST::Assignment
+
+        private
+
+        def word: (Array[AST::WordSegment] tail) -> AST::Word
+      end
+
       @word: AST::Word
 
       @state: LexState
@@ -39,13 +54,13 @@ module Rush
 
       def lookup: (Hash[String, Symbol] table) -> Symbol?
 
-      def assignment_name: () -> String?
+      def assignment_head: () -> AssignmentHead?
+
+      def assignment_literal: () -> String?
 
       def capture: (String value) -> String?
 
-      def assignment_token: (String name) -> [ Symbol, untyped ]
-
-      def assignment_value: (String name) -> untyped
+      def assignment_token: (AssignmentHead head) -> [ Symbol, untyped ]
     end
   end
 end

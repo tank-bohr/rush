@@ -10,11 +10,32 @@ module Rush
     class AliasExpander
       extend T::Sig
 
-      @table: untyped
+      class Replacement
+        extend T::Sig
 
-      @active: Array[[String, untyped]]
+        attr_reader name: String
+        attr_reader value: String
 
-      @parents: Array[StringScanner]
+        def initialize: (String name, String value) -> void
+
+        def frame: (StringScanner parent) -> Frame
+      end
+
+      class Frame
+        extend T::Sig
+
+        attr_reader name: String
+        attr_reader value: String
+        attr_reader parent: StringScanner
+
+        def initialize: (String name, String value, StringScanner parent) -> void
+
+        def trailing_blank?: () -> bool
+      end
+
+      @table: AliasTable?
+
+      @frames: Array[Frame]
 
       @check_next: bool
 
@@ -22,13 +43,13 @@ module Rush
 
       # The replacement text when `word` is an alias eligible to expand here, else
       # nil. Eligible means command position or a pending trailing-blank carry.
-      def expand: (AST::Word word, bool command_position) -> String?
+      def expand: (AST::Word word, bool command_position) -> Replacement?
 
       # Stash the scanner a replacement was spliced over; restore it once the
       # replacement is fully read, dropping the alias from the active set and, if
       # its value ended in a blank, marking the following word eligible too (OR so
       # an inner blank-ending alias still chains past an outer one).
-      def push: (StringScanner scanner) -> void
+      def push: (Replacement replacement, StringScanner scanner) -> void
 
       def nested?: () -> bool
 
@@ -43,7 +64,9 @@ module Rush
       # position, or a pending trailing-blank carry makes it eligible here.
       def eligible?: (bool command_position) -> bool
 
-      def enter: (String name) -> String?
+      def enter: (AliasTable table, String name) -> Replacement?
+
+      def active?: (String name) -> bool
     end
   end
 end

@@ -12,6 +12,7 @@ module Rush
     # Phase 2 ${} forms land.)
     class HeredocBody
       extend T::Sig
+      include ScannerPredicates
 
       PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
       ESCAPES = { '$' => '$', '`' => '`', '\\' => '\\' }.freeze
@@ -53,7 +54,7 @@ module Rush
 
       sig { void }
       def dollar
-        @scanner.peek(1) == '(' ? command_sub : param
+        peek?('(') ? command_sub : param
       end
 
       sig { void }
@@ -75,7 +76,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def read_ref
-        return braced if @scanner.peek(1) == '{'
+        return braced if peek?('{')
 
         name = @scanner.scan(PARAM)
         name && AST::ParamRef.simple(name)

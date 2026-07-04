@@ -10,6 +10,33 @@ module Rush
     class TokenClassifier
       extend T::Sig
 
+      # The assignment-name capture plus the literal segment it came from.
+      class AssignmentHead
+        extend T::Sig
+
+        sig { returns(String) }
+        attr_reader :name, :literal
+
+        sig { params(name: String, literal: String).void }
+        def initialize(name, literal)
+          @name = name
+          @literal = literal
+        end
+
+        sig { params(tail: T::Array[AST::WordSegment]).returns(AST::Assignment) }
+        def assignment(tail)
+          AST::Assignment.new(name: name, value: word(tail))
+        end
+
+        private
+
+        sig { params(tail: T::Array[AST::WordSegment]).returns(AST::Word) }
+        def word(tail)
+          remainder = AST::LiteralSegment.new(literal.delete_prefix("#{name}="), false)
+          AST::Word.new([remainder] + tail)
+        end
+      end
+
       NAME = /\A([a-zA-Z_]\w*)=/
       RESERVED = {
         'if' => :If, 'then' => :Then, 'else' => :Else, 'elif' => :Elif, 'fi' => :Fi,
@@ -63,8 +90,8 @@ module Rush
         keyword = reserved
         return [keyword, @word] if keyword
 
-        name = assignment_name
-        name ? assignment_token(name) : [:WORD, @word]
+        head = assignment_head
+        head ? assignment_token(head) : [:WORD, @word]
       end
 
       sig { returns(T.nilable(Symbol)) }
@@ -83,31 +110,31 @@ module Rush
         name ? table.fetch(name, nil) : nil
       end
 
-      sig { returns(T.nilable(String)) }
-      def assignment_name
+      sig { returns(T.nilable(AssignmentHead)) }
+      def assignment_head
         return unless @state.expects_command?
 
-        value = @word.segments.first.literal_value
-        capture(value) if value
+        literal = assignment_literal
+        return unless literal
+
+        name = capture(literal)
+        name ? AssignmentHead.new(name, literal) : nil
       end
 
-      sig { params(value: T.untyped).returns(T.nilable(String)) }
+      sig { returns(T.nilable(String)) }
+      def assignment_literal
+        @word.first_literal_value
+      end
+
+      sig { params(value: String).returns(T.nilable(String)) }
       def capture(value)
         match = NAME.match(value)
         match && match[1]
       end
 
-      sig { params(name: String).returns([Symbol, T.untyped]) }
-      def assignment_token(name)
-        [:ASSIGNMENT_WORD, AST::Assignment.new(name: name, value: assignment_value(name))]
-      end
-
-      sig { params(name: String).returns(T.untyped) }
-      def assignment_value(name)
-        head = @word.segments.first
-        literal = head.literal_value
-        remainder = AST::LiteralSegment.new(literal.delete_prefix("#{name}="), false)
-        AST::Word.new([remainder] + @word.segments.drop(1))
+      sig { params(head: AssignmentHead).returns([Symbol, T.untyped]) }
+      def assignment_token(head)
+        [:ASSIGNMENT_WORD, head.assignment(@word.segments.drop(1))]
       end
     end
   end

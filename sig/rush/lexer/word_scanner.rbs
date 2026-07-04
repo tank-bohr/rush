@@ -6,6 +6,7 @@ module Rush
     # substitution and arithmetic arrive in later slices.
     class WordScanner
       extend T::Sig
+      include ScannerPredicates
 
       @scanner: StringScanner
 

@@ -24,7 +24,7 @@ module Rush
       # (raises), so every value flowing through the pipeline has #expand.
       def expand: (Executor executor) -> String
 
-      def literal_value: () -> untyped
+      def literal_value: () -> String?
 
       def splittable?: () -> bool
 

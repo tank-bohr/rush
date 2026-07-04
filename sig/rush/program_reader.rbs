@@ -14,11 +14,11 @@ module Rush
     # PS1 vs PS2 from it); returns the next source line, or nil at end of input.
     @next_line: ^(bool buffered) -> String?
 
-    @aliases: AliasTable?
+    @aliases: AliasTable
 
     @buffer: String
 
-    def initialize: (?aliases: AliasTable?) { (bool buffered) -> String? } -> void
+    def initialize: (?aliases: AliasTable) { (bool buffered) -> String? } -> void
 
     # The next complete program, or :eof. Raises ParseError on a real syntax
     # error, so the caller decides policy: batch aborts, the REPL reports and

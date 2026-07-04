@@ -11,6 +11,7 @@ module Rush
     # substitution and arithmetic arrive in later slices.
     class WordScanner # rubocop:disable Metrics/ClassLength
       extend T::Sig
+      include ScannerPredicates
 
       TERMINATOR = /[ \t\n;&|<>()]/
       DOUBLE_LITERAL = /[^"$\\`]+/
@@ -90,7 +91,7 @@ module Rush
 
       sig { void }
       def double_quote
-        push('', quoted: true) if @scanner.peek(1) == '"' # "" yields one empty field
+        push('', quoted: true) if peek?('"') # "" yields one empty field
         double_step until end_double?
         raise IncompleteInput, 'unterminated double quote' if @scanner.eos?
 
@@ -99,15 +100,14 @@ module Rush
 
       sig { returns(T::Boolean) }
       def end_double?
-        @scanner.eos? || @scanner.peek(1) == '"'
+        @scanner.eos? || peek?('"')
       end
 
       sig { void }
       def double_step
-        char = @scanner.peek(1)
-        return double_dollar if char == '$'
-        return add(DollarScanner.new(@scanner).read_backtick(quoted: true)) if char == '`'
-        return double_escape if char == '\\'
+        return double_dollar if peek?('$')
+        return add(DollarScanner.new(@scanner).read_backtick(quoted: true)) if peek?('`')
+        return double_escape if peek?('\\')
 
         push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
       end
@@ -141,8 +141,11 @@ module Rush
 
       sig { void }
       def escape
-        char = @scanner.getch
-        push(char, quoted: true) if char && char != "\n"
+        char = @scanner.getch or return
+        case char
+        when "\n" then nil
+        else push(char, quoted: true)
+        end
       end
 
       sig { params(value: T.untyped, quoted: T::Boolean).void }

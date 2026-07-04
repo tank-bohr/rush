@@ -1,0 +1,13 @@
+module Rush
+  class Lexer
+    # Typed token-shape predicates for the raw [kind, value] tuples returned to
+    # Racc.
+    module TokenPredicates
+      extend T::Sig
+
+      private
+
+      def word_token?: ([ untyped, untyped ] token) -> bool
+    end
+  end
+end

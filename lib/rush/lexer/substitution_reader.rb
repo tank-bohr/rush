@@ -43,21 +43,26 @@ module Rush
 
       sig { params(body: String).returns(String) }
       def collect(body)
-        char = arith_char
-        return body unless char
+        piece = arith_char
+        return body unless piece
 
-        collect(body << char)
+        collect(body << piece)
       end
 
       sig { returns(T.nilable(String)) }
       def arith_char
         raise IncompleteInput, 'unterminated $((' if @scanner.eos?
 
-        char = @scanner.getch
-        return arith_close if char == ')'
+        adjust_arithmetic(@scanner.getch)
+      end
 
-        @depth += 1 if char == '('
-        char
+      sig { params(token: T.nilable(String)).returns(T.nilable(String)) }
+      def adjust_arithmetic(token)
+        delta = DEPTH_DELTA.fetch(token, 0)
+        return arith_close if delta.negative?
+
+        @depth += delta
+        token
       end
 
       sig { returns(T.nilable(String)) }
@@ -70,16 +75,16 @@ module Rush
 
       sig { returns(String) }
       def paren_char
-        char = @scanner.getch
-        raise IncompleteInput, 'unterminated $(' unless char
+        unit = @scanner.getch
+        raise IncompleteInput, 'unterminated $(' unless unit
 
-        adjust(char)
-        @depth.zero? ? '' : char
+        adjust(unit)
+        @depth.zero? ? '' : unit
       end
 
-      sig { params(char: String).void }
-      def adjust(char)
-        @depth += DEPTH_DELTA.fetch(char, 0)
+      sig { params(unit: String).void }
+      def adjust(unit)
+        @depth += DEPTH_DELTA.fetch(unit, 0)
       end
     end
   end

@@ -28,7 +28,7 @@ module Rush
         raise NotImplementedError
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T.nilable(String)) }
       def literal_value
         nil
       end
@@ -72,7 +72,7 @@ module Rush
         value
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T.nilable(String)) }
       def literal_value
         (value unless quoted)
       end
