@@ -13,9 +13,9 @@ module Rush
 
     def remove: (String name) -> String?
 
-    def value: (String name) -> String?
+    def value: (untyped name) -> String?
 
-    def key?: (String name) -> bool
+    def key?: (untyped name) -> bool
 
     def clear: () -> void
 

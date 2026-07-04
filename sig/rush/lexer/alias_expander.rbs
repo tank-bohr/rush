@@ -10,17 +10,15 @@ module Rush
     class AliasExpander
       extend T::Sig
 
-      # @table (AliasTable?) and @active (the [name, value] recursion stack) stay
-      # untyped: their cross-method/paired-stack invariants aren't worth coercing.
       @table: untyped
 
-      @active: untyped
+      @active: Array[[String, untyped]]
 
       @parents: Array[StringScanner]
 
       @check_next: bool
 
-      def initialize: (untyped table) -> void
+      def initialize: (AliasTable? table) -> void
 
       # The replacement text when `word` is an alias eligible to expand here, else
       # nil. Eligible means command position or a pending trailing-blank carry.
@@ -45,7 +43,7 @@ module Rush
       # position, or a pending trailing-blank carry makes it eligible here.
       def eligible?: (bool command_position) -> bool
 
-      def enter: (untyped name) -> String?
+      def enter: (String name) -> String?
     end
   end
 end

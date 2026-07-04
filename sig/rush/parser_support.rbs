@@ -3,15 +3,15 @@ module Rush
   # `include`s this), kept in a normal linted/covered file. Rule actions call
   # these factories; none contain node logic.
   module ParserSupport
-    @lexer: untyped
+    @lexer: Lexer
 
-    def initialize: (untyped lexer) -> void
+    def initialize: (Lexer lexer) -> void
 
     def parse: () -> untyped
 
-    def next_token: () -> untyped
+    def next_token: () -> [ untyped, untyped ]
 
-    def on_error: (untyped token_id, untyped value, untyped _stack) -> untyped
+    def on_error: (untyped token_id, untyped value, untyped _stack) -> bot
 
     private
 
@@ -20,44 +20,44 @@ module Rush
 
     def token_to_str: (untyped token_id) -> untyped
 
-    def make_list: (untyped entries) -> untyped
+    def make_list: (Array[[AST::Node, String]] entries) -> AST::List
 
-    def pending_entry: (untyped and_or) -> ::Array[untyped | ";"]
+    def pending_entry: (AST::Node and_or) -> [AST::Node, String]
 
-    def terminate_list: (untyped entries, untyped sep) -> untyped
+    def terminate_list: (untyped entries, String sep) -> untyped
 
-    def append_and_or: (untyped entries, untyped sep, untyped and_or) -> untyped
+    def append_and_or: (untyped entries, String sep, AST::Node and_or) -> untyped
 
-    def make_and_or: (untyped left, untyped op, untyped right) -> untyped
+    def make_and_or: (AST::Node left, Symbol op, AST::Node right) -> AST::AndOr
 
-    def make_pipeline: (untyped commands, untyped negate) -> untyped
+    def make_pipeline: (Array[AST::Node] commands, bool negate) -> AST::Pipeline
 
-    def make_if: (untyped condition, untyped consequent, untyped alternative) -> untyped
+    def make_if: (AST::Node condition, AST::Node consequent, AST::Node? alternative) -> AST::If
 
-    def make_brace_group: (untyped body) -> untyped
+    def make_brace_group: (AST::Node body) -> AST::BraceGroup
 
-    def make_subshell: (untyped body) -> untyped
+    def make_subshell: (AST::Node body) -> AST::Subshell
 
-    def make_redirected: (untyped command, untyped redirects) -> untyped
+    def make_redirected: (AST::Node command, Array[AST::Redirect] redirects) -> AST::Redirected
 
-    def make_while: (untyped condition, untyped body) -> untyped
+    def make_while: (AST::Node condition, AST::Node body) -> AST::While
 
-    def make_until: (untyped condition, untyped body) -> untyped
+    def make_until: (AST::Node condition, AST::Node body) -> AST::Until
 
-    def make_for: (untyped name, untyped words, untyped body) -> untyped
+    def make_for: (String name, Array[AST::Word]? words, AST::Node body) -> AST::For
 
-    def make_case: (untyped word, untyped items) -> untyped
+    def make_case: (AST::Word word, Array[AST::CaseItem] items) -> AST::Case
 
-    def make_case_item: (untyped patterns, untyped body) -> untyped
+    def make_case_item: (Array[AST::Word] patterns, AST::Node body) -> AST::CaseItem
 
-    def make_function: (untyped word, untyped body) -> untyped
+    def make_function: (AST::Word word, AST::Node body) -> AST::FunctionDef
 
     def make_simple_command: (untyped prefix, untyped word, untyped suffix) -> untyped
 
-    def make_redirect: (untyped kind, untyped target) -> untyped
+    def make_redirect: (Symbol kind, AST::Word target) -> AST::Redirect
 
-    def make_heredoc: (untyped holder) -> untyped
+    def make_heredoc: (untyped holder) -> AST::Redirect
 
-    def with_io_number: (untyped redirect, untyped number) -> untyped
+    def with_io_number: (AST::Redirect redirect, Integer number) -> AST::Redirect
   end
 end

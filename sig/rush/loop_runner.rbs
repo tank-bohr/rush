@@ -7,26 +7,26 @@ module Rush
 
     @executor: Executor
 
-    @condition: untyped
+    @condition: AST::Node
 
-    @body: untyped
+    @body: AST::Node
 
-    @sense: untyped
+    @sense: :while | :until
 
     include LoopControlHandling
 
-    def initialize: (untyped executor, untyped condition, untyped body, untyped sense) -> void
+    def initialize: (Executor executor, AST::Node condition, AST::Node body, :while | :until sense) -> void
 
     # Bracket the loop so break/continue see the right nesting depth; leave runs
     # even when break unwinds.
-    def call: () -> untyped
+    def call: () -> Status
 
     private
 
-    def run_loop: () -> untyped
+    def run_loop: () -> Status
 
-    def proceed?: () -> untyped
+    def proceed?: () -> bool
 
-    def iterate: () -> untyped
+    def iterate: () -> Status
   end
 end

@@ -57,13 +57,13 @@ module Rush
     # returns nil so next_token re-reads from the new frame.
     def word: () -> [ untyped, untyped ]?
 
-    def alias_for: ([ untyped, untyped ] token, untyped word) -> String?
+    def alias_for: ([ untyped, untyped ] token, AST::Word word) -> String?
 
     def splice: (String value) -> nil
 
     def finish: ([ untyped, untyped ] token) -> [ untyped, untyped ]
 
-    def delimiter: (untyped word) -> [ untyped, untyped ]
+    def delimiter: (AST::Word word) -> [ untyped, untyped ]
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.

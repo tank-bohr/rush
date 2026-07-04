@@ -7,17 +7,17 @@ module Rush
     class Command < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def verify: (untyped name) -> untyped
+      def verify: (String? name) -> Status
 
-      def verbose: (untyped name) -> untyped
+      def verbose: (String? name) -> Status
 
-      def run: (untyped args) -> untyped
+      def run: (Array[String] args) -> Status
 
-      def exported_env: () -> untyped
+      def exported_env: () -> ::Hash[String, String]
     end
   end
 end

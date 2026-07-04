@@ -30,6 +30,8 @@ module Rush
 
         SPEC: ::Regexp
 
+        def initialize: (String template) -> void
+
         def emit: (PrintfFormatter formatter) -> String
 
         private

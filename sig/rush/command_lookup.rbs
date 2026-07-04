@@ -20,11 +20,11 @@ module Rush
     class Match
       extend T::Sig
 
-      @name: String
+      @name: String?
 
       @detail: String?
 
-      def initialize: (String name, ?String? detail) -> void
+      def initialize: (String? name, ?String? detail) -> void
 
       def known?: () -> bool
 
@@ -35,11 +35,11 @@ module Rush
 
       def terse: () -> String?
 
-      def cache_into: (untyped cache) -> void
+      def cache_into: (::Hash[untyped, untyped] cache) -> void
 
       private
 
-      attr_reader name: String
+      attr_reader name: String?
 
       attr_reader detail: String?
     end
@@ -80,7 +80,7 @@ module Rush
       # detail (the resolved path) is String? on the base Match, so terse is too.
       def terse: () -> String?
 
-      def cache_into: (untyped cache) -> void
+      def cache_into: (::Hash[untyped, untyped] cache) -> void
     end
 
     def initialize: (untyped executor) -> void
@@ -88,35 +88,35 @@ module Rush
     # The Match for a name (Unknown if it resolves to nothing). An alias outranks
     # a function/builtin but not a reserved word; a PATH/slash file is the last
     # resort.
-    def find: (String name) -> Match
+    def find: (String? name) -> Match
 
     # The `type`/`command -V` description line for a name, or nil if unknown.
     def describe: (String name) -> String?
 
     private
 
-    def as_keyword: (String name) -> untyped
+    def as_keyword: (String? name) -> untyped
 
-    def as_alias: (String name) -> untyped
+    def as_alias: (String? name) -> untyped
 
-    def as_function: (String name) -> untyped
+    def as_function: (String? name) -> untyped
 
-    def as_special: (String name) -> untyped
+    def as_special: (String? name) -> untyped
 
-    def as_builtin: (String name) -> untyped
+    def as_builtin: (String? name) -> untyped
 
-    def as_file: (String name) -> untyped
+    def as_file: (String? name) -> untyped
 
-    def aliases: () -> untyped
+    def aliases: () -> AliasTable
 
-    def functions: () -> untyped
+    def functions: () -> FunctionTable
 
-    def path_of: (String name) -> untyped
+    def path_of: (String? name) -> String?
 
     def join: (String dir, String name) -> String
 
-    def executable?: (String path) -> untyped
+    def executable?: (String path) -> bool
 
-    def dirs: () -> untyped
+    def dirs: () -> Array[String]
   end
 end

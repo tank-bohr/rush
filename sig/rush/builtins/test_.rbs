@@ -7,17 +7,17 @@ module Rush
     class Test < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def bracketed?: () -> untyped
+      def bracketed?: () -> bool
 
-      def without_close: (untyped ops) -> untyped
+      def without_close: (Array[String] ops) -> Array[String]
 
-      def evaluate: (untyped ops) -> untyped
+      def evaluate: (Array[String] ops) -> Status
 
-      def report: (untyped message) -> untyped
+      def report: (String message) -> Status
     end
   end
 end

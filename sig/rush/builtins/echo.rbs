@@ -6,15 +6,15 @@ module Rush
     class Echo < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def render: () -> untyped
+      def render: () -> String
 
-      def newline?: () -> untyped
+      def newline?: () -> bool
 
-      def printed: () -> untyped
+      def printed: () -> Array[String]
     end
   end
 end

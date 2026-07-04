@@ -47,7 +47,7 @@ module Rush
 
       def message: () -> String
 
-      def sub_word: (untyped text) -> untyped
+      def sub_word: (String text) -> AST::Word
     end
   end
 end

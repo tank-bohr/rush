@@ -6,6 +6,26 @@ module Rush
   class ClosedStream
     extend T::Sig
 
+    def write: (*untyped objects) -> bot
+
+    def print: (*untyped objects) -> bot
+
+    def puts: (*untyped objects) -> bot
+
+    def <<: (untyped object) -> bot
+
+    def printf: (*untyped objects) -> bot
+
+    def gets: (?String? sep, ?Integer limit) -> bot
+
+    def read: (?Integer? length, ?String outbuf) -> bot
+
+    def readline: (*untyped args) -> bot
+
+    def each_line: (*untyped args) -> bot
+
+    def readpartial: (*untyped args) -> bot
+
     def close: () -> nil
 
     def flush: () -> self

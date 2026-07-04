@@ -10,11 +10,11 @@ module Rush
 
       @executor: Executor
 
-      @segments: Array[untyped]
+      @segments: Array[AST::WordSegment]
 
-      def initialize: (Executor executor, Array[untyped] segments) -> void
+      def initialize: (Executor executor, Array[AST::WordSegment] segments) -> void
 
-      def expand: () -> Array[untyped]
+      def expand: () -> Array[AST::WordSegment]
 
       private
 
@@ -41,11 +41,11 @@ module Rush
     class NoTilde
       extend T::Sig
 
-      @segments: Array[untyped]
+      @segments: Array[AST::WordSegment]
 
-      def initialize: (untyped _executor, Array[untyped] segments) -> void
+      def initialize: (Executor _executor, Array[AST::WordSegment] segments) -> void
 
-      def expand: () -> Array[untyped]
+      def expand: () -> Array[AST::WordSegment]
     end
   end
 end

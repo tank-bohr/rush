@@ -16,6 +16,6 @@ module Rush
     # loud fetch: a missing name is a bug, not a nil to thread through.
     def fetch: (String name) -> AST::Node
 
-    def key?: (String name) -> bool
+    def key?: (untyped name) -> bool
   end
 end

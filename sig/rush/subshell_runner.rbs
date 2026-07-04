@@ -8,17 +8,17 @@ module Rush
 
     @executor: Executor
 
-    @body: untyped
+    @body: AST::Node
 
-    def initialize: (untyped executor, untyped body) -> void
+    def initialize: (Executor executor, AST::Node body) -> void
 
-    def call: () -> untyped
+    def call: () -> Status
 
     # The subshell is a fresh top level: exit (or an uncaught return) ends it
     # with that code, a stray break/continue is a no-op, and a fatal error
     # (readonly, ${x:?}, ...) aborts only the subshell — the parent shell carries
     # on — without letting the exception escape the fork.
-    def run_body: () -> untyped
+    def run_body: () -> Status
 
     private
 
@@ -29,9 +29,9 @@ module Rush
     # the loop), so a break/continue targeting a loop in the parent unwinds to
     # here and ends the subshell — the parent loop, a separate process, is
     # untouched. (With no enclosing loop the builtin no-ops and never raises.)
-    def exit_like?: (untyped error) -> untyped
+    def exit_like?: (Error error) -> bool
 
-    def report_fatal: (untyped error) -> untyped
+    def report_fatal: (Error error) -> Status
 
     def spawn_child: () -> untyped
 

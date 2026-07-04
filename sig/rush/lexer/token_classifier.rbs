@@ -41,7 +41,7 @@ module Rush
 
       def assignment_name: () -> String?
 
-      def capture: (untyped value) -> String?
+      def capture: (String value) -> String?
 
       def assignment_token: (String name) -> [ Symbol, untyped ]
 

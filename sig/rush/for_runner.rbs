@@ -7,24 +7,24 @@ module Rush
 
     @executor: Executor
 
-    @name: untyped
+    @name: String
 
-    @values: untyped
+    @values: Array[String]
 
-    @body: untyped
+    @body: AST::Node
 
     include LoopControlHandling
 
-    def initialize: (untyped executor, untyped name, untyped values, untyped body) -> void
+    def initialize: (Executor executor, String name, Array[String] values, AST::Node body) -> void
 
     # Bracket the loop so break/continue see the right nesting depth; leave runs
     # even when break unwinds.
-    def call: () -> untyped
+    def call: () -> Status
 
     private
 
-    def run_loop: () -> untyped
+    def run_loop: () -> Status
 
-    def iterate: (untyped value) -> untyped
+    def iterate: (String value) -> Status
   end
 end

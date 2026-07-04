@@ -8,17 +8,17 @@ module Rush
     class ParamRef < ::Data
       extend T::Sig
 
-      attr_reader name: untyped
+      attr_reader name: String
       attr_reader op: untyped
       attr_reader arg: untyped
 
       def self.new: (name: untyped, op: untyped, arg: untyped) -> ParamRef
 
-      def self.simple: (untyped name) -> ParamRef
+      def self.simple: (String name) -> ParamRef
 
-      def self.parse: (untyped body) -> ParamRef
+      def self.parse: (String body) -> ParamRef
 
-      def self.length?: (untyped body) -> bool
+      def self.length?: (String body) -> bool
     end
   end
 end

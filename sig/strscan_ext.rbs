@@ -3,4 +3,20 @@
 # prefers them). Add the String overloads so code and checker agree.
 class StringScanner
   def scan: (Regexp | String pattern) -> String?
+
+  def skip: (Regexp | String pattern) -> Integer?
+
+  def getch: () -> String?
+
+  def peek: (Integer length) -> String
+
+  def eos?: () -> bool
+
+  def unscan: () -> self
+
+  def rest: () -> String
+
+  def terminate: () -> self
+
+  def charpos: () -> Integer
 end

@@ -5,17 +5,17 @@ module Rush
     class Unset < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def names: () -> untyped
+      def names: () -> Array[String]
 
-      def function?: () -> untyped
+      def function?: () -> bool
 
-      def remove: (untyped name) -> untyped
+      def remove: (String name) -> void
 
-      def state: () -> untyped
+      def state: () -> ShellState
     end
   end
 end

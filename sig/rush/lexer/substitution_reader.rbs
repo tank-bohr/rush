@@ -16,7 +16,7 @@ module Rush
 
       def parens: () -> String
 
-      def backticks: () -> String?
+      def backticks: () -> String
 
       # Read the body of $(( ... )) after the leading `((`, up to the matching
       # `))`, allowing balanced inner parentheses.

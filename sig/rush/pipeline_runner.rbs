@@ -23,9 +23,9 @@ module Rush
 
       def last?: () -> bool
 
-      def input: () -> IO?
+      def input: () -> untyped
 
-      def output: () -> IO?
+      def output: () -> untyped
 
       def ends: () -> Array[IO]
 

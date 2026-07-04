@@ -32,11 +32,9 @@ module Rush
 
       def operands: () -> Array[String]
 
-      # Optimistically IO: a redirected-closed fd is a ClosedStream that quacks
-      # like IO and raises EBADF on use (intended), so the IO surface is correct.
-      def stdout: () -> IO
+      def stdout: () -> _IoStream
 
-      def stderr: () -> IO
+      def stderr: () -> _IoStream
 
       def success: () -> Status
 

@@ -5,7 +5,7 @@ module Rush
     class HereDocRedirect
       extend T::Sig
 
-      def apply: (untyped redirect, untyped body, untyped io, untyped system) -> untyped
+      def apply: (AST::Redirect redirect, String body, IoTable io, SystemCalls system) -> IoTable
     end
   end
 end

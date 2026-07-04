@@ -8,13 +8,13 @@ module Rush
     class Shift < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def state: () -> untyped
+      def state: () -> ShellState
 
-      def count: () -> (1 | untyped)
+      def count: () -> Integer
     end
   end
 end

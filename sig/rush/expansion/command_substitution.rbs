@@ -9,30 +9,30 @@ module Rush
 
       @executor: Executor
 
-      @source: untyped
+      @source: String
 
-      def initialize: (untyped executor, untyped source) -> void
+      def initialize: (Executor executor, String source) -> void
 
-      def expand: () -> untyped
+      def expand: () -> String
 
-      def capture: (untyped write) -> untyped
+      def capture: (_IoStream write) -> Status
 
       private
 
       # The body runs in a fresh errexit context (a subshell): a `set -e` failure
       # ends only this substitution, leaving its status for the enclosing command.
       # exit, and an uncaught return, both end the substitution with their code.
-      def run_isolated: () -> untyped
+      def run_isolated: () -> Status
 
-      def read_output: (untyped read, untyped pid) -> untyped
+      def read_output: (_IoStream read, untyped pid) -> untyped
 
-      def strip: (untyped output) -> untyped
+      def strip: (String output) -> String
 
-      def spawn_child: (untyped write) -> untyped
+      def spawn_child: (_IoStream write) -> untyped
 
-      def run_child: (untyped write) -> untyped
+      def run_child: (_IoStream write) -> untyped
 
-      def parse: () -> untyped
+      def parse: () -> AST::Node
     end
   end
 end

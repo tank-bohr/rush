@@ -4,15 +4,15 @@ module Rush
     class Registry
       extend T::Sig
 
-      @builtins: untyped
+      @builtins: ::Hash[String?, untyped]
 
       def initialize: () -> void
 
-      def register: (untyped name, untyped klass) -> untyped
+      def register: (String name, untyped klass) -> untyped
 
-      def fetch: (untyped name) -> untyped
+      def fetch: (String? name) -> untyped
 
-      def key?: (untyped name) -> untyped
+      def key?: (String? name) -> bool
     end
   end
 end

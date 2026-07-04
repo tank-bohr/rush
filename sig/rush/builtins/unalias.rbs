@@ -6,17 +6,17 @@ module Rush
     class Unalias < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def remove_all: () -> untyped
+      def remove_all: () -> Status
 
-      def remove: (untyped name) -> untyped
+      def remove: (String name) -> Status
 
-      def keep: (untyped status, untyped result) -> untyped
+      def keep: (Status status, Status result) -> Status
 
-      def aliases: () -> untyped
+      def aliases: () -> AliasTable
     end
   end
 end

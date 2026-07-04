@@ -1,31 +1,52 @@
 module Rush
+  interface _IoStream
+    def !: () -> bool
+
+    def is_a?: (untyped klass) -> bool
+
+    def puts: (*untyped objects) -> nil
+
+    def write: (*untyped objects) -> untyped
+
+    def print: (*untyped objects) -> nil
+
+    def printf: (*untyped objects) -> nil
+
+    def gets: (?String? sep, ?Integer limit) -> String?
+
+    def read: (?Integer? length, ?String outbuf) -> String?
+
+    def close: () -> untyped
+
+    def flush: () -> untyped
+  end
+
   # Maps file descriptors to IO objects for a single command. Redirections fold
   # over a base table to produce a new one (`with`), so the shell's own streams
   # are never mutated and a command's redirections are scoped to that command.
   class IoTable
     extend T::Sig
 
-    # fd -> stream; values are heterogeneous (IO/File/Tempfile/ClosedStream), so
-    # kept untyped until a shared stream interface is worth declaring.
-    @streams: Hash[Integer, untyped]
+    @streams: Hash[Integer, _IoStream]
 
-    def initialize: (Hash[Integer, untyped] streams) -> void
+    def initialize: (Hash[Integer, _IoStream] streams) -> void
 
     def self.standard: (SystemCalls system) -> IoTable
 
-    def get: (Integer fd) -> untyped
+    def get: (0 | 1 | 2 fd) -> _IoStream
+           | (Integer fd) -> _IoStream?
 
-    def with: (Integer fd, untyped io) -> IoTable
+    def with: (Integer fd, _IoStream io) -> IoTable
 
     # The bound streams, for diffing which a command's redirects freshly opened
     # (and so must close) against the base table it inherited.
-    def ios: () -> Array[untyped]
+    def ios: () -> Array[_IoStream]
 
     # Flush+close the streams this table opened over `base` (the ones a command's
     # redirects added), leaving inherited streams and pipe ends untouched.
     def close_opened_over: (IoTable base, SystemCalls system) -> void
 
     # A closed fd (ClosedStream) becomes :close so a spawned child closes it.
-    def to_spawn_options: () -> Hash[Integer, untyped]
+    def to_spawn_options: () -> Hash[Integer, _IoStream | :close]
   end
 end

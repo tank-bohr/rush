@@ -9,7 +9,7 @@ module Rush
     class Trap < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
@@ -20,21 +20,21 @@ module Rush
       # spec that names no signal — dash's behaviour for `trap x INT BADD TERM`.
       def apply: (untyped action, untyped signals) -> untyped
 
-      def place: (untyped action, untyped spec) -> untyped
+      def place: (String? action, String spec) -> String?
 
-      def change: (untyped name, untyped action) -> untyped
+      def change: (String name, untyped action) -> void
 
-      def reset?: (untyped action) -> untyped
+      def reset?: (String? action) -> bool
 
-      def bad_trap: (untyped spec) -> untyped
+      def bad_trap: (String spec) -> Status
 
-      def list: () -> untyped
+      def list: () -> Status
 
-      def line: (untyped name, untyped action) -> ::String
+      def line: (String name, String action) -> ::String
 
-      def quote: (untyped action) -> ::String
+      def quote: (String action) -> ::String
 
-      def traps: () -> untyped
+      def traps: () -> TrapTable
     end
   end
 end

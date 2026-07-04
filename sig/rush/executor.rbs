@@ -44,7 +44,7 @@ module Rush
     # Exception: redirect-only `exec` commits the table as the shell's base
     # (replace_io), so it now equals @io — leave those files open so they persist
     # for the rest of the shell rather than closing them out from under it.
-    def with_redirects: [T] (Array[AST::Redirect] redirects, ?IoTable base) { (untyped io) -> T } -> T
+    def with_redirects: [T] (Array[AST::Redirect] redirects, ?IoTable base) { (IoTable io) -> T } -> T
 
     # Run a compound command with its redirects bound for the whole body.
     def run_redirected: (AST::Node command, Array[AST::Redirect] redirects) -> Status
@@ -86,6 +86,6 @@ module Rush
 
     def abort_on?: (Status status) -> bool
 
-    def redirect_into: (AST::Redirect redirect, IoTable io) -> untyped
+    def redirect_into: (AST::Redirect redirect, IoTable io) -> IoTable
   end
 end

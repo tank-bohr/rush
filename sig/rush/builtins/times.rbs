@@ -7,11 +7,11 @@ module Rush
     class Times < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def clock: (untyped seconds) -> untyped
+      def clock: (Float seconds) -> String
     end
   end
 end

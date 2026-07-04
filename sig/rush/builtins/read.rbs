@@ -23,7 +23,7 @@ module Rush
 
       def ifs: () -> String?
 
-      def stdin: () -> IO
+      def stdin: () -> _IoStream
 
       def usage_error: () -> Status
     end

@@ -6,18 +6,18 @@ module Rush
     class FileRedirect
       extend T::Sig
 
-      @mode: untyped
+      @mode: String | Integer
 
-      @default_fd: untyped
+      @default_fd: Integer
 
-      def initialize: (untyped mode, untyped default_fd) -> void
+      def initialize: (String | Integer mode, Integer default_fd) -> void
 
       # A failure to open the target (missing directory, permission denied, a
       # directory where a file is expected) is a redirection error: the command
       # is left unrun with status 2 (RedirectError), or — on a special builtin —
       # aborts the shell, the escalation being handled one level up in
       # CommandRunner where the command word is known.
-      def apply: (untyped redirect, untyped target, untyped io, untyped system) -> untyped
+      def apply: (AST::Redirect redirect, String target, IoTable io, SystemCalls system) -> IoTable
     end
   end
 end

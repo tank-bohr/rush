@@ -6,13 +6,21 @@ module Rush
     # case is "$@"/$@, which yields one part per positional parameter with a
     # forced field break between them ($* always joins to a scalar). Quoted
     # metacharacters are backslash-escaped so they survive splitting and glob.
+    interface _TildeExpansion
+      def expand: () -> Array[AST::WordSegment]
+    end
+
+    interface _TildeExpanderClass
+      def new: (Executor executor, Array[AST::WordSegment] segments) -> _TildeExpansion
+    end
+
     class Pipeline
       extend T::Sig
 
       @executor: Executor
 
       # Tilde expansion strategy per mode (its value is a word's segment list).
-      TILDE_EXPANDERS: Hash[Symbol, untyped]
+      TILDE_EXPANDERS: Hash[Symbol, _TildeExpanderClass]
 
       def initialize: (Executor executor) -> void
 
