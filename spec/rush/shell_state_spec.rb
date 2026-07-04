@@ -39,4 +39,18 @@ RSpec.describe Rush::ShellState do
     inner = state.loops.without { state.loops.depth }
     expect([inner, state.loops.depth]).to eq([0, 1])
   end
+
+  it 'brackets function frames around locals, loops and positionals' do
+    state = described_class.new(environment: Rush::Environment.new('x' => 'global'))
+    state.positional.replace(%w[outer])
+    state.loops.enter
+
+    result = state.with_function_frame(%w[arg]) do
+      state.variables.declare_local_operand('x=local')
+      [state.positional.to_a, state.loops.depth, state.variables.get('x')]
+    end
+
+    expect(result).to eq([%w[arg], 0, 'local'])
+    expect([state.positional.to_a, state.loops.depth, state.variables.get('x')]).to eq([%w[outer], 1, 'global'])
+  end
 end

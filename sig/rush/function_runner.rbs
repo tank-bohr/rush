@@ -16,8 +16,8 @@ module Rush
 
     def initialize: (Executor executor, AST::Node body, Array[String] args) -> void
 
-    # A function body is a fresh loop scope: without_loops resets the depth so a
-    # break/continue inside it cannot reach a loop in the caller (POSIX 2.9.5).
+    # A function body runs inside a ShellState-owned function frame: locals are
+    # scoped, positionals are rebound, and loop depth is reset (POSIX 2.9.5).
     def call: () -> Status
 
     private

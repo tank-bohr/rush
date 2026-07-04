@@ -49,9 +49,19 @@ module Rush
       @loops = LoopNesting.new
       @options = Options.new
       @positional = Positional.new
+      @function_frame = FunctionFrame.new(variables: @variables, loops: @loops, positional: @positional)
       @functions = FunctionTable.new
       @aliases = AliasTable.new
       @command_hash = {}
+    end
+
+    sig do
+      type_parameters(:U)
+        .params(args: T::Array[String], blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def with_function_frame(args, &blk)
+      @function_frame.call(args, &blk)
     end
 
     # The last command's exit status ($?), recorded after each command runs.

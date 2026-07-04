@@ -1,0 +1,18 @@
+module Rush
+  # Brackets a shell-function invocation: open a local-variable scope, reset loop
+  # nesting so break/continue cannot escape to the caller, bind positional
+  # parameters to the function arguments, then restore all three on return.
+  class FunctionFrame
+    extend T::Sig
+
+    @variables: ShellVariables
+
+    @loops: LoopNesting
+
+    @positional: Positional
+
+    def initialize: (variables: ShellVariables, loops: LoopNesting, positional: Positional) -> void
+
+    def call: [T] (Array[String] args) { () -> T } -> T
+  end
+end

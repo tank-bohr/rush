@@ -17,14 +17,11 @@ module Rush
       @args = args
     end
 
-    # A function body is a fresh loop scope: without_loops resets the depth so a
-    # break/continue inside it cannot reach a loop in the caller (POSIX 2.9.5).
+    # A function body runs inside a ShellState-owned function frame: locals are
+    # scoped, positionals are rebound, and loop depth is reset (POSIX 2.9.5).
     sig { returns(Status) }
     def call
-      @state.variables.begin_scope
-      @state.loops.without { @state.positional.with(@args) { invoke } }
-    ensure
-      @state.variables.end_scope
+      @state.with_function_frame(@args) { invoke }
     end
 
     private

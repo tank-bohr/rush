@@ -13,6 +13,13 @@ module T
   end
 
   module Private
+    # Sorbet's proc type builder, used as a value inside sig {} blocks.
+    class ProcBuilder
+      def params: (**untyped) -> ProcBuilder
+
+      def returns: (untyped) -> ProcBuilder
+    end
+
     # Sorbet's sig-block builder: every call returns self so they chain.
     class DeclBuilder
       def params: (**untyped) -> DeclBuilder
@@ -53,7 +60,7 @@ module T
 
   def self.noreturn: () -> untyped
 
-  def self.proc: () -> untyped
+  def self.proc: () -> T::Private::ProcBuilder
 
   def self.type_parameter: (Symbol) -> untyped
 
