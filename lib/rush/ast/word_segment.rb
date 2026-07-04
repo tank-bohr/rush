@@ -51,10 +51,15 @@ module Rush
 
       sig { params(other: T.untyped).returns(T::Boolean) }
       def ==(other)
-        other.instance_of?(self.class) && value == other.value && quoted == other.quoted
+        other.instance_of?(self.class) && equality_value == other.equality_value && quoted == other.quoted
       end
 
       alias eql? ==
+
+      sig { returns(Object) }
+      def equality_value
+        value
+      end
 
       sig { returns(Integer) }
       def hash

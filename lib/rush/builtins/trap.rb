@@ -12,17 +12,18 @@ module Rush
     class Trap < Base
       extend T::Sig
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def call
         return list if operands.empty?
 
-        apply(*split)
+        action, signals = split
+        apply(action, signals)
       end
 
       private
 
       # tuple, not Array: split feeds `apply(*split)`, a fixed-arity call.
-      sig { returns(T.untyped) }
+      sig { returns([T.nilable(String), T::Array[String]]) }
       def split
         return [nil, operands] if operands.size < 2
 
@@ -31,52 +32,51 @@ module Rush
 
       # Apply left to right, stopping at (but keeping the work before) the first
       # spec that names no signal — dash's behaviour for `trap x INT BADD TERM`.
-      sig { params(action: T.untyped, signals: T.untyped).returns(T.untyped) }
+      sig { params(action: T.nilable(String), signals: T::Array[String]).returns(Status) }
       def apply(action, signals)
         bad = signals.find { |spec| !place(action, spec) }
         bad ? bad_trap(bad) : success
       end
 
-      sig { params(action: T.untyped, spec: T.untyped).returns(T.untyped) }
+      sig { params(action: T.nilable(String), spec: String).returns(T.nilable(String)) }
       def place(action, spec)
         name = Signals.decode(spec)
         change(name, action) if name
         name
       end
 
-      sig { params(name: T.untyped, action: T.untyped).returns(T.untyped) }
+      sig { params(name: String, action: T.nilable(String)).void }
       def change(name, action)
-        reset?(action) ? executor.trap_runner.reset(name) : executor.trap_runner.set(name, action)
+        if action && action != '-'
+          executor.trap_runner.set(name, action)
+        else
+          executor.trap_runner.reset(name)
+        end
       end
 
-      sig { params(action: T.untyped).returns(T.untyped) }
-      def reset?(action)
-        !action || action == '-'
-      end
-
-      sig { params(spec: T.untyped).returns(T.untyped) }
+      sig { params(spec: String).returns(Status) }
       def bad_trap(spec)
         stderr.puts("trap: #{spec}: bad trap")
         failure(1)
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(Status) }
       def list
         traps.listing.each { |name, action| stdout.puts(line(name, action)) }
         success
       end
 
-      sig { params(name: T.untyped, action: T.untyped).returns(String) }
+      sig { params(name: String, action: String).returns(String) }
       def line(name, action)
         "trap -- #{quote(action)} #{name}"
       end
 
-      sig { params(action: T.untyped).returns(String) }
+      sig { params(action: String).returns(String) }
       def quote(action)
         "'#{action.gsub("'", %q('"'"'))}'"
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(TrapTable) }
       def traps
         executor.state.traps
       end

@@ -51,6 +51,19 @@ module Rush
         base = base.with(0, input) if input
         output ? base.with(1, output) : base
       end
+
+      sig { void }
+      def close_unused
+        keep = ends
+        pipes.each { |pipe| close_unkept(pipe, keep) }
+      end
+
+      private
+
+      sig { params(pipe: [IO, IO], keep: T::Array[IO]).void }
+      def close_unkept(pipe, keep)
+        pipe.each { |io| io.close unless keep.include?(io) }
+      end
     end
 
     sig { params(executor: Executor, commands: T::Array[AST::Node]).void }
@@ -89,13 +102,12 @@ module Rush
 
     sig { params(stage: Stage).void }
     def close_unused(stage)
-      keep = stage.ends
-      stage.pipes.flatten.each { |io| io.close unless keep.include?(io) }
+      stage.close_unused
     end
 
     sig { params(pipes: T::Array[[IO, IO]]).void }
     def close_all(pipes)
-      pipes.flatten.each(&:close)
+      pipes.each { |pipe| pipe.each(&:close) }
     end
 
     sig { params(pids: T::Array[T.nilable(Integer)]).returns(Status) }

@@ -22,19 +22,12 @@ module Rush
 
     private
 
-    def resolve: (untyped error) -> untyped
-
-    # exit, and a `return` not caught by a function/dot, both end the subshell
-    # with their code. A subshell inherits the loop scope (it is lexically inside
-    # the loop), so a break/continue targeting a loop in the parent unwinds to
-    # here and ends the subshell — the parent loop, a separate process, is
-    # untouched. (With no enclosing loop the builtin no-ops and never raises.)
-    def exit_like?: (Error error) -> bool
+    def resolve: (Error error) -> Status
 
     def report_fatal: (Error error) -> Status
 
-    def spawn_child: () -> untyped
+    def spawn_child: () -> Integer
 
-    def run_child: () -> untyped
+    def run_child: () -> bot
   end
 end

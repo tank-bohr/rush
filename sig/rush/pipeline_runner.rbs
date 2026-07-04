@@ -31,6 +31,12 @@ module Rush
 
       # Layer this stage's pipe ends over the base IoTable.
       def io: (IoTable base) -> IoTable
+
+      def close_unused: () -> void
+
+      private
+
+      def close_unkept: ([ IO, IO ] pipe, Array[IO] keep) -> void
     end
 
     def initialize: (Executor executor, Array[AST::Node] commands) -> void

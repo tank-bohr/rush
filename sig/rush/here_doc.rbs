@@ -30,6 +30,6 @@ module Rush
     def fill: (AST::Word body) -> void
 
     # Quacks like AST::Word for the expansion pipeline: the body's segments.
-    def segments: () -> Array[AST::WordSegment]
+    def segments: () -> Array[AST::WordSegment[untyped]]
   end
 end

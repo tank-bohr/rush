@@ -7,18 +7,18 @@ module Rush
     # the kind-specific payload (literal text, a ParamRef, or substitution
     # source). literal_value is the text when the segment can stand in as a bare
     # name; splittable?/splat? are its field-splitting roles.
-    class WordSegment
+    class WordSegment[unchecked out V < Object]
       extend T::Sig
 
-      @value: untyped
+      @value: V
 
       @quoted: bool
 
-      attr_reader value: untyped
+      attr_reader value: V
 
       attr_reader quoted: bool
 
-      def initialize: (untyped value, bool quoted) -> void
+      def initialize: (V value, bool quoted) -> void
 
       # Each concrete segment expands itself to a string; the base is abstract
       # (raises), so every value flowing through the pipeline has #expand.
@@ -31,18 +31,20 @@ module Rush
       def splat?: () -> bool
 
       # A copy with a rewritten value (e.g. after tilde expansion).
-      def with_value: (untyped new_value) -> WordSegment
+      def with_value: (V new_value) -> WordSegment[V]
 
-      def ==: (untyped other) -> bool
+      def ==: (Object? other) -> bool
 
       alias eql? ==
 
       def hash: () -> Integer
+
+      def equality_value: () -> Object
     end
 
     # Literal text. It expands to itself, can act as a bare name when unquoted,
     # and is never field-split.
-    class LiteralSegment < WordSegment
+    class LiteralSegment < WordSegment[String]
       extend T::Sig
 
       attr_reader value: String
@@ -54,14 +56,14 @@ module Rush
 
     # A segment substituted at expansion time (param / command / arithmetic): its
     # unquoted result undergoes field splitting.
-    class DynamicSegment < WordSegment
+    class DynamicSegment[unchecked out V < Object] < WordSegment[V]
       extend T::Sig
 
       def splittable?: () -> bool
     end
 
     # $name / ${...}: value is the ParamRef.
-    class ParamSegment < DynamicSegment
+    class ParamSegment < DynamicSegment[ParamRef]
       extend T::Sig
 
       attr_reader value: ParamRef
@@ -73,7 +75,7 @@ module Rush
     end
 
     # $(...) / `...`: value is the command-substitution source.
-    class CommandSegment < DynamicSegment
+    class CommandSegment < DynamicSegment[String]
       extend T::Sig
 
       attr_reader value: String
@@ -82,7 +84,7 @@ module Rush
     end
 
     # $((...)): value is the arithmetic source.
-    class ArithSegment < DynamicSegment
+    class ArithSegment < DynamicSegment[String]
       extend T::Sig
 
       attr_reader value: String

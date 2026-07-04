@@ -13,18 +13,16 @@ module Rush
 
       private
 
-      # tuple, not Array: split feeds `apply(*split)`, a fixed-arity call.
-      def split: () -> [ untyped, untyped ]
+      # tuple, not Array: split feeds a fixed action/signals pair to #apply.
+      def split: () -> [ String?, Array[String] ]
 
       # Apply left to right, stopping at (but keeping the work before) the first
       # spec that names no signal — dash's behaviour for `trap x INT BADD TERM`.
-      def apply: (untyped action, untyped signals) -> untyped
+      def apply: (String? action, Array[String] signals) -> Status
 
       def place: (String? action, String spec) -> String?
 
-      def change: (String name, untyped action) -> void
-
-      def reset?: (String? action) -> bool
+      def change: (String name, String? action) -> void
 
       def bad_trap: (String spec) -> Status
 
