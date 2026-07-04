@@ -22,38 +22,37 @@ module Rush
       class Template < StringScanner
         ESCAPES = { '\\' => '\\', 'a' => "\a", 'b' => "\b", 'f' => "\f",
                     'n' => "\n", 'r' => "\r", 't' => "\t", 'v' => "\v" }.freeze
-        SPEC = /\A%([-+ #0]*\d*(?:\.\d+)?)([diouxXcs%])/
-        LITERAL = /[^%\\]+/
+        SPEC = /\A([-+ #0]*\d*(?:\.\d+)?)([diouxXcs%])/
 
         def emit(formatter)
           out = +''
-          out << piece(formatter) until eos?
+          while (char = getch)
+            out << piece(formatter, char)
+          end
           out
         end
 
         private
 
-        def piece(formatter)
-          return conversion(formatter) if peek(1) == '%'
-          return escape if peek(1) == '\\'
+        def piece(formatter, char)
+          return conversion(formatter) if char == '%'
+          return escape if char == '\\'
 
-          # Not at %, \\ or eos, so LITERAL (/[^%\\]+/) always matches here; .to_s
-          # only quiets scan's nominal String? (a nil would loop forever, can't happen).
-          scan(LITERAL).to_s
+          char
         end
 
         def conversion(formatter)
-          return getch.to_s unless scan(SPEC)
+          return '%' unless scan(SPEC)
 
-          formatter.convert(self[1].to_s, self[2].to_s)
+          flags, conv = captures
+          formatter.convert(flags, conv)
         end
 
         def escape
-          getch
           char = getch
-          # getch is String? at end-of-string; .to_s keeps the missing-key path
-          # identical (fetch("") and fetch(nil) both miss → block → "\\").
-          ESCAPES.fetch(char.to_s) { "\\#{char}" }
+          return '\\' unless char
+
+          ESCAPES.fetch(char) { "\\#{char}" }
         end
       end
 
@@ -81,7 +80,7 @@ module Rush
         return numeric(flags, conv, arg) if NUMERIC.include?(conv)
         return Kernel.format("%#{flags}s", first_char(arg)) if conv == 'c'
 
-        Kernel.format("%#{flags}s", arg.to_s)
+        Kernel.format("%#{flags}s", arg)
       end
 
       private
@@ -100,10 +99,9 @@ module Rush
       end
 
       def to_int(arg)
-        text = arg.to_s
-        return 0 if text.empty?
+        return 0 if arg.empty?
 
-        Integer(text, exception: false) || invalid
+        Integer(arg, exception: false) || invalid
       end
 
       def invalid
@@ -112,14 +110,14 @@ module Rush
       end
 
       def take
-        arg = @args[@cursor]
+        arg = @args.fetch(@cursor, '')
         @cursor += 1
         @consumed += 1
         arg
       end
 
       def first_char(arg)
-        arg.to_s.each_char.first.to_s
+        arg.each_char.first || ''
       end
     end
   end

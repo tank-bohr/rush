@@ -28,13 +28,11 @@ module Rush
 
         SPEC: ::Regexp
 
-        LITERAL: ::Regexp
-
         def emit: (PrintfFormatter formatter) -> String
 
         private
 
-        def piece: (PrintfFormatter formatter) -> String
+        def piece: (PrintfFormatter formatter, String char) -> String
 
         def conversion: (PrintfFormatter formatter) -> String
 
@@ -55,15 +53,15 @@ module Rush
 
       def one_pass: (String template) -> String
 
-      def numeric: (String flags, String conv, String? arg) -> String
+      def numeric: (String flags, String conv, String arg) -> String
 
-      def to_int: (String? arg) -> Integer
+      def to_int: (String arg) -> Integer
 
       def invalid: () -> Integer
 
-      def take: () -> String?
+      def take: () -> String
 
-      def first_char: (String? arg) -> String
+      def first_char: (String arg) -> String
     end
   end
 end
