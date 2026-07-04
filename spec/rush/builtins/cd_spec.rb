@@ -12,7 +12,7 @@ RSpec.describe Rush::Builtins::Cd do
   end
 
   it 'changes to the given directory and updates PWD/OLDPWD' do
-    state.scope.move_to('/start')
+    executor.state.scope.move_to('/start')
     expect(cd('/some/dir')).to be_success
     expect(system.chdirs).to eq(['/some/dir'])
     expect(env.get('PWD')).to eq('/some/dir')
@@ -20,7 +20,7 @@ RSpec.describe Rush::Builtins::Cd do
   end
 
   it 'resolves a relative directory against the logical pwd' do
-    state.scope.move_to('/a/b')
+    executor.state.scope.move_to('/a/b')
     cd('..')
     expect(env.get('PWD')).to eq('/a')
   end

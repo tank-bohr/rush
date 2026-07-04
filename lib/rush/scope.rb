@@ -24,7 +24,7 @@ module Rush
     # left) and $PWD (the one we entered) in step — the invariant cd relies on.
     sig { params(pwd: String).void }
     def move_to(pwd)
-      @environment.assign('OLDPWD', @pwd)
+      @environment.assign('OLDPWD', current_pwd)
       @pwd = pwd
       @environment.assign('PWD', pwd)
     end

@@ -19,11 +19,11 @@ module Rush
       @vars.fetch(name, nil)
     end
 
-    sig { params(name: String, value: T.untyped).returns(String) }
+    sig { params(name: String, value: String).returns(String) }
     def assign(name, value)
       raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
 
-      @vars[name] = value.to_s
+      @vars[name] = value
     end
 
     sig { params(name: String).void }

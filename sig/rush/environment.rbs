@@ -14,7 +14,7 @@ module Rush
 
     def get: (String name) -> String?
 
-    def assign: (String name, _ToS value) -> String
+    def assign: (String name, String value) -> String
 
     def export: (String name) -> void
 

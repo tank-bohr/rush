@@ -44,7 +44,7 @@ module Rush
       sig { params(line: T.untyped).returns(T.untyped) }
       def assign(line)
         fields = Expansion::ReadSplitter.new(ifs, names.size).split(line)
-        names.each_with_index { |name, index| executor.state.environment.assign(name, fields[index]) }
+        names.each_with_index { |name, index| executor.state.environment.assign(name, fields.fetch(index)) }
       end
 
       sig { returns(T.untyped) }

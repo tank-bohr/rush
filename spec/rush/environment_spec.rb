@@ -5,9 +5,9 @@ RSpec.describe Rush::Environment do
     expect(described_class.new.get('PATH')).to eq(ENV.fetch('PATH'))
   end
 
-  it 'reads and writes variables, stringifying values' do
+  it 'reads and writes string variables' do
     env = described_class.new({})
-    env.assign('N', 5)
+    env.assign('N', '5')
     expect(env.get('N')).to eq('5')
   end
 
