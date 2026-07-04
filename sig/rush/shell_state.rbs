@@ -36,6 +36,10 @@ module Rush
 
     def with_function_frame: [T] (Array[String] args) { () -> T } -> T
 
+    def with_loop: [T] () { () -> T } -> T
+
+    def preserve_status: [T] () { () -> T } -> T
+
     # The last command's exit status ($?), recorded after each command runs;
     # returns the status it recorded (Executor#run passes it straight through).
     def record_status: (Status status) -> Status

@@ -70,6 +70,30 @@ module Rush
       @function_frame.call(args, &blk)
     end
 
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def with_loop(&blk)
+      @loops.enter
+      yield
+    ensure
+      @loops.leave
+    end
+
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def preserve_status(&blk)
+      saved = @last_status
+      yield
+    ensure
+      @last_status = T.must(saved)
+    end
+
     # The last command's exit status ($?), recorded after each command runs.
     sig { params(status: Status).returns(Status) }
     def record_status(status)

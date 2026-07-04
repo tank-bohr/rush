@@ -18,14 +18,11 @@ module Rush
       @body = body
     end
 
-    # Bracket the loop so break/continue see the right nesting depth (see
-    # LoopNesting#enter via state.loops); leave runs even when break unwinds.
+    # Bracket the loop so break/continue see the right nesting depth; leave runs
+    # even when break unwinds.
     sig { returns(T.untyped) }
     def call
-      @executor.state.loops.enter
-      run_loop
-    ensure
-      @executor.state.loops.leave
+      @executor.state.with_loop { run_loop }
     end
 
     private

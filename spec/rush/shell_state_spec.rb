@@ -41,6 +41,22 @@ RSpec.describe Rush::ShellState do
     expect([inner, state.loops.depth]).to eq([0, 1])
   end
 
+  it 'brackets loop depth and restores it after errors' do
+    state = described_class.new
+    expect { state.with_loop { raise Rush::BreakSignal, 1 } }.to raise_error(Rush::BreakSignal)
+    expect(state.loops.depth).to eq(0)
+  end
+
+  it 'preserves the last status around a block' do
+    state = described_class.new
+    state.record_status(Rush::Status.new(7))
+    result = state.preserve_status do
+      state.record_status(Rush::Status.new(2))
+      :ran
+    end
+    expect([result, state.last_status.exitstatus]).to eq([:ran, 7])
+  end
+
   it 'brackets function frames around locals, loops and positionals' do
     state = described_class.new(environment: Rush::Environment.new('x' => 'global'))
     state.positional.replace(%w[outer])

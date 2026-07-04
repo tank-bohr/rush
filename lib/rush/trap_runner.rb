@@ -104,9 +104,7 @@ module Rush
       action = @state.traps.action(name)
       return unless action
 
-      saved = @state.last_status
-      fire(action)
-      @state.record_status(saved)
+      @state.preserve_status { fire(action) }
     end
   end
 end

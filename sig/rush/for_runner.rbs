@@ -17,8 +17,8 @@ module Rush
 
     def initialize: (untyped executor, untyped name, untyped values, untyped body) -> void
 
-    # Bracket the loop so break/continue see the right nesting depth (see
-    # LoopNesting#enter via state.loops); leave runs even when break unwinds.
+    # Bracket the loop so break/continue see the right nesting depth; leave runs
+    # even when break unwinds.
     def call: () -> untyped
 
     private
