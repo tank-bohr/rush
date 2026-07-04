@@ -10,7 +10,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def call
-        target = operands.first || executor.state.environment.get('HOME')
+        target = operands.first || executor.state.variables.get('HOME')
         target ? change_to(target) : report('HOME not set')
       end
 
@@ -27,8 +27,8 @@ module Rush
 
       sig { params(dir: T.untyped).returns(T.untyped) }
       def update_pwd(dir)
-        state = executor.state
-        state.scope.move_to(executor.system.expand_path(dir, state.scope.current_pwd))
+        variables = executor.state.variables
+        variables.move_to(executor.system.expand_path(dir, variables.current_pwd))
       end
 
       sig { params(message: T.untyped).returns(T.untyped) }

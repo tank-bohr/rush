@@ -12,17 +12,14 @@ module Rush
     sig { returns(String) }
     attr_reader :name
 
+    sig { returns(T.nilable(String)) }
+    attr_reader :value
+
     sig { params(text: String).void }
     def initialize(text)
       @name = text
       @value = nil
       parse(text) if text.include?('=')
-    end
-
-    sig { params(environment: Environment).void }
-    def assign_to(environment)
-      assigned = @value
-      environment.assign(name, assigned) if assigned
     end
 
     private

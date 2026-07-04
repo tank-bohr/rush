@@ -13,7 +13,7 @@ RSpec.describe Rush::Builtins::Dot do
   it 'runs the file in the current shell, persisting its definitions' do
     system.provide_file('/lib.sh', "greet() { echo hi; }\nX=loaded\n")
     expect(run('/lib.sh')).to be_success
-    expect(state.environment.get('X')).to eq('loaded')
+    expect(state.variables.get('X')).to eq('loaded')
     expect(state.functions.key?('greet')).to be(true)
   end
 

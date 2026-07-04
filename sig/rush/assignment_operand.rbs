@@ -12,9 +12,9 @@ module Rush
 
     attr_reader name: String
 
-    def initialize: (String text) -> void
+    attr_reader value: String?
 
-    def assign_to: (Environment environment) -> void
+    def initialize: (String text) -> void
 
     private
 

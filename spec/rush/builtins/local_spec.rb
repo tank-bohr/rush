@@ -16,32 +16,32 @@ RSpec.describe Rush::Builtins::Local do
   end
 
   context 'when inside a function scope' do
-    before { state.scope.begin_scope }
+    before { state.variables.begin_scope }
 
     it 'snapshots a bare name, restoring it when the scope ends' do
       run('x')
       env.assign('x', 'changed')
-      state.scope.end_scope
+      state.variables.end_scope
       expect(env.get('x')).to eq('global')
     end
 
     it 'assigns name=value and restores the prior value on scope end' do
       expect(run('x=local')).to be_success
       expect(env.get('x')).to eq('local')
-      state.scope.end_scope
+      state.variables.end_scope
       expect(env.get('x')).to eq('global')
     end
 
     it 'restores a previously-unset variable to unset' do
       run('fresh=1')
-      state.scope.end_scope
+      state.variables.end_scope
       expect(env.get('fresh')).to be_nil
     end
 
     it 'keeps the first snapshot when a name is declared twice' do
       run('x=one')
       run('x=two')
-      state.scope.end_scope
+      state.variables.end_scope
       expect(env.get('x')).to eq('global')
     end
   end

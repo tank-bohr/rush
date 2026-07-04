@@ -81,7 +81,7 @@ module Rush
 
       sig { returns(T.nilable(String)) }
       def ifs
-        @executor.state.environment.get('IFS')
+        @executor.state.variables.get('IFS')
       end
     end
   end

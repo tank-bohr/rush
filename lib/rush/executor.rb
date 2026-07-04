@@ -43,7 +43,7 @@ module Rush
       @io = IoTable.standard(@system)
       @tested = false
       @trap_runner = TrapRunner.new(self)
-      @state.scope.seed_pwd(@system.pwd)
+      @state.variables.seed_pwd(@system.pwd)
     end
 
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the

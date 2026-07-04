@@ -73,6 +73,9 @@ module Rush
 
     private
 
+    sig { returns(Environment) }
+    attr_reader :environment
+
     sig { params(name: String, value: T.nilable(String)).void }
     def restore(name, value)
       value ? @environment.assign(name, value) : @environment.unset(name)

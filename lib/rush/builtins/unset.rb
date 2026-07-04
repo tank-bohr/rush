@@ -28,7 +28,7 @@ module Rush
 
       sig { params(name: T.untyped).returns(T.untyped) }
       def remove(name)
-        function? ? state.functions.undefine(name) : state.environment.unset(name)
+        function? ? state.functions.undefine(name) : state.variables.unset(name)
       end
 
       sig { returns(T.untyped) }

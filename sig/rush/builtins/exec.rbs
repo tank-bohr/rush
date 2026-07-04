@@ -19,7 +19,7 @@ module Rush
 
       def options: () -> untyped
 
-      def environment: () -> untyped
+      def variables: () -> ShellVariables
     end
   end
 end

@@ -48,7 +48,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def exported_env
-        executor.state.environment.exported
+        executor.state.variables.exported
       end
     end
   end

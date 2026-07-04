@@ -11,8 +11,6 @@ module Rush
       private
 
       def declare: (String operand) -> void
-
-      def environment: () -> Environment
     end
   end
 end

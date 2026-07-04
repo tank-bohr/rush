@@ -98,14 +98,14 @@ module Rush
 
     sig { returns(T::Hash[String, String]) }
     def command_env
-      @command.assignments.each_with_object(@executor.state.environment.exported) do |assignment, env|
+      @command.assignments.each_with_object(@executor.state.variables.exported) do |assignment, env|
         env[assignment.name] = assigned(assignment.value)
       end
     end
 
     sig { params(assignment: AST::Assignment).void }
     def persist(assignment)
-      @executor.state.environment.assign(assignment.name, assigned(assignment.value))
+      @executor.state.variables.assign(assignment.name, assigned(assignment.value))
     end
 
     sig { params(word: AST::Word).returns(String) }

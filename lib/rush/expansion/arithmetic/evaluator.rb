@@ -23,7 +23,7 @@ module Rush
 
         sig { params(name: String).returns(Integer) }
         def resolve(name)
-          value = @executor.state.environment.get(name) || ''
+          value = @executor.state.variables.get(name) || ''
           return 0 if value.strip.empty?
 
           Number.parse(value)
@@ -34,7 +34,7 @@ module Rush
         sig { params(name: String, op: String, value: Integer).returns(Integer) }
         def assign(name, op, value)
           result = op == '=' ? value : Number.binary(op.chop, resolve(name), value)
-          @executor.state.environment.assign(name, result.to_s)
+          @executor.state.variables.assign(name, result.to_s)
           result
         end
       end

@@ -1,16 +1,14 @@
 module Rush
-  # The mutable shell state threaded through execution: the variable environment,
+  # The mutable shell state threaded through execution: shell variables,
   # the last command's status ($?, the one field with behaviour here), the shell
   # name ($0), and the session sub-objects it bundles for the rest of the
-  # interpreter to drive directly — the variable Scope (local scoping + cwd),
-  # LoopNesting, Options, Positional, the function/alias/trap tables and the
-  # command-location cache.
+  # interpreter to drive directly — LoopNesting, Options, Positional, the
+  # function/alias/trap tables and the command-location cache.
   class ShellState
     extend T::Sig
 
-    @environment: Environment
     @name: String
-    @scope: Scope
+    @variables: ShellVariables
     @traps: TrapTable
     @last_status: Status
     @loops: LoopNesting
@@ -20,13 +18,12 @@ module Rush
     @aliases: AliasTable
     @command_hash: Hash[String, String]
 
-    attr_reader environment: Environment
     attr_reader functions: FunctionTable
     attr_reader traps: TrapTable
     attr_reader aliases: AliasTable
     attr_reader command_hash: Hash[String, String]
     attr_reader name: String
-    attr_reader scope: Scope
+    attr_reader variables: ShellVariables
     attr_reader loops: LoopNesting
     attr_reader options: Options
     attr_reader last_status: Status

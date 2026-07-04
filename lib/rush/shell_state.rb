@@ -2,17 +2,13 @@
 # frozen_string_literal: true
 
 module Rush
-  # The mutable shell state threaded through execution: the variable environment,
+  # The mutable shell state threaded through execution: shell variables,
   # the last command's status ($?, the one field with behaviour here), the shell
   # name ($0), and the session sub-objects it bundles for the rest of the
-  # interpreter to drive directly — the variable Scope (local scoping + cwd),
-  # LoopNesting, Options, Positional, the function/alias/trap tables and the
-  # command-location cache.
+  # interpreter to drive directly — LoopNesting, Options, Positional, the
+  # function/alias/trap tables and the command-location cache.
   class ShellState
     extend T::Sig
-
-    sig { returns(Environment) }
-    attr_reader :environment
 
     sig { returns(FunctionTable) }
     attr_reader :functions
@@ -29,8 +25,8 @@ module Rush
     sig { returns(String) }
     attr_reader :name
 
-    sig { returns(Scope) }
-    attr_reader :scope
+    sig { returns(ShellVariables) }
+    attr_reader :variables
 
     sig { returns(LoopNesting) }
     attr_reader :loops
@@ -46,9 +42,8 @@ module Rush
 
     sig { params(environment: Environment, name: String).void }
     def initialize(environment: Environment.new, name: 'rush')
-      @environment = environment
       @name = name
-      @scope = Scope.new(environment)
+      @variables = ShellVariables.new(environment)
       @traps = TrapTable.new
       @last_status = Status.success
       @loops = LoopNesting.new

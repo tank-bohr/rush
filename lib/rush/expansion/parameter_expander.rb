@@ -67,7 +67,7 @@ module Rush
 
       sig { params(text: String).returns(String) }
       def assign(text)
-        @executor.state.environment.assign(@ref.name, text)
+        @executor.state.variables.assign(@ref.name, text)
         text
       end
 

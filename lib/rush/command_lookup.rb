@@ -206,7 +206,7 @@ module Rush
 
     sig { returns(T.untyped) }
     def dirs
-      (@executor.state.environment.get('PATH') || '').split(':', -1)
+      (@executor.state.variables.get('PATH') || '').split(':', -1)
     end
   end
 end

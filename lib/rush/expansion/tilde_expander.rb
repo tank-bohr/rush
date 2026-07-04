@@ -50,7 +50,7 @@ module Rush
 
       sig { params(name: String).returns(T.nilable(String)) }
       def resolve(name)
-        return @executor.state.environment.get('HOME') if name.empty?
+        return @executor.state.variables.get('HOME') if name.empty?
 
         @executor.system.home_dir(name)
       end

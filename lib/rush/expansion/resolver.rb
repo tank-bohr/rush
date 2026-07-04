@@ -25,7 +25,7 @@ module Rush
         return send(SPECIAL.fetch(name)) if SPECIAL.key?(name)
         return positional(name.to_i) if name.match?(/\A\d+\z/)
 
-        state.environment.get(name)
+        state.variables.get(name)
       end
 
       private
@@ -62,7 +62,7 @@ module Rush
 
       sig { returns(String) }
       def separator
-        ifs = state.environment.get('IFS')
+        ifs = state.variables.get('IFS')
         ifs ? (ifs.each_char.first || '') : ' '
       end
 

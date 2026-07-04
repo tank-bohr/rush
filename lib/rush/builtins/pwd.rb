@@ -9,7 +9,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def call
-        stdout.puts(executor.state.scope.pwd)
+        stdout.puts(executor.state.variables.pwd)
         success
       end
     end

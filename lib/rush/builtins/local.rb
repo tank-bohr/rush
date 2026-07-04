@@ -12,7 +12,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def call
-        return not_in_function unless state.scope.in_function?
+        return not_in_function unless state.variables.in_function?
 
         operands.each { |operand| declare(operand) }
         success
@@ -27,9 +27,7 @@ module Rush
 
       sig { params(operand: T.untyped).returns(T.untyped) }
       def declare(operand)
-        assignment = AssignmentOperand.new(operand)
-        state.scope.declare_local(assignment.name)
-        assignment.assign_to(state.environment)
+        state.variables.declare_local_operand(operand)
       end
 
       sig { returns(T.untyped) }

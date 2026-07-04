@@ -1,17 +1,17 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::ShellState do
-  it 'defaults to a fresh environment, a success status and the name rush' do
+  it 'defaults to fresh variables, a success status and the name rush' do
     state = described_class.new
     expect(state.name).to eq('rush')
     expect(state.last_status).to be_success
-    expect(state.environment).to be_a(Rush::Environment)
+    expect(state.variables).to be_a(Rush::ShellVariables)
   end
 
   it 'accepts an injected environment and name' do
-    env = Rush::Environment.new({})
+    env = Rush::Environment.new('X' => '1')
     state = described_class.new(environment: env, name: 'sh')
-    expect(state.environment).to be(env)
+    expect(state.variables.get('X')).to eq('1')
     expect(state.name).to eq('sh')
   end
 

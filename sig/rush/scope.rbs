@@ -40,6 +40,8 @@ module Rush
 
     private
 
+    attr_reader environment: Environment
+
     def restore: (String name, String? value) -> void
   end
 end

@@ -44,7 +44,7 @@ module Rush
 
     sig { params(value: T.untyped).returns(T.untyped) }
     def iterate(value)
-      @executor.state.environment.assign(@name, value)
+      @executor.state.variables.assign(@name, value)
       @executor.run(@body)
     rescue ContinueSignal => e
       unwind(e)

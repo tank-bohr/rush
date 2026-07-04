@@ -21,7 +21,7 @@ RSpec.describe Rush::Builtins::Eval do
 
   it 'sees and mutates the current environment' do
     run('X=set')
-    expect(state.environment.get('X')).to eq('set')
+    expect(state.variables.get('X')).to eq('set')
   end
 
   it 'raises a BuiltinError on a syntax error (a special builtin aborts the shell)' do

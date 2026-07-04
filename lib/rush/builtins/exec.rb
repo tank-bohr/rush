@@ -25,7 +25,7 @@ module Rush
 
       sig { returns(T.untyped) }
       def replace_process
-        executor.system.exec(environment.exported, operands, options)
+        executor.system.exec(variables.exported, operands, options)
       rescue Errno::ENOENT
         abort_exec('not found', 127)
       rescue Errno::EACCES
@@ -44,8 +44,8 @@ module Rush
       end
 
       sig { returns(T.untyped) }
-      def environment
-        executor.state.environment
+      def variables
+        executor.state.variables
       end
     end
   end

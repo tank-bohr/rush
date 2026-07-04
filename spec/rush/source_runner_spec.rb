@@ -25,7 +25,7 @@ RSpec.describe Rush::SourceRunner do
 
   it 'persists definitions and assignments into the shell state' do
     run("X=set\nf() { :; }\n")
-    expect(state.environment.get('X')).to eq('set')
+    expect(state.variables.get('X')).to eq('set')
     expect(state.functions.key?('f')).to be(true)
   end
 
