@@ -25,6 +25,8 @@ module Rush
 
       def value: () -> String?
 
+      def value_text: () -> String
+
       def unset_or_null?: () -> bool
 
       def arg: () -> String

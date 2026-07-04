@@ -35,9 +35,10 @@ module Rush
       # an error (special parameters like $@ are exempt).
       sig { returns(String) }
       def plain
-        raise(ExpansionError, "#{@ref.name}: parameter not set") if !value && unbound?
+        current = value
+        raise(ExpansionError, "#{@ref.name}: parameter not set") if !current && unbound?
 
-        value.to_s
+        current || ''
       end
 
       sig { returns(T.nilable(String)) }
@@ -45,9 +46,18 @@ module Rush
         Resolver.new(@executor).resolve(@ref.name)
       end
 
+      sig { returns(String) }
+      def value_text
+        value || ''
+      end
+
       sig { returns(T::Boolean) }
       def unset_or_null?
-        colon? ? value.nil? || value.to_s.empty? : value.nil?
+        case value
+        in nil then true
+        in '' then colon?
+        else false
+        end
       end
 
       sig { returns(String) }
@@ -70,12 +80,12 @@ module Rush
 
       sig { returns(String) }
       def length
-        value.to_s.length.to_s
+        value_text.length.to_s
       end
 
       sig { returns(String) }
       def strip
-        PatternRemoval.new(@executor.system, @ref.op, value.to_s, arg).call
+        PatternRemoval.new(@executor.system, @ref.op, value_text, arg).call
       end
 
       sig { returns(T::Boolean) }
