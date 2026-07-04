@@ -26,6 +26,8 @@ module Rush
       class Template < StringScanner
         ESCAPES: ::Hash[String, String]
 
+        ESCAPE_TABLE: EscapeTable
+
         SPEC: ::Regexp
 
         def emit: (PrintfFormatter formatter) -> String

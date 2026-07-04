@@ -2,18 +2,21 @@
 # frozen_string_literal: true
 
 module Rush
-  # Renders a backslash escape from a small table. Missing trailing characters
+  # Renders backslash escapes from a small table. Missing trailing characters
   # become a literal backslash; unknown escapes keep the backslash plus character.
-  module EscapeTable
+  class EscapeTable
     extend T::Sig
 
-    module_function
+    sig { params(table: T::Hash[String, String]).void }
+    def initialize(table)
+      @table = table
+    end
 
-    sig { params(char: T.nilable(String), table: T::Hash[String, String]).returns(String) }
-    def render(char, table)
+    sig { params(char: T.nilable(String)).returns(String) }
+    def escape(char)
       return '\\' unless char
 
-      table.fetch(char) { "\\#{char}" }
+      @table.fetch(char) { "\\#{char}" }
     end
   end
 end

@@ -15,6 +15,7 @@ module Rush
 
       PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
       ESCAPES = { '$' => '$', '`' => '`', '\\' => '\\' }.freeze
+      ESCAPE_TABLE = EscapeTable.new(ESCAPES).freeze
 
       sig { params(text: String).void }
       def initialize(text)
@@ -91,7 +92,7 @@ module Rush
 
       sig { void }
       def escape
-        @literal << EscapeTable.render(@scanner.getch, ESCAPES)
+        @literal << ESCAPE_TABLE.escape(@scanner.getch)
       end
 
       sig { params(segment: T.untyped).void }

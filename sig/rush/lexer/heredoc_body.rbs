@@ -20,6 +20,8 @@ module Rush
 
       ESCAPES: Hash[String, String]
 
+      ESCAPE_TABLE: EscapeTable
+
       def initialize: (String text) -> void
 
       def scan: () -> AST::Word

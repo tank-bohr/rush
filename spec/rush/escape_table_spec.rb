@@ -2,16 +2,17 @@
 
 RSpec.describe Rush::EscapeTable do
   let(:table) { { 'n' => "\n" } }
+  let(:escapes) { described_class.new(table) }
 
   it 'renders a known escape through the table' do
-    expect(described_class.render('n', table)).to eq("\n")
+    expect(escapes.escape('n')).to eq("\n")
   end
 
   it 'keeps the backslash for an unknown escape' do
-    expect(described_class.render('z', table)).to eq('\\z')
+    expect(escapes.escape('z')).to eq('\\z')
   end
 
   it 'renders a missing trailing character as a literal backslash' do
-    expect(described_class.render(nil, table)).to eq('\\')
+    expect(escapes.escape(nil)).to eq('\\')
   end
 end

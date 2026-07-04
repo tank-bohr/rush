@@ -22,6 +22,7 @@ module Rush
       class Template < StringScanner
         ESCAPES = { '\\' => '\\', 'a' => "\a", 'b' => "\b", 'f' => "\f",
                     'n' => "\n", 'r' => "\r", 't' => "\t", 'v' => "\v" }.freeze
+        ESCAPE_TABLE = EscapeTable.new(ESCAPES).freeze
         SPEC = /\A([-+ #0]*\d*(?:\.\d+)?)([diouxXcs%])/
 
         def emit(formatter)
@@ -49,7 +50,7 @@ module Rush
         end
 
         def escape
-          EscapeTable.render(getch, ESCAPES)
+          ESCAPE_TABLE.escape(getch)
         end
       end
 
