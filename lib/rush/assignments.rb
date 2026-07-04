@@ -3,9 +3,8 @@
 
 module Rush
   # Applies `name[=value]` declaration operands to shell variables. A missing `=`
-  # leaves the variable unchanged; `name=` assigns the empty string. Callers may
-  # pass a block to run after parsing the name but before assignment, which lets
-  # `local` snapshot the old value first.
+  # leaves the variable unchanged; `name=` assigns the empty string. The local
+  # path snapshots the parsed name before assignment.
   class Assignments
     extend T::Sig
 

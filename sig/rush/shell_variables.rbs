@@ -1,9 +1,19 @@
 module Rush
   # Semantic facade for shell variables: ordinary get/assign/export/readonly
-  # operations plus the dynamic local scopes and logical PWD tracking inherited
-  # from Scope. Environment remains the storage detail behind this API.
-  class ShellVariables < Scope
+  # operations plus dynamic local scopes and logical PWD tracking delegated to
+  # Scope. Environment and Scope remain storage details behind this API.
+  class ShellVariables
     extend T::Sig
+
+    @environment: Environment
+
+    @scope: Scope
+
+    @assignments: Assignments
+
+    def pwd: () -> String?
+
+    def initialize: (Environment environment) -> void
 
     def get: (String name) -> String?
 
@@ -16,6 +26,20 @@ module Rush
     def unset: (String name) -> void
 
     def exported: () -> Hash[String, String]
+
+    def move_to: (String pwd) -> void
+
+    def seed_pwd: (String path) -> void
+
+    def current_pwd: () -> String
+
+    def begin_scope: () -> void
+
+    def end_scope: () -> void
+
+    def in_function?: () -> bool
+
+    def declare_local: (String name) -> void
 
     def export_operand: (String text) -> void
 

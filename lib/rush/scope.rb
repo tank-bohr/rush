@@ -2,11 +2,9 @@
 # frozen_string_literal: true
 
 module Rush
-  # The variable-environment side of the shell state, layered over one
-  # Environment: dynamic `local` scoping (a stack of snapshots restored when a
-  # function returns) and the logical working directory mirrored into
-  # $PWD/$OLDPWD. Both are managed mutations of the same environment, so they
-  # live together here, off ShellState.
+  # Dynamic variable scope and logical working directory for ShellVariables,
+  # layered over one Environment: `local` frames snapshot variables restored when
+  # a function returns, and logical PWD is mirrored into $PWD/$OLDPWD.
   class Scope
     extend T::Sig
 
@@ -72,9 +70,6 @@ module Rush
     end
 
     private
-
-    sig { returns(Environment) }
-    attr_reader :environment
 
     sig { params(name: String, value: T.nilable(String)).void }
     def restore(name, value)
