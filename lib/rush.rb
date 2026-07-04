@@ -71,6 +71,8 @@ require_relative 'rush/expansion/glob_expander'
 require_relative 'rush/expansion/read_splitter'
 require_relative 'rush/expansion/pipeline'
 
+require_relative 'rush/command_assignments'
+
 require_relative 'rush/builtins/base'
 require_relative 'rush/builtins/registry'
 require_relative 'rush/builtins/colon'

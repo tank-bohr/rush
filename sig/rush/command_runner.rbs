@@ -12,6 +12,8 @@ module Rush
 
     @base_io: IoTable
 
+    @assignments: CommandAssignments
+
     def initialize: (Executor executor, AST::SimpleCommand command, ?IoTable base_io) -> void
 
     def call: () -> Status
@@ -52,9 +54,5 @@ module Rush
     def run_function: (Array[String] argv, untyped io) -> Status
 
     def command_env: () -> Hash[String, String]
-
-    def persist: (AST::Assignment assignment) -> void
-
-    def assigned: (AST::Word word) -> String
   end
 end

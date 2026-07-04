@@ -1,0 +1,22 @@
+module Rush
+  # Applies assignment words attached to a simple command. Bare assignments
+  # persist in shell variables; assignments before an external command overlay
+  # the exported environment without mutating the shell.
+  class CommandAssignments
+    extend T::Sig
+
+    @assignments: Array[AST::Assignment]
+
+    @expander: Expansion::Pipeline
+
+    def initialize: (Array[AST::Assignment] assignments, Expansion::Pipeline expander) -> void
+
+    def persist_to: (ShellVariables variables) -> void
+
+    def environment_for: (ShellVariables variables) -> Hash[String, String]
+
+    private
+
+    def expand: (AST::Assignment assignment) -> String
+  end
+end
