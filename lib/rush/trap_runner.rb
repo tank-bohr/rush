@@ -101,8 +101,11 @@ module Rush
     # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.
     sig { params(name: String).void }
     def fire_signal(name)
+      action = @state.traps.action(name)
+      return unless action
+
       saved = @state.last_status
-      fire(@state.traps.action(name).to_s)
+      fire(action)
       @state.record_status(saved)
     end
   end

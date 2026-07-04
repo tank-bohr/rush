@@ -99,4 +99,12 @@ RSpec.describe Rush::Builtins::Trap do
     system.trap_block('TERM').call
     expect([system.stdout.string, state.last_status.exitstatus]).to eq(["caught\n", 7])
   end
+
+  it 'ignores a stale delivered signal after the action is reset' do
+    state.record_status(Rush::Status.failure(7))
+    run('echo caught', 'TERM')
+    run('-', 'TERM')
+    system.trap_block('TERM').call
+    expect([system.stdout.string, state.last_status.exitstatus]).to eq(['', 7])
+  end
 end
