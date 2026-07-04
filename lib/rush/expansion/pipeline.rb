@@ -42,7 +42,7 @@ module Rush
         tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
       end
 
-      sig { params(segments: T::Array[AST::WordSegment], mode: Symbol).returns(T::Array[AST::WordSegment]) }
+      sig { params(segments: T::Array[AST::WordSegment[T.untyped]], mode: Symbol).returns(T::Array[AST::WordSegment[T.untyped]]) }
       def tilde_expand(segments, mode)
         TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
       end
@@ -52,7 +52,7 @@ module Rush
         fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
       end
 
-      sig { params(segment: AST::WordSegment).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
+      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
       def field_parts(segment)
         return splat_parts(segment) if segment.splat?
 
@@ -61,7 +61,7 @@ module Rush
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
-      sig { params(segment: AST::WordSegment, text: String).returns(String) }
+      sig { params(segment: AST::WordSegment[T.untyped], text: String).returns(String) }
       def escape_if_quoted(segment, text)
         segment.quoted ? escape(text) : text
       end
@@ -71,7 +71,7 @@ module Rush
         text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
       end
 
-      sig { params(segment: AST::WordSegment).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
+      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
       def splat_parts(segment)
         split = !segment.quoted
         @executor.state.positional.map.with_index do |element, index|

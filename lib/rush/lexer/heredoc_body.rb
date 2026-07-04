@@ -21,7 +21,7 @@ module Rush
       sig { params(text: String).void }
       def initialize(text)
         @scanner = StringScanner.new(text)
-        @segments = []
+        @segments = T.let([], T::Array[AST::WordSegment[T.untyped]])
         @literal = +''
       end
 
@@ -74,18 +74,18 @@ module Rush
         ref ? push(AST::ParamSegment.new(ref, false)) : (@literal << '$')
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(T.nilable(AST::ParamRef)) }
       def read_ref
         return braced if peek?('{')
 
         name = @scanner.scan(PARAM)
-        name && AST::ParamRef.simple(name)
+        name ? AST::ParamRef.simple(name) : nil
       end
 
-      sig { returns(T.untyped) }
+      sig { returns(AST::ParamRef) }
       def braced
         @scanner.getch
-        body = @scanner.scan(/[^}]*/)
+        body = @scanner.scan(/[^}]*/) || ''
         raise ParseError, 'unterminated ${' unless @scanner.scan('}')
 
         AST::ParamRef.parse(body)
@@ -96,7 +96,7 @@ module Rush
         @literal << ESCAPE_TABLE.escape(@scanner.getch)
       end
 
-      sig { params(segment: T.untyped).void }
+      sig { params(segment: AST::WordSegment[T.untyped]).void }
       def push(segment)
         flush
         @segments << segment

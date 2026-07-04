@@ -1,10 +1,9 @@
 module Rush
   module Expansion
     module Arithmetic
-      # The arithmetic AST. Declared as real Data classes; #result lives in a
-      # reopened class (see the .rb) so Steep attributes it to the node. Every node
-      # evaluates to an Integer against the Evaluator (ctx); inter-node members are
-      # themselves nodes (the AST holds AST), captured by the `node` union.
+      # The arithmetic AST. Every node evaluates to an Integer against the
+      # Evaluator (ctx); inter-node members are themselves nodes (the AST holds
+      # AST), captured by the `node` union.
       type node = Num | Var | Unary | Binary | And | Or | Cond | Assign
 
       # The four unary operator tokens as a string-literal union. The parser
@@ -13,80 +12,83 @@ module Rush
       # Sorbet (no string-literal types) types the same op as String — a drift.
       type unary_op = "+" | "-" | "!" | "~"
 
+      # Sorbet runtime type alias used only by inline sigs in the implementation.
+      Node: untyped
+
       # A literal integer.
-      class Num < ::Data
+      class Num
         extend T::Sig
 
         attr_reader value: Integer
-        def self.new: (Integer value) -> Num
+        def initialize: (Integer value) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
       # A variable reference; resolves its name through the evaluator.
-      class Var < ::Data
+      class Var
         extend T::Sig
 
         attr_reader name: String
-        def self.new: (String name) -> Var
+        def initialize: (String name) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
       # A unary operation (+ - ! ~) on one operand.
-      class Unary < ::Data
+      class Unary
         extend T::Sig
 
         attr_reader op: unary_op
         attr_reader operand: node
-        def self.new: (unary_op op, node operand) -> Unary
+        def initialize: (unary_op op, node operand) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
       # A binary arithmetic / bitwise / comparison operation on two operands.
-      class Binary < ::Data
+      class Binary
         extend T::Sig
 
         attr_reader op: String
         attr_reader left: node
         attr_reader right: node
-        def self.new: (String op, node left, node right) -> Binary
+        def initialize: (String op, node left, node right) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
-      class And < ::Data
+      class And
         extend T::Sig
 
         attr_reader left: node
         attr_reader right: node
-        def self.new: (node left, node right) -> And
+        def initialize: (node left, node right) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
-      class Or < ::Data
+      class Or
         extend T::Sig
 
         attr_reader left: node
         attr_reader right: node
-        def self.new: (node left, node right) -> Or
+        def initialize: (node left, node right) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
-      class Cond < ::Data
+      class Cond
         extend T::Sig
 
         attr_reader test: node
         attr_reader truthy: node
         attr_reader falsy: node
-        def self.new: (node test, node truthy, node falsy) -> Cond
+        def initialize: (node test, node truthy, node falsy) -> void
         def result: (Evaluator ctx) -> Integer
       end
 
-      class Assign < ::Data
+      class Assign
         extend T::Sig
 
         attr_reader name: String
         attr_reader op: String
         attr_reader rhs: node
-        def self.new: (String name, String op, node rhs) -> Assign
+        def initialize: (String name, String op, node rhs) -> void
         def result: (Evaluator ctx) -> Integer
       end
     end

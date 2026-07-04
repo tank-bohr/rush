@@ -12,14 +12,14 @@ module Rush
     # One stage: position + the shared pipe array + the stage count. Its methods
     # live in a reopened class (see the .rb) so Steep can type them; each pipe is
     # a [read, write] IO pair from SystemCalls#pipe.
-    class Stage < ::Data
+    class Stage
       extend T::Sig
 
       attr_reader index: Integer
       attr_reader pipes: Array[[ IO, IO ]]
       attr_reader count: Integer
 
-      def self.new: (Integer index, Array[[ IO, IO ]] pipes, Integer count) -> Stage
+      def initialize: (Integer index, Array[[ IO, IO ]] pipes, Integer count) -> void
 
       def last?: () -> bool
 

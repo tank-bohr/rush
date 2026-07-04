@@ -13,16 +13,26 @@ module Rush
   class PipelineRunner
     extend T::Sig
 
-    Stage = Data.define(:index, :pipes, :count)
     # One stage of the pipeline: its position plus the shared pipe array and the
     # stage count. The fd topology — which pipe end feeds this stage (input) and
     # which it feeds (output), and so which ends to keep open (ends) — derives
     # from all three, so the runner threads a single Stage rather than the
-    # (index, pipes) pair through every per-stage step. Its methods live in a
-    # reopened class (assignment form, not `class < Data.define` and not the
-    # define block) — the one Data shape both Steep and Sorbet accept.
+    # (index, pipes) pair through every per-stage step.
     class Stage
       extend T::Sig
+
+      sig { returns(Integer) }
+      attr_reader :index, :count
+
+      sig { returns(T::Array[[IO, IO]]) }
+      attr_reader :pipes
+
+      sig { params(index: Integer, pipes: T::Array[[IO, IO]], count: Integer).void }
+      def initialize(index, pipes, count)
+        @index = index
+        @pipes = pipes
+        @count = count
+      end
 
       sig { returns(T::Boolean) }
       def last?

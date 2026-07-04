@@ -35,6 +35,10 @@ module Rush
 
         def self?.modulo: (Integer left, Integer right) -> Integer
 
+        UNARY_PROC: untyped
+
+        BINARY_PROC: untyped
+
         UNARY: Hash[String, ^(Integer value) -> Integer]
 
         BINARY: Hash[String, ^(Integer left, Integer right) -> Integer]

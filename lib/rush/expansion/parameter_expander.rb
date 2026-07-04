@@ -110,7 +110,7 @@ module Rush
         @ref.arg || ''
       end
 
-      sig { params(text: T.untyped).returns(T.untyped) }
+      sig { params(text: String).returns(AST::Word) }
       def sub_word(text)
         Lexer::WordScanner.entire(text)
       end

@@ -519,9 +519,11 @@ void }`, runs (to Steep) against Sorbet's real builder type — so `params`/`ret
 its methods and the *types inside the block are never cross-checked by Steep* (exactly the wanted
 independence). `[self: untyped]` did NOT work — Steep kept self as the enclosing class and flagged
 `returns`; a concrete builder class is what binds. A class using `sig {}` adds `extend T::Sig` in
-**both** its `.rb` (for sorbet-runtime) and its `.rbs` (so Steep finds `sig` on the singleton). `T`'s
-value surface (`T.unsafe/let/cast/must`, `T::Boolean`) is declared returning untyped — a sig block's
-*types* are Sorbet's, deliberately not Steep's.
+**both** its `.rb` (for sorbet-runtime) and its `.rbs` (so Steep finds `sig` on the singleton). Most
+of `T`'s value surface (`T.unsafe/cast/must`, `T::Boolean`) stays untyped in the RBS bridge — a sig
+block's *types* are Sorbet's, deliberately not Steep's. `T.let` is the narrow exception: the bridge
+models it as identity (`[X] (X, untyped) -> X`) so inline Sorbet casts inside real expressions do not
+turn otherwise typed Steep calls into untyped calls; the type object itself is still opaque to Steep.
 
 `Status` is the first class carrying real `sig {}` (proves it on both checkers + at runtime), and two
 findings fell out immediately:
@@ -535,8 +537,9 @@ findings fell out immediately:
 - **typing one class ripples into its callers' inference.** Giving `Status.success` a return type made
   the loop runners' `status` variable `Status`, then the still-unsig'd `#iterate` reassigned it to
   untyped — and Sorbet forbids a variable changing type across a loop/block (srb.help/7001). Fixed
-  with `T.let(Status.success, Status)` to pin it (Steep ignores `T.let` via the bridge). Gradual
-  typing isn't local: each sig you add is a small obligation on everything downstream.
+  with `T.let(Status.success, Status)` to pin it (the bridge treats `T.let` as returning the value's
+  own type, not as a Steep check of Sorbet's type object). Gradual typing isn't local: each sig you add
+  is a small obligation on everything downstream.
 
 The bridge makes the rest of the `sig {}` rollout mechanical; it proceeds class by class.
 

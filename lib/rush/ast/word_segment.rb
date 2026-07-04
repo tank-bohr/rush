@@ -12,10 +12,17 @@ module Rush
     # name; splittable?/splat? are its field-splitting roles.
     class WordSegment
       extend T::Sig
+      extend T::Generic
 
-      attr_reader :value, :quoted
+      Value = type_member
 
-      sig { params(value: T.untyped, quoted: T::Boolean).void }
+      sig { returns(Value) }
+      attr_reader :value
+
+      sig { returns(T::Boolean) }
+      attr_reader :quoted
+
+      sig { params(value: Value, quoted: T::Boolean).void }
       def initialize(value, quoted)
         @value = value
         @quoted = quoted
@@ -44,19 +51,19 @@ module Rush
       end
 
       # A copy with a rewritten value (e.g. after tilde expansion).
-      sig { params(new_value: T.untyped).returns(WordSegment) }
+      sig { params(new_value: Value).returns(WordSegment[Value]) }
       def with_value(new_value)
         self.class.new(new_value, quoted)
       end
 
       sig { params(other: T.untyped).returns(T::Boolean) }
       def ==(other)
-        other.instance_of?(self.class) && equality_value == other.equality_value && quoted == other.quoted
+        !!(other.instance_of?(self.class) && equality_value == other.equality_value && quoted == other.quoted)
       end
 
       alias eql? ==
 
-      sig { returns(Object) }
+      sig { returns(T.untyped) }
       def equality_value
         value
       end
@@ -71,6 +78,9 @@ module Rush
     # and is never field-split.
     class LiteralSegment < WordSegment
       extend T::Sig
+      extend T::Generic
+
+      Value = type_member { { fixed: String } }
 
       sig { params(_executor: Executor).returns(String) }
       def expand(_executor)
@@ -87,6 +97,9 @@ module Rush
     # unquoted result undergoes field splitting.
     class DynamicSegment < WordSegment
       extend T::Sig
+      extend T::Generic
+
+      Value = type_member
 
       sig { returns(T::Boolean) }
       def splittable?
@@ -97,6 +110,9 @@ module Rush
     # $name / ${...}: value is the ParamRef.
     class ParamSegment < DynamicSegment
       extend T::Sig
+      extend T::Generic
+
+      Value = type_member { { fixed: ParamRef } }
 
       sig { params(executor: Executor).returns(String) }
       def expand(executor)
@@ -113,6 +129,9 @@ module Rush
     # $(...) / `...`: value is the command-substitution source.
     class CommandSegment < DynamicSegment
       extend T::Sig
+      extend T::Generic
+
+      Value = type_member { { fixed: String } }
 
       sig { params(executor: Executor).returns(String) }
       def expand(executor)
@@ -123,6 +142,9 @@ module Rush
     # $((...)): value is the arithmetic source.
     class ArithSegment < DynamicSegment
       extend T::Sig
+      extend T::Generic
+
+      Value = type_member { { fixed: String } }
 
       sig { params(executor: Executor).returns(String) }
       def expand(executor)

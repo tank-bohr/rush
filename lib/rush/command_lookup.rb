@@ -33,7 +33,7 @@ module Rush
         true
       end
 
-      sig { params(_cache: T.untyped).void }
+      sig { params(_cache: T::Hash[T.untyped, T.untyped]).void }
       def cache_into(_cache)
         nil
       end
@@ -118,13 +118,13 @@ module Rush
         detail
       end
 
-      sig { params(cache: T.untyped).void }
+      sig { params(cache: T::Hash[T.untyped, T.untyped]).void }
       def cache_into(cache)
         cache[name] = detail
       end
     end
 
-    sig { params(executor: T.untyped).void }
+    sig { params(executor: Executor).void }
     def initialize(executor)
       @executor = executor
     end
@@ -145,49 +145,52 @@ module Rush
 
     private
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_keyword(name)
-      KEYWORDS.include?(name) && Labelled.new(name, 'a shell keyword')
+      name && KEYWORDS.include?(name) ? Labelled.new(name, 'a shell keyword') : nil
     end
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_alias(name)
-      aliases.key?(name) && Aliased.new(name, aliases.value(name))
+      value = name && aliases.value(name)
+      value ? Aliased.new(name, value) : nil
     end
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_function(name)
-      functions.key?(name) && Labelled.new(name, 'a shell function')
+      name && functions.key?(name) ? Labelled.new(name, 'a shell function') : nil
     end
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_special(name)
-      SPECIAL.include?(name) && Labelled.new(name, 'a special shell builtin')
+      name && SPECIAL.include?(name) ? Labelled.new(name, 'a special shell builtin') : nil
     end
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_builtin(name)
-      @executor.builtins.key?(name) && Labelled.new(name, 'a shell builtin')
+      name && @executor.builtins.key?(name) ? Labelled.new(name, 'a shell builtin') : nil
     end
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_file(name)
-      (path = path_of(name)) && Executable.new(name, path)
+      return unless name
+
+      path = path_of(name)
+      path ? Executable.new(name, path) : nil
     end
 
-    sig { returns(T.untyped) }
+    sig { returns(AliasTable) }
     def aliases
       @executor.state.aliases
     end
 
-    sig { returns(T.untyped) }
+    sig { returns(FunctionTable) }
     def functions
       @executor.state.functions
     end
 
-    sig { params(name: T.nilable(String)).returns(T.untyped) }
+    sig { params(name: String).returns(T.nilable(String)) }
     def path_of(name)
-      return unless name
       return name if name.include?('/') && executable?(name)
       return if name.include?('/')
 
@@ -199,12 +202,12 @@ module Rush
       dir.empty? ? name : "#{dir}/#{name}"
     end
 
-    sig { params(path: String).returns(T.untyped) }
+    sig { params(path: String).returns(T::Boolean) }
     def executable?(path)
       @executor.system.file?(path) && @executor.system.executable?(path)
     end
 
-    sig { returns(T.untyped) }
+    sig { returns(T::Array[String]) }
     def dirs
       (@executor.state.variables.get('PATH') || '').split(':', -1)
     end

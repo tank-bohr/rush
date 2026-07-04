@@ -10,12 +10,12 @@ module Rush
     class LexState
       extend T::Sig
 
-      REDIRECT_OPS = ['<', '>', :DGREAT, :LESSGREAT, :CLOBBER].freeze
-      INTRODUCERS = [
+      REDIRECT_OPS = T.let(['<', '>', :DGREAT, :LESSGREAT, :CLOBBER].freeze, T::Array[T.any(String, Symbol)])
+      INTRODUCERS = T.let([
         :NEWLINE, ';', '&', '|', '(', ')', :AND_IF, :OR_IF,
         :If, :Then, :Else, :Elif, :Lbrace, :Bang, :While, :Until, :Do, :DSEMI
-      ].freeze
-      NEUTRAL = %i[ASSIGNMENT_WORD IO_NUMBER].freeze
+      ].freeze, T::Array[T.any(String, Symbol)])
+      NEUTRAL = T.let(%i[ASSIGNMENT_WORD IO_NUMBER].freeze, T::Array[Symbol])
       TRANSITIONS = {
         %i[normal For] => :for_name, %i[normal Case] => :case_subject,
         %i[for_name NAME] => :for_in,
@@ -77,7 +77,7 @@ module Rush
         @mode == :case_pat
       end
 
-      sig { params(symbol: T.untyped).void }
+      sig { params(symbol: T.any(String, Symbol)).void }
       def advance(symbol)
         @mode = TRANSITIONS.fetch([@mode, symbol], @mode)
         return @expect_filename = true if REDIRECT_OPS.include?(symbol)

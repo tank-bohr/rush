@@ -83,7 +83,7 @@ module Rush
       def cache_into: (::Hash[untyped, untyped] cache) -> void
     end
 
-    def initialize: (untyped executor) -> void
+    def initialize: (Executor executor) -> void
 
     # The Match for a name (Unknown if it resolves to nothing). An alias outranks
     # a function/builtin but not a reserved word; a PATH/slash file is the last
@@ -95,23 +95,23 @@ module Rush
 
     private
 
-    def as_keyword: (String? name) -> untyped
+    def as_keyword: (String? name) -> Match?
 
-    def as_alias: (String? name) -> untyped
+    def as_alias: (String? name) -> Match?
 
-    def as_function: (String? name) -> untyped
+    def as_function: (String? name) -> Match?
 
-    def as_special: (String? name) -> untyped
+    def as_special: (String? name) -> Match?
 
-    def as_builtin: (String? name) -> untyped
+    def as_builtin: (String? name) -> Match?
 
-    def as_file: (String? name) -> untyped
+    def as_file: (String? name) -> Match?
 
     def aliases: () -> AliasTable
 
     def functions: () -> FunctionTable
 
-    def path_of: (String? name) -> String?
+    def path_of: (String name) -> String?
 
     def join: (String dir, String name) -> String
 

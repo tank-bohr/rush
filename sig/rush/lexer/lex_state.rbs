@@ -43,7 +43,7 @@ module Rush
 
       def case_pat?: () -> bool
 
-      def advance: (untyped symbol) -> void
+      def advance: (String | Symbol symbol) -> void
 
       private
 

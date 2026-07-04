@@ -37,7 +37,7 @@ module Rush
       @body = body
     end
 
-    sig { returns(T::Array[AST::WordSegment]) }
+    sig { returns(T::Array[AST::WordSegment[T.untyped]]) }
     def segments
       @body.segments
     end

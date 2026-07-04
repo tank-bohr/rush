@@ -65,36 +65,39 @@ module Rush
           left - (divide(left, right) * right)
         end
 
-        # The #: types each lambda's parameters: Steep does not propagate a frozen
-        # hash's declared value type into bare `->()` literals, so without it the
-        # params stay untyped (and every operator body with them). See number.rbs.
-        UNARY = {
-          '+' => ->(value) { value }, #: ^(Integer) -> Integer
-          '-' => ->(value) { -value }, #: ^(Integer) -> Integer
-          '!' => ->(value) { bool(value.zero?) }, #: ^(Integer) -> Integer
-          '~' => ->(value) { ~value } #: ^(Integer) -> Integer
-        }.freeze
+        # The #: comments type each lambda for Steep; the T.let around the whole
+        # table gives Sorbet the same proc shape without hiding the lambda from
+        # Steep's comment parser.
+        UNARY_PROC = T.type_alias { T.proc.params(value: Integer).returns(Integer) }
+        BINARY_PROC = T.type_alias { T.proc.params(left: Integer, right: Integer).returns(Integer) }
 
-        BINARY = {
-          '+' => ->(left, right) { left + right }, #: ^(Integer, Integer) -> Integer
-          '-' => ->(left, right) { left - right }, #: ^(Integer, Integer) -> Integer
-          '*' => ->(left, right) { left * right }, #: ^(Integer, Integer) -> Integer
-          '/' => ->(left, right) { divide(left, right) }, #: ^(Integer, Integer) -> Integer
-          '%' => ->(left, right) { modulo(left, right) }, #: ^(Integer, Integer) -> Integer
+        UNARY = T.let({
+          '+' => ->(value) { T.let(value, Integer) }, #: ^(Integer) -> Integer
+          '-' => ->(value) { -T.let(value, Integer) }, #: ^(Integer) -> Integer
+          '!' => ->(value) { bool(T.let(value, Integer).zero?) }, #: ^(Integer) -> Integer
+          '~' => ->(value) { ~T.let(value, Integer) } #: ^(Integer) -> Integer
+        }.freeze, T::Hash[String, UNARY_PROC])
+
+        BINARY = T.let({
+          '+' => ->(left, right) { T.let(left, Integer) + T.let(right, Integer) }, #: ^(Integer, Integer) -> Integer
+          '-' => ->(left, right) { T.let(left, Integer) - T.let(right, Integer) }, #: ^(Integer, Integer) -> Integer
+          '*' => ->(left, right) { T.let(left, Integer) * T.let(right, Integer) }, #: ^(Integer, Integer) -> Integer
+          '/' => ->(left, right) { divide(T.let(left, Integer), T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
+          '%' => ->(left, right) { modulo(T.let(left, Integer), T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
           # Shift counts are masked to 6 bits, matching x86-64 (and so dash) for
           # the out-of-range/negative counts that C leaves undefined.
-          '<<' => ->(left, right) { left << (right & 63) }, #: ^(Integer, Integer) -> Integer
-          '>>' => ->(left, right) { left >> (right & 63) }, #: ^(Integer, Integer) -> Integer
-          '&' => ->(left, right) { left & right }, #: ^(Integer, Integer) -> Integer
-          '|' => ->(left, right) { left | right }, #: ^(Integer, Integer) -> Integer
-          '^' => ->(left, right) { left ^ right }, #: ^(Integer, Integer) -> Integer
-          '<' => ->(left, right) { bool(left < right) }, #: ^(Integer, Integer) -> Integer
-          '<=' => ->(left, right) { bool(left <= right) }, #: ^(Integer, Integer) -> Integer
-          '>' => ->(left, right) { bool(left > right) }, #: ^(Integer, Integer) -> Integer
-          '>=' => ->(left, right) { bool(left >= right) }, #: ^(Integer, Integer) -> Integer
-          '==' => ->(left, right) { bool(left == right) }, #: ^(Integer, Integer) -> Integer
-          '!=' => ->(left, right) { bool(left != right) } #: ^(Integer, Integer) -> Integer
-        }.freeze
+          '<<' => ->(left, right) { T.let(left, Integer) << (T.let(right, Integer) & 63) }, #: ^(Integer, Integer) -> Integer
+          '>>' => ->(left, right) { T.let(left, Integer) >> (T.let(right, Integer) & 63) }, #: ^(Integer, Integer) -> Integer
+          '&' => ->(left, right) { T.let(left, Integer) & T.let(right, Integer) }, #: ^(Integer, Integer) -> Integer
+          '|' => ->(left, right) { T.let(left, Integer) | T.let(right, Integer) }, #: ^(Integer, Integer) -> Integer
+          '^' => ->(left, right) { T.let(left, Integer) ^ T.let(right, Integer) }, #: ^(Integer, Integer) -> Integer
+          '<' => ->(left, right) { bool(T.let(left, Integer) < T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
+          '<=' => ->(left, right) { bool(T.let(left, Integer) <= T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
+          '>' => ->(left, right) { bool(T.let(left, Integer) > T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
+          '>=' => ->(left, right) { bool(T.let(left, Integer) >= T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
+          '==' => ->(left, right) { bool(T.let(left, Integer) == T.let(right, Integer)) }, #: ^(Integer, Integer) -> Integer
+          '!=' => ->(left, right) { bool(T.let(left, Integer) != T.let(right, Integer)) } #: ^(Integer, Integer) -> Integer
+        }.freeze, T::Hash[String, BINARY_PROC])
       end
     end
   end

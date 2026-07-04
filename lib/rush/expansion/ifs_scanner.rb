@@ -52,7 +52,7 @@ module Rush
       def initialize(whitespace, others)
         @ws = whitespace
         @others = others
-        @done = []
+        @done = T.let([], T::Array[Field])
         @current = Field.new
         @pending = false
         @skip = true

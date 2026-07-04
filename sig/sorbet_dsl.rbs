@@ -12,6 +12,11 @@ module T
     def sig: (?Symbol) { () [self: T::Private::DeclBuilder] -> void } -> void
   end
 
+  module Generic
+    def type_member: () -> untyped
+                   | () { () -> untyped } -> untyped
+  end
+
   module Private
     # Sorbet's proc type builder, used as a value inside sig {} blocks.
     class ProcBuilder
@@ -45,7 +50,7 @@ module T
   # can't carry it — these return untyped (Sorbet does the real narrowing).
   def self.unsafe: (untyped) -> untyped
 
-  def self.let: (untyped value, untyped) -> untyped
+  def self.let: [X] (X value, untyped) -> X
 
   def self.cast: (untyped value, untyped) -> untyped
 
@@ -61,6 +66,8 @@ module T
   def self.noreturn: () -> untyped
 
   def self.proc: () -> T::Private::ProcBuilder
+
+  def self.type_alias: () { () -> untyped } -> untyped
 
   def self.type_parameter: (Symbol) -> untyped
 

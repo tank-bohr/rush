@@ -11,7 +11,7 @@ module Rush
 
       attr_reader :segments
 
-      sig { params(segments: T::Array[WordSegment]).void }
+      sig { params(segments: T::Array[WordSegment[T.untyped]]).void }
       def initialize(segments)
         super()
         @segments = segments

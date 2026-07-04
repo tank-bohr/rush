@@ -9,6 +9,11 @@ module Rush
     # name; splittable?/splat? are its field-splitting roles.
     class WordSegment[unchecked out V < Object]
       extend T::Sig
+      extend T::Generic
+
+      Value: untyped
+
+      def self.[]: (untyped arg) -> untyped
 
       @value: V
 
@@ -46,6 +51,9 @@ module Rush
     # and is never field-split.
     class LiteralSegment < WordSegment[String]
       extend T::Sig
+      extend T::Generic
+
+      Value: untyped
 
       attr_reader value: String
 
@@ -58,6 +66,9 @@ module Rush
     # unquoted result undergoes field splitting.
     class DynamicSegment[unchecked out V < Object] < WordSegment[V]
       extend T::Sig
+      extend T::Generic
+
+      Value: untyped
 
       def splittable?: () -> bool
     end
@@ -65,6 +76,9 @@ module Rush
     # $name / ${...}: value is the ParamRef.
     class ParamSegment < DynamicSegment[ParamRef]
       extend T::Sig
+      extend T::Generic
+
+      Value: untyped
 
       attr_reader value: ParamRef
 
@@ -77,6 +91,9 @@ module Rush
     # $(...) / `...`: value is the command-substitution source.
     class CommandSegment < DynamicSegment[String]
       extend T::Sig
+      extend T::Generic
+
+      Value: untyped
 
       attr_reader value: String
 
@@ -86,6 +103,9 @@ module Rush
     # $((...)): value is the arithmetic source.
     class ArithSegment < DynamicSegment[String]
       extend T::Sig
+      extend T::Generic
+
+      Value: untyped
 
       attr_reader value: String
 

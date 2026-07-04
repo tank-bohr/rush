@@ -13,7 +13,7 @@ module Rush
 
       @scanner: StringScanner
 
-      @segments: Array[untyped]
+      @segments: Array[AST::WordSegment[untyped]]
 
       @literal: String
 
@@ -41,13 +41,13 @@ module Rush
 
       def param: () -> void
 
-      def read_ref: () -> untyped
+      def read_ref: () -> AST::ParamRef?
 
-      def braced: () -> untyped
+      def braced: () -> AST::ParamRef
 
       def escape: () -> void
 
-      def push: (untyped segment) -> void
+      def push: (AST::WordSegment[untyped] segment) -> void
 
       def flush: () -> void
     end

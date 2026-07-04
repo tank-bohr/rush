@@ -23,9 +23,9 @@ module Rush
         (+'').tap { |body| body << paren_char until @depth.zero? }
       end
 
-      sig { returns(T.nilable(String)) }
+      sig { returns(String) }
       def backticks
-        body = @scanner.scan(/[^`]*/)
+        body = @scanner.scan(/[^`]*/) || ''
         raise IncompleteInput, 'unterminated `' unless @scanner.scan('`')
 
         body
