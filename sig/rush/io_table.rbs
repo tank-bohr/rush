@@ -51,9 +51,16 @@ module Rush
     # fds) are intentionally not closed by redirect cleanup.
     def entries: () -> Array[FdEntry]
 
+    # Owned entries that appeared while moving from `base` to this table. This
+    # includes newly opened redirect files/heredocs, but not borrowed stdio,
+    # pipes, inherited fds or dup aliases of entries already present in `base`.
+    def opened_over: (IoTable base) -> Array[FdEntry]
+
     # Flush+close the streams this table opened over `base` (the ones a command's
     # redirects added), leaving inherited streams and pipe ends untouched.
     def close_opened_over: (IoTable base, SystemCalls system) -> void
+
+    def self.close_entries: (Array[FdEntry] entries, SystemCalls system) -> void
 
     # A closed fd becomes :close so a spawned child closes it.
     def to_spawn_options: () -> Hash[Integer, _IoStream | Symbol]

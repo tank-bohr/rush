@@ -116,6 +116,14 @@ RSpec.describe Rush::Executor do
     expect(system).to have_received(:close_redirect).with(system.files.fetch('/file'))
   end
 
+  it 'closes an opened redirect stream overwritten by a later redirect' do
+    executor = build(state)
+    allow(system).to receive(:close_redirect).and_call_original
+    redirects = [redirect(:out, '/lost'), redirect(:dup_out, '2', io_number: 1)]
+    executor.with_redirects(redirects) { Rush::Status.success }
+    expect(system).to have_received(:close_redirect).with(system.files.fetch('/lost'))
+  end
+
   it 'uses the current io as the default redirect base' do
     executor = build(state)
     expect(executor.with_redirects([]) { |io| io }).to be(executor.io)
@@ -127,6 +135,15 @@ RSpec.describe Rush::Executor do
     executor.with_redirects([redirect(:out, '/persist')]) { |io| executor.replace_io(io) }
     expect(executor.io.get(1)).to be(system.files.fetch('/persist'))
     expect(system).not_to have_received(:close_redirect)
+  end
+
+  it 'closes exec redirect streams that are overwritten before being committed' do
+    executor = build(state)
+    allow(system).to receive(:close_redirect).and_call_original
+    redirects = [redirect(:out, '/lost'), redirect(:dup_out, '2', io_number: 1)]
+    executor.with_redirects(redirects) { |io| executor.replace_io(io) }
+    expect(executor.io.get(1)).to be(system.stderr)
+    expect(system).to have_received(:close_redirect).with(system.files.fetch('/lost'))
   end
 
   it 'runs a redirected compound command with temporary io' do

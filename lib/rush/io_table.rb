@@ -58,11 +58,24 @@ module Rush
       @entries.values
     end
 
+    # Owned entries that appeared while moving from `base` to this table. This
+    # includes newly opened redirect files/heredocs, but not borrowed stdio,
+    # pipes, inherited fds or dup aliases of entries already present in `base`.
+    sig { params(base: IoTable).returns(T::Array[FdEntry]) }
+    def opened_over(base)
+      (entries - base.entries).select(&:owned?)
+    end
+
     # Flush+close the streams this table opened over `base` (the ones a command's
     # redirects added), leaving inherited streams and pipe ends untouched.
     sig { params(base: IoTable, system: SystemCalls).void }
     def close_opened_over(base, system)
-      (entries - base.entries).uniq.each { |entry| entry.close_redirect(system) }
+      self.class.close_entries(opened_over(base), system)
+    end
+
+    sig { params(entries: T::Array[FdEntry], system: SystemCalls).void }
+    def self.close_entries(entries, system)
+      entries.uniq.each { |entry| entry.close_redirect(system) }
     end
 
     # A closed fd becomes :close so a spawned child closes it.

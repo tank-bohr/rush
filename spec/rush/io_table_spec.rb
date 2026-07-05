@@ -48,6 +48,12 @@ RSpec.describe Rush::IoTable do
     expect(table.to_spawn_options.fetch(2)).to eq(:close)
   end
 
+  it 'reports only newly owned entries over the base table' do
+    base = described_class.standard(system).with_owned(4, :persistent)
+    table = base.with_owned(1, :fresh).with(3, :borrowed)
+    expect(table.opened_over(base).map(&:stream)).to eq([:fresh])
+  end
+
   it 'closes only newly owned entries over the base table' do
     base = described_class.standard(system).with_owned(4, :persistent)
     table = base.with_owned(1, :fresh).with(3, :borrowed)

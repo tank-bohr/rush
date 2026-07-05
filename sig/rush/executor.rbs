@@ -90,7 +90,11 @@ module Rush
 
     def abort_on?: (Status status) -> bool
 
-    def close_redirect_io: (IoTable io, IoTable base) -> void
+    def apply_redirects: (Array[AST::Redirect] redirects, IoTable base, Array[FdEntry] opened) -> IoTable
+
+    def apply_redirect: (AST::Redirect redirect, IoTable io, Array[FdEntry] opened) -> IoTable
+
+    def close_redirect_io: (Array[FdEntry] opened, IoTable io) -> void
 
     def redirect_into: (AST::Redirect redirect, IoTable io) -> IoTable
   end
