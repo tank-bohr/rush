@@ -14,7 +14,13 @@ RSpec.describe Rush::Builtins::Break do
     before { state.loops.enter }
 
     it 'raises a BreakSignal with the default level of 1' do
+      state.loops.enter
       expect { run }.to raise_error(Rush::BreakSignal) { |signal| expect(signal.count).to eq(1) }
+    end
+
+    it 'accepts an explicit level of 1 inside deeper nesting' do
+      state.loops.enter
+      expect { run('1') }.to raise_error(Rush::BreakSignal) { |signal| expect(signal.count).to eq(1) }
     end
 
     it 'raises a BreakSignal with the requested level' do

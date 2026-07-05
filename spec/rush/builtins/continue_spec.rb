@@ -14,7 +14,13 @@ RSpec.describe Rush::Builtins::Continue do
     before { state.loops.enter }
 
     it 'raises a ContinueSignal with the default level of 1' do
+      state.loops.enter
       expect { run }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(1) }
+    end
+
+    it 'accepts an explicit level of 1 inside deeper nesting' do
+      state.loops.enter
+      expect { run('1') }.to raise_error(Rush::ContinueSignal) { |signal| expect(signal.count).to eq(1) }
     end
 
     it 'raises a ContinueSignal with the requested level' do
