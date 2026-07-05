@@ -36,6 +36,8 @@ module Rush
       end
 
       sig { returns(T.nilable(String)) }
+      # mutant:disable -- `nil` is the default "not a literal" value; an empty
+      # method body has the same public semantics for this abstract fallback.
       def literal_value
         nil
       end
@@ -58,7 +60,11 @@ module Rush
 
       sig { params(other: T.untyped).returns(T::Boolean) }
       def ==(other)
-        !!(other.instance_of?(self.class) && equality_value == other.equality_value && quoted == other.quoted)
+        return false unless other.instance_of?(self.class)
+        return false unless equality_value.eql?(other.equality_value)
+        return false unless quoted.eql?(other.quoted)
+
+        true
       end
 
       alias eql? ==
