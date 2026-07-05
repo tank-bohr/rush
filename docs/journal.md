@@ -20,9 +20,11 @@ comparing **`[stdout, exitstatus]`** (stderr ignored), via the differential corp
 rush is a **research project about Ruby (the language + ecosystem), not about shells**: a
 POSIX `sh` is a deliberately *solved* problem (dash is the oracle, correctness is externally
 decidable), so all effort goes to the *how* — under extreme quality pressure (RuboCop +
-Sandi-Metz + reek + 100% coverage + mutant + two type systems), what does the ecosystem offer
-for non-trivial code, and what code results? Two type systems (RBS/Steep and inline Sorbet) are
-run independently on the same code — the task is to compare how each fares.
+Sandi-Metz + reek + meaningful coverage pressure + mutant + two type systems), what does the
+ecosystem offer for non-trivial code, and what code results? Coverage aims at 100% where it is
+meaningful, but shell semantics cross process boundaries that SimpleCov cannot observe; the
+metric serves the design, not the reverse. Two type systems (RBS/Steep and inline Sorbet) are run
+independently on the same code — the task is to compare how each fares.
 
 ---
 
@@ -223,6 +225,11 @@ unit specs, with a few deterministic differential cases.
   **differentially**, and in-process specs cover builtin logic on StringIO. This is why the
   literal "IoTable holds bare fd-numbers" rewrite was low-payoff and was skipped — real-fd
   correctness lives in prod + differential regardless.
+- **Coverage is a design pressure, not the product.** We still target 100% meaningful coverage,
+  and the suite currently reaches it, but `.simplecov` intentionally keeps relaxed thresholds
+  because SimpleCov cannot see forked/exec'd code paths. Use `:nocov:` for irreducible process
+  wrappers, then pin the real behaviour with subprocess/differential tests instead of deleting
+  shell features or distorting boundaries to satisfy a metric.
 - **Differential harness + asdf:** invoke rush via the absolute `RbConfig.ruby` (bypasses the
   asdf shim, which otherwise needs a `.tool-versions` in the cwd) with `-Ilib exe/rush -c`, and
   `chdir` to a fresh `Dir.mktmpdir` for bad-path tests. Bare `ruby` from `/tmp` fails with 126.
@@ -236,7 +243,7 @@ unit specs, with a few deterministic differential cases.
 
 ---
 
-## Dev tooling (beyond rubocop + rspec + 100% coverage)
+## Dev tooling (beyond rubocop + rspec + coverage)
 
 Tool-state verified on Ruby 4.0.5 (so it isn't re-researched). Beads epic `rush-211`.
 
@@ -333,15 +340,15 @@ Findings worth not re-learning (the research payoff of running the tool hard):
   `sig/rush/parser.rbs` lets the rest resolve the `Parser` constant. `ParserSupport`'s host methods
   (`do_parse`/`token_to_str`, from `Racc::Parser`) are unmodelled, so that file is deferred too.
 
-#### Tightening pattern: value-level invariants under a 100% coverage gate
+#### Tightening pattern: value-level invariants under strict coverage pressure
 Recurring across the hand-typing batches (`Status.of`, `Scope#declare_local`/`#end_scope`,
 `CommandLookup#verify`, `Environment#exported`): the code is correct because of an invariant the
 type system can't see — *absent exitstatus ⟹ present termsig*, *the popped frame is non-nil
 because it's paired with begin_scope*, *terse is only called behind a `known?` guard*. Steep flags
-these as `NoMethod`-on-`nil` (or on a union member). The **coverage gate shapes the fix**: the
+these as `NoMethod`-on-`nil` (or on a union member). The **coverage pressure shapes the fix**: the
 obvious nil-guards (`x || default`, `x&.m`, `return unless x`) all add a branch whose
-invariant-false side is unreachable → it can never be covered → the 100% gate fails. So instead
-**pin the type with a branchless, behaviour-preserving coercion on the only reachable path**:
+invariant-false side is unreachable and therefore untestable noise. So instead **pin the type with
+a branchless, behaviour-preserving coercion on the only reachable path**:
 `termsig.to_i`, `@frames.fetch(-1)` (keeps crash-if-empty), `@frames.pop.to_a`, `*set.to_a` for a
 splat Steep won't widen. Where the gap is a guarded union (not nil), model the **abstract base as
 the protocol** — `CommandLookup::Match` declares `describe`/`terse` so `find -> Match` covers the
@@ -599,8 +606,8 @@ mutant 0.16.3 is **free for OSS** (rush is MIT + public; `--usage opensource`, n
 actively maintained. The parse+unparse roundtrip it relies on handled **all 111 lib files
 cleanly** (`unparser` 0.9.0), so the `parser/ruby33`-grammar warning is cosmetic. Kept out of the
 default gate: it reruns the ~60s suite per mutation, far too slow for a per-slice gate; it belongs
-in a `rake mutant` task / CI. Its payoff is exactly what 100% coverage cannot show — whether the
-assertions actually *kill* mutations.
+in a `rake mutant` task / CI. Its payoff is exactly what line/branch coverage cannot show —
+whether the assertions actually *kill* mutations.
 
 Wired in as an on-demand `rake mutant[Subject]` task (default subject from `.mutant.yml`: `Rush*`,
 with generated `Rush::Parser*` ignored just like coverage ignores `lib/rush/parser.rb`). The Mutant

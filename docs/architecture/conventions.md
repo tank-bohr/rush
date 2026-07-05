@@ -43,8 +43,10 @@ Rules 1–9) and **all OS access funnelled through one injectable port** (`Rush:
 
 - `grammar/shell.y` (POSIX §2.10, transcribed) is the **source of truth**. `lib/rush/parser.rb`
   is **generated** by racc, committed, and excluded from rubocop/coverage/metrics. Regenerate
-  only via `bundle exec rake compile`; the gate fails on drift. `expect 1` covers the single
-  benign dangling-else shift/reduce — add no precedence rules.
+  only via `bundle exec rake compile`. The default `bundle exec rake` intentionally stays fast;
+  use `bundle exec rake check_parser_drift` as an explicit audit when touching the grammar or
+  generated parser, and in release/CI flows that want the extra check. Treat parser conflicts as
+  grammar-design events, not something to hide with precedence rules.
 - The lexer is **context-sensitive** (POSIX Grammar Rules 1–9) centralised in `LexState` +
   `TokenClassifier` — the hardest part; get it wrong and `echo if` mis-parses. It is **pure**
   (no OS calls) and **defers all expansion**, emitting a `WordNode` of typed segments

@@ -21,13 +21,21 @@ knowledge lives in `docs/` and the backlog lives in beads (see "Where things liv
 3. **reek** (code-smell ratchet; config + rationale in `.reek.yml`)
 4. **steep** (RBS type-check gate; config in `Steepfile`)
 5. **sorbet** (inline `sig {}` type-check gate; config in `sorbet/config`)
-6. **rspec** (+ 100% line/branch coverage gate)
+6. **rspec** (+ SimpleCov coverage gate; 100% meaningful coverage is the target,
+   not a design-at-any-cost rule)
 
 ```bash
-bundle exec rake             # the full green gate
-exe/rush -c '<program>'      # run rush
-dash  -c '<program>'         # the oracle to diff against
+bundle exec rake                  # the fast full green gate
+bundle exec rake check_parser_drift # explicit generated-parser audit when needed
+exe/rush -c '<program>'           # run rush
+dash  -c '<program>'              # the oracle to diff against
 ```
+
+Coverage policy: aim for 100% meaningful line/branch coverage, but do not reject valid
+shell features or contort the design just to satisfy SimpleCov. Fork/exec paths and other
+irreducible process-boundary wrappers may be marked `:nocov:` and pinned by differential
+behaviour tests instead; `.simplecov` thresholds are intentionally a guardrail, not the
+project's definition of quality.
 
 ## Slice Workflow
 

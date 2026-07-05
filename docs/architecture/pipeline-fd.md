@@ -44,7 +44,7 @@ They are one decision because they all live in the **IO/fd model**.
   reuse Ruby `spawn`'s fd-mapping (`to_spawn_options` can express `{2 => 1}` / `[:child,1]`);
   for **builtins** (in-process) alias fd 2 to the same IO object as fd 1.
 - **Pros**: each piece is one differential-testable slice; keeps StringIO in-process
-  testability (our 100%-coverage + differential discipline survives); low risk per slice;
+  testability (our meaningful-coverage + differential discipline survives); low risk per slice;
   reuses Ruby's spawn fd-mapping for the common (external) case.
 - **Cons**: the in-process-vs-fork buffering seam remains the fragile spot; builtin-side
   `2>&1` via IO-aliasing is leaky (no shared kernel offset/append semantics); not bit-exact
@@ -62,7 +62,7 @@ They are one decision because they all live in the **IO/fd model**.
 - **Cons**: **big rewrite** — `IoTable`, every builtin's stdout/stderr access, redirection
   classes, `External`, cmd-sub, subshell, the `SystemCalls` port **and the test fake**
   (it's StringIO-based; real fds break in-process assertions → need a tmpfile/pipe fake or
-  accept less in-process coverage). Directly fights our "100% in-process + differential"
+  accept less in-process coverage). Directly fights our "in-process coverage + differential"
   methodology; high risk; the suite is hard to keep green mid-migration.
 
 ## Option 3 — Hybrid: Ruby-IO in-process, fds only at the boundary
@@ -103,11 +103,13 @@ contained but the lowest-frequency feature.
 
 ## Testing-methodology impact (the real constraint)
 
-Our verification is "100% in-process unit coverage + bit-exact differential vs dash."
-Option 2's real fds run across processes (invisible to SimpleCov, hard to assert in-process),
-so it would *erode* the method. Options 1/3 keep StringIO in-process and verify the
-fork/fd boundary differentially — same as every slice 7x–7af. That alignment is the main
-reason to prefer 1/3 over 2 right now.
+Our verification pressure is "as much meaningful in-process unit coverage as possible +
+bit-exact differential vs dash." The historical shorthand was "100% coverage", but SimpleCov
+cannot see every fork/exec path; coverage must not veto correct shell semantics. Option 2's
+real fds run across processes (invisible to SimpleCov, hard to assert in-process), so it would
+*erode* the method. Options 1/3 keep StringIO in-process and verify the fork/fd boundary
+differentially — same as every slice 7x–7af. That alignment is the main reason to prefer 1/3
+over 2 right now.
 
 ---
 

@@ -6,6 +6,7 @@
 /tmp/
 *.gem
 .rspec_status
+.pi-subagents/
 
 # Beads / Dolt files (added by bd init)
 .dolt/
