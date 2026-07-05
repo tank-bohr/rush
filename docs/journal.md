@@ -594,3 +594,10 @@ cleanly** (`unparser` 0.9.0), so the `parser/ruby33`-grammar warning is cosmetic
 default gate: it reruns the ~60s suite per mutation, far too slow for a per-slice gate; it belongs
 in a `rake mutant` task / CI. Its payoff is exactly what 100% coverage cannot show — whether the
 assertions actually *kill* mutations.
+
+Wired in as an on-demand `rake mutant[Subject]` task (default subject from `.mutant.yml`: `Rush*`,
+with generated `Rush::Parser*` ignored just like coverage ignores `lib/rush/parser.rb`). The Mutant
+config sets `RUSH_SKIP_COVERAGE=1` so SimpleCov does not overwrite the normal coverage report with
+the tiny, mutation-selected test subset. Full-project mutation is intentionally outside
+`bundle exec rake`; use subject-level runs while hardening specs, then let CI/nightly take the slow
+whole-tree pass.

@@ -35,5 +35,15 @@ task :sorbet do
   sh bin
 end
 
+desc 'Mutation-test gate (Mutant; on-demand, not part of default). Optional: rake mutant[Rush::Status]'
+task :mutant, [:subject] => :compile do |_task, args|
+  command = %w[mutant run]
+  subject = args[:subject] || ENV.fetch('MUTANT_SUBJECT', nil)
+
+  command << subject if subject && !subject.empty?
+
+  sh(*command)
+end
+
 desc 'Full pipeline: compile -> rubocop -> reek -> steep -> sorbet -> spec (+ coverage gate)'
 task default: %i[compile rubocop reek steep sorbet spec]

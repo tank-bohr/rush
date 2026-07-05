@@ -34,13 +34,14 @@ bundle install          # dev/runtime gems into vendor/bundle
 `rake` runs the whole pipeline in order:
 
 ```
-compile (racc) → rubocop → rspec (+ coverage gate)
+compile (racc) → rubocop → reek → steep → sorbet → rspec (+ coverage gate)
 ```
 
 ```sh
-bundle exec rake            # full pipeline
-bundle exec rake compile    # regenerate lib/rush/parser.rb from grammar/shell.y
-bundle exec rspec           # tests + 100% line/branch coverage gate
+bundle exec rake                  # full pipeline
+bundle exec rake compile          # regenerate lib/rush/parser.rb from grammar/shell.y
+bundle exec rspec                 # tests + 100% line/branch coverage gate
+bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
 echo 'echo hi; exit 2' | bundle exec ruby -Ilib exe/rush
 bundle exec ruby -Ilib exe/rush -c 'echo hello'
 ```

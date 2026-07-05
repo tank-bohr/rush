@@ -1,0 +1,15 @@
+---
+usage: opensource
+integration:
+  name: rspec
+requires:
+  - rush
+environment_variables:
+  RUSH_SKIP_COVERAGE: '1'
+matcher:
+  subjects:
+    - Rush*
+  ignore:
+    - Rush::Parser*
+mutation:
+  timeout: 5.0

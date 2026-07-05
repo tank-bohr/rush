@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require 'simplecov' # loads .simplecov and starts coverage before lib is required
+require 'simplecov' unless ENV['RUSH_SKIP_COVERAGE'] # loads .simplecov before lib is required
 
 require 'stringio'
 require 'rush'
