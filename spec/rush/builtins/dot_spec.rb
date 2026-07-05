@@ -18,12 +18,21 @@ RSpec.describe Rush::Builtins::Dot do
   end
 
   it 'aborts with a BuiltinError on a missing file (a special builtin aborts the shell)' do
-    expect { run('/nope.sh') }.to raise_error(Rush::BuiltinError, /No such file/)
+    expect { run('/nope.sh') }.to raise_error(Rush::BuiltinError, '.: /nope.sh: No such file or directory')
   end
 
   it 'aborts with a BuiltinError on a syntax error in the file' do
     system.provide_file('/bad.sh', 'if')
-    expect { run('/bad.sh') }.to raise_error(Rush::BuiltinError)
+    expect { run('/bad.sh') }.to raise_error(Rush::BuiltinError, '.: unexpected end of input')
+  end
+
+  it 'runs the sourced commands under the builtin io table' do
+    redirected = StringIO.new
+    system.provide_file('/io.sh', 'echo redirected')
+
+    expect(described_class.new(executor, ['.', '/io.sh'], io.with(1, redirected)).call).to be_success
+    expect(redirected.string).to eq("redirected\n")
+    expect(system.stdout.string).to eq('')
   end
 
   it 'errors with exit status 2 when given no filename' do

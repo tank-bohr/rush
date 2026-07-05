@@ -15,7 +15,7 @@ RSpec.describe Rush::Builtins::Echo do
   end
 
   it 'suppresses the trailing newline with -n' do
-    echo('-n', 'x')
+    echo(+'-n', 'x')
     expect(system.stdout.string).to eq('x')
   end
 

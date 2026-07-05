@@ -25,7 +25,7 @@ module Rush
 
       sig { returns(T::Boolean) }
       def newline?
-        operands.first != '-n'
+        !operands.first.eql?('-n')
       end
 
       sig { returns(T::Array[String]) }

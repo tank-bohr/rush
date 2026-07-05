@@ -32,7 +32,7 @@ module Rush
         text = executor.system.read_file(path)
         executor.with_io(io) { run_text(text) }
       rescue ParseError => e
-        raise BuiltinError, ".: #{e.message}"
+        raise BuiltinError, ".: #{e}"
       end
 
       sig { params(text: String).returns(Status) }
