@@ -26,7 +26,8 @@ RSpec.describe Rush::Expansion::TildeExpander do
   end
 
   it 'leaves an unknown user, a non-leading tilde or a quoted tilde untouched' do
-    expect([head('~nobody'), head('a~'), head('~', quoted: true)]).to eq(['~nobody', 'a~', '~'])
+    results = [head('~nobody'), head('a~'), head('bob/rest'), head('~', quoted: true)]
+    expect(results).to eq(['~nobody', 'a~', 'bob/rest', '~'])
   end
 
   it 'leaves a bare tilde untouched when HOME is unset' do
@@ -40,8 +41,14 @@ RSpec.describe Rush::Expansion::TildeExpander do
     expect(described_class.new(executor, []).expand).to eq([])
   end
 
+  it 'rewrites only the first literal segment and preserves the tail' do
+    expanded = described_class.new(executor, [seg('~'), seg('/tail')]).expand
+    expect(expanded.map(&:value)).to eq(['/home/me', '/tail'])
+  end
+
   it 'expands after each colon only in assignment context' do
-    expect([assigned('~/a:~bob:c'), head('~/a:~bob')]).to eq(['/home/me/a:/home/bob:c', '/home/me/a:~bob'])
+    expect([assigned('~/a:~bob:c'), assigned('~:'), head('~/a:~bob')])
+      .to eq(['/home/me/a:/home/bob:c', '/home/me:', '/home/me/a:~bob'])
   end
 
   it 'NoTilde passes the segments through unchanged' do
