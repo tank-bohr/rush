@@ -8,7 +8,7 @@ module Rush
     class Registry
       extend T::Sig
 
-      @builtins: ::Hash[String, _BuiltinClass]
+      @builtins: ::Hash[String?, _BuiltinClass]
 
       def initialize: () -> void
 

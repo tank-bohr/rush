@@ -10,6 +10,11 @@ RSpec.describe Rush::Builtins::Return do
       .to raise_error(Rush::ReturnSignal) { |signal| expect(signal.code).to eq(5) }
   end
 
+  it 'uses the first operand as the return status' do
+    expect { described_class.new(executor, %w[return 5 6], io).call }
+      .to raise_error(Rush::ReturnSignal) { |signal| expect(signal.code).to eq(5) }
+  end
+
   it 'defaults to the last command status' do
     state.record_status(Rush::Status.new(7))
     expect { described_class.new(executor, %w[return], io).call }

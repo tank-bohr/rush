@@ -24,14 +24,12 @@ module Rush
 
       sig { params(name: T.nilable(String)).returns(T.nilable(T.class_of(Base))) }
       def lookup(name)
-        return unless name
-
-        @builtins.fetch(name, nil)
+        @builtins[name]
       end
 
       sig { params(name: T.nilable(String)).returns(T::Boolean) }
       def key?(name)
-        !!(name && @builtins.key?(name))
+        @builtins.key?(name)
       end
     end
   end

@@ -17,7 +17,7 @@ module Rush
 
       sig { returns(Integer) }
       def code
-        operands.first ? numeric_operand(T.must(operands.first)) : executor.state.last_status.exitstatus
+        operands.first ? numeric_operand(operands.fetch(0)) : executor.state.last_status.exitstatus
       end
     end
   end

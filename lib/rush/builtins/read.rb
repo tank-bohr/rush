@@ -38,7 +38,7 @@ module Rush
 
       sig { params(text: String).returns(String) }
       def strip_escapes(text)
-        raw? ? text : text.gsub(/\\(.)/m, '\1').delete_suffix('\\')
+        raw? ? text : text.gsub(/\\(.)/, '\1').delete_suffix('\\')
       end
 
       sig { params(line: String).void }
