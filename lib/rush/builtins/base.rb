@@ -8,10 +8,11 @@ module Rush
     class Base
       extend T::Sig
 
-      # A non-negative decimal integer (optionally signed +, surrounding blanks);
-      # the accepted form of an exit/return operand. dash parses it into a C int,
-      # so a value past INT_MAX overflows and is rejected like a non-numeric one.
-      NUMERIC_OPERAND = /\A\s*\+?\d+\s*\z/
+      # A signed decimal integer (surrounding blanks allowed); the caller's min
+      # enforces whether negative or zero values are valid for this operand. dash
+      # parses it into a C int, so a value past INT_MAX overflows and is rejected
+      # like a non-numeric one.
+      NUMERIC_OPERAND = /\A\s*[+-]?\d+\s*\z/
       INT_MAX = 2_147_483_647
 
       sig { params(executor: Executor, argv: T::Array[String], io: IoTable).void }

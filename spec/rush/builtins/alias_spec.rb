@@ -40,10 +40,10 @@ RSpec.describe Rush::Builtins::Alias do
     expect(system.stdout.string).to eq("'aaa=2'\n'zzz=1'\n")
   end
 
-  it 'quotes an embedded single quote dash-style when listing' do
-    run("x=it's")
+  it 'quotes embedded single quotes dash-style when listing' do
+    run("x=it's 'ok'")
     run('x')
-    expect(system.stdout.string).to eq(%('x=it'"'"'s'\n))
+    expect(system.stdout.string).to eq(%('x=it'"'"'s '"'"'ok'"'"''\n))
   end
 
   it 'prints a queried alias and succeeds' do

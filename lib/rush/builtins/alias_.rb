@@ -13,9 +13,11 @@ module Rush
 
       sig { returns(Status) }
       def call
-        return list if operands.empty?
-
-        operands.reduce(success) { |status, operand| keep(status, handle(operand)) }
+        if operands.empty?
+          list
+        else
+          operands.reduce(success) { |status, operand| keep(status, handle(operand)) }
+        end
       end
 
       private
@@ -38,7 +40,7 @@ module Rush
         return show(name, value) if value
 
         stderr.puts("alias: #{name} not found")
-        failure(1)
+        failure
       end
 
       sig { returns(Status) }
