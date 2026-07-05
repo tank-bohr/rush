@@ -54,13 +54,25 @@ module Rush
 
       sig { void }
       def dollar
-        peek?('(') ? command_sub : param
+        peek?('(') ? dollar_paren : param
       end
 
       sig { void }
-      def command_sub
+      def dollar_paren
         @scanner.getch
-        push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).parens, false))
+        reader = SubstitutionReader.new(@scanner)
+        peek?('(') ? arithmetic(reader) : command_sub(reader)
+      end
+
+      sig { params(reader: SubstitutionReader).void }
+      def command_sub(reader)
+        push(AST::CommandSegment.new(reader.parens, false))
+      end
+
+      sig { params(reader: SubstitutionReader).void }
+      def arithmetic(reader)
+        @scanner.getch
+        push(AST::ArithSegment.new(reader.arithmetic, false))
       end
 
       sig { void }

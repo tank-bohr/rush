@@ -21,6 +21,10 @@ RSpec.describe Rush::Lexer::HeredocBody do
     expect(kinds('$(echo hi) and `date`')).to eq(%i[command literal command])
   end
 
+  it 'parses $((...)) into an arithmetic segment' do
+    expect(kinds('sum $((1 + 2)) end')).to eq(%i[literal arith literal])
+  end
+
   it 'keeps an escaped dollar literal rather than a parameter' do
     expect(kinds('\\$x')).to eq([:literal])
     expect(scan('\\$x').literal_text).to eq('$x')

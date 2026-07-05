@@ -35,7 +35,11 @@ module Rush
 
       def dollar: () -> void
 
-      def command_sub: () -> void
+      def dollar_paren: () -> void
+
+      def command_sub: (SubstitutionReader reader) -> void
+
+      def arithmetic: (SubstitutionReader reader) -> void
 
       def backtick: () -> void
 

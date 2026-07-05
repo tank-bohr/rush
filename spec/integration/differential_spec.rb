@@ -106,6 +106,7 @@ RSpec.describe 'rush vs dash (differential)' do
     "wc -l <<EOF\na\nb\nc\nEOF",
     "v=42; cat <<EOF\nvalue is $v\nEOF",
     "cat <<EOF\nsub: $(echo deep)\nEOF",
+    "cat <<EOF\narith: $((1+1))\nEOF",
     "x=1; cat <<EOF\nescaped \\$x literal\nEOF",
     'readonly x=1; echo "$x"',
     'readonly x=1; x=2; echo after',
