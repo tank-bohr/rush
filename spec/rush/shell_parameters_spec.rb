@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::ShellParameters do
-  let(:variables) { Rush::ShellVariables.new(Rush::Environment.new('V' => 'v')) }
-  let(:positional) { Rush::Positional.new(%w[a b c]) }
-  let(:status) { Rush::Status.new(3) }
-  let(:parameters) do
-    described_class.new(variables: variables, positional: positional, name: 'sh', status: -> { status })
+  let(:state) do
+    Rush::ShellState.new(environment: Rush::Environment.new('V' => 'v'), name: 'sh', positional: %w[a b c])
   end
+  let(:parameters) { state.parameters }
+
+  before { state.record_status(Rush::Status.new(3)) }
 
   it 'resolves ordinary variables' do
     expect(parameters.resolve('V', pid: 4242)).to eq('v')
@@ -22,17 +22,22 @@ RSpec.describe Rush::ShellParameters do
     expect(resolved).to eq(['b', nil])
   end
 
-  it 'returns placeholders for deferred special parameters' do
+  it 'returns placeholders for special parameters without current values' do
     expect([parameters.resolve('-', pid: 4242), parameters.resolve('!', pid: 4242)]).to eq(['', nil])
   end
 
+  it 'resolves $!' do
+    state.record_background_pid(1234)
+    expect(parameters.resolve('!', pid: 4242)).to eq('1234')
+  end
+
   it 'joins $* with the first IFS character' do
-    variables.assign('IFS', ':-')
+    state.variables.assign('IFS', ':-')
     expect(parameters.resolve('*', pid: 4242)).to eq('a:b:c')
   end
 
   it 'joins $* with no separator when IFS is null' do
-    variables.assign('IFS', '')
+    state.variables.assign('IFS', '')
     expect(parameters.resolve('*', pid: 4242)).to eq('abc')
   end
 end

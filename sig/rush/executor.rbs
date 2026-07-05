@@ -31,6 +31,8 @@ module Rush
     # command unrun with status 2; the shell carries on (RedirectError).
     def run: (AST::Node node) -> Status
 
+    def run_async: (AST::Node node) -> Status
+
     def exitstatus: () -> Integer
 
     def run_exit_trap: (Integer code) -> Integer

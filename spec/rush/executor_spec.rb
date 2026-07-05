@@ -45,6 +45,14 @@ RSpec.describe Rush::Executor do
     expect([target.last_status.exitstatus, executor.exitstatus]).to eq([1, 1])
   end
 
+  it 'records launch success and $! when running a node asynchronously' do
+    target = state
+    executor = build(target)
+    allow(system).to receive(:fork).and_return(4321)
+    status = executor.run_async(Rush::AST::SimpleCommand.new([], [word('false')], []))
+    expect([status.exitstatus, target.last_status.exitstatus, target.last_background_pid]).to eq([0, 0, 4321])
+  end
+
   it 'records status 2 and carries on when a redirect duplicates an unopened fd' do
     target = state
     executor = build(target)

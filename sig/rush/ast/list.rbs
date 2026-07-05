@@ -13,9 +13,8 @@ module Rush
     # A `;` / `&` / newline-separated list of and-or lists and the program root.
     # Runs each entry in order; the list's status is the last entry's. An empty
     # list (a blank or comment-only line, which is its own program under
-    # command-by-command reading) preserves $?, like dash. Async (`&`) execution
-    # lands with the fork slice; for now it is parsed and recorded but run
-    # synchronously.
+    # command-by-command reading) preserves $?, like dash. Async (`&`) entries
+    # fork a background subshell and return launch status in the parent.
     class List < Node
       extend T::Sig
 

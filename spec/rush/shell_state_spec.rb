@@ -57,6 +57,13 @@ RSpec.describe Rush::ShellState do
     expect([result, state.last_status.exitstatus]).to eq([:ran, 7])
   end
 
+  it 'records the most recent background pid for $!' do
+    state = described_class.new
+    expect(state.parameters.resolve('!', pid: 4242)).to be_nil
+    state.record_background_pid(1234)
+    expect([state.last_background_pid, state.parameters.resolve('!', pid: 4242)]).to eq([1234, '1234'])
+  end
+
   it 'brackets function frames around locals, loops and positionals' do
     state = described_class.new(environment: Rush::Environment.new('x' => 'global'))
     state.positional.replace(%w[outer])

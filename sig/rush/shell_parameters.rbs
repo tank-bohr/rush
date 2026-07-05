@@ -7,15 +7,9 @@ module Rush
   class ShellParameters
     extend T::Sig
 
-    @variables: ShellVariables
+    @state: ShellState
 
-    @positional: Positional
-
-    @name: String
-
-    @status: ^() -> Status
-
-    def initialize: (variables: ShellVariables, positional: Positional, name: String, status: ^() -> Status) -> void
+    def initialize: (ShellState state) -> void
 
     def resolve: (String parameter, pid: Integer pid) -> String?
 
@@ -33,7 +27,7 @@ module Rush
 
     def options: () -> String
 
-    def background: () -> nil
+    def background: () -> String?
 
     def ordinary_or_positional: (String parameter) -> String?
 

@@ -37,6 +37,9 @@ module Rush
     sig { returns(Status) }
     attr_reader :last_status
 
+    sig { returns(T.nilable(Integer)) }
+    attr_reader :last_background_pid
+
     sig { returns(Positional) }
     attr_reader :positional
 
@@ -54,14 +57,13 @@ module Rush
       @variables = ShellVariables.new(environment)
       @traps = TrapTable.new
       @last_status = Status.success
+      @last_background_pid = T.let(nil, T.nilable(Integer))
       @loops = LoopNesting.new
       @options = Options.new
       @positional = Positional.new(positional)
       @getopts = GetoptsState.new
       @variables.assign('OPTIND', '1')
-      @parameters = ShellParameters.new(
-        variables: @variables, positional: @positional, name: @name, status: -> { @last_status }
-      )
+      @parameters = ShellParameters.new(self)
       @function_frame = FunctionFrame.new(variables: @variables, loops: @loops, positional: @positional)
       @functions = FunctionTable.new
       @aliases = AliasTable.new
@@ -106,6 +108,11 @@ module Rush
     sig { params(status: Status).returns(Status) }
     def record_status(status)
       @last_status = status
+    end
+
+    sig { params(pid: Integer).returns(Integer) }
+    def record_background_pid(pid)
+      @last_background_pid = pid
     end
   end
 end

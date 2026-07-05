@@ -11,6 +11,7 @@ module Rush
     @variables: ShellVariables
     @traps: TrapTable
     @last_status: Status
+    @last_background_pid: Integer?
     @loops: LoopNesting
     @options: Options
     @positional: Positional
@@ -30,6 +31,7 @@ module Rush
     attr_reader loops: LoopNesting
     attr_reader options: Options
     attr_reader last_status: Status
+    attr_reader last_background_pid: Integer?
     attr_reader positional: Positional
     attr_reader getopts: GetoptsState
     attr_reader parameters: ShellParameters
@@ -45,5 +47,7 @@ module Rush
     # The last command's exit status ($?), recorded after each command runs;
     # returns the status it recorded (Executor#run passes it straight through).
     def record_status: (Status status) -> Status
+
+    def record_background_pid: (Integer pid) -> Integer
   end
 end

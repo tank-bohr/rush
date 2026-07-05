@@ -55,6 +55,11 @@ module Rush
       @state.record_status(Status.new(2))
     end
 
+    sig { params(node: AST::Node).returns(Status) }
+    def run_async(node)
+      @state.record_status(BackgroundRunner.new(self, node).call)
+    end
+
     sig { returns(Integer) }
     def exitstatus
       @state.last_status.exitstatus

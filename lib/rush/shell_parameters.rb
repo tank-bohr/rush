@@ -10,19 +10,9 @@ module Rush
   class ShellParameters
     extend T::Sig
 
-    sig do
-      params(
-        variables: ShellVariables,
-        positional: Positional,
-        name: String,
-        status: T.proc.returns(Status)
-      ).void
-    end
-    def initialize(variables:, positional:, name:, status:)
-      @variables = variables
-      @positional = positional
-      @name = name
-      @status = status
+    sig { params(state: T.untyped).void }
+    def initialize(state)
+      @state = state
     end
 
     sig { params(parameter: String, pid: Integer).returns(T.nilable(String)) }
@@ -37,29 +27,29 @@ module Rush
 
     sig { returns(T::Hash[String, T.proc.returns(T.nilable(String))]) }
     def special_parameters
-      { '?' => -> { status }, '#' => -> { count }, '0' => -> { @name },
+      { '?' => -> { status }, '#' => -> { count }, '0' => -> { @state.name },
         '@' => -> { positional_all }, '*' => -> { positional_all }, '-' => -> { options },
         '!' => -> { background } }
     end
 
     sig { returns(String) }
     def status
-      @status.call.exitstatus.to_s
+      @state.last_status.exitstatus.to_s
     end
 
     sig { returns(String) }
     def count
-      @positional.size.to_s
+      @state.positional.size.to_s
     end
 
     sig { returns(String) }
     def positional_all
-      @positional.join(separator)
+      @state.positional.join(separator)
     end
 
     sig { returns(String) }
     def separator
-      ifs = @variables.get('IFS')
+      ifs = @state.variables.get('IFS')
       ifs ? (ifs.each_char.first || '') : ' '
     end
 
@@ -68,21 +58,21 @@ module Rush
       ''
     end
 
-    sig { returns(NilClass) }
+    sig { returns(T.nilable(String)) }
     def background
-      nil
+      @state.last_background_pid&.to_s
     end
 
     sig { params(parameter: String).returns(T.nilable(String)) }
     def ordinary_or_positional(parameter)
       return positional(parameter.to_i) if parameter.match?(/\A\d+\z/)
 
-      @variables.get(parameter)
+      @state.variables.get(parameter)
     end
 
     sig { params(index: Integer).returns(T.nilable(String)) }
     def positional(index)
-      @positional[index - 1]
+      @state.positional[index - 1]
     end
   end
 end

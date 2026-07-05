@@ -96,6 +96,8 @@ RSpec.describe 'rush vs dash (differential)' do
     'X=local; printenv X; echo "rc=$?"',
     'export X=hi; unset X; printenv X; echo "rc=$?"',
     'no-such-cmd-rush-xyz 2>&-; echo "rc=$?"',
+    'false & echo "rc=$?"',
+    'false & test -n "$!" && echo pid',
     'eval echo one two',
     'eval "echo hi; x=1"; echo $x',
     'x=5; eval "echo \$x"',

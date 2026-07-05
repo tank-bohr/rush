@@ -27,13 +27,13 @@ RSpec.describe Rush::AST::List do
     expect(executor).not_to have_received(:tested)
   end
 
-  it 'runs an async entry in a tested context, returning its status' do
+  it 'launches an async entry in a tested context, returning its launch status' do
     entry = Rush::AST::ListEntry.new(and_or: :bg, async: true)
-    allow(executor).to receive(:run).with(:bg).and_return(Rush::Status.new(3))
+    allow(executor).to receive(:run_async).with(:bg).and_return(Rush::Status.success)
     allow(executor).to receive(:tested).and_call_original
 
-    expect(described_class.new([entry]).execute(executor).exitstatus).to eq(3)
+    expect(described_class.new([entry]).execute(executor)).to be_success
     expect(executor).to have_received(:tested).once
-    expect(executor).to have_received(:run).with(:bg).once
+    expect(executor).to have_received(:run_async).with(:bg).once
   end
 end

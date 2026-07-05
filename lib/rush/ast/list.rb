@@ -9,9 +9,8 @@ module Rush
     # A `;` / `&` / newline-separated list of and-or lists and the program root.
     # Runs each entry in order; the list's status is the last entry's. An empty
     # list (a blank or comment-only line, which is its own program under
-    # command-by-command reading) preserves $?, like dash. Async (`&`) execution
-    # lands with the fork slice; for now it is parsed and recorded but run
-    # synchronously.
+    # command-by-command reading) preserves $?, like dash. Async (`&`) entries
+    # fork a background subshell and return launch status in the parent.
     class List < Node
       extend T::Sig
 
@@ -39,7 +38,7 @@ module Rush
       # An async (&) command is exempt from errexit, so it runs in a tested context.
       sig { params(executor: Executor, entry: ListEntry).returns(Status) }
       def run_entry(executor, entry)
-        return executor.tested { executor.run(entry.and_or) } if entry.async
+        return executor.tested { executor.run_async(entry.and_or) } if entry.async
 
         executor.run(entry.and_or)
       end
