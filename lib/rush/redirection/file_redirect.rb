@@ -22,7 +22,7 @@ module Rush
       # CommandRunner where the command word is known.
       sig { params(redirect: AST::Redirect, target: String, io: IoTable, system: SystemCalls).returns(IoTable) }
       def apply(redirect, target, io, system)
-        io.with(redirect.io_number || @default_fd, system.open_file(target, @mode))
+        io.with_owned(redirect.io_number || @default_fd, system.open_file(target, @mode))
       rescue SystemCallError
         raise RedirectError, "#{target}: cannot redirect"
       end

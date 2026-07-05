@@ -119,13 +119,14 @@ nesting is clamped.
   IoTable so both logical fds map to one real fd; builtins share the IO object. The left-to-right
   fold of redirects (`with_redirects`' reduce) gives correct ordering (`>f 2>&1` → both to f;
   `2>&1 >f` → stderr to old stdout).
-- **`n>&-` closes** fd n → a `ClosedStream` whose I/O raises `Errno::EBADF` (a write fails the
-  command with status 1, caught in `CommandRunner#builtin`; the shell continues) and which
-  `IoTable#to_spawn_options` maps to `:close`. Dup *from* a closed/unopened fd → `RedirectError`
-  (status 2, shell continues); a **non-numeric** dup target → `BuiltinError` (fatal).
-- **Flush/close after the command** (`close_opened_over`): a redirect's target is closed when the
-  command finishes, identified by object-identity diff `io.ios - base.ios`, so inherited streams
-  and pipe ends are untouched. Redirect files are opened in **sync mode** so a forked subshell's
+- **`n>&-` closes** fd n → a closed `FdEntry` whose stream access raises `Errno::EBADF` (a write
+  fails the command with status 1, caught in `CommandRunner#builtin`; the shell continues) and
+  which `IoTable#to_spawn_options` maps to `:close`. Dup *from* a closed/unopened fd →
+  `RedirectError` (status 2, shell continues); a **non-numeric** dup target → `BuiltinError`
+  (fatal).
+- **Flush/close after the command** (`close_opened_over`): an owned redirect target is closed when
+  the command finishes, identified by object-identity diff `io.entries - base.entries`, so borrowed
+  stdio, inherited streams and pipe ends are untouched. Redirect files are opened in **sync mode** so a forked subshell's
   output survives its `exit!` (which flushes only the std streams).
 - **Compound command as a pipeline stage** (7ag): `PipelineRunner#run_stage` runs the arbitrary
   AST node with stdin/stdout bound to the pipe (`with_io(stage_io) { run(node) }`), so
@@ -470,10 +471,10 @@ where a reopened-class's doc comment lives. reek's `IrresponsibleModule` sees **
 comment can't satisfy it. RuboCop's `Style/Documentation` wants the comment on the reopen and is
 content with one. So for these classes the usual split is inverted: RuboCop holds the doc gate
 (comment on the reopen) and reek's `IrresponsibleModule` exempts them (`.reek.yml`). Two more small
-Sorbet⟂linter frictions, same flavour: an anonymous block splat `{ |*| … }` (ClosedStream's EBADF
-stubs) is fine for RuboCop but Sorbet forbids it (srb.help/3012) — naming it `|*_|` satisfies Sorbet
-but trips reek's `UncommunicativeVariableName` (the project accepts only `e`), so ClosedStream is
-exempted there. **Lesson so far:** adding a second type system to existing code mostly costs you at
+Sorbet⟂linter frictions, same flavour: an anonymous block splat `{ |*| … }` (the old closed-fd
+sentinel's EBADF stubs) is fine for RuboCop but Sorbet forbids it (srb.help/3012) — naming it
+`|*_|` satisfies Sorbet but trips reek's `UncommunicativeVariableName` (the project accepts only
+`e`). **Lesson so far:** adding a second type system to existing code mostly costs you at
 the *structural* seams (class shape, splat syntax) the first system and the linters had already
 pinned — and each clash is a small, real piece of "how these tools see Ruby differently", which is
 exactly what this project is for. (Inline `sig {}` and raising `# typed:` levels: next slice.)
@@ -488,7 +489,7 @@ What got there cleanly: a `Rush::Parser` RBI shim in `sorbet/rbi/shims/` (the Ra
 `parser.rb` is excluded, exactly like Steep's `parser.rbs` stub — the *one* place the two type
 systems' stubs are deliberately parallel; `sorbet/config` had to add `--dir ./sorbet/rbi` because the
 raw binary, unlike `srb`, doesn't auto-read it), and `Kernel.raise` in LoopControlHandling (a bare
-`raise` in a mixin has no resolvable self — the same fix ClosedStream already used).
+`raise` in a mixin has no resolvable self).
 
 Five files stay `# typed: false`, each a concrete Steep⟂Sorbet drift (Steep types them; Sorbet
 can't, or mistypes):
@@ -558,9 +559,10 @@ they read Ruby:
   code" (7006); rbs models the nilable. (Two files stay `# typed: false` for it.)
 - **`File.writable?`** — Sorbet's stdlib RBI mistypes it `T.nilable(Integer)` (it returns Boolean,
   unlike its siblings `readable?`/`executable?`); needed a `!!`.
-- **`Base#stdout`/`#stderr`** — RBS says `IO`; Sorbet's *runtime* `is_a?(IO)` would reject the
-  `ClosedStream` (from `>&-`) that quacks like IO, so the Sorbet sig is `T.untyped`. The sig sets
-  diverge on purpose — runtime validation forces a looser nominal type than static checking needs.
+- **`Base#stdout`/`#stderr`** — RBS says `IO`; Sorbet's *runtime* `is_a?(IO)` rejected the old
+  closed-fd sentinel (from `>&-`) that quacked like IO, so the Sorbet sig stayed `T.untyped`. The
+  sig sets diverged on purpose — runtime validation forced a looser nominal type than static
+  checking needed.
 - **literal-symbol narrowing** — `parse -> AST::List | :eof`: Steep narrows on `== :eof`, Sorbet
   can't (it widens `:eof` to `Symbol`), so the call sites need `T.cast(program, AST::List)`.
 - **string-literal union types (a drift that *doesn't* materialise)** — RBS can spell

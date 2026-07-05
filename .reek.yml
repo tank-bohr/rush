@@ -106,15 +106,10 @@ detectors:
       - Rush::ParserSupport
 
   # Only `e` is accepted — RuboCop's Naming/RescuedExceptionsVariableName forces
-  # that name for rescues; everything else is spelled out. ClosedStream is exempt:
-  # its define_method blocks take a `|*_|` splat (every read/write raises EBADF
-  # ignoring its args) — the splat must be named because Sorbet (srb.help/3012)
-  # forbids an anonymous block splat, and `_` is the intentionally-unused marker.
+  # that name for rescues; everything else is spelled out.
   UncommunicativeVariableName:
     accept:
       - /^e$/
-    exclude:
-      - Rush::ClosedStream
   UncommunicativeMethodName:
     accept:
       - waitpid2

@@ -15,7 +15,7 @@ module Rush
     def unwind(signal)
       relayed = relay(signal)
       # Kernel.raise (not bare raise): in this mixin Sorbet can't resolve a bare
-      # raise on the module's self (the same reason ClosedStream uses Kernel.raise).
+      # raise on the module's self.
       Kernel.raise relayed if relayed
 
       @executor.state.last_status

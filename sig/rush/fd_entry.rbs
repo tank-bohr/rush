@@ -1,0 +1,31 @@
+module Rush
+  # One binding in the shell's logical fd table. It records the stream currently
+  # bound to a descriptor plus ownership: redirections that open files/heredocs
+  # are owned and closed after the command, while stdio, pipes and future
+  # inherited descriptors are borrowed. A closed entry models `n>&-` / `n<&-`.
+  class FdEntry
+    extend T::Sig
+
+    @stream: _IoStream?
+
+    @state: Symbol
+
+    def self.borrowed: (_IoStream stream) -> FdEntry
+
+    def self.owned: (_IoStream stream) -> FdEntry
+
+    def self.closed: () -> FdEntry
+
+    def initialize: (_IoStream? stream, Symbol state) -> void
+
+    def owned?: () -> bool
+
+    def closed?: () -> bool
+
+    def stream: () -> _IoStream
+
+    def to_spawn_option: () -> (_IoStream | Symbol)
+
+    def close_redirect: (SystemCalls system) -> void
+  end
+end

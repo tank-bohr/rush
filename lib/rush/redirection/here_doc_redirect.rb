@@ -10,7 +10,7 @@ module Rush
 
       sig { params(redirect: AST::Redirect, body: String, io: IoTable, system: SystemCalls).returns(IoTable) }
       def apply(redirect, body, io, system)
-        io.with(redirect.io_number || 0, system.here_doc(body))
+        io.with_owned(redirect.io_number || 0, system.here_doc(body))
       end
     end
   end

@@ -21,32 +21,45 @@ module Rush
     def flush: () -> untyped
   end
 
-  # Maps file descriptors to IO objects for a single command. Redirections fold
+  # Maps file descriptors to fd entries for a single command. Redirections fold
   # over a base table to produce a new one (`with`), so the shell's own streams
   # are never mutated and a command's redirections are scoped to that command.
   class IoTable
     extend T::Sig
 
-    @streams: Hash[Integer, _IoStream]
+    @entries: Hash[Integer, FdEntry]
 
-    def initialize: (Hash[Integer, _IoStream] streams) -> void
+    def initialize: (Hash[Integer, _IoStream | FdEntry] entries) -> void
 
     def self.standard: (SystemCalls system) -> IoTable
 
     def get: (0 | 1 | 2 fd) -> _IoStream
            | (Integer fd) -> _IoStream?
 
+    def entry: (Integer fd) -> FdEntry?
+
     def with: (Integer fd, _IoStream io) -> IoTable
 
-    # The bound streams, for diffing which a command's redirects freshly opened
-    # (and so must close) against the base table it inherited.
-    def ios: () -> Array[_IoStream]
+    def with_owned: (Integer fd, _IoStream io) -> IoTable
+
+    def with_closed: (Integer fd) -> IoTable
+
+    def with_entry: (Integer fd, FdEntry entry) -> IoTable
+
+    # The bound entries, for diffing which redirections freshly opened owned
+    # streams over the base table. Borrowed entries (stdio, pipes and inherited
+    # fds) are intentionally not closed by redirect cleanup.
+    def entries: () -> Array[FdEntry]
 
     # Flush+close the streams this table opened over `base` (the ones a command's
     # redirects added), leaving inherited streams and pipe ends untouched.
     def close_opened_over: (IoTable base, SystemCalls system) -> void
 
-    # A closed fd (ClosedStream) becomes :close so a spawned child closes it.
-    def to_spawn_options: () -> Hash[Integer, _IoStream | :close]
+    # A closed fd becomes :close so a spawned child closes it.
+    def to_spawn_options: () -> Hash[Integer, _IoStream | Symbol]
+
+    private
+
+    def fd_entry: (_IoStream | FdEntry entry) -> FdEntry
   end
 end

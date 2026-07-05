@@ -10,11 +10,11 @@ RSpec.describe Rush::Redirection::HereDocRedirect do
 
   it 'binds the body to stdin as a readable stream' do
     result = described_class.new.apply(redirect(nil), "body\n", io, system)
-    expect(result.get(0).read).to eq("body\n")
+    expect([result.get(0).read, result.entry(0).owned?]).to eq(["body\n", true])
   end
 
   it 'honours an explicit fd' do
     result = described_class.new.apply(redirect(3), 'x', io, system)
-    expect(result.get(3).read).to eq('x')
+    expect([result.get(3).read, result.entry(3).owned?]).to eq(['x', true])
   end
 end

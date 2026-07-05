@@ -1,6 +1,6 @@
 module Rush
   module Redirection
-    # n>&m / n<&m — make fd n a duplicate of fd m by binding it to m's stream
+    # n>&m / n<&m — make fd n a duplicate of fd m by binding it to m's entry
     # (the left-to-right fold means it copies whatever m points at right now),
     # n>&- / n<&- — close fd n. The default fd is 1 for >& and 0 for <&. A target
     # that is neither a number nor `-`, or a number whose fd is not open, is a
@@ -20,7 +20,7 @@ module Rush
       # (unset, or already closed by an earlier n>&-) is a non-fatal redirect
       # error (status 2, shell continues); a non-number is a special-builtin
       # error (aborts the shell).
-      def source: (IoTable io, String target) -> untyped
+      def source: (IoTable io, String target) -> FdEntry
 
       def numeric: (String target) -> Integer
     end
