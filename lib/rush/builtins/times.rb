@@ -13,12 +13,17 @@ module Rush
       sig { returns(Status) }
       def call
         tms = executor.system.times
-        stdout.puts("#{clock(tms.utime)} #{clock(tms.stime)}")
-        stdout.puts("#{clock(tms.cutime)} #{clock(tms.cstime)}")
+        write_times(tms)
         success
       end
 
       private
+
+      sig { params(tms: Process::Tms).void }
+      def write_times(tms)
+        stdout.puts("#{clock(tms.utime)} #{clock(tms.stime)}")
+        stdout.puts("#{clock(tms.cutime)} #{clock(tms.cstime)}")
+      end
 
       sig { params(seconds: Float).returns(String) }
       def clock(seconds)

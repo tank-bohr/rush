@@ -11,6 +11,8 @@ module Rush
 
       private
 
+      def write_times: (Process::Tms tms) -> void
+
       def clock: (Float seconds) -> String
     end
   end

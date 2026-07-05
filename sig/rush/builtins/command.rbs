@@ -17,6 +17,12 @@ module Rush
 
       def run: (Array[String] args) -> Status
 
+      def build_command: (Array[String] args) -> (Base | External)
+
+      def build_named_command: (Array[String] args) -> (Base | External)
+
+      def build_named_command_from_builtin: (Array[String] args, _BuiltinClass? builtin) -> (Base | External)
+
       def exported_env: () -> ::Hash[String, String]
     end
   end

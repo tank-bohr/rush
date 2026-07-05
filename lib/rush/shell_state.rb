@@ -43,6 +43,8 @@ module Rush
     sig { returns(ShellParameters) }
     attr_reader :parameters
 
+    # ShellState wires every shell sub-table; helper extraction would hide state.
+    # rubocop:disable Metrics/AbcSize
     sig { params(environment: Environment, name: String).void }
     def initialize(environment: Environment.new, name: 'rush')
       @name = name
@@ -60,6 +62,7 @@ module Rush
       @aliases = AliasTable.new
       @command_hash = {}
     end
+    # rubocop:enable Metrics/AbcSize
 
     sig do
       type_parameters(:U)

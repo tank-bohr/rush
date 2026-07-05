@@ -49,7 +49,7 @@ Metrics/BlockLength:
     - 'tasks/**/*.rake'
 
 Metrics/AbcSize:
-  Max: 17
+  Max: 15
 
 # The differential corpus is a deliberately large table of shell snippets to
 # compare against dash; it grows one block per slice and is data, not logic.

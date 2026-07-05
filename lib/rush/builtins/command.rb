@@ -38,12 +38,31 @@ module Rush
 
       sig { params(args: T::Array[String]).returns(Status) }
       def run(args)
-        return success if args.empty?
+        build_command(args).call
+      end
 
+      sig { params(args: T::Array[String]).returns(T.any(Base, External)) }
+      def build_command(args)
+        if args.empty?
+          Colon.new(executor, args, io)
+        else
+          build_named_command(args)
+        end
+      end
+
+      sig { params(args: T::Array[String]).returns(T.any(Base, External)) }
+      def build_named_command(args)
         builtin = executor.builtins.lookup(args.fetch(0))
-        return builtin.new(executor, args, io).call if builtin
+        build_named_command_from_builtin(args, builtin)
+      end
 
-        External.new(executor, args, io, exported_env).call
+      sig { params(args: T::Array[String], builtin: T.nilable(T.class_of(Base))).returns(T.any(Base, External)) }
+      def build_named_command_from_builtin(args, builtin)
+        if builtin
+          builtin.new(executor, args, io)
+        else
+          External.new(executor, args, io, exported_env)
+        end
       end
 
       sig { returns(T::Hash[String, String]) }

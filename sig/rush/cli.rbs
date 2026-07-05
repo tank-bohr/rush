@@ -1,18 +1,14 @@
 module Rush
-  # Entry point: parse argv, build the executor, run the requested source and
-  # return the process exit code. Supports `-c command`, a batch program on
-  # stdin, and an interactive REPL when invoked with no arguments on a terminal.
-  # The program is read and executed command by command (see ProgramReader), so
-  # earlier commands run — and flush their output — before a later syntax error,
-  # and a fatal error fires the EXIT trap, both matching dash.
+  # Entry point: dispatch to the interactive REPL or the non-interactive source
+  # runner and return the process exit code. Supports `-c command`, a batch
+  # program on stdin, and an interactive REPL when invoked with no arguments on a
+  # terminal.
   class CLI
     extend T::Sig
 
     @argv: Array[String]
 
     @system: SystemCalls
-
-    @executor: Executor
 
     def self.run: (Array[String] argv, ?system: SystemCalls) -> Integer
 
@@ -23,32 +19,5 @@ module Rush
     private
 
     def repl?: () -> bool
-
-    def run_source: () -> Integer
-
-    def run_commands: () -> Integer
-
-    # Under `set -v` (verbose) each input line is written to stderr as it is read,
-    # before it runs, so a `set -v`/`set +v` toggles which later lines echo (POSIX).
-    def echo_verbose: (String? line) -> String?
-
-    def continue?: (ProgramReader reader) -> bool
-
-    # A `return` not caught by a function or dot script acts like `exit` with
-    # that code in a non-interactive shell (POSIX): re-raise as ExitSignal so it
-    # settles the status and fires the EXIT trap. A stray break/continue no longer
-    # reaches here — with no enclosing loop the builtin is a no-op.
-    def execute: (AST::List program) -> Status
-
-    # Fire the EXIT trap once the program (or an `exit`) has settled on a status.
-    def terminate: (Integer code) -> Integer
-
-    # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then
-    # fire the EXIT trap (which may override the code via `exit`) — like dash.
-    def abort_with: (StandardError error) -> Integer
-
-    def source: () -> String
-
-    def executor: () -> Executor
   end
 end
