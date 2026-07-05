@@ -101,10 +101,40 @@ Style/InvertibleUnlessCondition:
   Enabled: true # `unless x.zero?` reads better as `if x.nonzero?`
 Style/YodaExpression:
   Enabled: true
+Style/ArrayCoercion:
+  Enabled: true
+Style/AutoResourceCleanup:
+  Enabled: true
+Style/ClassMethodsDefinitions:
+  Enabled: true
+Style/CollectionMethods:
+  Enabled: true
+Style/DataInheritance:
+  Enabled: true
+Style/DateTime:
+  Enabled: true
 Style/ImplicitRuntimeError:
   Enabled: true # raise must name an error class, not a bare RuntimeError
+Style/MethodCalledOnDoEndBlock:
+  Enabled: true
+Style/MissingElse:
+  Enabled: true
+Style/MultilineMethodSignature:
+  Enabled: true
+Style/OptionHash:
+  Enabled: true
+Style/RedundantStructKeywordInit:
+  Enabled: true
 Style/ReturnNil:
   Enabled: true # bare `return` everywhere; `return nil` is redundant
+Style/StaticClass:
+  Enabled: true
+Style/StringMethods:
+  Enabled: true
+Style/TopLevelMethodDefinition:
+  Enabled: true
+Style/TrailingCommaInBlockArgs:
+  Enabled: true
 Lint/ShadowingOuterLocalVariable:
   Enabled: true
 Lint/HeredocMethodCallPosition:
@@ -176,34 +206,20 @@ RSpec/MessageExpectation: { Enabled: false }
 RSpec/Pending: { Enabled: false }
 
 # Style
-Style/ArrayCoercion: { Enabled: false }
 Style/ArrayFirstLast: { Enabled: false }
 Style/AsciiComments: { Enabled: false }
-Style/AutoResourceCleanup: { Enabled: false }
-Style/ClassMethodsDefinitions: { Enabled: false }
-Style/CollectionMethods: { Enabled: false }
 Style/ConstantVisibility: { Enabled: false }
 Style/Copyright: { Enabled: false }
-Style/DateTime: { Enabled: false }
 Style/DisableCopsWithinSourceCodeDirective: { Enabled: false }
 Style/DocumentationMethod: { Enabled: false }
 Style/HashLookupMethod: { Enabled: false }
 Style/InlineComment: { Enabled: false }
 Style/IpAddresses: { Enabled: false }
-Style/MethodCalledOnDoEndBlock: { Enabled: false }
 Style/MethodCallWithArgsParentheses: { Enabled: false }
-Style/MissingElse: { Enabled: false }
-Style/MultilineMethodSignature: { Enabled: false }
-Style/OptionHash: { Enabled: false }
-Style/RedundantStructKeywordInit: { Enabled: false }
 Style/RequireOrder: { Enabled: false }
 Style/Send: { Enabled: false }
 Style/SingleLineBlockParams: { Enabled: false }
-Style/StaticClass: { Enabled: false }
 Style/StringHashKeys: { Enabled: false }
-Style/StringMethods: { Enabled: false }
-Style/TopLevelMethodDefinition: { Enabled: false }
-Style/TrailingCommaInBlockArgs: { Enabled: false }
 
 # The plan keeps development dependencies declared in the gemspec (single source
 # of truth), so do not force them into the Gemfile.
@@ -224,14 +240,6 @@ Layout/LineLength:
 # the same kind of method never appears in two shapes.
 Style/EndlessMethod:
   EnforcedStyle: disallow
-
-# This cop wants `Data.define(...) do ... end`, but Steep attributes an instance
-# method defined in that block to the *enclosing module*, not the class, so the
-# block form can't be type-checked. We use `class X < Data.define(...)` instead
-# (the methods then attribute to the node and Steep types them) — see the RBS
-# typing notes in docs/journal.md.
-Style/DataInheritance:
-  Enabled: false
 
 # number.rb's operator table is uniformly explicit lambdas; for the two bare
 # unary operators this cop would force `lambda(&:-@)` / `lambda(&:~)`, which Steep
