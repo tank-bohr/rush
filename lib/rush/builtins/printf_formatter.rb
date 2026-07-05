@@ -12,7 +12,6 @@ module Rush
     # non-number is reported via the ok flag and treated as 0, a missing one as
     # 0 silently). %b and octal escapes arrive in a later slice. Returns [text, ok].
     class PrintfFormatter
-      RUBY_CONV = { 'i' => 'd', 'u' => 'd' }.freeze
       NUMERIC = %w[d i o u x X].freeze
 
       # Scans and walks one pass of a printf template: literal runs and resolved
@@ -57,13 +56,13 @@ module Rush
       def initialize(args)
         @args = args
         @cursor = 0
-        @consumed = 0
         @ok = true
       end
 
       def render(template)
-        text = one_pass(template)
-        return [text, @ok] if last_pass?
+        start = @cursor
+        text = Template.new(template).emit(self)
+        return [text, @ok] if @cursor == start || @cursor >= @args.size
 
         rest, = render(template)
         [text + rest, @ok]
@@ -76,24 +75,15 @@ module Rush
 
         arg = take
         return numeric(flags, conv, arg) if NUMERIC.include?(conv)
-        return Kernel.format("%#{flags}s", first_char(arg)) if conv == 'c'
+        return format("%#{flags}s", first_char(arg)) if conv == 'c'
 
-        Kernel.format("%#{flags}s", arg)
+        format("%#{flags}s", arg)
       end
 
       private
 
-      def last_pass?
-        @consumed.zero? || @cursor >= @args.size
-      end
-
-      def one_pass(template)
-        @consumed = 0
-        Template.new(template).emit(self)
-      end
-
       def numeric(flags, conv, arg)
-        Kernel.format("%#{flags}#{RUBY_CONV.fetch(conv, conv)}", to_int(arg))
+        format("%#{flags}#{conv}", to_int(arg))
       end
 
       def to_int(arg)
@@ -110,12 +100,11 @@ module Rush
       def take
         arg = @args.fetch(@cursor, '')
         @cursor += 1
-        @consumed += 1
         arg
       end
 
       def first_char(arg)
-        arg.each_char.first || ''
+        arg.each_char.first
       end
     end
   end

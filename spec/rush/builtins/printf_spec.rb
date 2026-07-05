@@ -12,15 +12,16 @@ RSpec.describe Rush::Builtins::Printf do
   it 'writes the formatted text without a trailing newline of its own' do
     expect(run('%s-%s', 'a', 'b')).to be_success
     expect(system.stdout.string).to eq('a-b')
+    expect(system.stderr.string).to eq('')
   end
 
   it 'returns failure and reports a non-numeric argument' do
     expect(run('%d', 'oops')).not_to be_success
-    expect(system.stderr.string).to include('numeric')
+    expect(system.stderr.string).to eq("rush: printf: expected numeric value\n")
   end
 
   it 'errors with exit status 2 when given no format' do
     expect(run.exitstatus).to eq(2)
-    expect(system.stderr.string).to include('usage')
+    expect(system.stderr.string).to eq("rush: printf: usage: printf format [arguments]\n")
   end
 end

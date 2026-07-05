@@ -11,11 +11,7 @@ module Rush
 
       @cursor: Integer
 
-      @consumed: Integer
-
       @ok: bool
-
-      RUBY_CONV: ::Hash[String, String]
 
       NUMERIC: ::Array["d" | "i" | "o" | "u" | "x" | "X"]
 
@@ -53,10 +49,6 @@ module Rush
 
       private
 
-      def last_pass?: () -> bool
-
-      def one_pass: (String template) -> String
-
       def numeric: (String flags, String conv, String arg) -> String
 
       def to_int: (String arg) -> Integer
@@ -65,7 +57,7 @@ module Rush
 
       def take: () -> String
 
-      def first_char: (String arg) -> String
+      def first_char: (String arg) -> String?
     end
   end
 end

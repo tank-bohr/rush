@@ -23,8 +23,10 @@ module Rush
 
       sig { params(valid: T::Boolean).returns(Status) }
       def report(valid)
-        stderr.puts('rush: printf: expected numeric value') unless valid
-        valid ? success : failure
+        return success if valid
+
+        stderr.puts('rush: printf: expected numeric value')
+        failure
       end
 
       sig { returns(Status) }

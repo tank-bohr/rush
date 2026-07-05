@@ -10,7 +10,7 @@ RSpec.describe Rush::Builtins::PrintfFormatter do
   end
 
   it 'substitutes %s and processes format escapes' do
-    expect(text("%s\n", 'hi')).to eq("hi\n")
+    expect(render("%s\n", 'hi')).to eq(["hi\n", true])
     expect(text('a\tb')).to eq("a\tb")
   end
 
@@ -40,16 +40,21 @@ RSpec.describe Rush::Builtins::PrintfFormatter do
 
   it 'prints the first character for %c and a literal percent' do
     expect(text('%c%c', 'abc', 'xyz')).to eq('ax')
+    expect(text('[%3c]', 'abc')).to eq('[  a]')
     expect(text('%%')).to eq('%')
   end
 
-  it 'treats a missing argument as empty or zero' do
-    expect(text('[%s][%d]')).to eq('[][0]')
+  it 'treats a missing argument as empty or zero without reporting a numeric error' do
+    expect(render('[%s][%d]')).to eq(['[][0]', true])
   end
 
   it 'reports a present non-numeric argument and uses zero' do
     result, ok = render('%d', 'abc')
     expect([result, ok]).to eq(['0', false])
+  end
+
+  it 'keeps the non-numeric report flag when a later recycled pass fails' do
+    expect(render('%d\n', '1', 'abc')).to eq(["1\n0\n", false])
   end
 
   it 'keeps a lone percent that is not a conversion' do
