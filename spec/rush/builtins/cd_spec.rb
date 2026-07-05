@@ -30,6 +30,31 @@ RSpec.describe Rush::Builtins::Cd do
     expect(system.chdirs).to eq(['/home/test'])
   end
 
+  it 'changes to OLDPWD and prints the destination for cd -' do
+    executor.state.variables.move_to('/start')
+    cd('/next')
+    expect(cd('-')).to be_success
+    expect(system.chdirs).to eq(['/next', '/start'])
+    expect(env.get('PWD')).to eq('/start')
+    expect(env.get('OLDPWD')).to eq('/next')
+    expect(system.stdout.string).to eq("/start\n")
+  end
+
+  it 'uses the logical current directory for cd - before OLDPWD exists' do
+    expect(cd('-')).to be_success
+    expect(system.chdirs).to eq(['/home/test'])
+    expect(system.stdout.string).to eq("/home/test\n")
+  end
+
+  it 'reports an error when cd - cannot change to OLDPWD' do
+    executor.state.variables.move_to('/gone')
+    executor.state.variables.move_to('/middle')
+    system.fail_chdir_with(Errno::ENOENT)
+    expect(cd('-')).not_to be_success
+    expect(system.stderr.string).to eq("rush: cd: /gone: No such file or directory\n")
+    expect(system.stdout.string).to be_empty
+  end
+
   it 'fails when HOME is unset and no operand is given' do
     bare = Rush::Executor.new(system: system, state: Rush::ShellState.new(environment: Rush::Environment.new({})))
     expect(described_class.new(bare, ['cd'], io).call).not_to be_success

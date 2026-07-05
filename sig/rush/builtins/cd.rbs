@@ -11,6 +11,14 @@ module Rush
 
       def change_to: (untyped dir) -> untyped
 
+      def change_back: () -> untyped
+
+      def oldpwd: () -> untyped
+
+      def perform_chdir: (untyped dir) -> untyped
+
+      def success_with_echo: () -> untyped
+
       def update_pwd: (untyped dir) -> untyped
 
       def report: (untyped message) -> untyped
