@@ -12,11 +12,15 @@ module Rush
 
     @assignments: Assignments
 
+    @allexport: bool
+
     def pwd: () -> String?
 
     def initialize: (Environment environment) -> void
 
     def get: (String name) -> String?
+
+    def allexport=: (bool enabled) -> void
 
     def assign: (String name, String value) -> String
 

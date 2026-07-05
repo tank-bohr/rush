@@ -224,6 +224,8 @@ RSpec.describe 'rush vs dash (differential)' do
     'set -o errexit; if true; then echo c; false; fi || echo rec; echo done',
     'set +o errexit; false; echo after',
     'set -o nounset; echo "${x:-ok}"; echo $undef; echo no',
+    'set -a; X=ok; printenv X',
+    'set -a; X=ok; set +a; Y=no; printenv X; printenv Y; echo "rc=$?"',
     'type echo set if',
     'type ls',
     'f() { :; }; type f',

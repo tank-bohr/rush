@@ -6,14 +6,15 @@ module Rush
     # `set [-/+ options] [--] [arg ...]` — toggle shell options (-x/+x and the
     # `-o name`/`+o name` long form) and, when operands follow (or after `--`),
     # replace the positional parameters. With no operands the parameters are left
-    # unchanged; an unknown option is ignored. Options: -e/errexit, -u/nounset,
-    # -x/xtrace, -f/noglob, -v/verbose.
+    # unchanged; an unknown option is ignored. Options: -a/allexport, -e/errexit,
+    # -u/nounset, -x/xtrace, -f/noglob, -v/verbose.
     class Set < Base
       extend T::Sig
 
-      OPTIONS = { 'e' => :errexit, 'u' => :nounset, 'x' => :xtrace, 'f' => :noglob, 'v' => :verbose }.freeze
-      LONG = { 'errexit' => :errexit, 'nounset' => :nounset, 'xtrace' => :xtrace,
-               'noglob' => :noglob, 'verbose' => :verbose }.freeze
+      OPTIONS = { 'a' => :allexport, 'e' => :errexit, 'u' => :nounset,
+                  'x' => :xtrace, 'f' => :noglob, 'v' => :verbose }.freeze
+      LONG = { 'allexport' => :allexport, 'errexit' => :errexit, 'nounset' => :nounset,
+               'xtrace' => :xtrace, 'noglob' => :noglob, 'verbose' => :verbose }.freeze
 
       sig { returns(Status) }
       def call
@@ -74,7 +75,11 @@ module Rush
 
       sig { params(option: T.nilable(Symbol), sign: T.nilable(String)).void }
       def toggle(option, sign)
-        option && executor.state.options.set(option, sign == '-')
+        return unless option
+
+        enabled = sign == '-'
+        executor.state.options.set(option, enabled)
+        executor.state.variables.allexport = enabled if option == :allexport
       end
     end
   end

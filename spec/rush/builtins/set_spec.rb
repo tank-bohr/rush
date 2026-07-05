@@ -95,6 +95,23 @@ RSpec.describe Rush::Builtins::Set do
     expect(state.options.on?(:verbose)).to be(true)
   end
 
+  it 'toggles allexport with -a/+a and exports subsequent assignments' do
+    run('-a')
+    expect(state.options.on?(:allexport)).to be(true)
+    state.variables.assign('X', '1')
+    run('+a')
+    state.variables.assign('Y', '2')
+    expect([state.options.on?(:allexport), state.variables.exported.slice('X', 'Y')]).to eq([false, { 'X' => '1' }])
+  end
+
+  it 'toggles allexport with the long option name' do
+    run('-o', 'allexport')
+    state.variables.assign('X', '1')
+    run('+o', 'allexport')
+    state.variables.assign('Y', '2')
+    expect(state.variables.exported.slice('X', 'Y')).to eq('X' => '1')
+  end
+
   it 'accepts string subclasses as option flags' do
     flag = Class.new(String).new('-u')
     run(flag)
