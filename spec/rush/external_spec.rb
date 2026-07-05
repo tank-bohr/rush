@@ -5,8 +5,8 @@ RSpec.describe Rush::External do
   let(:executor) { instance_double(Rush::Executor, system: system) }
   let(:io) { Rush::IoTable.standard(FakeSystemCalls.new) }
 
-  def run(argv)
-    described_class.new(executor, argv, io, {}).call
+  def run(argv, table = io)
+    described_class.new(executor, argv, table, {}).call
   end
 
   it 'spawns the program and translates its exit status' do
@@ -26,5 +26,10 @@ RSpec.describe Rush::External do
     allow(system).to receive(:spawn).and_raise(Errno::EACCES)
     expect(run(%w[adir]).exitstatus).to eq(126)
     expect(io.get(2).string).to include('Permission denied')
+  end
+
+  it 'keeps the lookup failure status when stderr is closed' do
+    allow(system).to receive(:spawn).and_raise(Errno::ENOENT)
+    expect(run(%w[nope], io.with_closed(2)).exitstatus).to eq(127)
   end
 end

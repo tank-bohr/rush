@@ -34,8 +34,15 @@ module Rush
 
       sig { params(reason: String, code: Integer).returns(T.noreturn) }
       def abort_exec(reason, code)
-        stderr.puts("rush: #{operands.first}: #{reason}")
+        report_exec_error(reason)
         raise ExitSignal, code
+      end
+
+      sig { params(reason: String).void }
+      def report_exec_error(reason)
+        stderr.puts("rush: #{operands.first}: #{reason}")
+      rescue Errno::EBADF
+        nil
       end
 
       sig { returns(T::Hash[T.any(Integer, Symbol), T.untyped]) }

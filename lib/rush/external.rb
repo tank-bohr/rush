@@ -41,8 +41,15 @@ module Rush
     def error_status(error)
       code = error.is_a?(Errno::EACCES) ? 126 : 127
       reason = code == 126 ? 'Permission denied' : 'not found'
-      @io.get(2).puts("rush: #{@argv.first}: #{reason}")
+      report_error(reason)
       Status.new(code)
+    end
+
+    sig { params(reason: String).void }
+    def report_error(reason)
+      @io.get(2).puts("rush: #{@argv.first}: #{reason}")
+    rescue Errno::EBADF
+      nil
     end
   end
 end

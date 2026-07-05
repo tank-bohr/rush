@@ -25,5 +25,7 @@ module Rush
     def spawn_options: () -> Hash[Integer | Symbol, untyped]
 
     def error_status: (SystemCallError error) -> Status
+
+    def report_error: (String reason) -> void
   end
 end

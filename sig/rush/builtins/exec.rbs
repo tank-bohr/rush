@@ -17,6 +17,8 @@ module Rush
 
       def abort_exec: (untyped reason, untyped code) -> untyped
 
+      def report_exec_error: (String reason) -> void
+
       def options: () -> untyped
 
       def variables: () -> ShellVariables

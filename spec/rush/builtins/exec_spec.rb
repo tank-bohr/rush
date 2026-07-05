@@ -32,4 +32,12 @@ RSpec.describe Rush::Builtins::Exec do
     expect { run('nope') }.to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(126) }
     expect(system.stderr.string).to eq("rush: nope: Permission denied\n")
   end
+
+  it 'keeps the exec failure status when stderr is closed' do
+    allow(system).to receive(:exec).and_raise(Errno::ENOENT)
+    closed = io.with_closed(2)
+    expect { described_class.new(executor, %w[exec nope], closed).call }
+      .to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(127) }
+    expect(system.stderr.string).to be_empty
+  end
 end
