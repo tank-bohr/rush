@@ -31,7 +31,7 @@ RSpec.describe Rush::Builtins::Test do
 
   it 'reports an unknown unary operator with exit status 2' do
     expect(test('-q', 'x').exitstatus).to eq(2)
-    expect(system.stderr.string).to include('unary operator expected')
+    expect(system.stderr.string).to eq("rush: test: -q: unary operator expected\n")
   end
 
   it 'evaluates -e/-f/-d against the filesystem' do
@@ -118,6 +118,6 @@ RSpec.describe Rush::Builtins::Test do
 
   it 'reports a missing ] with exit status 2' do
     expect(bracket('x').exitstatus).to eq(2)
-    expect(system.stderr.string).to include("missing `]'")
+    expect(system.stderr.string).to eq("rush: [: missing `]'\n")
   end
 end
