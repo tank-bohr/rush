@@ -75,6 +75,26 @@ Style/Documentation:
 # cops are visible rather than hidden in RuboCop's own defaults.
 #
 # Opted in — these earn their keep without fighting the project's compact style:
+Layout/EmptyLineAfterMultilineCondition:
+  Enabled: true
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true
+Layout/HeredocArgumentClosingParenthesis:
+  Enabled: true
+Layout/MultilineMethodParameterLineBreaks:
+  Enabled: true
+# Enforce the broad class shape but allow class methods to sit where they read
+# best: CLI-style entry points go before initialize, while small factories can
+# live next to related instance API.
+Layout/ClassStructure:
+  Enabled: true
+  ExpectedOrder:
+    - module_inclusion
+    - constants
+    - initializer
+    - public_methods
+    - protected_methods
+    - private_methods
 Style/UnlessLogicalOperators:
   Enabled: true # forbid the confusing mixed `unless a && b || c`; plain guards stay
 Style/InvertibleUnlessCondition:
@@ -100,18 +120,13 @@ Bundler/GemVersion: { Enabled: false }
 Gemspec/DependencyVersion: { Enabled: false }
 
 # Layout
-Layout/ClassStructure: { Enabled: false }
-Layout/EmptyLineAfterMultilineCondition: { Enabled: false }
 Layout/FirstArrayElementLineBreak: { Enabled: false }
 Layout/FirstHashElementLineBreak: { Enabled: false }
 Layout/FirstMethodArgumentLineBreak: { Enabled: false }
-Layout/FirstMethodParameterLineBreak: { Enabled: false }
-Layout/HeredocArgumentClosingParenthesis: { Enabled: false }
 Layout/MultilineArrayLineBreaks: { Enabled: false }
 Layout/MultilineAssignmentLayout: { Enabled: false }
 Layout/MultilineHashKeyLineBreaks: { Enabled: false }
 Layout/MultilineMethodArgumentLineBreaks: { Enabled: false }
-Layout/MultilineMethodParameterLineBreaks: { Enabled: false }
 Layout/RedundantLineBreak: { Enabled: false }
 Layout/SingleLineBlockChain: { Enabled: false }
 

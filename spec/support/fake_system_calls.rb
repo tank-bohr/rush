@@ -18,6 +18,10 @@ class FakeSystemCalls
     end
   end
 
+  # A Process::Tms stand-in for the `times` builtin; zeros keep the format
+  # deterministic (the real times are non-deterministic).
+  ProcessTimes = Struct.new(:utime, :stime, :cutime, :cstime)
+
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
                     executable: false, symlink: false }.freeze
 
@@ -153,10 +157,6 @@ class FakeSystemCalls
   def here_doc(body)
     StringIO.new(body)
   end
-
-  # A Process::Tms stand-in for the `times` builtin; zeros keep the format
-  # deterministic (the real times are non-deterministic).
-  ProcessTimes = Struct.new(:utime, :stime, :cutime, :cstime)
 
   def times
     ProcessTimes.new(0.0, 0.0, 0.0, 0.0)
