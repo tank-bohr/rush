@@ -107,6 +107,22 @@ Style/ReturnNil:
   Enabled: true # bare `return` everywhere; `return nil` is redundant
 Lint/ShadowingOuterLocalVariable:
   Enabled: true
+Lint/HeredocMethodCallPosition:
+  Enabled: true
+# Existing numeric conversions are either regex-guarded POSIX parsers or
+# deliberately use nil/non-numeric-to-zero semantics at OS/test boundaries. Keep
+# the cop on elsewhere so new unsafe conversions are still caught.
+Lint/NumberConversion:
+  Enabled: true
+  Exclude:
+    - 'lib/rush/builtins/base.rb'
+    - 'lib/rush/builtins/kill.rb'
+    - 'lib/rush/builtins/test_expr.rb'
+    - 'lib/rush/shell_parameters.rb'
+    - 'lib/rush/signals.rb'
+    - 'lib/rush/status.rb'
+    - 'lib/rush/system_calls/file_tests.rb'
+    - 'spec/support/fake_system_calls.rb'
 Naming/InclusiveLanguage:
   Enabled: true
 
@@ -132,8 +148,6 @@ Layout/SingleLineBlockChain: { Enabled: false }
 
 # Lint
 Lint/ConstantResolution: { Enabled: false }
-Lint/HeredocMethodCallPosition: { Enabled: false }
-Lint/NumberConversion: { Enabled: false }
 
 # Performance
 Performance/ArraySemiInfiniteRangeSlice: { Enabled: false }
