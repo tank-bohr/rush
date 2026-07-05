@@ -34,7 +34,7 @@ module Rush
     attr_reader getopts: GetoptsState
     attr_reader parameters: ShellParameters
 
-    def initialize: (?environment: Environment, ?name: String) -> void
+    def initialize: (?environment: Environment, ?name: String, ?positional: Array[String]) -> void
 
     def with_function_frame: [T] (Array[String] args) { () -> T } -> T
 

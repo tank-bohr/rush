@@ -21,13 +21,22 @@ RSpec.describe 'rush vs dash (differential)' do
   # `>&9` dup it while rush, which only tracks fds it opened, could not — so a
   # snippet redirecting to an fd it never opened must see it closed either way.
   def rush(source, input = nil)
-    out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,
+    rush_with_args(source, [], input)
+  end
+
+  def dash(source, input = nil)
+    dash_with_args(source, [], input)
+  end
+
+  def rush_with_args(source, args, input = nil)
+    out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source, *args,
                                        chdir: project_root, stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
 
-  def dash(source, input = nil)
-    out, _err, status = Open3.capture3('dash', '-c', source, stdin_data: input.to_s, close_others: true)
+  def dash_with_args(source, args, input = nil)
+    out, _err, status = Open3.capture3('dash', '-c', source, *args,
+                                       stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
 
@@ -793,6 +802,12 @@ RSpec.describe 'rush vs dash (differential)' do
   def hash_snippets
     ['hash z a; hash', 'hash a; hash z; hash', 'hash a; hash -r; hash',
      'hash a missing_zzz; echo "rc=$?"; hash']
+  end
+
+  it 'initializes $0 and positional parameters from -c operands like dash' do
+    source = 'printf "%s:%s:%s:%s\n" "$0" "$1" "$2" "$#"'
+    args = %w[name a b]
+    expect(rush_with_args(source, args)).to eq(dash_with_args(source, args))
   end
 
   it 'caches and lists PATH command locations the same as dash' do

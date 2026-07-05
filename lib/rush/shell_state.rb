@@ -48,15 +48,15 @@ module Rush
 
     # ShellState wires every shell sub-table; helper extraction would hide state.
     # rubocop:disable Metrics/AbcSize
-    sig { params(environment: Environment, name: String).void }
-    def initialize(environment: Environment.new, name: 'rush')
+    sig { params(environment: Environment, name: String, positional: T::Array[String]).void }
+    def initialize(environment: Environment.new, name: 'rush', positional: [])
       @name = name
       @variables = ShellVariables.new(environment)
       @traps = TrapTable.new
       @last_status = Status.success
       @loops = LoopNesting.new
       @options = Options.new
-      @positional = Positional.new
+      @positional = Positional.new(positional)
       @getopts = GetoptsState.new
       @variables.assign('OPTIND', '1')
       @parameters = ShellParameters.new(

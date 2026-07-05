@@ -11,7 +11,7 @@ module Rush
 
     @reader: ProgramReader
 
-    def initialize: (SystemCalls system) -> void
+    def initialize: (SystemCalls system, ?state: ShellState) -> void
 
     def run: () -> Integer
 

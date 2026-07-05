@@ -15,6 +15,18 @@ RSpec.describe Rush::CLI do
     expect(system.stdout.string).to eq("hi\n")
   end
 
+  it 'uses the command_name operand as $0 and later operands as positionals under -c' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', 'printf "%s:%s:%s\n" "$0" "$1" "$#"', 'name', 'a', 'b'], system)).to eq(0)
+    expect(system.stdout.string).to eq("name:a:2\n")
+  end
+
+  it 'leaves stdin source name and positionals unchanged' do
+    system = FakeSystemCalls.new(stdin: 'printf "%s:%s:%s\n" "$0" "$1" "$#"')
+    expect(run([], system)).to eq(0)
+    expect(system.stdout.string).to eq("rush::0\n")
+  end
+
   it 'reads the program from stdin when given no -c' do
     system = FakeSystemCalls.new(stdin: "echo fromstdin\n")
     run([], system)
