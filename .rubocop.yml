@@ -123,6 +123,24 @@ Lint/NumberConversion:
     - 'lib/rush/status.rb'
     - 'lib/rush/system_calls/file_tests.rb'
     - 'spec/support/fake_system_calls.rb'
+Performance/ArraySemiInfiniteRangeSlice:
+  Enabled: true
+Performance/BigDecimalWithNumericArgument:
+  Enabled: true
+Performance/BlockGivenWithExplicitBlock:
+  Enabled: true
+Performance/Casecmp:
+  Enabled: true
+Performance/CaseWhenSplat:
+  Enabled: true
+Performance/ChainArrayAllocation:
+  Enabled: true
+Performance/IoReadlines:
+  Enabled: true
+Performance/OpenStruct:
+  Enabled: true
+Performance/SelectMap:
+  Enabled: true
 Naming/InclusiveLanguage:
   Enabled: true
 
@@ -148,17 +166,6 @@ Layout/SingleLineBlockChain: { Enabled: false }
 
 # Lint
 Lint/ConstantResolution: { Enabled: false }
-
-# Performance
-Performance/ArraySemiInfiniteRangeSlice: { Enabled: false }
-Performance/BigDecimalWithNumericArgument: { Enabled: false }
-Performance/BlockGivenWithExplicitBlock: { Enabled: false }
-Performance/Casecmp: { Enabled: false }
-Performance/CaseWhenSplat: { Enabled: false }
-Performance/ChainArrayAllocation: { Enabled: false }
-Performance/IoReadlines: { Enabled: false }
-Performance/OpenStruct: { Enabled: false }
-Performance/SelectMap: { Enabled: false }
 
 # RSpec
 RSpec/AlignLeftLetBrace: { Enabled: false }

@@ -23,7 +23,7 @@ module Rush
         text = head&.literal_value
         return @segments unless text
 
-        [head.with_value(rewrite(text))] + @segments[1..].to_a
+        [head.with_value(rewrite(text))] + @segments.drop(1)
       end
 
       private

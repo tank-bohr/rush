@@ -125,7 +125,9 @@ module Rush
       # fork returns the child pid in the parent (nil only in the child, which
       # exit!s and never reaches here), so compact only quiets the nominal
       # Integer?; a pipeline always has >= 2 stages, so fetch(-1) has a status.
-      pids.compact.map { |pid| Status.of(@executor.system.waitpid2(pid).last) }.fetch(-1)
+      status = T.let(nil, T.nilable(Status))
+      pids.compact.each { |pid| status = Status.of(@executor.system.waitpid2(pid).last) }
+      T.must(status)
     end
   end
 end
