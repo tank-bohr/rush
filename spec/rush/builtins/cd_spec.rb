@@ -25,6 +25,44 @@ RSpec.describe Rush::Builtins::Cd do
     expect(env.get('PWD')).to eq('/a')
   end
 
+  it 'searches CDPATH for relative operands and prints the resolved directory' do
+    env.assign('CDPATH', '/search')
+    system.register('/search/project', type: :dir)
+    expect(cd('project')).to be_success
+    expect(system.chdirs).to eq(['/search/project'])
+    expect(env.get('PWD')).to eq('/search/project')
+    expect(system.stdout.string).to eq("/search/project\n")
+  end
+
+  it 'uses an empty CDPATH entry as the current directory without printing' do
+    env.assign('CDPATH', ':/search')
+    system.register('project', type: :dir)
+    system.register('/search/project', type: :dir)
+    expect(cd('project')).to be_success
+    expect(system.chdirs).to eq(['project'])
+    expect(env.get('PWD')).to eq('/home/test/project')
+    expect(system.stdout.string).to be_empty
+  end
+
+  it 'does not search CDPATH for absolute, dot, or dot-dot operands' do
+    env.assign('CDPATH', '/search')
+    system.register('/search/abs', type: :dir)
+    system.register('/search/dot', type: :dir)
+    cd('/abs')
+    cd('./dot')
+    cd('../dot')
+    expect(system.chdirs).to eq(['/abs', './dot', '../dot'])
+    expect(system.stdout.string).to be_empty
+  end
+
+  it 'falls back to the operand when CDPATH has no matching directory' do
+    env.assign('CDPATH', '/search')
+    expect(cd('project')).to be_success
+    expect(system.chdirs).to eq(['project'])
+    expect(env.get('PWD')).to eq('/home/test/project')
+    expect(system.stdout.string).to be_empty
+  end
+
   it 'defaults to HOME when no operand is given' do
     cd
     expect(system.chdirs).to eq(['/home/test'])

@@ -5,6 +5,13 @@ module Rush
     class Cd < Base
       extend T::Sig
 
+      class Target < ::Data
+        attr_reader path: String
+        attr_reader echo: bool
+
+        def self.new: (path: String, echo: bool) -> Target
+      end
+
       def call: () -> untyped
 
       private
@@ -15,9 +22,29 @@ module Rush
 
       def oldpwd: () -> untyped
 
+      def resolve_cdpath: (String dir) -> Target
+
+      def search_cdpath?: (String dir) -> bool
+
+      def relative_cdpath_operand?: (String dir) -> bool
+
+      def cdpath?: () -> bool
+
+      def cdpath_targets: (String dir) -> Array[Target]
+
+      def cdpath_entries: () -> Array[String]
+
+      def cdpath_target: (String prefix, String dir) -> Target
+
+      def cdpath_path: (String prefix, String dir) -> String
+
+      def cdpath_echo?: (String prefix) -> bool
+
       def perform_chdir: (untyped dir) -> untyped
 
       def success_with_echo: () -> untyped
+
+      def success_after_cdpath: (Target target) -> untyped
 
       def update_pwd: (untyped dir) -> untyped
 

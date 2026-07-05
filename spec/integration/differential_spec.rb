@@ -237,6 +237,7 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo() { echo no; }; command echo hi',
     'cd() { echo CDFUNC; }; cd /tmp; echo after',
     'cd /tmp; cd -; pwd',
+    'd=rush-cdpath-diff; rm -rf /tmp/$d; mkdir -p /tmp/$d; CDPATH=/tmp; cd $d; pwd; cd /; rmdir /tmp/$d',
     'true() { echo TF; }; true; echo "rc=$?"',
     'greet() { echo "hi $1"; }; greet world',
     'command -V echo',
