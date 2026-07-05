@@ -46,4 +46,9 @@ RSpec.describe Rush::Redirection::DupRedirect do
   it 'raises a BuiltinError for a non-numeric target' do
     expect { described_class.new(1).apply(redirect(nil), 'foo', io, system) }.to raise_error(Rush::BuiltinError)
   end
+
+  it 'raises a BuiltinError for a signed target' do
+    expect { described_class.new(1).apply(redirect(nil), '+1', io, system) }.to raise_error(Rush::BuiltinError)
+    expect { described_class.new(1).apply(redirect(nil), '-1', io, system) }.to raise_error(Rush::BuiltinError)
+  end
 end

@@ -11,6 +11,8 @@ module Rush
     class DupRedirect
       extend T::Sig
 
+      FD_TARGET = /\A\d+\z/
+
       sig { params(default_fd: Integer).void }
       def initialize(default_fd)
         @default_fd = default_fd
@@ -47,9 +49,9 @@ module Rush
 
       sig { params(target: String).returns(Integer) }
       def numeric(target)
+        raise BuiltinError, "Bad fd number: #{target}" unless target.match?(FD_TARGET)
+
         Integer(target, 10)
-      rescue ArgumentError
-        raise BuiltinError, "Bad fd number: #{target}"
       end
     end
   end

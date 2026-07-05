@@ -8,6 +8,8 @@ module Rush
     class DupRedirect
       extend T::Sig
 
+      FD_TARGET: ::Regexp
+
       @default_fd: Integer
 
       def initialize: (Integer default_fd) -> void

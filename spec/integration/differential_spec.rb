@@ -552,8 +552,8 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo a | cat | cat',
     # fd-duplication: n>&m / n<&m makes fd n a copy of fd m at that point in the
     # left-to-right fold; n>&- closes fd n (a write then fails, status 1); a fd
-    # that is not open is status 2 and the shell continues; a non-numeric target
-    # is a special-builtin error that aborts with 2.
+    # that is not open is status 2 and the shell continues; a non-numeric or
+    # signed target is a special-builtin error that aborts with 2.
     'echo o; { echo e >&2; } 2>&1',
     'echo x 2>&1 | cat',
     '{ echo a; echo b >&2; } 2>&1 | cat',
@@ -566,6 +566,10 @@ RSpec.describe 'rush vs dash (differential)' do
     'echo a; echo x >&9; echo b',
     'read x <&-; echo "after=$?"',
     "cat <&0 <<E\nhi\nE",
+    'echo x >&+1; echo AFTER',
+    'echo x >&-1; echo AFTER',
+    'read x <&+0; echo AFTER',
+    'read x <&-1; echo AFTER',
     'echo x >&foo; echo AFTER',
     "trap 'echo bye' EXIT; echo x >&foo"
   ].freeze
