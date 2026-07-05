@@ -56,11 +56,14 @@ RSpec.describe Rush::Builtins::Test do
   it 'compares integers with the six numeric primaries' do
     expect([test('3', '-eq', '3'), test('3', '-ne', '4'), test('5', '-gt', '4'),
             test('5', '-ge', '5'), test('4', '-lt', '5'), test('5', '-le', '5')]).to all(be_success)
+    expect([test('3', '-eq', '4'), test('3', '-ne', '3'), test('4', '-gt', '5'),
+            test('4', '-ge', '5'), test('5', '-lt', '4'), test('5', '-le', '4')])
+      .to all(satisfy { |s| s.exitstatus == 1 })
   end
 
   it 'rejects a non-integer operand with exit status 2' do
     expect(test('x', '-eq', '1').exitstatus).to eq(2)
-    expect(system.stderr.string).to include('integer expected')
+    expect(system.stderr.string).to eq("rush: test: x: integer expected\n")
   end
 
   it 'accepts integer operands padded with surrounding whitespace, as dash and bash do' do
@@ -83,6 +86,11 @@ RSpec.describe Rush::Builtins::Test do
     expect(test('(', 'x', 'y').exitstatus).to eq(2)
   end
 
+  it 'reports malformed binary-looking expressions with exit status 2' do
+    expect(test('a', '=', 'a', 'extra').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: test: syntax error\n")
+  end
+
   it 'handles four-argument ! and ( ) groupings' do
     expect(test('!', 'a', '=', 'b')).to be_success
     expect(test('!', 'a', '=', 'a')).not_to be_success
@@ -103,12 +111,19 @@ RSpec.describe Rush::Builtins::Test do
   end
 
   it 'treats an empty ( ) grouping as false rather than an error, like dash' do
-    expect(test('(', ')')).not_to be_success
-    expect(test('(', '(', ')', ')')).not_to be_success
+    expect(test('(', ')').exitstatus).to eq(1)
+    expect(test('(', '(', ')', ')').exitstatus).to eq(1)
+  end
+
+  it 'does not treat a trailing ) alone as a grouping' do
+    expect(test(')')).to be_success
+    expect(test('x', ')').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: test: x: unary operator expected\n")
   end
 
   it 'reports more than four ungrouped arguments with exit status 2' do
     expect(test('a', 'b', 'c', 'd', 'e').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: test: syntax error\n")
   end
 
   it 'requires and strips a closing ] in the [ form' do
