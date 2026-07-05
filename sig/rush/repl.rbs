@@ -6,40 +6,23 @@ module Rush
   # loop; parse and expansion errors are reported without ending the session.
   # Line editing/history, PS1/PS2 customisation and job control are deferred to
   # Phase 4.
-  class Repl
+  class Repl < ProgramSession
     extend T::Sig
-
-    @system: SystemCalls
-
-    @executor: Executor
-
-    @reader: ProgramReader
 
     PS1: "$ "
 
     PS2: "> "
 
-    def initialize: (SystemCalls system) -> void
-
-    def run: () -> Integer
-
     private
-
-    def session: () -> Integer
-
-    # The EXIT trap fires as the session ends, on Ctrl-D or `exit` alike.
-    def terminate: (Integer code) -> Integer
-
-    def continue?: () -> bool
 
     # A real syntax error reports and resumes the session; the next turn starts
     # fresh at PS1 (the reader discards the broken buffer per next_program call).
     def read_program: () -> (AST::List | :eof | :error)
 
+    def next_line: (bool continuation) -> String?
+
     def prompt_line: (bool continuation) -> String?
 
-    def run_program: (AST::List program) -> void
-
-    def report: (StandardError error) -> void
+    def execute: (AST::List program) -> void
   end
 end

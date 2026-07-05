@@ -31,6 +31,10 @@ module Rush
     # command unrun with status 2; the shell carries on (RedirectError).
     def run: (AST::Node node) -> Status
 
+    def exitstatus: () -> Integer
+
+    def run_exit_trap: (Integer code) -> Integer
+
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
     def replace_io: (IoTable table) -> void

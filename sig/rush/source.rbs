@@ -2,14 +2,12 @@ module Rush
   # Runs non-interactive shell source from `-c` or stdin, command by command.
   # It owns the batch-mode error policy: fatal syntax/expansion/builtin errors
   # publish status 2, run the EXIT trap, and stop the remaining input.
-  class Source
+  class Source < ProgramSession
     extend T::Sig
 
     @argv: Array[String]
 
-    @system: SystemCalls
-
-    @executor: Executor
+    @source_lines: ::Enumerator[String, String]
 
     def initialize: (Array[String] argv, SystemCalls system) -> void
 
@@ -17,33 +15,26 @@ module Rush
 
     private
 
-    def run_commands: () -> Integer
-
-    def program_reader: () -> ProgramReader
+    def next_line: (bool _continuation) -> String?
 
     # Under `set -v` (verbose) each input line is written to stderr as it is read,
     # before it runs, so a `set -v`/`set +v` toggles which later lines echo (POSIX).
     def echo_verbose: (String? line) -> void
 
-    def next_line: (::Enumerator[String, String] lines) -> String?
+    def source_line: () -> String?
 
-    def run_loop: (ProgramReader reader) -> void
+    def source_lines: () -> ::Enumerator[String, String]
 
     # A `return` not caught by a function or dot script acts like `exit` with
     # that code in a non-interactive shell (POSIX): re-raise as ExitSignal so it
     # settles the status and fires the EXIT trap. A stray break/continue no longer
     # reaches here — with no enclosing loop the builtin is a no-op.
-    def execute: (AST::List program) -> Status
-
-    # Fire the EXIT trap once the program (or an `exit`) has settled on a status.
-    def terminate: (Integer code) -> Integer
+    def execute: (AST::List program) -> void
 
     # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then
     # fire the EXIT trap (which may override the code via `exit`) — like dash.
     def abort_with: (StandardError error) -> Integer
 
     def source: () -> String
-
-    def executor: () -> Executor
   end
 end

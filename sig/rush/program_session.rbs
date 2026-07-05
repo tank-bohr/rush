@@ -1,0 +1,38 @@
+module Rush
+  # Shared command-by-command session over ProgramReader. Subclasses provide the
+  # input source and tune error policy: batch source aborts on fatal errors,
+  # while the REPL reports recoverable errors and keeps reading.
+  class ProgramSession
+    extend T::Sig
+
+    @system: SystemCalls
+
+    @executor: Executor
+
+    @reader: ProgramReader
+
+    def initialize: (SystemCalls system) -> void
+
+    def run: () -> Integer
+
+    private
+
+    attr_reader system: SystemCalls
+
+    attr_reader executor: Executor
+
+    attr_reader reader: ProgramReader
+
+    def session: () -> Integer
+
+    def run_loop: () -> void
+
+    def read_program: () -> (AST::List | :eof | :error)
+
+    def next_line: (bool _continuation) -> String?
+
+    def execute: (AST::List program) -> void
+
+    def report: (StandardError error) -> void
+  end
+end

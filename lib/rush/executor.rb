@@ -55,6 +55,16 @@ module Rush
       @state.record_status(Status.new(2))
     end
 
+    sig { returns(Integer) }
+    def exitstatus
+      @state.last_status.exitstatus
+    end
+
+    sig { params(code: Integer).returns(Integer) }
+    def run_exit_trap(code)
+      @trap_runner.run_exit_trap(code)
+    end
+
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
     sig { params(table: IoTable).void }
