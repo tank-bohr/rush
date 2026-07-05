@@ -600,4 +600,6 @@ with generated `Rush::Parser*` ignored just like coverage ignores `lib/rush/pars
 config sets `RUSH_SKIP_COVERAGE=1` so SimpleCov does not overwrite the normal coverage report with
 the tiny, mutation-selected test subset. Full-project mutation is intentionally outside
 `bundle exec rake`; use subject-level runs while hardening specs, then let CI/nightly take the slow
-whole-tree pass.
+whole-tree pass. A separate `rake mutant:check[Subject,Threshold]` task reads Mutant's JSON result
+and enforces an opt-in mutation score gate (default `Rush*`, `95.0%`) without adding Mutant to the
+normal rake pipeline.

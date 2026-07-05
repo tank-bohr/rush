@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'bundler/gem_tasks'
+require 'json'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 
@@ -35,7 +36,80 @@ task :sorbet do
   sh bin
 end
 
-desc 'Mutation-test gate (Mutant; on-demand, not part of default). Optional: rake mutant[Rush::Status]'
+# Mutant exits non-zero when any mutation survives. The threshold gate therefore
+# evaluates Mutant's JSON result instead of treating that non-zero status as an
+# automatic failure.
+module MutantRake
+  module_function
+
+  def latest_result(previous)
+    candidates = Dir['.mutant/results/*.json'] - previous
+    (candidates.empty? ? Dir['.mutant/results/*.json'] : candidates).max_by { |path| File.mtime(path) }
+  end
+
+  def counts(path)
+    JSON.parse(File.read(path)).fetch('subject_results').each_with_object(Hash.new(0)) do |subject, totals|
+      count_subject(subject, totals)
+    end
+  end
+
+  def count_subject(subject, totals)
+    subject.fetch('coverage_results').each { |result| count_criteria(result.fetch('criteria_result'), totals) }
+  end
+
+  def count_criteria(criteria, totals)
+    totals[:total] += 1
+    totals[category(criteria)] += 1
+  end
+
+  def category(criteria)
+    return :timeout if criteria.fetch('timeout')
+
+    criteria.fetch('test_result') ? :killed : :alive
+  end
+
+  def score(counts)
+    return 100.0 if counts[:total].zero?
+
+    ((counts[:killed] + counts[:timeout]) * 100.0) / counts[:total]
+  end
+
+  def score_line(score, threshold, result)
+    format('Mutant score: %<score>.2f%% (threshold %<threshold>.2f%%) from %<result>s',
+           score: score, threshold: threshold, result: result)
+  end
+
+  def summary(counts)
+    format('Mutants: %<total>d, killed: %<killed>d, timeouts: %<timeout>d, alive: %<alive>d', counts)
+  end
+
+  def failure(score, threshold)
+    format('Mutant score %<score>.2f%% is below %<threshold>.2f%%', score: score, threshold: threshold)
+  end
+end
+
+MUTANT_DEFAULT_THRESHOLD = 95.0
+MUTANT_DEFAULT_SUBJECT = 'Rush*'
+
+namespace :mutant do
+  desc 'Mutation threshold gate (on-demand). Optional: rake mutant:check[Rush*,95.0]'
+  task :check, %i[subject threshold] => :compile do |_task, args|
+    previous = Dir['.mutant/results/*.json']
+    subject = args[:subject] || ENV.fetch('MUTANT_SUBJECT', MUTANT_DEFAULT_SUBJECT)
+    threshold = Float(args[:threshold] || ENV.fetch('MUTANT_THRESHOLD', MUTANT_DEFAULT_THRESHOLD.to_s))
+
+    system('mutant', 'run', subject)
+    result = MutantRake.latest_result(previous) || abort('mutant:check could not find a Mutant JSON result')
+    counts = MutantRake.counts(result)
+    score = MutantRake.score(counts)
+
+    puts MutantRake.score_line(score, threshold, result)
+    puts MutantRake.summary(counts)
+    abort MutantRake.failure(score, threshold) if score < threshold
+  end
+end
+
+desc 'Mutation-test run (Mutant; on-demand, not part of default). Optional: rake mutant[Rush::Status]'
 task :mutant, [:subject] => :compile do |_task, args|
   command = %w[mutant run]
   subject = args[:subject] || ENV.fetch('MUTANT_SUBJECT', nil)

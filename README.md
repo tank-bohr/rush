@@ -42,6 +42,7 @@ bundle exec rake                  # full pipeline
 bundle exec rake compile          # regenerate lib/rush/parser.rb from grammar/shell.y
 bundle exec rspec                 # tests + 100% line/branch coverage gate
 bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
+bundle exec rake 'mutant:check[Rush*,95.0]'      # on-demand mutation score threshold
 echo 'echo hi; exit 2' | bundle exec ruby -Ilib exe/rush
 bundle exec ruby -Ilib exe/rush -c 'echo hello'
 ```
