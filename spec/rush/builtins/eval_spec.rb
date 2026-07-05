@@ -25,7 +25,16 @@ RSpec.describe Rush::Builtins::Eval do
   end
 
   it 'raises a BuiltinError on a syntax error (a special builtin aborts the shell)' do
-    expect { run('if') }.to raise_error(Rush::BuiltinError, /eval/)
+    expect { run('if') }.to raise_error(Rush::BuiltinError, 'eval: unexpected end of input')
+  end
+
+  it 'runs the evaluated commands under the builtin io table' do
+    redirected = StringIO.new
+    status = described_class.new(executor, %w[eval echo redirected], io.with(1, redirected)).call
+
+    expect(status).to be_success
+    expect(redirected.string).to eq("redirected\n")
+    expect(system.stdout.string).to eq('')
   end
 
   it 'propagates exit from the evaluated input' do

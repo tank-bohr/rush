@@ -24,10 +24,12 @@ RSpec.describe Rush::Builtins::Exec do
   it 'aborts the shell with 127 when the command is not found' do
     allow(system).to receive(:exec).and_raise(Errno::ENOENT)
     expect { run('nope') }.to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(127) }
+    expect(system.stderr.string).to eq("rush: nope: not found\n")
   end
 
   it 'aborts the shell with 126 when the command is not executable' do
     allow(system).to receive(:exec).and_raise(Errno::EACCES)
     expect { run('nope') }.to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(126) }
+    expect(system.stderr.string).to eq("rush: nope: Permission denied\n")
   end
 end

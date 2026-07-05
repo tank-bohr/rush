@@ -18,7 +18,7 @@ module Rush
       def call
         executor.with_io(io) { SourceRunner.new(executor, operands.join(' ')).run }
       rescue ParseError => e
-        raise BuiltinError, "eval: #{e.message}"
+        raise BuiltinError, "eval: #{e}"
       end
     end
   end
