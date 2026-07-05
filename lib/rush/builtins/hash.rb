@@ -19,9 +19,8 @@ module Rush
       sig { returns(Status) }
       def call
         return reset if operands.first == '-r'
-        return list if operands.empty?
 
-        remember(operands)
+        operands.empty? ? list : remember(operands)
       end
 
       private

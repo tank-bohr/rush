@@ -11,6 +11,11 @@ RSpec.describe Rush::Builtins::Exit do
       .to raise_error(Rush::ExitSignal) { |signal| expect(signal.code).to eq(4) }
   end
 
+  it 'uses the first operand as the exit status' do
+    expect { described_class.new(executor, %w[exit 4 5], io).call }
+      .to raise_error(Rush::ExitSignal) { |signal| expect(signal.code).to eq(4) }
+  end
+
   it 'exits with the last status when no operand is given' do
     state.record_status(Rush::Status.new(7))
     expect { described_class.new(executor, %w[exit], io).call }

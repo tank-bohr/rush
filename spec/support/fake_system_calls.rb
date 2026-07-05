@@ -71,6 +71,7 @@ class FakeSystemCalls
     raise Errno::ESRCH if @dead_pids.include?(pid)
 
     @kills << [signal, pid]
+    1
   end
 
   # Records the installed disposition and keeps the handler block so specs can

@@ -27,8 +27,8 @@ module Rush
 
       def deliver: (Integer | String signal, Array[String] pids) -> Status
 
-      # Returns the pid on success (truthy, for #reject), nil when delivery failed.
-      def send_to: (Integer | String signal, String pid) -> String?
+      # Returns a truthy OS delivery count on success, nil when delivery failed.
+      def send_to: (Integer | String signal, String pid) -> Integer?
 
       def list: (Array[String] args) -> Status
 
@@ -36,9 +36,13 @@ module Rush
 
       def list_one: (String arg) -> Status
 
+      def listed_signal_name: (String arg) -> String?
+
       def adjust: (Integer num) -> Integer
 
       def ok: (String name) -> Status
+
+      def invalid_signal: (String? spec) -> Status
 
       def usage: () -> Status
 

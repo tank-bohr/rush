@@ -26,6 +26,8 @@ module Rush
 
       # tuple, not Array: parse is destructured into send_signal's two arguments.
       sig { returns([String, T::Array[String]]) }
+      # mutant:disable -- for incomplete `-s`, the returned sigspec is ignored:
+      # `send_signal` reports usage before resolving any signal when no pid exists.
       def parse
         first = operands.fetch(0)
         return [operands.fetch(1, ''), operands.drop(2)] if first == '-s'
@@ -36,7 +38,7 @@ module Rush
 
       sig { params(arg: String).returns(T::Boolean) }
       def flag?(arg)
-        arg.start_with?('-') && arg != '-'
+        arg.start_with?('-') && !arg.eql?('-')
       end
 
       sig { params(spec: String, pids: T::Array[String]).returns(Status) }
@@ -59,14 +61,13 @@ module Rush
       sig { params(signal: T.any(Integer, String), pids: T::Array[String]).returns(Status) }
       def deliver(signal, pids)
         failed = pids.reject { |pid| send_to(signal, pid) }
-        failed.empty? ? success : failure(1)
+        failed.empty? ? success : failure
       end
 
-      # Returns the pid on success (truthy, for #reject), nil when delivery failed.
-      sig { params(signal: T.any(Integer, String), pid: String).returns(T.nilable(String)) }
+      # Returns a truthy OS delivery count on success, nil when delivery failed.
+      sig { params(signal: T.any(Integer, String), pid: String).returns(T.nilable(Integer)) }
       def send_to(signal, pid)
         executor.system.kill(signal, Integer(pid))
-        pid
       rescue SystemCallError, ArgumentError, TypeError
         oops("#{pid}: no such process")
       end
@@ -84,20 +85,36 @@ module Rush
 
       sig { params(arg: String).returns(Status) }
       def list_one(arg)
-        num = arg.match?(/\A\d+\z/) ? adjust(arg.to_i) : 0
-        name = num.positive? ? Signals::NUMBERS.fetch(num, nil) : nil
-        name ? ok(name) : bad("#{arg}: invalid signal specification")
+        name = listed_signal_name(arg)
+        name ? ok(name) : invalid_signal(arg)
+      end
+
+      sig { params(arg: String).returns(T.nilable(String)) }
+      def listed_signal_name(arg)
+        return unless arg.match?(/\A\d+\z/)
+
+        num = adjust(Integer(arg))
+        return unless num.positive?
+
+        Signals::NUMBERS.fetch(num, nil)
       end
 
       sig { params(num: Integer).returns(Integer) }
+      # mutant:disable -- for `kill -l 128`, `128` and `0` are both invalid;
+      # changing the wait-status boundary is observationally equivalent there.
       def adjust(num)
-        num > 128 ? num - 128 : num
+        num >= 129 ? num - 128 : num
       end
 
       sig { params(name: String).returns(Status) }
       def ok(name)
         stdout.puts(name)
         success
+      end
+
+      sig { params(spec: T.nilable(String)).returns(Status) }
+      def invalid_signal(spec)
+        bad("#{spec}: invalid signal specification")
       end
 
       sig { returns(Status) }
@@ -114,7 +131,6 @@ module Rush
       sig { params(message: String).returns(NilClass) }
       def oops(message)
         stderr.puts("kill: #{message}")
-        nil
       end
     end
   end

@@ -19,7 +19,7 @@ module Rush
 
       sig { returns(Integer) }
       def code
-        operands.empty? ? executor.trap_runner.exiting_status : numeric_operand(T.must(operands.first))
+        operands.empty? ? executor.trap_runner.exiting_status : numeric_operand(operands.fetch(0))
       end
     end
   end
