@@ -18,15 +18,23 @@ RSpec.describe Rush::Builtins::Unset do
   end
 
   it 'treats a -v flag as a variable unset' do
+    env.assign('-v', 'flag')
     env.assign('X', '1')
     run('-v', 'X')
-    expect(env.get('X')).to be_nil
+    expect([env.get('-v'), env.get('X')]).to eq(['flag', nil])
+  end
+
+  it 'treats a leading dash operand as a flag, not a variable name' do
+    env.assign('-x', 'flag')
+    expect(run('-x')).to be_success
+    expect(env.get('-x')).to eq('flag')
   end
 
   it 'removes a function with -f' do
+    state.functions.define('-f', Rush::AST::SimpleCommand.new([], [], []))
     state.functions.define('f', Rush::AST::SimpleCommand.new([], [], []))
     run('-f', 'f')
-    expect(state.functions.key?('f')).to be(false)
+    expect([state.functions.key?('-f'), state.functions.key?('f')]).to eq([true, false])
   end
 
   it 'succeeds as a no-op when given no operands' do

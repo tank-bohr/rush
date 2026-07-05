@@ -15,17 +15,17 @@ RSpec.describe Rush::Builtins::Trap do
   end
 
   it 'sets an action for a signal' do
-    run('echo hi', 'INT')
+    expect(run('echo hi', 'INT')).to be_success
     expect(traps.action('INT')).to eq('echo hi')
   end
 
   it 'sets one action for several signals at once' do
-    run('cleanup', 'INT', 'TERM')
+    expect(run('cleanup', 'INT', 'TERM')).to be_success
     expect([traps.action('INT'), traps.action('TERM')]).to eq(%w[cleanup cleanup])
   end
 
   it 'records signal 0 under the EXIT name' do
-    run('bye', '0')
+    expect(run('bye', '0')).to be_success
     expect(traps.action('EXIT')).to eq('bye')
   end
 
@@ -42,8 +42,16 @@ RSpec.describe Rush::Builtins::Trap do
 
   it 'treats a lone signal operand as a reset, consuming no action' do
     run('x', 'INT')
-    run('INT')
+    expect(run('INT')).to be_success
     expect(traps.action('INT')).to be_nil
+    expect(system.traps_installed).to eq([['INT', nil], %w[INT DEFAULT]])
+  end
+
+  it 'resets a signal given a non-identical "-" action string' do
+    run('x', 'INT')
+    expect(run(+'-', 'INT')).to be_success
+    expect(traps.action('INT')).to be_nil
+    expect(system.traps_installed).to eq([['INT', nil], %w[INT DEFAULT]])
   end
 
   it 'lists active traps as quoted lines ordered by signal number' do
@@ -54,10 +62,10 @@ RSpec.describe Rush::Builtins::Trap do
     expect(system.stdout.string).to eq("trap -- 'c' EXIT\ntrap -- 'b' INT\ntrap -- 'a' TERM\n")
   end
 
-  it 'quotes an embedded single quote dash-style when listing' do
-    run("echo a'b", 'INT')
+  it 'quotes embedded single quotes dash-style when listing' do
+    run("echo a'b'c", 'INT')
     run
-    expect(system.stdout.string).to eq(%(trap -- 'echo a'"'"'b' INT\n))
+    expect(system.stdout.string).to eq(%(trap -- 'echo a'"'"'b'"'"'c' INT\n))
   end
 
   it 'reports a bad signal, applies the signals before it and stops with status 1' do
@@ -65,6 +73,7 @@ RSpec.describe Rush::Builtins::Trap do
     expect(status.exitstatus).to eq(1)
     expect(system.stderr.string).to eq("trap: BADD: bad trap\n")
     expect([traps.action('INT'), traps.action('TERM')]).to eq(['x', nil])
+    expect(system.traps_installed).to eq([['INT', nil]])
   end
 
   it 'succeeds and prints nothing when listing an empty trap table' do

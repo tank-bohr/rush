@@ -30,8 +30,9 @@ RSpec.describe Rush::Builtins::Unalias do
   end
 
   it 'removes everything with -a' do
-    run('-a')
+    expect(run('-a')).to be_success
     expect(aliases.listing).to eq([])
+    expect(system.stderr.string).to eq('')
   end
 
   it 'reports an unknown name on stderr with status 1' do
