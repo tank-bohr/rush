@@ -11,7 +11,6 @@ module Rush
 
       sig { params(condition: Node, body: Node).void }
       def initialize(condition, body)
-        super()
         @condition = condition
         @body = body
       end

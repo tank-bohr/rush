@@ -13,7 +13,6 @@ module Rush
 
       sig { params(name: String, words: T.nilable(T::Array[Word]), body: Node).void }
       def initialize(name, words, body)
-        super()
         @name = name
         @words = words
         @body = body

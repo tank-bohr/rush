@@ -13,7 +13,6 @@ module Rush
 
       sig { params(segments: T::Array[WordSegment[T.untyped]]).void }
       def initialize(segments)
-        super()
         @segments = segments
       end
 

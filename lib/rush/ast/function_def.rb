@@ -12,7 +12,6 @@ module Rush
 
       sig { params(name: String, body: Node).void }
       def initialize(name, body)
-        super()
         @name = name
         @body = body
       end

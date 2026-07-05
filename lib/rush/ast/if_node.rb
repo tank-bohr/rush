@@ -13,7 +13,6 @@ module Rush
 
       sig { params(condition: Node, consequent: Node, alternative: T.nilable(Node)).void }
       def initialize(condition, consequent, alternative)
-        super()
         @condition = condition
         @consequent = consequent
         @alternative = alternative

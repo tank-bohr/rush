@@ -13,7 +13,6 @@ module Rush
 
       sig { params(command: Node, redirects: T::Array[Redirect]).void }
       def initialize(command, redirects)
-        super()
         @command = command
         @redirects = redirects
       end

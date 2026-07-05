@@ -19,7 +19,6 @@ module Rush
 
       sig { params(entries: T::Array[ListEntry]).void }
       def initialize(entries)
-        super()
         @entries = entries
       end
 

@@ -12,7 +12,6 @@ module Rush
 
       sig { params(left: Node, op: Symbol, right: Node).void }
       def initialize(left, op, right)
-        super()
         @left = left
         @op = op
         @right = right

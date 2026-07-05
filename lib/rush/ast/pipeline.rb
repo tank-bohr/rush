@@ -13,7 +13,6 @@ module Rush
 
       sig { params(commands: T::Array[Node], negate: T::Boolean).void }
       def initialize(commands, negate)
-        super()
         @commands = commands
         @negate = negate
       end

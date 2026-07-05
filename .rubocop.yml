@@ -139,6 +139,11 @@ Lint/ShadowingOuterLocalVariable:
   Enabled: true
 Lint/HeredocMethodCallPosition:
   Enabled: true
+# AST::Node has no initializer state; forcing subclass constructors to call the
+# no-op Object#initialize only satisfies the cop and leaves equivalent mutants.
+Lint/MissingSuper:
+  Exclude:
+    - 'lib/rush/ast/*.rb'
 # Existing numeric conversions are either regex-guarded POSIX parsers or
 # deliberately use nil/non-numeric-to-zero semantics at OS/test boundaries. Keep
 # the cop on elsewhere so new unsafe conversions are still caught.

@@ -12,7 +12,6 @@ module Rush
 
       sig { params(assignments: T::Array[Assignment], words: T::Array[Word], redirects: T::Array[Redirect]).void }
       def initialize(assignments, words, redirects)
-        super()
         @assignments = assignments
         @words = words
         @redirects = redirects

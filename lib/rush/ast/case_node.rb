@@ -16,7 +16,6 @@ module Rush
 
       sig { params(word: Word, items: T::Array[CaseItem]).void }
       def initialize(word, items)
-        super()
         @word = word
         @items = items
       end
