@@ -126,8 +126,13 @@ nesting is clamped.
   (fatal).
 - **Flush/close after the command** (`close_opened_over`): an owned redirect target is closed when
   the command finishes, identified by object-identity diff `io.entries - base.entries`, so borrowed
-  stdio, inherited streams and pipe ends are untouched. Redirect files are opened in **sync mode** so a forked subshell's
-  output survives its `exit!` (which flushes only the std streams).
+  stdio, inherited streams and pipe ends are untouched. Redirect files are opened in **sync mode** so
+  a forked subshell's output survives its `exit!` (which flushes only the std streams).
+- **Inherited fd probing** (9f): dup redirects first consult `IoTable`; if the source fd is absent,
+  `SystemCalls#inherited_fd` lazily wraps the real process fd with `IO.for_fd(..., autoclose: false)`
+  and binds it as a borrowed `FdEntry`. A logically closed entry still wins over the real fd, so
+  `9>&-; 1>&9` fails even if the OS fd 9 exists, and borrowed inherited fds are never closed by
+  per-command redirect cleanup.
 - **Compound command as a pipeline stage** (7ag): `PipelineRunner#run_stage` runs the arbitrary
   AST node with stdin/stdout bound to the pipe (`with_io(stage_io) { run(node) }`), so
   `cmd | while read`, `{ } | cat`, `( ) | cat`, `f | g` work.

@@ -12,7 +12,7 @@ module Rush
 
       def initialize: (Integer default_fd) -> void
 
-      def apply: (AST::Redirect redirect, String target, IoTable io, SystemCalls _system) -> IoTable
+      def apply: (AST::Redirect redirect, String target, IoTable io, SystemCalls system) -> IoTable
 
       private
 
@@ -20,7 +20,9 @@ module Rush
       # (unset, or already closed by an earlier n>&-) is a non-fatal redirect
       # error (status 2, shell continues); a non-number is a special-builtin
       # error (aborts the shell).
-      def source: (IoTable io, String target) -> FdEntry
+      def source: (IoTable io, String target, SystemCalls system) -> FdEntry
+
+      def inherited_entry: (SystemCalls system, Integer fd) -> FdEntry?
 
       def numeric: (String target) -> Integer
     end

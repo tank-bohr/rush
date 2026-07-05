@@ -16,10 +16,10 @@ module Rush
         @default_fd = default_fd
       end
 
-      sig { params(redirect: AST::Redirect, target: String, io: IoTable, _system: SystemCalls).returns(IoTable) }
-      def apply(redirect, target, io, _system)
+      sig { params(redirect: AST::Redirect, target: String, io: IoTable, system: SystemCalls).returns(IoTable) }
+      def apply(redirect, target, io, system)
         fd = redirect.io_number || @default_fd
-        target == '-' ? io.with_closed(fd) : io.with_entry(fd, source(io, target))
+        target == '-' ? io.with_closed(fd) : io.with_entry(fd, source(io, target, system))
       end
 
       private
@@ -28,12 +28,21 @@ module Rush
       # (unset, or already closed by an earlier n>&-) is a non-fatal redirect
       # error (status 2, shell continues); a non-number is a special-builtin
       # error (aborts the shell).
-      sig { params(io: IoTable, target: String).returns(FdEntry) }
-      def source(io, target)
-        entry = io.entry(numeric(target))
-        raise RedirectError, "#{target}: fd not open" if !entry || entry.closed?
+      sig { params(io: IoTable, target: String, system: SystemCalls).returns(FdEntry) }
+      def source(io, target, system)
+        fd = numeric(target)
+        entry = io.entry(fd)
+        raise RedirectError, "#{target}: fd not open" if entry&.closed?
 
-        entry
+        return entry if entry
+
+        inherited_entry(system, fd) || raise(RedirectError, "#{target}: fd not open")
+      end
+
+      sig { params(system: SystemCalls, fd: Integer).returns(T.nilable(FdEntry)) }
+      def inherited_entry(system, fd)
+        stream = system.inherited_fd(fd)
+        FdEntry.borrowed(stream) if stream
       end
 
       sig { params(target: String).returns(Integer) }

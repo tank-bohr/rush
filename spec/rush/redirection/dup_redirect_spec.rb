@@ -26,11 +26,19 @@ RSpec.describe Rush::Redirection::DupRedirect do
     expect { result.get(1) }.to raise_error(Errno::EBADF)
   end
 
+  it 'falls back to a parent-inherited fd absent from the io table' do
+    inherited = StringIO.new
+    system.inherit_fd(9, inherited)
+    result = described_class.new(1).apply(redirect(nil), '9', io, system)
+    expect([result.get(1), result.entry(1).owned?]).to eq([inherited, false])
+  end
+
   it 'raises a RedirectError when the source fd is not open' do
     expect { described_class.new(1).apply(redirect(nil), '9', io, system) }.to raise_error(Rush::RedirectError)
   end
 
-  it 'raises a RedirectError when the source fd was already closed' do
+  it 'raises a RedirectError when the source fd was already closed without falling back' do
+    system.inherit_fd(2, StringIO.new)
     closed = io.with_closed(2)
     expect { described_class.new(1).apply(redirect(nil), '2', closed, system) }.to raise_error(Rush::RedirectError)
   end

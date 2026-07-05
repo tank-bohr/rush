@@ -58,6 +58,17 @@ module Rush
       IO.pipe
     end
 
+    # Return a non-owning IO wrapper for an fd that is already open in the rush
+    # process (typically inherited from the parent) but not tracked by IoTable.
+    # A closed fd returns nil so redirection code can report "fd not open".
+    def inherited_fd(fd)
+      return if fd.negative?
+
+      IO.for_fd(fd, autoclose: false)
+    rescue Errno::EBADF
+      nil
+    end
+
     # fork/exit! replace or split the process and so cannot run in-process under
     # the test harness; the child-side logic they drive is extracted into pure
     # methods that ARE tested, and real behaviour is covered by subprocess specs.

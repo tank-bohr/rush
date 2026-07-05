@@ -49,6 +49,15 @@ class FakeSystemCalls
     @nodes = {}
     @contents = {}
     @wait_status = ChildStatus.new(0)
+    @inherited_fds = {}
+  end
+
+  def inherit_fd(fd, stream)
+    @inherited_fds[fd] = stream
+  end
+
+  def inherited_fd(fd)
+    @inherited_fds.fetch(fd, nil)
   end
 
   # Configured matches for a pattern; unconfigured patterns match nothing, so

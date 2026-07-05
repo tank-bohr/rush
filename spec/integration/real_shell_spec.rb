@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'open3'
+require 'tempfile'
 
 # Exercises the real exe/rush in a child process so the fork-based features
 # (pipelines) are validated end to end. Coverage of the forked children is not
@@ -13,6 +14,12 @@ RSpec.describe 'rush real subprocess' do
 
   def run(source)
     out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source, chdir: project_root)
+    [out, status.exitstatus]
+  end
+
+  def run_with_options(source, options)
+    out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,
+                                       { chdir: project_root }.merge(options))
     [out, status.exitstatus]
   end
 
@@ -30,6 +37,26 @@ RSpec.describe 'rush real subprocess' do
 
   it 'substitutes command output and strips trailing newlines' do
     expect(run('echo "[$(echo hi)]"')).to eq(["[hi]\n", 0])
+  end
+
+  it 'redirects to a parent-inherited fd and leaves it open for later commands' do
+    Tempfile.create('rush-inherited-fd') do |file|
+      expect(run_with_options('echo one >&9; echo two >&9; echo ok', 9 => file)).to eq(["ok\n", 0])
+      file.rewind
+      expect(file.read).to eq("one\ntwo\n")
+    end
+  end
+
+  it 'persists an inherited fd duplicated by exec' do
+    Tempfile.create('rush-inherited-fd') do |file|
+      expect(run_with_options('exec 8>&9; echo via8 >&8; echo via9 >&9', 9 => file)).to eq(['', 0])
+      file.rewind
+      expect(file.read).to eq("via8\nvia9\n")
+    end
+  end
+
+  it 'still treats an explicitly closed inherited fd as not open' do
+    expect(run_with_options('true >&9; echo "rc=$?"', 9 => :close)).to eq(["rc=2\n", 0])
   end
 
   it 'runs a for loop with a conditional continue (external test)' do

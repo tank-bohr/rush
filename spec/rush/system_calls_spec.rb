@@ -32,6 +32,23 @@ RSpec.describe Rush::SystemCalls do
     expect([system.pipe, system.pid]).to eq([%i[r w], 321])
   end
 
+  it 'wraps an already-open fd without owning it' do
+    Tempfile.create('rush-fd') do |file|
+      inherited = system.inherited_fd(file.fileno)
+      inherited.write('x')
+      inherited.flush
+      file.rewind
+      expect([inherited.fileno, file.read]).to eq([file.fileno, 'x'])
+    end
+  end
+
+  it 'returns nil for a closed or negative inherited fd probe' do
+    file = Tempfile.new('rush-fd')
+    fd = file.fileno
+    file.close!
+    expect([system.inherited_fd(fd), system.inherited_fd(-1)]).to eq([nil, nil])
+  end
+
   it 'delegates directory operations' do
     allow(Dir).to receive(:chdir).with('/x')
     allow(Dir).to receive(:pwd).and_return('/here')
