@@ -13,6 +13,7 @@ RSpec.describe Rush::Builtins::Local do
 
   it 'fails with status 2 outside a function' do
     expect(run('x=1').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: local: not in a function\n")
   end
 
   context 'when inside a function scope' do

@@ -6,7 +6,8 @@ RSpec.describe Rush::Builtins::Pwd do
     state = Rush::ShellState.new
     state.variables.move_to('/work')
     executor = Rush::Executor.new(system: system, state: state)
-    described_class.new(executor, ['pwd'], Rush::IoTable.standard(system)).call
+    status = described_class.new(executor, ['pwd'], Rush::IoTable.standard(system)).call
+    expect(status).to be_success
     expect(system.stdout.string).to eq("/work\n")
   end
 end
