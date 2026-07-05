@@ -49,8 +49,10 @@ RSpec.describe Rush::CommandRunner do
     captured = nil
     external = instance_double(Rush::External, call: Rush::Status.success)
     allow(Rush::External).to receive(:new) { |*args| captured = args }.and_return(external)
-    run(simple(assignments: [assignment('X', '1')], words: [word('ls')]))
-    expect(captured[3]).to include('X' => '1')
+    status = run(simple(assignments: [assignment('X', '1')], words: [word('ls')]))
+    expect(status).to be_success
+    expect(external).to have_received(:call)
+    expect(captured).to match([executor, ['ls'], executor.io, hash_including('X' => '1')])
   end
 
   it 'applies redirections into the command io table' do
@@ -67,10 +69,18 @@ RSpec.describe Rush::CommandRunner do
     expect(system).not_to have_received(:close_redirect)
   end
 
+  it 'applies redirects for a bare assignment command' do
+    allow(system).to receive(:open_file).and_raise(Errno::EACCES)
+    redirect = Rush::AST::Redirect.new(kind: :out, target: word('/denied'), io_number: nil)
+    expect { run(simple(assignments: [assignment('X', '1')], redirects: [redirect])) }.to raise_error(Rush::RedirectError)
+    expect(env.get('X')).to be_nil
+  end
+
   it 'escalates a redirect-open failure on a special builtin to a fatal builtin error' do
     allow(system).to receive(:open_file).and_raise(Errno::ENOENT)
     redirect = Rush::AST::Redirect.new(kind: :out, target: word('/denied'), io_number: nil)
-    expect { run(simple(words: [word(':')], redirects: [redirect])) }.to raise_error(Rush::BuiltinError)
+    expect { run(simple(words: [word(':')], redirects: [redirect])) }
+      .to raise_error(Rush::BuiltinError, '/denied: cannot redirect')
   end
 
   it 'fails with status 1 when a builtin writes to a fd closed by >&-' do
@@ -94,14 +104,61 @@ RSpec.describe Rush::CommandRunner do
     expect(system.stdout.string).to be_empty
   end
 
+  it 'passes only function arguments as positional parameters' do
+    state.functions.define('show', program('echo "$1:$2"'))
+    run(simple(words: [word('show'), word('one'), word('two')]))
+    expect(system.stdout.string).to eq("one:two\n")
+  end
+
+  it 'lets an exec redirection inside an unredirected function persist' do
+    state.functions.define('f', program('exec > /from-function'))
+    run(simple(words: [word('f')]))
+    expect(executor.io.get(1)).to be(system.files.fetch('/from-function'))
+  end
+
   it 'dispatches to a defined function before falling through to an external' do
     state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success
   end
 
+  it 'lets a special builtin outrank a function of the same name' do
+    state.functions.define(':', program('echo function'))
+    expect(run(simple(words: [word(':')]))).to be_success
+    expect(system.stdout.string).to be_empty
+  end
+
+  it 'falls back to PATH for a special-builtin name missing from the registry' do
+    registry = Rush::Builtins::Registry.new
+    runner = described_class.new(Rush::Executor.new(system: system, state: state, builtins: registry),
+                                 simple(words: [word(':')]))
+    external = instance_double(Rush::External, call: Rush::Status.success)
+    allow(Rush::External).to receive(:new).and_return(external)
+    expect(runner.call).to be_success
+    expect(Rush::External).to have_received(:new)
+  end
+
+  it 'uses the provided base io for a command without redirects' do
+    out = StringIO.new
+    base_io = executor.io.with(1, out)
+    described_class.new(executor, simple(words: [word('echo'), word('hi')]), base_io).call
+    expect([out.string, system.stdout.string]).to eq(["hi\n", ''])
+  end
+
+  it 'uses the provided base io while applying bare redirects' do
+    base_io = Rush::IoTable.new({})
+    redirect = Rush::AST::Redirect.new(kind: :dup_out, target: word('2'), io_number: nil)
+    runner = described_class.new(executor, simple(assignments: [assignment('X', '1')], redirects: [redirect]), base_io)
+    expect { runner.call }.to raise_error(Rush::RedirectError, '2: fd not open')
+  end
+
+  it 'does not trace commands unless xtrace is enabled' do
+    run(simple(words: [word('true')]))
+    expect(system.stderr.string).to be_empty
+  end
+
   it 'traces the command to stderr under xtrace' do
     state.options.set(:xtrace, true)
-    run(simple(words: [word('true')]))
-    expect(system.stderr.string).to eq("+ true\n")
+    run(simple(words: [word('echo'), word('hello'), word('world')]))
+    expect(system.stderr.string).to eq("+ echo hello world\n")
   end
 end
