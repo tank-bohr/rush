@@ -15,6 +15,13 @@ RSpec.describe Rush::AST::ParamRef do
     expect { described_class.parse('') }.to raise_error(Rush::ExpansionError, 'bad substitution')
   end
 
+  it 'rejects an internal match without a captured name' do
+    match = instance_double(MatchData)
+    allow(match).to receive(:[]).with(1).and_return(nil)
+
+    expect { described_class.__send__(:braced_name, match) }.to raise_error(Rush::ExpansionError, 'bad substitution')
+  end
+
   it 'parses an operator and its word' do
     ref = described_class.parse('x:-default')
     expect([ref.name, ref.op, ref.arg]).to eq(['x', ':-', 'default'])
@@ -27,6 +34,11 @@ RSpec.describe Rush::AST::ParamRef do
   it 'parses the ${#name} length form' do
     ref = described_class.parse('#name')
     expect([ref.name, ref.op, ref.arg]).to eq(['name', '#len', nil])
+  end
+
+  it 'parses a one-character ${#x} length form' do
+    ref = described_class.parse('#x')
+    expect([ref.name, ref.op, ref.arg]).to eq(['x', '#len', nil])
   end
 
   it 'keeps ${#} as the count parameter, not a length' do

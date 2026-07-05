@@ -30,7 +30,10 @@ module Rush
 
       sig { params(executor: Executor).returns(Status) }
       def run_stages(executor)
-        commands.one? ? executor.run(T.must(commands.first)) : PipelineRunner.new(executor, commands).call
+        case commands
+        in [command] then executor.run(command)
+        else PipelineRunner.new(executor, commands).call
+        end
       end
 
       sig { params(status: Status).returns(Status) }
