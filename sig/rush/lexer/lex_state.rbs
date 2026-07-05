@@ -2,8 +2,9 @@ module Rush
   class Lexer
     # Tracks command position (POSIX Grammar Rule 1) plus the for-header and case
     # modes (Rules 4-6): the for NAME and `in`, and the case subject / `in` /
-    # pattern / `esac` positions. Modes are a single token (not a stack), so
-    # `for`/`case` nested *directly* inside a case body are not tracked.
+    # pattern / `esac` positions. A compound stack lets nested for/case/if/etc.
+    # temporarily use their own header modes inside a case body, then return to
+    # the surrounding case body so `;;` and `esac` are classified correctly.
     class LexState
       extend T::Sig
 
@@ -13,11 +14,15 @@ module Rush
 
       @mode: Symbol
 
+      @compounds: Array[[String | Symbol, Symbol]]
+
       REDIRECT_OPS: Array[String | Symbol]
 
       INTRODUCERS: Array[String | Symbol]
 
       NEUTRAL: Array[Symbol]
+
+      OPENERS: Hash[String | Symbol, String | Symbol]
 
       TRANSITIONS: Hash[Array[Symbol | String], Symbol]
 
@@ -46,6 +51,12 @@ module Rush
       def advance: (String | Symbol symbol) -> void
 
       private
+
+      def transition: (String | Symbol symbol) -> void
+
+      def update_position: (String | Symbol symbol) -> void
+
+      def start_compound: (String | Symbol symbol) -> void
 
       def reset: () -> void
 

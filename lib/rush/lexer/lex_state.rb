@@ -5,8 +5,9 @@ module Rush
   class Lexer
     # Tracks command position (POSIX Grammar Rule 1) plus the for-header and case
     # modes (Rules 4-6): the for NAME and `in`, and the case subject / `in` /
-    # pattern / `esac` positions. Modes are a single token (not a stack), so
-    # `for`/`case` nested *directly* inside a case body are not tracked.
+    # pattern / `esac` positions. A compound stack lets nested for/case/if/etc.
+    # temporarily use their own header modes inside a case body, then return to
+    # the surrounding case body so `;;` and `esac` are classified correctly.
     class LexState
       extend T::Sig
 
@@ -16,8 +17,12 @@ module Rush
         :If, :Then, :Else, :Elif, :Lbrace, :Bang, :While, :Until, :Do, :DSEMI
       ].freeze, T::Array[T.any(String, Symbol)])
       NEUTRAL = T.let(%i[ASSIGNMENT_WORD IO_NUMBER].freeze, T::Array[Symbol])
+      OPENERS = T.let({ For: :Done, While: :Done, Until: :Done, If: :Fi,
+                        Case: :Esac, Lbrace: :Rbrace, '(': ')' }.freeze,
+                      T::Hash[T.any(String, Symbol), T.any(String, Symbol)])
       TRANSITIONS = {
-        %i[normal For] => :for_name, %i[normal Case] => :case_subject,
+        %i[normal For] => :for_name, %i[case_body For] => :for_name,
+        %i[normal Case] => :case_subject, %i[case_body Case] => :case_subject,
         %i[for_name NAME] => :for_in,
         %i[for_in In] => :normal, %i[for_in Do] => :normal,
         %i[for_in NEWLINE] => :normal, [:for_in, ';'] => :normal, [:for_in, '&'] => :normal,
@@ -31,6 +36,7 @@ module Rush
         @command_position = true
         @expect_filename = false
         @mode = :normal
+        @compounds = []
       end
 
       sig { returns(T::Boolean) }
@@ -79,7 +85,21 @@ module Rush
 
       sig { params(symbol: T.any(String, Symbol)).void }
       def advance(symbol)
+        transition(symbol)
+        update_position(symbol)
+      end
+
+      private
+
+      sig { params(symbol: T.any(String, Symbol)).void }
+      def transition(symbol)
+        start_compound(symbol)
         @mode = TRANSITIONS.fetch([@mode, symbol], @mode)
+        @mode = T.must(@compounds.pop).last if @compounds.last&.first == symbol
+      end
+
+      sig { params(symbol: T.any(String, Symbol)).void }
+      def update_position(symbol)
         return @expect_filename = true if REDIRECT_OPS.include?(symbol)
         return reset if INTRODUCERS.include?(symbol)
         return @expect_filename = false if NEUTRAL.include?(symbol)
@@ -87,7 +107,11 @@ module Rush
         consume_word
       end
 
-      private
+      sig { params(symbol: T.any(String, Symbol)).void }
+      def start_compound(symbol)
+        close = OPENERS.fetch(symbol, nil)
+        @compounds << [close, @mode] if close && expects_command? && command_mode?
+      end
 
       sig { void }
       def reset
