@@ -28,20 +28,26 @@ module Rush
 
     # <> opens read-write and creates the file (POSIX), unlike the string modes.
     DEFAULTS = {
-      in: ['r', 0], out: ['w', 1], append: ['a', 1],
-      readwrite: [File::RDWR | File::CREAT, 0], clobber: ['w', 1]
+      in: ['r', 0, nil], out: ['w', 1, :noclobber], append: ['a', 1, nil],
+      readwrite: [File::RDWR | File::CREAT, 0, nil], clobber: ['w', 1, nil]
     }.freeze
 
     # Default fd for the dup operators: 1 for >&, 0 for <&.
     DUPS = { dup_out: 1, dup_in: 0 }.freeze
 
-    sig { returns(Registry) }
-    def self.default_registry
+    sig { params(options: T.nilable(Options)).returns(Registry) }
+    def self.default_registry(options = nil)
       Registry.new.tap do |registry|
-        DEFAULTS.each { |kind, spec| registry.register(kind, FileRedirect.new(spec[0], spec[1])) }
+        DEFAULTS.each { |kind, spec| register_file(registry, kind, spec, options) }
         DUPS.each { |kind, fd| registry.register(kind, DupRedirect.new(fd)) }
         registry.register(:heredoc, HereDocRedirect.new)
       end
+    end
+
+    sig { params(registry: Registry, kind: Symbol, spec: T::Array[T.untyped], options: T.nilable(Options)).void }
+    def self.register_file(registry, kind, spec, options)
+      redirect = FileRedirect.new(spec.fetch(0), spec.fetch(1), options: options, protection: spec.fetch(2))
+      registry.register(kind, redirect)
     end
   end
 end

@@ -26,6 +26,8 @@ module Rush
     # Default fd for the dup operators: 1 for >&, 0 for <&.
     DUPS: Hash[Symbol, Integer]
 
-    def self.default_registry: () -> Registry
+    def self.default_registry: (?Options? options) -> Registry
+
+    def self.register_file: (Registry registry, Symbol kind, Array[untyped] spec, Options? options) -> void
   end
 end

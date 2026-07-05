@@ -693,7 +693,9 @@ RSpec.describe 'rush vs dash (differential)' do
   # in sync mode, so a forked subshell's output survives its exit! too).
   def output_redirect_snippets
     ['echo x > f; cat f', '{ echo a; echo b; } > f; cat f', 'echo aaa > f; echo b > f; cat f',
-     'echo a > f; echo b >> f; cat f', 'for i in 1 2 3; do echo $i; done > f; cat f',
+     'echo a > f; echo b >> f; cat f', 'echo old > f; set -C; echo new > f; echo "rc=$?"; cat f',
+     'echo old > f; set -C; echo force >| f; cat f', 'echo old > f; set -C; set +C; echo ok > f; cat f',
+     'for i in 1 2 3; do echo $i; done > f; cat f',
      '( echo s1; echo s2 ) > f; cat f', '> f; cat f; echo "rc=$?"',
      'echo one > f; cat f; echo two > f; cat f', 'echo hi > f; read x < f; echo "[$x]"',
      '( for i in 1 2; do echo $i; done ) > f; wc -l < f', 'echo n > f; ( cat f; echo m ) > g; cat g',

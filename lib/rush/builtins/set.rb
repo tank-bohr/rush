@@ -6,14 +6,15 @@ module Rush
     # `set [-/+ options] [--] [arg ...]` — toggle shell options (-x/+x and the
     # `-o name`/`+o name` long form) and, when operands follow (or after `--`),
     # replace the positional parameters. With no operands the parameters are left
-    # unchanged; an unknown option is ignored. Options: -a/allexport, -e/errexit,
-    # -u/nounset, -x/xtrace, -f/noglob, -v/verbose.
+    # unchanged; an unknown option is ignored. Options: -a/allexport, -C/noclobber,
+    # -e/errexit, -u/nounset, -x/xtrace, -f/noglob, -v/verbose.
     class Set < Base
       extend T::Sig
 
-      OPTIONS = { 'a' => :allexport, 'e' => :errexit, 'u' => :nounset,
+      OPTIONS = { 'a' => :allexport, 'C' => :noclobber, 'e' => :errexit, 'u' => :nounset,
                   'x' => :xtrace, 'f' => :noglob, 'v' => :verbose }.freeze
-      LONG = { 'allexport' => :allexport, 'errexit' => :errexit, 'nounset' => :nounset,
+      LONG = { 'allexport' => :allexport, 'noclobber' => :noclobber,
+               'errexit' => :errexit, 'nounset' => :nounset,
                'xtrace' => :xtrace, 'noglob' => :noglob, 'verbose' => :verbose }.freeze
 
       sig { returns(Status) }

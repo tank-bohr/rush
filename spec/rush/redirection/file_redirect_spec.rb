@@ -18,6 +18,28 @@ RSpec.describe Rush::Redirection::FileRedirect do
     expect([result.get(2), result.entry(2).owned?]).to eq([system.files.fetch('/f'), true])
   end
 
+  it 'uses exclusive-create mode for protected redirects under noclobber' do
+    options = Rush::Options.new
+    options.set(:noclobber, true)
+    allow(system).to receive(:open_file).and_call_original
+    described_class.new('w', 1, options: options, protection: :noclobber).apply(redirect(nil), '/f', io, system)
+    expect(system).to have_received(:open_file).with('/f', File::WRONLY | File::CREAT | File::EXCL)
+  end
+
+  it 'leaves explicit clobber redirects in truncating mode under noclobber' do
+    options = Rush::Options.new
+    options.set(:noclobber, true)
+    allow(system).to receive(:open_file).and_call_original
+    described_class.new('w', 1, options: options).apply(redirect(nil), '/f', io, system)
+    expect(system).to have_received(:open_file).with('/f', 'w')
+  end
+
+  it 'uses ordinary truncating mode when no options object is attached' do
+    allow(system).to receive(:open_file).and_call_original
+    described_class.new('w', 1, protection: :noclobber).apply(redirect(nil), '/f', io, system)
+    expect(system).to have_received(:open_file).with('/f', 'w')
+  end
+
   it 'raises a redirect error when the target cannot be opened' do
     allow(system).to receive(:open_file).and_raise(Errno::ENOENT)
     expect { described_class.new('w', 1).apply(redirect(nil), '/no/such/f', io, system) }

@@ -6,11 +6,17 @@ module Rush
     class FileRedirect
       extend T::Sig
 
+      EXCLUSIVE: Integer
+
       @mode: String | Integer
 
       @default_fd: Integer
 
-      def initialize: (String | Integer mode, Integer default_fd) -> void
+      @options: Options?
+
+      @protection: Symbol?
+
+      def initialize: (String | Integer mode, Integer default_fd, ?options: Options?, ?protection: Symbol?) -> void
 
       # A failure to open the target (missing directory, permission denied, a
       # directory where a file is expected) is a redirection error: the command
@@ -18,6 +24,12 @@ module Rush
       # aborts the shell, the escalation being handled one level up in
       # CommandRunner where the command word is known.
       def apply: (AST::Redirect redirect, String target, IoTable io, SystemCalls system) -> IoTable
+
+      private
+
+      def open_mode: () -> (String | Integer)
+
+      def noclobber?: () -> bool
     end
   end
 end

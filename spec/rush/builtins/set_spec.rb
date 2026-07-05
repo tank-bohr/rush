@@ -95,6 +95,15 @@ RSpec.describe Rush::Builtins::Set do
     expect(state.options.on?(:verbose)).to be(true)
   end
 
+  it 'toggles noclobber with -C/+C and the long option name' do
+    run('-C')
+    expect(state.options.on?(:noclobber)).to be(true)
+    run('+C')
+    expect(state.options.on?(:noclobber)).to be(false)
+    run('-o', 'noclobber')
+    expect(state.options.on?(:noclobber)).to be(true)
+  end
+
   it 'toggles allexport with -a/+a and exports subsequent assignments' do
     run('-a')
     expect(state.options.on?(:allexport)).to be(true)

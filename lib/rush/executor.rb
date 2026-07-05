@@ -38,7 +38,7 @@ module Rush
       @system = system
       @state = state
       @builtins = builtins
-      @redirections = Redirection.default_registry
+      @redirections = Redirection.default_registry(@state.options)
       @expander = Expansion::Pipeline.new(self)
       @io = IoTable.standard(@system)
       @tested = false
