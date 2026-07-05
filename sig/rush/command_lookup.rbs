@@ -91,7 +91,7 @@ module Rush
     def find: (String? name) -> Match
 
     # The `type`/`command -V` description line for a name, or nil if unknown.
-    def describe: (String name) -> String?
+    def describe: (String? name) -> String?
 
     private
 

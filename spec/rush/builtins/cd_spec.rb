@@ -39,6 +39,6 @@ RSpec.describe Rush::Builtins::Cd do
   it 'reports an error for a missing directory' do
     system.fail_chdir_with(Errno::ENOENT)
     expect(cd('/nope')).not_to be_success
-    expect(system.stderr.string).to include('No such file or directory')
+    expect(system.stderr.string).to eq("rush: cd: /nope: No such file or directory\n")
   end
 end

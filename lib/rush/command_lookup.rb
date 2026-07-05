@@ -138,7 +138,7 @@ module Rush
     end
 
     # The `type`/`command -V` description line for a name, or nil if unknown.
-    sig { params(name: String).returns(T.nilable(String)) }
+    sig { params(name: T.nilable(String)).returns(T.nilable(String)) }
     def describe(name)
       find(name).describe
     end

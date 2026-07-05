@@ -12,8 +12,9 @@ module Rush
 
       sig { returns(Status) }
       def call
-        return verify(operands[1]) if operands.first == '-v'
-        return verbose(operands[1]) if operands.first == '-V'
+        option, name = operands
+        return verify(name) if option == '-v'
+        return verbose(name) if option == '-V'
 
         run(operands)
       end
@@ -31,7 +32,7 @@ module Rush
 
       sig { params(name: T.nilable(String)).returns(Status) }
       def verbose(name)
-        line = name && CommandLookup.new(executor).describe(name)
+        line = CommandLookup.new(executor).describe(name)
         stdout.puts(line || "#{name}: not found")
         line ? success : failure(127)
       end

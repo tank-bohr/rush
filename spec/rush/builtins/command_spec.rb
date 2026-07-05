@@ -12,8 +12,8 @@ RSpec.describe Rush::Builtins::Command do
 
   it 'prints the name for -v of a builtin and the path for an external' do
     system.register('/usr/bin/ls', executable: true)
-    run('-v', 'echo')
-    run('-v', 'ls')
+    expect(run('-v', 'echo')).to be_success
+    expect(run('-v', 'ls')).to be_success
     expect(system.stdout.string).to eq("echo\n/usr/bin/ls\n")
   end
 
@@ -27,13 +27,30 @@ RSpec.describe Rush::Builtins::Command do
   end
 
   it 'reports not found for -V of an unknown or missing name with status 127' do
-    expect([run('-V', 'nope_zzz').exitstatus, run('-V').exitstatus]).to eq([127, 127])
+    expect(run('-V', 'nope_zzz').exitstatus).to eq(127)
+    expect(run('-V').exitstatus).to eq(127)
+    expect(system.stdout.string).to eq("nope_zzz: not found\n: not found\n")
   end
 
   it 'runs a builtin, bypassing a shadowing function' do
     state.functions.define('echo', Rush::AST::SimpleCommand.new([], [], []))
     run('echo', 'hi')
     expect(system.stdout.string).to eq("hi\n")
+  end
+
+  it 'constructs a builtin with the current executor' do
+    registry = Rush::Builtins::Registry.new
+    checker = Class.new(Rush::Builtins::Base) do
+      def call
+        executor.state.record_status(success)
+        success
+      end
+    end
+    registry.register('check-executor', checker)
+    custom = Rush::Executor.new(system: system, state: state, builtins: registry)
+
+    status = described_class.new(custom, %w[command check-executor], io).call
+    expect(status).to be_success
   end
 
   it 'runs an external command, bypassing functions' do
@@ -44,7 +61,11 @@ RSpec.describe Rush::Builtins::Command do
   end
 
   it 'returns success when given no name to run' do
+    colon = instance_double(Rush::Builtins::Colon, call: Rush::Status.success)
+    allow(Rush::Builtins::Colon).to receive(:new).with(executor, [], io).and_return(colon)
+
     expect(run).to be_success
+    expect(Rush::Builtins::Colon).to have_received(:new).with(executor, [], io)
   end
 
   it "prints an alias as alias 'name=value' for -v" do
