@@ -35,7 +35,9 @@ module Rush
       return [text, nil] unless text.include?('=')
 
       parts = text.split('=', 2)
-      [parts.fetch(0), parts.fetch(1)]
+      name = parts.fetch(0)
+      value = parts.fetch(1)
+      [name, value]
     end
 
     sig { params(name: String, value: T.nilable(String)).void }
