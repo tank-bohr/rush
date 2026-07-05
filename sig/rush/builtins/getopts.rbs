@@ -1,0 +1,37 @@
+module Rush
+  module Builtins
+    # `getopts optstring name [args...]` — parse one POSIX short option per call,
+    # storing the option in `name`, the next public position in OPTIND and any
+    # option argument in OPTARG. A leading ':' in optstring enables silent error
+    # mode for bad options / missing arguments.
+    class Getopts < Base
+      extend T::Sig
+
+      def call: () -> Status
+
+      private
+
+      def usage: () -> Status
+
+      def apply: (GetoptsParser::Result result) -> Status
+
+      def update_optarg: (untyped value) -> void
+
+      def report_message: (String? message) -> void
+
+      def report: (String message) -> void
+
+      def optind: () -> Integer
+
+      def arguments: () -> Array[String]
+
+      def optstring: () -> String
+
+      def name: () -> String
+
+      def state: () -> GetoptsState
+
+      def variables: () -> ShellVariables
+    end
+  end
+end

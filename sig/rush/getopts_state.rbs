@@ -1,0 +1,52 @@
+module Rush
+  # Cursor state for POSIX getopts. OPTIND is public and 1-based, but while
+  # parsing an option cluster such as -ab dash already publishes OPTIND=2 after
+  # returning -a; the private cursor still points at b in argv[0]. This object
+  # keeps that hidden intra-argument cursor and resets it when OPTIND or the
+  # argument vector changes.
+  class GetoptsState
+    extend T::Sig
+
+    @signature: String?
+
+    @current_index: Integer
+
+    @cursor: Integer
+
+    @optind: Integer
+
+    attr_reader current_index: Integer
+    attr_reader cursor: Integer
+    attr_reader optind: Integer
+
+    def initialize: () -> void
+
+    def prepare: (Array[String] arguments, Integer optind) -> void
+
+    def current: (Array[String] arguments) -> String?
+
+    def option: (String argument) -> String
+
+    def consume_option: (String argument) -> void
+
+    def cluster_remains?: (String argument) -> bool
+
+    def consume_cluster: () -> void
+
+    def consume_final_option: () -> void
+
+    def consume_attached_argument: () -> void
+
+    def consume_detached_argument: () -> void
+
+    def finish: () -> void
+
+    def finish_double_dash: () -> void
+
+    private
+
+    def reset: (String signature, Integer optind) -> void
+
+    def publish: () -> void
+  end
+end

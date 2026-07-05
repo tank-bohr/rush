@@ -40,6 +40,9 @@ module Rush
     sig { returns(Positional) }
     attr_reader :positional
 
+    sig { returns(GetoptsState) }
+    attr_reader :getopts
+
     sig { returns(ShellParameters) }
     attr_reader :parameters
 
@@ -54,6 +57,8 @@ module Rush
       @loops = LoopNesting.new
       @options = Options.new
       @positional = Positional.new
+      @getopts = GetoptsState.new
+      @variables.assign('OPTIND', '1')
       @parameters = ShellParameters.new(
         variables: @variables, positional: @positional, name: @name, status: -> { @last_status }
       )

@@ -12,7 +12,7 @@ module Rush
       'echo' => Echo, 'exit' => Exit, 'pwd' => Pwd, 'cd' => Cd,
       'break' => Break, 'continue' => Continue, 'return' => Return,
       'test' => Test, '[' => Test, 'set' => Set, 'shift' => Shift,
-      'export' => Export, 'unset' => Unset, 'eval' => Eval, 'read' => Read,
+      'export' => Export, 'unset' => Unset, 'eval' => Eval, 'getopts' => Getopts, 'read' => Read,
       'printf' => Printf, '.' => Dot, 'readonly' => Readonly, 'exec' => Exec,
       'local' => Local, 'type' => Type, 'command' => Command, 'trap' => Trap,
       'kill' => Kill, 'alias' => Alias, 'unalias' => Unalias,

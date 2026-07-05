@@ -1,0 +1,99 @@
+module Rush
+  # Normal vs silent getopts error-mode formatting for bad options and missing
+  # arguments.
+  class GetoptsErrorMode
+    extend T::Sig
+
+    @missing_name: String
+
+    @keep_optarg: bool
+
+    @diagnostic: bool
+
+    def initialize: (Symbol mode) -> void
+
+    def missing_name: () -> String
+
+    def optarg: (String value) -> String?
+
+    def message: (String text) -> String?
+
+  end
+
+  # Pure parser for one POSIX getopts step. It owns option-string semantics and
+  # the hidden cluster cursor; the builtin applies the returned variable updates.
+  class GetoptsParser
+    extend T::Sig
+
+    KEEP: Object
+
+    class Result < ::Data
+      attr_reader name: String
+      attr_reader optarg: untyped
+      attr_reader optind: Integer
+      attr_reader message: String?
+      attr_reader exitstatus: Integer
+
+      def self.new: (name: String, optarg: untyped, optind: Integer, message: String?, exitstatus: Integer) -> Result
+    end
+
+    class Option < ::Data
+      attr_reader argument: String
+      attr_reader name: String
+
+      def self.new: (argument: String, name: String) -> Option
+    end
+
+    @state: GetoptsState
+
+    @error_mode: GetoptsErrorMode
+
+    @effective_optstring: String
+
+    @arguments: Array[String]
+
+    def initialize: (state: GetoptsState, optstring: String, arguments: Array[String], optind: Integer) -> void
+
+    def call: () -> Result
+
+    private
+
+    def dispatch: (Option option) -> Result
+
+    def found: (String name, String value) -> Result
+
+    def invalid: (Option option) -> Result
+
+    def missing: (Option option) -> Result
+
+    def finish: () -> Result
+
+    def finish_double_dash: () -> Result
+
+    def consume_found: (String value) -> void
+
+    def consume_missing: (String _argument) -> void
+
+    def argument_value: (Option option) -> Result
+
+    def error_result: (String name, String silent_optarg, String normal_message) -> Result
+
+    def result: (String name, untyped optarg, String? message, Integer exitstatus) -> Result
+
+    def option: (String argument) -> Option
+
+    def attached_argument: (String argument) -> String
+
+    def attached_value?: (String argument, String value) -> bool
+
+    def attached?: (String argument) -> bool
+
+    def next_argument: () -> String?
+
+    def valid?: (String option) -> bool
+
+    def requires_argument?: (String option) -> bool
+
+    def option_index: (String option) -> Integer?
+  end
+end

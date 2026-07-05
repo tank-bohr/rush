@@ -71,6 +71,13 @@ RSpec.describe 'rush vs dash (differential)' do
     'set a b c; for x in "$@"; do echo "[$x]"; done',
     'set "a b" c; for x in "$@"; do echo "[$x]"; done',
     'set --; for x in "$@"; do echo no; done; echo done',
+    'set -- -ab; getopts ab o; echo "$o:$OPTIND:$OPTARG:$?"; ' \
+    'getopts ab o; echo "$o:$OPTIND:$OPTARG:$?"; getopts ab o; echo "$o:$OPTIND:$?"',
+    'set -- -b val; getopts ab: o; echo "$o:$OPTIND:$OPTARG:$?"',
+    'set -- -bval; getopts ab: o; echo "$o:$OPTIND:$OPTARG:$?"',
+    'set -- -x; getopts a o 2>/dev/null; echo "$o:$OPTIND:${OPTARG-unset}:$?"',
+    'set -- -a; getopts :a: o; echo "$o:$OPTIND:$OPTARG:$?"',
+    'getopts a o -a; echo "$o:$OPTIND:$OPTARG:$?"',
     'set a b c; for x in $@; do echo "[$x]"; done',
     'set a b c; echo "$*"',
     'set a b c; echo "pre$@post"',
