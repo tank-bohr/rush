@@ -127,8 +127,9 @@ rule
     ;
 
   case_clause
-    : Case WORD linebreak In linebreak case_list Esac   { result = make_case(val[1], val[5]) }
-    | Case WORD linebreak In linebreak Esac             { result = make_case(val[1], []) }
+    : Case WORD linebreak In linebreak case_list Esac      { result = make_case(val[1], val[5]) }
+    | Case WORD linebreak In linebreak case_list_ns Esac   { result = make_case(val[1], val[5]) }
+    | Case WORD linebreak In linebreak Esac                { result = make_case(val[1], []) }
     ;
 
   case_list
@@ -136,9 +137,24 @@ rule
     | case_list case_item                         { result = val[0] << val[1] }
     ;
 
+  /* POSIX 2.10.2: the last case item may omit its DSEMI (`ns` = no separator). */
+  case_list_ns
+    : case_item_ns                                { result = [val[0]] }
+    | case_list case_item_ns                      { result = val[0] << val[1] }
+    ;
+
   case_item
-    : patterns ')' compound_list DSEMI linebreak  { result = make_case_item(val[0], val[2]) }
-    | patterns ')' linebreak DSEMI linebreak      { result = make_case_item(val[0], make_list([])) }
+    : patterns ')' compound_list DSEMI linebreak      { result = make_case_item(val[0], val[2]) }
+    | patterns ')' linebreak DSEMI linebreak          { result = make_case_item(val[0], make_list([])) }
+    | '(' patterns ')' compound_list DSEMI linebreak  { result = make_case_item(val[1], val[3]) }
+    | '(' patterns ')' linebreak DSEMI linebreak      { result = make_case_item(val[1], make_list([])) }
+    ;
+
+  case_item_ns
+    : patterns ')' compound_list                  { result = make_case_item(val[0], val[2]) }
+    | patterns ')' linebreak                      { result = make_case_item(val[0], make_list([])) }
+    | '(' patterns ')' compound_list              { result = make_case_item(val[1], val[3]) }
+    | '(' patterns ')' linebreak                  { result = make_case_item(val[1], make_list([])) }
     ;
 
   patterns

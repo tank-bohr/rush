@@ -74,6 +74,25 @@ RSpec.describe Rush::ParserSupport do
     expect([node.class, node.items.size]).to eq([Rush::AST::Case, 2])
   end
 
+  it 'parses a case whose last item omits ;; before esac (POSIX 2.10.2)' do
+    node = first_command('case x in a) :;; *) : ; esac')
+    expect([node.class, node.items.size]).to eq([Rush::AST::Case, 2])
+  end
+
+  it 'parses a ;;-less last item with an empty list' do
+    node = first_command('case x in a) esac')
+    expect([node.class, node.items.size]).to eq([Rush::AST::Case, 1])
+  end
+
+  it 'parses the optional ( before a case pattern' do
+    node = first_command('case x in (a|b) :;; (*) esac')
+    expect([node.class, node.items.size]).to eq([Rush::AST::Case, 2])
+  end
+
+  it 'rejects a stray esac as a reserved word in command position' do
+    expect { first_command('esac') }.to raise_error(Rush::ParseError, /esac/)
+  end
+
   it 'parses a function definition' do
     node = first_command('greet() { echo hi; }')
     expect([node.class, node.name]).to eq([Rush::AST::FunctionDef, 'greet'])

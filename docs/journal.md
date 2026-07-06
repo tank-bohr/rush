@@ -762,3 +762,16 @@ backslash-newline line continuation (POSIX 2.2.1 — unsupported: misparses an e
 locale.sh, and after `&&` it crashes with IndexError instead of a diagnostic, gawk.sh). Filed
 as rush-x27 and rush-v9t, with rush-9q8 to re-audit the whole profile.d corpus once they land.
 Real-world scripts are a fuzz corpus the differential suite doesn't reach.
+
+### case per POSIX 2.10.2 — the lexer owned half the bug
+rush-x27 looked like a grammar fix: add the POSIX `case_list_ns`/`case_item_ns` productions so
+the last item may omit `;;`. Adding them changed nothing — because the **lexer** only
+classified `esac` as the Esac token in the case_arm mode (right after `;;` or `in`); inside an
+item's command list it fell through to the RESERVED table, which lacked it, so the parser never
+saw the closer. POSIX 2.4 makes esac a reserved word in command position: the missing half of
+the fix is one RESERVED entry, and the existing compound-context stack already restores the
+enclosing mode when a closer token arrives, so nested cases needed nothing. Bonus alignment: a
+stray `esac` is now a syntax error, status 2, exactly like dash. The same slice added the
+optional `(` before patterns (also 2.10.2) — which turned out to be flatpak.sh's actual blocker
+(`(*":$share_path:"*)` items), not the `$( (` shape rush-9q8 suspected. The real /etc/profile
+now parses and sources profile.d up to gawk.sh, whose backslash-newline crash is rush-v9t.

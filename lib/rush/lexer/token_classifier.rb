@@ -39,10 +39,12 @@ module Rush
       end
 
       NAME = /\A([a-zA-Z_]\w*)=/
+      # `esac` is a reserved word in command position (POSIX 2.4): it closes a
+      # case item whose last list omits `;;`, and is a syntax error elsewhere.
       RESERVED = {
         'if' => :If, 'then' => :Then, 'else' => :Else, 'elif' => :Elif, 'fi' => :Fi,
         'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done,
-        'for' => :For, 'case' => :Case,
+        'for' => :For, 'case' => :Case, 'esac' => :Esac,
         '{' => :Lbrace, '}' => :Rbrace, '!' => :Bang
       }.freeze
       FOR_IN = { 'in' => :In, 'do' => :Do }.freeze
