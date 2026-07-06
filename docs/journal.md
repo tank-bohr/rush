@@ -672,3 +672,30 @@ that `RedirectScope` yielded the redirected `IoTable` without rebinding `Executo
 `executor.io`. Fix: keep argv expansion before `with_redirects`, but wrap only assignment persistence
 / external environment construction in `executor.with_io(io)`. That threads redirects into assignment
 substitutions without making command-word substitutions observe them.
+
+### Phase 4 split — the platform boundary runs through it
+Unfreezing phase 4 surfaced a framing worth keeping: **rush without job control is already a
+conforming POSIX shell**. `set -m`, `fg` and `bg` are User Portability options in POSIX.1-2017,
+not part of the mandatory §2 core (dash builds with `--disable-jobs` and still ships as
+`/bin/sh`), so phases 0–3 complete the mandatory shell language. rush's real platform is
+"POSIX as exposed by the Ruby VM": everything through phase 3 fits inside what core Ruby
+exports (`fork`/`pipe`/`waitpid2`/`spawn`/`trap`). Job control is the first feature that steps
+outside — Ruby has no `tcsetpgrp` binding at all. Verified on Ruby 4.0.5: no TIOC*/pgrp
+constants or methods in `IO`, `Fcntl`, `PTY` or `Socket::Constants`; the only relevant export
+is `Process::WUNTRACED`. Decided approach for when job control lands: `IO#ioctl` (core Ruby)
+with per-platform `TIOCSPGRP` constants keyed on `RbConfig::CONFIG['host_os']` — `0x5410` on
+Linux (asm-generic; powerpc/sparc/mips number ioctls differently), `0x80047476` on darwin/BSD —
+with Fiddle-into-libc as the fallback if the constant table grows unwieldy.
+
+Phase 4 is therefore split along that boundary. `rush-mw1` is rescoped to the **interactive
+shell only** — portable, in-platform, cheap to verify; the `Repl` baseline with PS2
+continuations and error-resumed sessions already exists — and sliced into `rush-mw1.1`–`.6`
+(detection/`-i`/`$-`, PS1/PS2 expansion, Reline, §2.8.1 error semantics, interactive signals,
+startup files). Job control moved to a new epic `rush-mv8`, deferred again: it is Unix-only by
+OS physics, not by implementation language (Windows has no POSIX process groups, no
+SIGTSTP/SIGCONT, no controlling terminal — every "POSIX shell on Windows" ships an emulation
+layer instead), so it gets a platform gate when it lands. The key design risk recorded on the
+epic: **waitpid ownership** — a SIGCHLD self-pipe reaper doing `waitpid(-1, WNOHANG|WUNTRACED)`
+steals statuses from the synchronous `waitpid2` calls in `PipelineRunner`/`BackgroundRunner`,
+so all child reaping must be centralized into one owner (a job table the synchronous waits
+consult) before any job-control feature can land.

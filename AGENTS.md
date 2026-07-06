@@ -9,8 +9,9 @@ verify against differentially, so rush matches `dash -c` in practice; but where 
 diverges from POSIX, follow the standard, not dash. Keep this file small and stable; bulk
 knowledge lives in `docs/` and the backlog lives in beads (see "Where things live").
 
-**Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate ✓ · 3 full POSIX scripting (next) ·
-4 (optional) job control + interactive. Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
+**Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate ✓ · 3 full POSIX scripting ✓ ·
+4 interactive shell (active) · job control split into its own deferred epic (`rush-mv8`).
+Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
 
 ## Build & Test
 
