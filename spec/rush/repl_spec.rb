@@ -36,6 +36,11 @@ RSpec.describe Rush::Repl do
     expect(session("echo hi\nexit 7\necho never\n")).to eq(["hi\n", '$ $ ', 7])
   end
 
+  it 'prompts from the PS1/PS2 variables, re-reading them each time' do
+    _, err = session("PS1='[$?]> '\nfalse\nif true\nthen echo ok\nfi\n")
+    expect(err).to eq('$ [0]> [1]> > > [0]> ')
+  end
+
   it 'returns the last command status at end of input' do
     _, _, code = session("false\n")
     expect(code).to eq(1)

@@ -4,9 +4,8 @@ module Rush
     # :command segments. Unlike WordScanner there are no quote delimiters (quotes
     # are literal) and no terminator (it consumes the whole body); a backslash
     # escapes only $, ` and \. Expansion itself is deferred to execution, so the
-    # body reflects the variable values at the time the command runs. (Shares the
-    # $-and-backtick shape with WordScanner; a common extractor can wait until the
-    # Phase 2 ${} forms land.)
+    # body reflects the variable values at the time the command runs. Parameter
+    # references are read by the shared ParamScanner.
     class HeredocBody
       extend T::Sig
       include ScannerPredicates
@@ -16,8 +15,6 @@ module Rush
       @segments: Array[AST::WordSegment[untyped]]
 
       @literal: String
-
-      PARAM: Regexp
 
       ESCAPES: Hash[String, String]
 
@@ -44,10 +41,6 @@ module Rush
       def backtick: () -> void
 
       def param: () -> void
-
-      def read_ref: () -> AST::ParamRef?
-
-      def braced: () -> AST::ParamRef
 
       def escape: () -> void
 

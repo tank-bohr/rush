@@ -5,15 +5,12 @@ module Rush
   # A simple interactive read-eval-print loop over the shared ProgramReader: each
   # turn reads a complete command (continuation lines prompted with PS2) and runs
   # it against one persistent ShellState, so variables and functions survive
-  # across lines. Prompts go to stderr; `exit` and end-of-input (Ctrl-D) end the
-  # loop; parse and expansion errors are reported without ending the session.
-  # Line editing/history, PS1/PS2 customisation and job control are deferred to
-  # Phase 4.
+  # across lines. Prompts come from the PS1/PS2 shell variables (see Prompt) and
+  # go to stderr; `exit` and end-of-input (Ctrl-D) end the loop; parse and
+  # expansion errors are reported without ending the session. Line
+  # editing/history and job control are deferred to later slices.
   class Repl < ProgramSession
     extend T::Sig
-
-    PS1 = '$ '
-    PS2 = '> '
 
     private
 
@@ -34,8 +31,13 @@ module Rush
 
     sig { params(continuation: T::Boolean).returns(T.nilable(String)) }
     def prompt_line(continuation)
-      system.stderr.print(continuation ? PS2 : PS1)
+      system.stderr.print(continuation ? prompt.continuation : prompt.primary)
       system.read_line
+    end
+
+    sig { returns(Prompt) }
+    def prompt
+      @prompt ||= T.let(Prompt.new(executor), T.nilable(Prompt))
     end
 
     sig { params(program: AST::List).void }

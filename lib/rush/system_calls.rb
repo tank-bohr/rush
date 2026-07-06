@@ -171,6 +171,12 @@ module Rush
       stderr.tty?
     end
 
+    # Whether the shell runs with root privileges: picks the default PS1
+    # ('# ' instead of '$ '), as POSIX permits for privileged users.
+    def privileged?
+      Process.euid.zero?
+    end
+
     # Home directory of a named user for ~user tilde expansion, or nil if there
     # is no such user.
     def home_dir(name)

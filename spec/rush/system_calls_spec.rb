@@ -116,6 +116,11 @@ RSpec.describe Rush::SystemCalls do
     expect(system.stderr_tty?).to be(true)
   end
 
+  it 'reports root privileges from the effective uid' do
+    allow(Process).to receive(:euid).and_return(0)
+    expect(system.privileged?).to be(true)
+  end
+
   it 'looks up a user home directory, returning nil for an unknown user' do
     allow(Etc).to receive(:getpwnam).with('bob').and_return(instance_double(Etc::Passwd, dir: '/home/bob'))
     allow(Etc).to receive(:getpwnam).with('ghost').and_raise(ArgumentError)

@@ -7,14 +7,12 @@ module Rush
     # :command segments. Unlike WordScanner there are no quote delimiters (quotes
     # are literal) and no terminator (it consumes the whole body); a backslash
     # escapes only $, ` and \. Expansion itself is deferred to execution, so the
-    # body reflects the variable values at the time the command runs. (Shares the
-    # $-and-backtick shape with WordScanner; a common extractor can wait until the
-    # Phase 2 ${} forms land.)
+    # body reflects the variable values at the time the command runs. Parameter
+    # references are read by the shared ParamScanner.
     class HeredocBody
       extend T::Sig
       include ScannerPredicates
 
-      PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
       ESCAPES = { '$' => '$', '`' => '`', '\\' => '\\' }.freeze
       ESCAPE_TABLE = EscapeTable.new(ESCAPES).freeze
 
@@ -82,25 +80,8 @@ module Rush
 
       sig { void }
       def param
-        ref = read_ref
+        ref = ParamScanner.new(@scanner).read
         ref ? push(AST::ParamSegment.new(ref, false)) : (@literal << '$')
-      end
-
-      sig { returns(T.nilable(AST::ParamRef)) }
-      def read_ref
-        return braced if peek?('{')
-
-        name = @scanner.scan(PARAM)
-        name ? AST::ParamRef.simple(name) : nil
-      end
-
-      sig { returns(AST::ParamRef) }
-      def braced
-        @scanner.getch
-        body = @scanner.scan(/[^}]*/) || ''
-        raise ParseError, 'unterminated ${' unless @scanner.scan('}')
-
-        AST::ParamRef.parse(body)
       end
 
       sig { void }

@@ -715,3 +715,18 @@ exit 2, like dash; and a script-file operand (`rush file.sh args...`) used to be
 ignored in favour of stdin — it now runs the file with $0/positionals set. Auto-interactivity
 follows POSIX (stdin AND stderr both ttys) rather than probing dash's tty behaviour, which a
 pipe-based oracle cannot observe.
+
+### PS1/PS2 prompts — parameter expansion only, and the ParamScanner extraction
+rush-mw1.2 wired the prompts to the PS1/PS2 variables (defaults `$ ` — `# ` for a privileged
+shell — and `> `), re-read at every prompt and subjected to POSIX 2.5.3 **parameter expansion
+only**: `$name`/`${...}` expand; command substitution, arithmetic, backticks, tilde and
+backslashes stay literal. Probed dash: modern dash does expand PS1 parameters
+(`PS1='[$PWD]$ '` prompts the cwd) but does not do the `!` history-number replacement (a UP
+feature rush also skips — no history yet). A prompt is the one expansion context that must
+never kill the session, so a malformed value (unterminated `${`, failing `${x?}`) falls back
+to the raw string instead of raising. The prompt scanner would have been the third copy of the
+lexer's read-a-$-reference logic, which forced the extraction HeredocBody's comment had
+deferred: `Lexer::ParamScanner` now serves DollarScanner (raising IncompleteInput so an
+interactive word can ask for another line), HeredocBody and Prompt::Text (plain ParseError —
+their inputs are already complete). Prompts sit on stderr, which the differential corpus
+ignores by design, so behaviour is pinned by unit specs; dash parity was checked by hand.

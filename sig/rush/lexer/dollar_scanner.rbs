@@ -1,21 +1,21 @@
 module Rush
   class Lexer
     # Reads a substitution at the word scanner's current position into the matching
-    # AST segment: $name / ${...} parameter refs, $(...) command substitution,
-    # $((...)) arithmetic, and `...` backticks. #read returns nil for a lone `$`
-    # that begins no valid reference, so the caller keeps it as a literal dollar.
+    # AST segment: $name / ${...} parameter refs (via ParamScanner), $(...) command
+    # substitution, $((...)) arithmetic, and `...` backticks. #read returns nil for
+    # a lone `$` that begins no valid reference, so the caller keeps it as a
+    # literal dollar.
     class DollarScanner
       extend T::Sig
       include ScannerPredicates
 
       @scanner: StringScanner
 
-      SIMPLE_PARAM: Regexp
-
       def initialize: (StringScanner scanner) -> void
 
       # The segment for a `$...` at the scanner head (the `$` not yet consumed),
-      # or nil when no valid reference follows.
+      # or nil when no valid reference follows. An unterminated ${ asks for more
+      # input: an interactive word may continue on the next line.
       def read: (quoted: bool) -> untyped
 
       # The command segment for a `` `...` `` at the scanner head.
@@ -25,10 +25,6 @@ module Rush
 
       # `$((` begins arithmetic; a lone `$(` (including `$( (`) is command sub.
       def dollar_paren: (bool quoted) -> untyped
-
-      def read_param_ref: () -> untyped
-
-      def braced_ref: () -> untyped
     end
   end
 end

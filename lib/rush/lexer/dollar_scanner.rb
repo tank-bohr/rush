@@ -4,14 +4,13 @@
 module Rush
   class Lexer
     # Reads a substitution at the word scanner's current position into the matching
-    # AST segment: $name / ${...} parameter refs, $(...) command substitution,
-    # $((...)) arithmetic, and `...` backticks. #read returns nil for a lone `$`
-    # that begins no valid reference, so the caller keeps it as a literal dollar.
+    # AST segment: $name / ${...} parameter refs (via ParamScanner), $(...) command
+    # substitution, $((...)) arithmetic, and `...` backticks. #read returns nil for
+    # a lone `$` that begins no valid reference, so the caller keeps it as a
+    # literal dollar.
     class DollarScanner
       extend T::Sig
       include ScannerPredicates
-
-      SIMPLE_PARAM = /[a-zA-Z_]\w*|\d|[@*#?$!\-0]/
 
       sig { params(scanner: StringScanner).void }
       def initialize(scanner)
@@ -19,13 +18,14 @@ module Rush
       end
 
       # The segment for a `$...` at the scanner head (the `$` not yet consumed),
-      # or nil when no valid reference follows.
+      # or nil when no valid reference follows. An unterminated ${ asks for more
+      # input: an interactive word may continue on the next line.
       sig { params(quoted: T::Boolean).returns(T.untyped) }
       def read(quoted:)
         @scanner.getch
         return dollar_paren(quoted) if peek?('(')
 
-        ref = read_param_ref
+        ref = ParamScanner.new(@scanner, error: IncompleteInput).read
         ref && AST::ParamSegment.new(ref, quoted)
       end
 
@@ -47,23 +47,6 @@ module Rush
 
         @scanner.getch # second (
         AST::ArithSegment.new(reader.arithmetic, quoted)
-      end
-
-      sig { returns(T.untyped) }
-      def read_param_ref
-        return braced_ref if peek?('{')
-
-        name = @scanner.scan(SIMPLE_PARAM)
-        name && AST::ParamRef.simple(name)
-      end
-
-      sig { returns(AST::ParamRef) }
-      def braced_ref
-        @scanner.getch
-        body = @scanner.scan(/[^}]*/) || ''
-        raise IncompleteInput, 'unterminated ${' unless @scanner.scan('}')
-
-        AST::ParamRef.parse(body)
       end
     end
   end
