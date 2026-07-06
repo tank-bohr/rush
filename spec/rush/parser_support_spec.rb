@@ -28,6 +28,14 @@ RSpec.describe Rush::ParserSupport do
     expect(command.redirects.map(&:kind)).to eq([:out])
   end
 
+  it 'preserves source order separately from grouped simple-command accessors' do
+    command = first_command('> out X=1 echo hi 2> err')
+    expect(command.parts).to eq([
+                                  command.redirects.fetch(0), command.assignments.fetch(0),
+                                  command.words.fetch(0), command.words.fetch(1), command.redirects.fetch(1)
+                                ])
+  end
+
   it 'captures an explicit fd as the redirect io_number' do
     expect(first_command('cat 2> err').redirects.first.io_number).to eq(2)
   end

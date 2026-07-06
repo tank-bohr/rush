@@ -648,3 +648,14 @@ keeps the existing `Node#execute`-style polymorphism without letting AST payload
 expansion as a whole. Revisit only if new segment kinds need cross-segment state, segment classes grow
 real algorithms, the pipeline starts type-switching on segment subclasses, or `WordSegment#value`'s
 open type becomes the dominant type-checking escape.
+
+### Simple command source order — preserve now, spend later
+rush-n5b.18 added `AST::SimpleCommand#parts` as the canonical source-order list of assignment,
+word, and redirect objects, with `#assignments`/`#words`/`#redirects` derived from it so existing
+execution callers keep their API. The decision is recorded in `docs/architecture/simple-command-order.md`.
+The useful dash probes while deciding: command-word substitutions are expanded before command
+redirections (`echo $(echo err >&2) 2>f` leaves `f` empty), but assignment substitutions attached to a
+command or to a no-command assignment/redirect see same-command redirections (`X=$(echo err >&2) true
+2>f` and `X=$(echo err >&2) 2>f` write `err` to `f`). rush's stored order is now available for future
+POSIX 2.9.1 execution fixes instead of being lost at parse time; the concrete redirection/assignment
+substitution fix is tracked as `rush-n5b.20`.

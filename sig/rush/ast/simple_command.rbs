@@ -1,31 +1,33 @@
 module Rush
   module AST
+    type simple_command_part = Assignment | Word | Redirect
+
     # `name=val ... cmd arg ... >file` — variable assignments, argv words and
-    # redirections (in source order within each group).
+    # redirections, preserving both grouped accessors and original source parts.
     class SimpleCommand < Node
       extend T::Sig
 
-      @assignments: Array[Assignment]
-
-      @words: Array[Word]
-
-      @redirects: Array[Redirect]
+      @parts: Array[simple_command_part]
 
       @source_line: Integer
 
-      attr_reader assignments: Array[Assignment]
-
-      attr_reader words: Array[Word]
-
-      attr_reader redirects: Array[Redirect]
+      attr_reader parts: Array[simple_command_part]
 
       attr_reader source_line: Integer
+
+      Part: untyped
 
       def self.from_parts: (Array[untyped] parts) -> SimpleCommand
 
       def self.source_line: (Array[untyped] parts) -> Integer
 
       def initialize: (Array[Assignment] assignments, Array[Word] words, Array[Redirect] redirects, ?source_line: Integer) -> void
+
+      def assignments: () -> Array[Assignment]
+
+      def words: () -> Array[Word]
+
+      def redirects: () -> Array[Redirect]
 
       def execute: (Executor executor) -> Status
     end

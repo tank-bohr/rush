@@ -53,3 +53,5 @@ Rules 1–9) and **all OS access funnelled through one injectable port** (`Rush:
   (`:literal`/`:single`/`:double`/`:param`/`:cmd_sub`/`:arith`/`:tilde`) that preserve quote
   provenance. `word-expansion-boundary.md` pins the ownership line: segments do scalar,
   kind-local expansion; `Expansion::Pipeline` owns context, splitting, and globbing.
+- `simple-command-order.md` pins the simple-command AST shape: `AST::SimpleCommand#parts` keeps the
+  original assignment/word/redirect order, while grouped accessors remain the execution-facing API.
