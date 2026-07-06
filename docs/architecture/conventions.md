@@ -51,4 +51,5 @@ Rules 1–9) and **all OS access funnelled through one injectable port** (`Rush:
   `TokenClassifier` — the hardest part; get it wrong and `echo if` mis-parses. It is **pure**
   (no OS calls) and **defers all expansion**, emitting a `WordNode` of typed segments
   (`:literal`/`:single`/`:double`/`:param`/`:cmd_sub`/`:arith`/`:tilde`) that preserve quote
-  provenance.
+  provenance. `word-expansion-boundary.md` pins the ownership line: segments do scalar,
+  kind-local expansion; `Expansion::Pipeline` owns context, splitting, and globbing.

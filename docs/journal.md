@@ -638,3 +638,13 @@ status or (when enabled) the rightmost non-zero status, falling back to 0 when e
 Keeping it below `AST::Pipeline` means the existing `!` and `set -e` machinery automatically sees the
 pipefail-adjusted status: `! false | true` inverts success without pipefail, but inverts failure with
 pipefail; `set -e -o pipefail; false | true` aborts at the same leaf `exit_on_error` checkpoint.
+
+### Word expansion boundary — keep segment polymorphism
+rush-n5b.17 decided **not** to migrate word expansion to a visitor/registry now. The durable rule is
+in `docs/architecture/word-expansion-boundary.md`: `WordSegment#expand` is scalar and kind-local
+(literal / parameter / command substitution / arithmetic), while `Expansion::Pipeline` owns the POSIX
+ordering context — tilde mode, `$@` field breaks, quote escaping, IFS splitting, and globbing. This
+keeps the existing `Node#execute`-style polymorphism without letting AST payload classes absorb word
+expansion as a whole. Revisit only if new segment kinds need cross-segment state, segment classes grow
+real algorithms, the pipeline starts type-switching on segment subclasses, or `WordSegment#value`'s
+open type becomes the dominant type-checking escape.
