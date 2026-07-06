@@ -27,7 +27,8 @@ RSpec.describe Rush::Executor do
     executor = build(state)
     expect(executor.builtins.key?('echo')).to be(true)
     expect(executor.io).to be_a(Rush::IoTable)
-    expect(executor.instance_variable_get(:@tested)).to be(false)
+    expect(executor.instance_variable_get(:@errexit)).to be_a(Rush::ErrexitContext)
+    expect(executor.instance_variable_get(:@redirect_scope)).to be_a(Rush::RedirectScope)
   end
 
   it 'backfills the logical pwd from the OS when the environment has none' do
@@ -196,7 +197,6 @@ RSpec.describe Rush::Executor do
     it 'returns the status unchanged when errexit is off' do
       executor = build(state)
       expect(executor.exit_on_error(fail_status)).to be(fail_status)
-      expect(executor.send(:abort_on?, fail_status)).to be(false)
     end
 
     it 'reports condition success in a tested context' do

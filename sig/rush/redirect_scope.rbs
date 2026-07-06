@@ -1,0 +1,23 @@
+module Rush
+  # Applies command redirects on top of an IoTable and owns cleanup of streams
+  # opened by those redirects.
+  class RedirectScope
+    extend T::Sig
+
+    @executor: Executor
+
+    def initialize: (Executor executor) -> void
+
+    def with_redirects: [T] (Array[AST::Redirect] redirects, IoTable base) { (IoTable io) -> T } -> T
+
+    private
+
+    def apply_redirects: (Array[AST::Redirect] redirects, IoTable base, Array[FdEntry] opened) -> IoTable
+
+    def apply_redirect: (AST::Redirect redirect, IoTable io, Array[FdEntry] opened) -> IoTable
+
+    def close_redirect_io: (Array[FdEntry] opened, IoTable io) -> void
+
+    def redirect_into: (AST::Redirect redirect, IoTable io) -> IoTable
+  end
+end

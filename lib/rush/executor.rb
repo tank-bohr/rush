@@ -5,7 +5,7 @@ module Rush
   # Walks the AST by polymorphic dispatch (node.execute(self)) over shared shell
   # state, with all OS access funneled through the injected SystemCalls port. The
   # base IoTable, builtin registry, redirection registry and expander hang off it;
-  # signal and trap handling live in the TrapRunner it owns.
+  # redirect cleanup, errexit state, signal and trap handling live in collaborators.
   class Executor # rubocop:disable Metrics/ClassLength
     extend T::Sig
 
@@ -41,7 +41,8 @@ module Rush
       @redirections = Redirection.default_registry(@state.options)
       @expander = Expansion::Pipeline.new(self)
       @io = IoTable.standard(@system)
-      @tested = false
+      @redirect_scope = RedirectScope.new(self)
+      @errexit = ErrexitContext.new(@state)
       @trap_runner = TrapRunner.new(self)
       @state.variables.seed_pwd(@system.pwd)
     end
@@ -101,11 +102,7 @@ module Rush
         .returns(T.type_parameter(:U))
     end
     def with_redirects(redirects, base = @io, &blk)
-      opened = T.let([], T::Array[FdEntry])
-      io = apply_redirects(redirects, base, opened)
-      yield io
-    ensure
-      close_redirect_io(T.must(opened), io || base)
+      @redirect_scope.with_redirects(redirects, base, &blk)
     end
 
     # Run a compound command with its redirects bound for the whole body.
@@ -156,7 +153,7 @@ module Rush
         .returns(T.type_parameter(:U))
     end
     def tested(&blk)
-      scoped_tested(true, &blk)
+      @errexit.tested(&blk)
     end
 
     sig do
@@ -165,7 +162,7 @@ module Rush
         .returns(T.type_parameter(:U))
     end
     def untested(&blk)
-      scoped_tested(false, &blk)
+      @errexit.untested(&blk)
     end
 
     # Evaluate an if/while/until condition: run the command in a tested context
@@ -179,52 +176,7 @@ module Rush
     # outside a tested context aborts the shell with that status.
     sig { params(status: Status).returns(Status) }
     def exit_on_error(status)
-      raise ExitSignal, status.exitstatus if abort_on?(status)
-
-      status
-    end
-
-    private
-
-    sig do
-      type_parameters(:U)
-        .params(value: T::Boolean, blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def scoped_tested(value, &blk)
-      previous = @tested
-      @tested = value
-      yield
-    ensure
-      @tested = previous
-    end
-
-    sig { params(status: Status).returns(T::Boolean) }
-    def abort_on?(status)
-      !!(@state.options.on?(:errexit) && !@tested && !status.success?)
-    end
-
-    sig { params(redirects: T::Array[AST::Redirect], base: IoTable, opened: T::Array[FdEntry]).returns(IoTable) }
-    def apply_redirects(redirects, base, opened)
-      redirects.reduce(base) { |io, redirect| apply_redirect(redirect, io, opened) }
-    end
-
-    sig { params(redirect: AST::Redirect, io: IoTable, opened: T::Array[FdEntry]).returns(IoTable) }
-    def apply_redirect(redirect, io, opened)
-      redirected = redirect_into(redirect, io)
-      opened.concat(redirected.opened_over(io))
-      redirected
-    end
-
-    sig { params(opened: T::Array[FdEntry], io: IoTable).void }
-    def close_redirect_io(opened, io)
-      entries = io.equal?(@io) ? opened - io.entries : opened
-      IoTable.close_entries(entries, system)
-    end
-
-    sig { params(redirect: AST::Redirect, io: IoTable).returns(IoTable) }
-    def redirect_into(redirect, io)
-      redirections.fetch(redirect.kind).apply(redirect, expander.expand_value(redirect.target), io, system)
+      @errexit.exit_on_error(status)
     end
   end
 end

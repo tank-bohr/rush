@@ -2,7 +2,7 @@ module Rush
   # Walks the AST by polymorphic dispatch (node.execute(self)) over shared shell
   # state, with all OS access funneled through the injected SystemCalls port. The
   # base IoTable, builtin registry, redirection registry and expander hang off it;
-  # signal and trap handling live in the TrapRunner it owns.
+  # redirect cleanup, errexit state, signal and trap handling live in collaborators.
   class Executor
     extend T::Sig
 
@@ -12,7 +12,8 @@ module Rush
     @redirections: Redirection::Registry
     @expander: Expansion::Pipeline
     @io: IoTable
-    @tested: bool
+    @redirect_scope: RedirectScope
+    @errexit: ErrexitContext
     @trap_runner: TrapRunner
     @cmd_sub_status: Status
 
@@ -88,18 +89,5 @@ module Rush
     # outside a tested context aborts the shell with that status.
     def exit_on_error: (Status status) -> Status
 
-    private
-
-    def scoped_tested: [T] (bool value) { () -> T } -> T
-
-    def abort_on?: (Status status) -> bool
-
-    def apply_redirects: (Array[AST::Redirect] redirects, IoTable base, Array[FdEntry] opened) -> IoTable
-
-    def apply_redirect: (AST::Redirect redirect, IoTable io, Array[FdEntry] opened) -> IoTable
-
-    def close_redirect_io: (Array[FdEntry] opened, IoTable io) -> void
-
-    def redirect_into: (AST::Redirect redirect, IoTable io) -> IoTable
   end
 end

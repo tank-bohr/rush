@@ -1,0 +1,24 @@
+module Rush
+  # Tracks whether a command is executing in a POSIX "tested" context where
+  # errexit is suppressed, and performs the leaf `set -e` abort check.
+  class ErrexitContext
+    extend T::Sig
+
+    @state: ShellState
+    @tested: bool
+
+    def initialize: (ShellState state) -> void
+
+    def tested: [T] () { () -> T } -> T
+
+    def untested: [T] () { () -> T } -> T
+
+    def exit_on_error: (Status status) -> Status
+
+    private
+
+    def scoped: [T] (bool value) { () -> T } -> T
+
+    def abort_on?: (Status status) -> bool
+  end
+end

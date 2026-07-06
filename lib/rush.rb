@@ -128,6 +128,8 @@ require_relative 'rush/loop_runner'
 require_relative 'rush/for_runner'
 require_relative 'rush/function_runner'
 require_relative 'rush/trap_runner'
+require_relative 'rush/errexit_context'
+require_relative 'rush/redirect_scope'
 require_relative 'rush/executor'
 
 require_relative 'rush/lexer'
