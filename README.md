@@ -42,11 +42,20 @@ bundle exec rake                  # fast full pipeline
 bundle exec rake compile          # regenerate lib/rush/parser.rb from grammar/shell.y
 bundle exec rake check_parser_drift # explicit generated-parser drift audit
 bundle exec rspec                 # tests + SimpleCov guardrail
+bundle exec rake docker:test      # opt-in Docker gate + syscall smoke
 bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
 bundle exec rake 'mutant:check[Rush*,95.0]'      # on-demand mutation score threshold
 echo 'echo hi; exit 2' | bundle exec ruby -Ilib exe/rush
 bundle exec ruby -Ilib exe/rush -c 'echo hello'
 ```
+
+`docker:test` builds `docker/rush-test.Dockerfile`, mounts the working tree into
+`/work`, runs `bundle install --jobs ... --retry ...`, then runs `bundle exec rake`
+and a container-only `ulimit` smoke that lowers rush's `RLIMIT_NOFILE` soft limit.
+The image checksum-pins dash 0.5.13.4 so the differential oracle matches the
+native development oracle instead of Debian slim's older dash. The gate is
+intentionally opt-in: the host shell limits are not mutated, but Docker's own
+cgroup, capability, and `--ulimit` ceilings still bound what the container can do.
 
 Coverage policy: rush targets 100% meaningful coverage, but SimpleCov cannot observe every
 fork/exec path a shell must exercise. The configured thresholds are intentionally relaxed so

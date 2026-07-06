@@ -6,6 +6,7 @@ require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
 
 load 'tasks/compile.rake'
+load 'tasks/docker.rake'
 
 RSpec::Core::RakeTask.new(:spec)
 RuboCop::RakeTask.new(:rubocop)

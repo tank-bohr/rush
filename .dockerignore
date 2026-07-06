@@ -1,0 +1,7 @@
+.git
+.bundle
+coverage
+pkg
+tmp
+vendor/bundle
+.mutant/results

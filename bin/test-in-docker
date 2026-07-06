@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+set -eu
+
+IMAGE=${RUSH_DOCKER_IMAGE:-rush-test:latest}
+DOCKERFILE=${RUSH_DOCKERFILE:-docker/rush-test.Dockerfile}
+BUNDLE_VOLUME=${RUSH_DOCKER_BUNDLE_VOLUME:-rush-bundle}
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
+
+docker build --pull -f "$DOCKERFILE" -t "$IMAGE" .
+
+docker run --rm \
+  --user "$USER_ID:$GROUP_ID" \
+  --ulimit nofile=1024:1024 \
+  -e BUNDLE_PATH=/bundle \
+  -e BUNDLE_JOBS="${BUNDLE_JOBS:-4}" \
+  -e BUNDLE_RETRY="${BUNDLE_RETRY:-3}" \
+  -e HOME=/tmp/rush-home \
+  -v "$PWD:/work" \
+  -v "$BUNDLE_VOLUME:/bundle" \
+  -w /work \
+  "$IMAGE" \
+  sh -lc 'mkdir -p "$HOME" "$BUNDLE_PATH" && bundle install --jobs "$BUNDLE_JOBS" --retry "$BUNDLE_RETRY" && bundle exec rake && docker/syscall-smoke.sh'

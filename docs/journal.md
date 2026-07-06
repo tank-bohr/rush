@@ -617,3 +617,16 @@ the tiny, mutation-selected test subset. Full-project mutation is intentionally 
 whole-tree pass. A separate `rake mutant:check[Subject,Threshold]` task reads Mutant's JSON result
 and enforces an opt-in mutation score gate (default `Rush*`, `95.0%`) without adding Mutant to the
 normal rake pipeline.
+
+### Docker syscall gate — explicit, not the default bar
+rush-n5b.19 adds `bundle exec rake docker:test` / `bin/test-in-docker` as the place for
+syscall-heavy integration checks that are too host-sensitive for the native fast gate. The task
+builds a small Ruby image, mounts the working tree, runs `bundle install --jobs ... --retry ...`,
+then runs the normal `bundle exec rake` inside the container before a smoke script exercises a real
+`ulimit -Sn 64` path through rush. The non-obvious part: the stock Debian slim `dash` (0.5.12)
+failed the existing differential corpus because it lacks the newer `LINENO` and alias-listing
+behaviour; the image therefore builds checksum-pinned dash 0.5.13.4 from upstream so the Docker
+oracle matches the native development oracle. The smoke calls the actual `Process.setrlimit` in the
+rush subprocess, so it verifies the impure port without changing the developer's login shell limits.
+The boundary is still Docker's boundary, not magic isolation: daemon policy, cgroups, capabilities,
+and `--ulimit` settings decide the container's ceiling.
