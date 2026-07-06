@@ -93,6 +93,31 @@ RSpec.describe Rush::ParserSupport do
     expect { first_command('esac') }.to raise_error(Rush::ParseError, /esac/)
   end
 
+  it 'removes a backslash-newline inside a word (POSIX 2.2.1 line continuation)' do
+    command = first_command("ec\\\nho joined")
+    expect(command.words.map(&:literal_text)).to eq(%w[echo joined])
+  end
+
+  it 'removes a backslash-newline between tokens' do
+    command = first_command("echo a \\\nb")
+    expect(command.words.map(&:literal_text)).to eq(%w[echo a b])
+  end
+
+  it 'removes a backslash-newline inside double quotes' do
+    command = first_command("echo \"a\\\nb\"")
+    expect(command.words.map(&:literal_text)).to eq(%w[echo ab])
+  end
+
+  it 'keeps a backslash-newline inside single quotes' do
+    command = first_command("echo 'a\\\nb'")
+    expect(command.words.last.literal_text).to eq("a\\\nb")
+  end
+
+  it 'keeps a backslash that ends the input literal, like dash' do
+    command = first_command('echo a\\')
+    expect(command.words.map(&:literal_text)).to eq(['echo', 'a\\'])
+  end
+
   it 'parses a function definition' do
     node = first_command('greet() { echo hi; }')
     expect([node.class, node.name]).to eq([Rush::AST::FunctionDef, 'greet'])

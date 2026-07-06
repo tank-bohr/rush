@@ -25,8 +25,11 @@ module Rush
     extend T::Sig
     include TokenPredicates
 
-    BLANK = /[ \t]+/
-    COMMENT = /#[^\n]*/
+    # Between tokens, blanks, comments and backslash-newline continuations
+    # (POSIX 2.2.1) are all insignificant. A continuation at the buffer's very
+    # end is left for the word scanner, which asks for the next line instead
+    # of ending the token stream.
+    INSIGNIFICANT = /(?:[ \t]+|#[^\n]*|\\\n(?=.))+/m
     IO_NUMBER = /\d+(?=[<>])/
     HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
@@ -77,7 +80,7 @@ module Rush
 
     sig { void }
     def skip_insignificant
-      loop { break unless @scanner.skip(BLANK) || @scanner.skip(COMMENT) }
+      @scanner.skip(INSIGNIFICANT)
     end
 
     sig { returns(T.nilable([T.untyped, T.untyped])) }
@@ -111,7 +114,7 @@ module Rush
     # returns nil so next_token re-reads from the new frame.
     sig { returns(T.nilable([T.untyped, T.untyped])) }
     def word
-      scanned = @lines.word { WordScanner.next_word(@scanner) }
+      scanned = @lines.word { WordScanner.next_word(@scanner, interactive: @interactive) }
       token = TokenClassifier.new(scanned, @state).call
       replacement = alias_for(token, scanned)
       return splice(replacement) if replacement

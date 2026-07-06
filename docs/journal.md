@@ -775,3 +775,21 @@ stray `esac` is now a syntax error, status 2, exactly like dash. The same slice 
 optional `(` before patterns (also 2.10.2) — which turned out to be flatpak.sh's actual blocker
 (`(*":$share_path:"*)` items), not the `$( (` shape rush-9q8 suspected. The real /etc/profile
 now parses and sources profile.d up to gawk.sh, whose backslash-newline crash is rush-v9t.
+
+### Backslash-newline — three seams, one rule, one documented divergence
+rush-v9t: POSIX 2.2.1 removes an unquoted backslash-newline *before tokenization*. rush
+implements it at three seams instead of a character-level filter. Between tokens it is skipped
+like blank space (the lexer's INSIGNIFICANT pattern) — except at the very end of the buffer,
+where it is deliberately left for the word scanner. Inside words, double quotes and heredoc
+data, the scanners drop the pair; when the pair ends an *accumulating* buffer the word scanner
+raises IncompleteInput — the same mechanism as an unterminated quote — so ProgramReader pulls
+the next line and the REPL shows PS2, while the reader's final at-EOF parse (interactive:
+false, the unterminated-heredoc mechanism) just drops the pair, exactly like dash reading a
+file that ends mid-continuation. A bare backslash before EOF stays literal (dash-verified:
+`dash -c 'echo a\'` prints `a\`). The bead's IndexError crash was the empty-word path — a
+continuation-only "word" built an AST::Word with zero segments; it can no longer be reached.
+One divergence, documented and deferred (rush-u9x, P4): dash splices at the character level, so
+`&\<newline>&` joins into `&&`; rush's operator matcher does not see through the pair.
+With this and the case fix, **the full real-host startup corpus is clean**: `rush -l` on this
+Arch box runs /etc/profile plus every /etc/profile.d/*.sh to completion (rush-9q8 closed) —
+the login shell works against unmodified system files.

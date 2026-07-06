@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Lexer::WordScanner do
-  def scan(source)
+  def scan(source, interactive: false)
     scanner = StringScanner.new(source)
-    [described_class.next_word(scanner), scanner]
+    [described_class.next_word(scanner, interactive: interactive), scanner]
   end
 
   def field(source)
@@ -31,14 +31,26 @@ RSpec.describe Rush::Lexer::WordScanner do
     expect(field('a\\ b')).to eq('a b')
   end
 
-  it 'treats a trailing backslash and a line continuation as empty' do
-    expect(field('end\\')).to eq('end')
+  it 'keeps a backslash that ends the input literal, and joins a continuation' do
+    expect(field('end\\')).to eq('end\\')
     expect(field("a\\\nb")).to eq('ab')
+  end
+
+  it 'asks for more input when a continuation ends an interactive buffer' do
+    expect { scan("a\\\n", interactive: true) }.to raise_error(Rush::IncompleteInput, /continuation/)
+  end
+
+  it 'ends the word at a continuation that ends the final buffer' do
+    expect(field("a\\\n")).to eq('a')
   end
 
   it 'honours backslash escapes inside double quotes' do
     expect(field('"a\\"b"')).to eq('a"b')
     expect(field('"a\\zb"')).to eq('a\\zb')
+  end
+
+  it 'removes a backslash-newline inside double quotes' do
+    expect(field("\"a\\\nb\"")).to eq('ab')
   end
 
   it 'stops at an unquoted operator and leaves the rest unscanned' do

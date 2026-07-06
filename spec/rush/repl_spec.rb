@@ -17,6 +17,11 @@ RSpec.describe Rush::Repl do
     expect([out, err.include?('> ')]).to eq(["ok\n", true])
   end
 
+  it 'continues a backslash-ended line, prompting with PS2' do
+    out, err = session("echo a \\\nb\n")
+    expect([out, err]).to eq(["a b\n", '$ > $ '])
+  end
+
   it 'continues an unterminated quote across lines' do
     out, = session("echo 'a\nb'\n")
     expect(out).to eq("a\nb\n")

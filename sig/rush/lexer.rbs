@@ -21,9 +21,11 @@ module Rush
 
     @heredocs: Array[HereDoc]
 
-    BLANK: Regexp
-
-    COMMENT: Regexp
+    # Between tokens, blanks, comments and backslash-newline continuations
+    # (POSIX 2.2.1) are all insignificant. A continuation at the buffer's very
+    # end is left for the word scanner, which asks for the next line instead
+    # of ending the token stream.
+    INSIGNIFICANT: Regexp
 
     IO_NUMBER: Regexp
 

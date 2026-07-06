@@ -24,11 +24,13 @@ module Rush
 
       DISPATCH: Hash[String, Symbol]
 
-      def self.next_word: (StringScanner scanner) -> AST::Word
+      def self.next_word: (StringScanner scanner, interactive: bool) -> AST::Word
 
       def self.entire: (String text) -> AST::Word
 
-      def initialize: (StringScanner scanner, ?terminator: Regexp?) -> void
+      @interactive: bool
+
+      def initialize: (StringScanner scanner, terminator: Regexp?, interactive: bool) -> void
 
       def scan: () -> AST::Word
 
@@ -59,6 +61,12 @@ module Rush
       def backtick: () -> void
 
       def escape: () -> void
+
+      # A backslash that ends the input stays literal, like dash.
+      def trailing_backslash: () -> void
+
+      # Line continuation (POSIX 2.2.1): the backslash-newline pair vanishes.
+      def continuation: () -> void
 
       def push: (untyped value, quoted: bool) -> void
 

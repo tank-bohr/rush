@@ -22,10 +22,11 @@ module Rush
       }.freeze
 
       # Scan the next shell word from a live lexer scanner, stopping at the first
-      # unquoted terminator (blank / operator).
-      sig { params(scanner: StringScanner).returns(AST::Word) }
-      def self.next_word(scanner)
-        new(scanner).scan
+      # unquoted terminator (blank / operator). `interactive` mirrors the lexer:
+      # an accumulating parse may ask for more input, the final one may not.
+      sig { params(scanner: StringScanner, interactive: T::Boolean).returns(AST::Word) }
+      def self.next_word(scanner, interactive:)
+        new(scanner, terminator: TERMINATOR, interactive: interactive).scan
       end
 
       # Scan a complete, already-delimited string (a ${...} operator word or
@@ -33,14 +34,15 @@ module Rush
       # are literal), only quote / $ / ` stay special.
       sig { params(text: String).returns(AST::Word) }
       def self.entire(text)
-        new(StringScanner.new(text), terminator: nil).scan
+        new(StringScanner.new(text), terminator: nil, interactive: false).scan
       end
 
       # terminator: the character class that ends a word, or nil in whole mode.
-      sig { params(scanner: StringScanner, terminator: T.nilable(Regexp)).void }
-      def initialize(scanner, terminator: TERMINATOR)
+      sig { params(scanner: StringScanner, terminator: T.nilable(Regexp), interactive: T::Boolean).void }
+      def initialize(scanner, terminator:, interactive:)
         @scanner = scanner
         @terminator = terminator
+        @interactive = interactive
         @segments = []
         @literal = +''
       end
@@ -115,7 +117,20 @@ module Rush
       sig { void }
       def double_escape
         @scanner.getch
+        return continuation if peek?("\n")
+
         DOUBLE_SPECIAL.include?(@scanner.peek(1)) ? push(@scanner.getch, quoted: true) : push('\\', quoted: true)
+      end
+
+      # Line continuation (POSIX 2.2.1): the backslash-newline pair vanishes.
+      # When the newline ends an accumulating (interactive) buffer, the logical
+      # line continues on input the lexer does not have yet, so ask the reader
+      # for the next line. The final parse at end of input — and `entire` mode,
+      # whose text is already complete — just drops the pair, like dash.
+      sig { void }
+      def continuation
+        @scanner.skip(/\n/)
+        raise IncompleteInput, 'line continuation' if @interactive && @terminator && @scanner.eos?
       end
 
       # A lone `$` that begins no valid reference stays a literal dollar: merged
@@ -141,11 +156,14 @@ module Rush
 
       sig { void }
       def escape
-        char = @scanner.getch or return
-        case char
-        when "\n" then nil
-        else push(char, quoted: true)
-        end
+        char = @scanner.getch or return trailing_backslash
+        char == "\n" ? continuation : push(char, quoted: true)
+      end
+
+      # A backslash that ends the input stays literal, like dash.
+      sig { void }
+      def trailing_backslash
+        @literal << '\\'
       end
 
       sig { params(value: T.untyped, quoted: T::Boolean).void }

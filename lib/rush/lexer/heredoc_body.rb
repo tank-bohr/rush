@@ -86,7 +86,10 @@ module Rush
 
       sig { void }
       def escape
-        @literal << ESCAPE_TABLE.escape(@scanner.getch)
+        char = @scanner.getch
+        return if char == "\n" # line continuation, as inside double quotes
+
+        @literal << ESCAPE_TABLE.escape(char)
       end
 
       sig { params(segment: AST::WordSegment[T.untyped]).void }
