@@ -13,6 +13,10 @@ module Rush
 
     private
 
+    # A startup-file error (broken ~/.profile or ENV file) reports and keeps
+    # the interactive session alive, where a batch shell would abort.
+    def run_startup: () -> void
+
     # A real syntax error reports and resumes the session; the next turn starts
     # fresh at PS1 (the reader discards the broken buffer per next_program call).
     def read_program: () -> (AST::List | :eof | :error)

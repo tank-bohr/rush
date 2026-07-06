@@ -9,7 +9,7 @@ module Rush
   class InvocationFlags
     extend T::Sig
 
-    FLAGS = Options::LETTERS.merge('i' => :interactive, 's' => :stdin).freeze
+    FLAGS = Options::LETTERS.merge('i' => :interactive, 's' => :stdin, 'l' => :login).freeze
 
     sig { returns(T::Hash[Symbol, T::Boolean]) }
     attr_reader :settings
@@ -87,13 +87,14 @@ module Rush
       @input = T.let(build_input, T.any(CommandInput, ScriptInput, StdinInput))
     end
 
-    # The session this invocation implies, wired to its shell state.
+    # The session this invocation implies, wired to its shell state and
+    # startup files (login profiles, interactive ENV).
     sig { returns(ProgramSession) }
     def session
       state = shell_state
-      return Repl.new(@system, state: state) if repl?
+      return Repl.new(@system, state: state, startup: startup) if repl?
 
-      Source.new(self, @system, state: state)
+      Source.new(self, @system, state: state, startup: startup)
     end
 
     sig { returns(T::Boolean) }
@@ -104,6 +105,14 @@ module Rush
     sig { returns(T::Boolean) }
     def interactive?
       @flags.settings.fetch(:interactive) { auto_interactive? }
+    end
+
+    # A login shell: -l, or invoked with a leading '-' in the program name
+    # (how login(1) execs a shell). dash accepts -l the same way; POSIX leaves
+    # login files unspecified, so the oracle decides.
+    sig { returns(T::Boolean) }
+    def login?
+      @flags.settings.fetch(:login) { @system.program_name.start_with?('-') }
     end
 
     sig { returns(String) }
@@ -145,6 +154,11 @@ module Rush
       state = ShellState.new(name: name, positional: positionals, pids: ShellProcessIds.for(@system))
       shell_flags.each { |option, enabled| state.set_option(option, enabled) }
       state
+    end
+
+    sig { returns(Startup) }
+    def startup
+      Startup.new(login: login?, interactive: interactive?)
     end
 
     # POSIX sh: with no -i, interactive only when reading stdin implicitly on a

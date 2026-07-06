@@ -24,6 +24,15 @@ module Rush
       :error
     end
 
+    # A startup-file error (broken ~/.profile or ENV file) reports and keeps
+    # the interactive session alive, where a batch shell would abort.
+    sig { void }
+    def run_startup
+      super
+    rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
+      recover(e)
+    end
+
     sig { params(continuation: T::Boolean).returns(T.nilable(String)) }
     def next_line(continuation)
       prompt_line(continuation)

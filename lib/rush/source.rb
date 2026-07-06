@@ -9,10 +9,10 @@ module Rush
   class Source < ProgramSession
     extend T::Sig
 
-    sig { params(invocation: Invocation, system: SystemCalls, state: ShellState).void }
-    def initialize(invocation, system, state:)
+    sig { params(invocation: Invocation, system: SystemCalls, state: ShellState, startup: T.nilable(Startup)).void }
+    def initialize(invocation, system, state:, startup: nil)
       @source = T.let(invocation.source, String)
-      super(system, state: state)
+      super(system, state: state, startup: startup)
     end
 
     sig { returns(Integer) }

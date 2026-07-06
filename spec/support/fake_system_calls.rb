@@ -5,7 +5,8 @@
 # process-spawning paths are exercised separately with doubles. Nothing here
 # touches the real OS.
 class FakeSystemCalls
-  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed, :limits_set
+  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed, :limits_set,
+              :program_name
   attr_accessor :wait_status
 
   UNTRAPPABLE = %w[KILL STOP].freeze
@@ -32,6 +33,7 @@ class FakeSystemCalls
     tty: false,
     stderr_tty: nil,
     privileged: false,
+    program_name: 'rush',
     homes: {},
     globs: {},
     dead_pids: []
@@ -43,6 +45,7 @@ class FakeSystemCalls
     @tty = tty
     @stderr_tty = stderr_tty.nil? ? tty : stderr_tty
     @privileged = privileged
+    @program_name = program_name
     @homes = homes
     @globs = globs
     @dead_pids = dead_pids

@@ -1,0 +1,21 @@
+module Rush
+  class SystemCalls
+    # Who the shell process is, mixed into SystemCalls: pids for $$/PPID,
+    # effective privileges for the PS1 default, and the invocation name for
+    # login-shell detection.
+    module ProcessIdentity
+      extend T::Sig
+
+      def pid: () -> Integer
+
+      def ppid: () -> Integer
+
+      # Whether the shell runs with root privileges: picks the default PS1
+      # ('# ' instead of '$ '), as POSIX permits for privileged users.
+      def privileged?: () -> bool
+
+      # How the process was invoked ($0): a leading '-' marks a login shell.
+      def program_name: () -> String
+    end
+  end
+end

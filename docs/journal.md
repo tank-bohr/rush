@@ -743,3 +743,22 @@ for >0; the oracle wins) — fixed and pinned in the language corpus. Also confi
 exits even an interactive shell, and `exit` with a bad operand ends the session with status 2,
 in both shells. The 2.8.1 interactive column is now a permanent differential corpus file
 (spec/integration/differential/interactive_spec.rb).
+
+### Startup files — dash's rules, and what real /etc/profile taught the parser
+rush-mw1.6 added login/ENV startup (Startup, run by ProgramSession before the main input).
+The dash-probed rules: a login shell (`-l`, or argv[0] starting with `-`; no $- letter) runs
+/etc/profile then $HOME/.profile before ANY input — including `-c` commands; an interactive
+shell (including `-i -c`) then runs the file named by ENV, its value parameter-expanded
+(ParamText, extracted from Prompt for exactly this reuse); missing files and unset HOME skip
+silently; `exit` in a profile ends the shell with that code; `return` is bounded to its file
+like a dot script, leaving its code in $?; errors follow the session's policy — a batch login
+shell aborts (status 2), an interactive one reports, publishes $?=2 and carries on. Login
+differential tests are deliberately absent: they would execute the host's real /etc/profile
+(host-sensitive); ENV paths are covered differentially with controlled files, login logic by
+unit specs. The valuable accident: **running this host's real /etc/profile{,.d} through rush
+surfaced two parser gaps dash handles** — a `case` whose last item omits `;;` before `esac`
+(POSIX 2.9.4.3 makes it optional; rush requires it — /etc/profile's append_path) and
+backslash-newline line continuation (POSIX 2.2.1 — unsupported: misparses an export list in
+locale.sh, and after `&&` it crashes with IndexError instead of a diagnostic, gawk.sh). Filed
+as rush-x27 and rush-v9t, with rush-9q8 to re-audit the whole profile.d corpus once they land.
+Real-world scripts are a fuzz corpus the differential suite doesn't reach.

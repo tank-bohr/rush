@@ -4,6 +4,7 @@
 require 'etc'
 require 'tempfile'
 require_relative 'system_calls/file_tests'
+require_relative 'system_calls/process_identity'
 require_relative 'system_calls/resource_limits'
 
 module Rush
@@ -12,6 +13,7 @@ module Rush
   # error branch without touching the real OS. Grows one wrapper per slice.
   class SystemCalls
     include FileTests
+    include ProcessIdentity
     include ResourceLimits
 
     # Run argv as an external program. The [cmd, argv0] form forbids the shell
@@ -28,14 +30,6 @@ module Rush
     # form forbids the shell path, like #spawn. Returns only if the exec fails.
     def exec(env, argv, options)
       Process.exec(env, [argv.first, argv.first], *argv.drop(1), options)
-    end
-
-    def pid
-      Process.pid
-    end
-
-    def ppid
-      Process.ppid
     end
 
     # Accumulated CPU times for the `times` builtin: a Process::Tms with utime /
@@ -169,12 +163,6 @@ module Rush
 
     def stderr_tty?
       stderr.tty?
-    end
-
-    # Whether the shell runs with root privileges: picks the default PS1
-    # ('# ' instead of '$ '), as POSIX permits for privileged users.
-    def privileged?
-      Process.euid.zero?
     end
 
     # Home directory of a named user for ~user tilde expansion, or nil if there

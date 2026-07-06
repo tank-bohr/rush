@@ -146,6 +146,26 @@ RSpec.describe Rush::Invocation do
     end
   end
 
+  describe 'login shells' do
+    it 'is not a login shell by default' do
+      expect(invocation(['-c', ':']).login?).to be(false)
+    end
+
+    it 'is a login shell under -l' do
+      expect(invocation(['-l', '-c', ':']).login?).to be(true)
+    end
+
+    it 'is a login shell when the program name begins with -' do
+      inv = invocation(['-c', ':'], system: FakeSystemCalls.new(program_name: '-rush'))
+      expect(inv.login?).to be(true)
+    end
+
+    it 'lets +l override a login program name' do
+      inv = invocation(['+l', '-c', ':'], system: FakeSystemCalls.new(program_name: '-rush'))
+      expect(inv.login?).to be(false)
+    end
+  end
+
   describe '#shell_flags implicit flags' do
     it 'marks a stdin source with s and an interactive session with i' do
       inv = invocation(['-i'])

@@ -102,6 +102,27 @@ RSpec.describe Rush::CLI do
     expect(system.stderr.string).to match(/\Arush: cannot open missing\.sh/)
   end
 
+  it 'runs /etc/profile before the main input under -l' do
+    system = FakeSystemCalls.new
+    system.provide_file('/etc/profile', "echo etc\n")
+    expect(run(['-l', '-c', 'echo main'], system)).to eq(0)
+    expect(system.stdout.string).to eq("etc\nmain\n")
+  end
+
+  it 'treats a leading-dash program name as a login shell' do
+    system = FakeSystemCalls.new(program_name: '-rush')
+    system.provide_file('/etc/profile', "echo etc\n")
+    run(['-c', 'echo main'], system)
+    expect(system.stdout.string).to eq("etc\nmain\n")
+  end
+
+  it 'aborts a batch login shell on a profile syntax error, like dash' do
+    system = FakeSystemCalls.new
+    system.provide_file('/etc/profile', "bad )\n")
+    expect(run(['-l', '-c', 'echo never'], system)).to eq(2)
+    expect(system.stdout.string).to eq('')
+  end
+
   it 'reports parse errors on stderr and returns 2' do
     system = FakeSystemCalls.new
     allow(Rush::Parser).to receive(:new).and_raise(Rush::ParseError, 'boom')

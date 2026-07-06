@@ -53,6 +53,11 @@ module Rush
 
     def interactive?: () -> bool
 
+    # A login shell: -l, or invoked with a leading '-' in the program name
+    # (how login(1) execs a shell). dash accepts -l the same way; POSIX leaves
+    # login files unspecified, so the oracle decides.
+    def login?: () -> bool
+
     def name: () -> String
 
     def positionals: () -> Array[String]
@@ -70,6 +75,8 @@ module Rush
     def build_input: () -> (CommandInput | ScriptInput | StdinInput)
 
     def shell_state: () -> ShellState
+
+    def startup: () -> Startup
 
     # POSIX sh: with no -i, interactive only when reading stdin implicitly on a
     # terminal — no operands, and stdin and stderr both ttys. (-c with no

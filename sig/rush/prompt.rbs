@@ -1,40 +1,12 @@
 module Rush
   # The interactive prompt strings (POSIX 2.5.3): PS1 and PS2 are re-read from
   # the shell variables at every prompt — so assignments take effect
-  # mid-session — and subjected to parameter expansion ONLY: $name and ${...}
-  # forms expand, while command substitution, arithmetic, tilde, quoting and
-  # backslashes all stay literal. Defaults: '$ ' ('# ' for a privileged shell)
-  # and '> '. A malformed value (unterminated ${, a failing ${x?} form) falls
-  # back to the raw string: a prompt must never break the session.
+  # mid-session — and subjected to parameter expansion ONLY (via ParamText).
+  # Defaults: '$ ' ('# ' for a privileged shell) and '> '. A malformed value
+  # (unterminated ${, a failing ${x?} form) falls back to the raw string: a
+  # prompt must never break the session.
   class Prompt
     extend T::Sig
-
-    # Scans a prompt value into literal and parameter segments: $name and
-    # ${...} become ParamSegments via the shared ParamScanner; any other
-    # character is literal text.
-    class Text
-      extend T::Sig
-
-      @scanner: StringScanner
-
-      @segments: Array[AST::WordSegment[untyped]]
-
-      @literal: String
-
-      def initialize: (String text) -> void
-
-      def word: () -> AST::Word
-
-      private
-
-      def step: () -> void
-
-      def dollar: () -> void
-
-      def push: (AST::WordSegment[untyped] segment) -> void
-
-      def flush: () -> void
-    end
 
     @executor: Executor
 

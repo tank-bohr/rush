@@ -1,0 +1,30 @@
+module Rush
+  # A runtime string subjected to parameter expansion ONLY — the treatment
+  # POSIX gives PS1/PS2 prompts and the ENV pathname: $name and ${...} become
+  # ParamSegments via the shared ParamScanner; any other character — including
+  # command substitution, backticks and backslashes — is literal text. #word
+  # yields the segments for Expansion::Pipeline#expand_value.
+  class ParamText
+    extend T::Sig
+
+    @scanner: StringScanner
+
+    @segments: Array[AST::WordSegment[untyped]]
+
+    @literal: String
+
+    def initialize: (String text) -> void
+
+    def word: () -> AST::Word
+
+    private
+
+    def step: () -> void
+
+    def dollar: () -> void
+
+    def push: (AST::WordSegment[untyped] segment) -> void
+
+    def flush: () -> void
+  end
+end

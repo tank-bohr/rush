@@ -66,6 +66,15 @@ RSpec.describe Rush::Repl do
     expect(out).to eq("[2]\n[2]\n")
   end
 
+  it 'reports a broken startup file and still serves the session' do
+    system = FakeSystemCalls.new(stdin: "echo main [$?]\n")
+    system.provide_file('/etc/profile', "bad )\n")
+    startup = Rush::Startup.new(login: true, interactive: true)
+    code = described_class.new(system, startup: startup).run
+    expect([system.stdout.string, system.stderr.string.include?('syntax'), code])
+      .to eq(["main [2]\n", true, 0])
+  end
+
   it 'fires the EXIT trap when the session ends at end of input' do
     out, = session("trap 'echo bye' EXIT\necho body\n")
     expect(out).to eq("body\nbye\n")

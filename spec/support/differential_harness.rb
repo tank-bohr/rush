@@ -29,14 +29,15 @@ module DifferentialHarness
   end
 
   # Raw invocation forms (no implied -c): option flags, -s/-i, script files.
-  def rush_argv(args, input = nil)
-    out, _err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', *args,
+  # `env` merges extra environment variables into both shells (e.g. ENV, HOME).
+  def rush_argv(args, input = nil, env = {})
+    out, _err, status = Open3.capture3(env, RbConfig.ruby, '-Ilib', 'exe/rush', *args,
                                        chdir: project_root, stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
 
-  def dash_argv(args, input = nil)
-    out, _err, status = Open3.capture3('dash', *args, stdin_data: input.to_s, close_others: true)
+  def dash_argv(args, input = nil, env = {})
+    out, _err, status = Open3.capture3(env, 'dash', *args, stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
 end

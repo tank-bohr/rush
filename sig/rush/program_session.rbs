@@ -11,7 +11,7 @@ module Rush
 
     @reader: ProgramReader
 
-    def initialize: (SystemCalls system, ?state: ShellState) -> void
+    def initialize: (SystemCalls system, ?state: ShellState, ?startup: Startup?) -> void
 
     def run: () -> Integer
 
@@ -24,6 +24,11 @@ module Rush
     attr_reader reader: ProgramReader
 
     def session: () -> Integer
+
+    # Login/ENV startup files run before the main input, inside the session's
+    # error policy: batch subclasses let fatal errors abort (Source#run), the
+    # REPL recovers (its override).
+    def run_startup: () -> void
 
     def run_loop: () -> void
 

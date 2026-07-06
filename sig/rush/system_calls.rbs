@@ -4,6 +4,7 @@ module Rush
   # error branch without touching the real OS. Grows one wrapper per slice.
   class SystemCalls
     include FileTests
+    include ProcessIdentity
 
     # Run argv as an external program. The [cmd, argv0] form forbids the shell
     # path even for a single-word command, so `spawn` never re-interprets words.
@@ -14,10 +15,6 @@ module Rush
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]
     # form forbids the shell path, like #spawn. Returns only if the exec fails.
     def exec: (Hash[String, String] env, Array[String] argv, untyped options) -> untyped
-
-    def pid: () -> Integer
-
-    def ppid: () -> Integer
 
     # Accumulated CPU times for the `times` builtin: a Process::Tms with utime /
     # stime for the shell and cutime / cstime for its children. Non-deterministic,
@@ -102,10 +99,6 @@ module Rush
     def tty?: () -> bool
 
     def stderr_tty?: () -> bool
-
-    # Whether the shell runs with root privileges: picks the default PS1
-    # ('# ' instead of '$ '), as POSIX permits for privileged users.
-    def privileged?: () -> bool
 
     # Home directory of a named user for ~user tilde expansion, or nil if there
     # is no such user.

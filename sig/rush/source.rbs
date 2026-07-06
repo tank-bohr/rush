@@ -10,7 +10,7 @@ module Rush
 
     @source_lines: Enumerator[String, void]?
 
-    def initialize: (Invocation invocation, SystemCalls system, state: ShellState) -> void
+    def initialize: (Invocation invocation, SystemCalls system, state: ShellState, ?startup: Startup?) -> void
 
     def run: () -> Integer
 

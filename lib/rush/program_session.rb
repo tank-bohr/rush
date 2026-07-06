@@ -8,9 +8,10 @@ module Rush
   class ProgramSession
     extend T::Sig
 
-    sig { params(system: SystemCalls, state: ShellState).void }
-    def initialize(system, state: ShellState.new(pids: ShellProcessIds.for(system)))
+    sig { params(system: SystemCalls, state: ShellState, startup: T.nilable(Startup)).void }
+    def initialize(system, state: ShellState.new(pids: ShellProcessIds.for(system)), startup: nil)
       @system = system
+      @startup = startup
       @executor = Executor.new(system: system, state: state)
       @reader = ProgramReader.new(aliases: executor.state.aliases) { |continuation| next_line(continuation) }
     end
@@ -35,8 +36,17 @@ module Rush
 
     sig { returns(Integer) }
     def session
+      run_startup
       run_loop
       executor.exitstatus
+    end
+
+    # Login/ENV startup files run before the main input, inside the session's
+    # error policy: batch subclasses let fatal errors abort (Source#run), the
+    # REPL recovers (its override).
+    sig { void }
+    def run_startup
+      @startup&.run(executor)
     end
 
     sig { void }

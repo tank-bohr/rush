@@ -1,0 +1,38 @@
+module Rush
+  # The startup files a session runs before its main input, per the dash
+  # oracle (POSIX defines ENV and leaves login files unspecified): a login
+  # shell runs /etc/profile then $HOME/.profile; an interactive shell then
+  # runs the file named by ENV, its value subjected to parameter expansion
+  # only. Missing or unreadable files are skipped silently; errors inside a
+  # file follow the session's normal policy (a batch shell aborts, an
+  # interactive one reports and carries on); `return` is bounded to its file
+  # like a dot script, leaving its code in $?.
+  class Startup
+    extend T::Sig
+
+    PROFILE: String
+
+    @login: bool
+
+    @interactive: bool
+
+    def initialize: (login: bool, interactive: bool) -> void
+
+    def run: (Executor executor) -> void
+
+    private
+
+    def paths: (Executor executor) -> Array[String]
+
+    def home_profile: (Executor executor) -> String?
+
+    # The ENV pathname, parameter-expanded (POSIX); nil when unset or empty.
+    def env_file: (Executor executor) -> String?
+
+    def source: (Executor executor, String path) -> void
+
+    def read: (Executor executor, String path) -> String?
+
+    def run_file: (Executor executor, String text) -> void
+  end
+end
