@@ -4,6 +4,7 @@
 require 'etc'
 require 'tempfile'
 require_relative 'system_calls/file_tests'
+require_relative 'system_calls/resource_limits'
 
 module Rush
   # The sole impure class: every syscall rush makes is a thin wrapper here, so
@@ -11,6 +12,7 @@ module Rush
   # error branch without touching the real OS. Grows one wrapper per slice.
   class SystemCalls
     include FileTests
+    include ResourceLimits
 
     # Run argv as an external program. The [cmd, argv0] form forbids the shell
     # path even for a single-word command, so `spawn` never re-interprets words.

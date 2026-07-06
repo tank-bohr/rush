@@ -1,0 +1,32 @@
+module Rush
+  module Builtins
+    # `umask [-S] [mode]` — print or set the file creation mask. Octal operands
+    # set the mask directly; symbolic operands edit the allowed permission bits
+    # (the complement of the mask), as shown by `umask -S`.
+    class Umask < Base
+      extend T::Sig
+
+      def call: () -> Status
+
+      private
+
+      def current_mask: () -> Integer
+
+      def change_mask: (String mode) -> Status
+
+      def invalid_option?: () -> bool
+
+      def invalid_option_operand?: (String arg) -> bool
+
+      def parse_operands: () -> [bool, String?]
+
+      def display_symbolic: () -> Status
+
+      def display_octal: () -> Status
+
+      def illegal: (String mode) -> Status
+
+      def illegal_option: (String? option) -> Status
+    end
+  end
+end

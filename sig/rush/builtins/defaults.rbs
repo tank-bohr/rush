@@ -4,7 +4,7 @@ module Rush
     extend T::Sig
 
     # The builtins available in Slice 1. Later slices extend this table.
-    DEFAULTS: { ":" => untyped, "true" => untyped, "false" => untyped, "echo" => untyped, "exit" => untyped, "pwd" => untyped, "cd" => untyped, "break" => untyped, "continue" => untyped, "return" => untyped, "test" => untyped, "[" => untyped, "set" => untyped, "shift" => untyped, "export" => untyped, "unset" => untyped, "eval" => untyped, "getopts" => untyped, "read" => untyped, "printf" => untyped, "." => untyped, "readonly" => untyped, "exec" => untyped, "local" => untyped, "type" => untyped, "command" => untyped, "trap" => untyped, "kill" => untyped, "alias" => untyped, "unalias" => untyped, "hash" => untyped, "times" => untyped }
+    DEFAULTS: { ":" => untyped, "true" => untyped, "false" => untyped, "echo" => untyped, "exit" => untyped, "pwd" => untyped, "cd" => untyped, "break" => untyped, "continue" => untyped, "return" => untyped, "test" => untyped, "[" => untyped, "set" => untyped, "shift" => untyped, "export" => untyped, "unset" => untyped, "eval" => untyped, "getopts" => untyped, "read" => untyped, "printf" => untyped, "." => untyped, "readonly" => untyped, "exec" => untyped, "local" => untyped, "type" => untyped, "command" => untyped, "trap" => untyped, "kill" => untyped, "alias" => untyped, "unalias" => untyped, "hash" => untyped, "times" => untyped, "umask" => untyped, "ulimit" => untyped }
 
     def self.default_registry: () -> untyped
   end

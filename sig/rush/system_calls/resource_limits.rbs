@@ -1,0 +1,19 @@
+module Rush
+  class SystemCalls
+    # Resource-limit wrappers for the `ulimit` builtin. The mapping lives outside
+    # SystemCalls proper so the impure syscall port stays small as it grows.
+    module ResourceLimits
+      RLIMITS: Hash[Symbol, Integer?]
+
+      def current_umask: () -> Integer
+
+      def change_umask: (Integer mask) -> Integer
+
+      def infinity_limit: () -> Integer
+
+      def getrlimit: (Symbol resource) -> [Integer, Integer]
+
+      def setrlimit: (Symbol resource, Integer soft, Integer hard) -> untyped
+    end
+  end
+end

@@ -1,0 +1,56 @@
+module Rush
+  # Parses and formats `umask` modes. Symbolic operands describe the permissions
+  # that remain allowed (the complement of the creation mask), matching dash and
+  # POSIX `umask -S` output.
+  class UmaskMode
+    extend T::Sig
+
+    CLASSES: Hash[String, Integer]
+    PERMISSIONS: Hash[String, Integer]
+    WHO: Array[String]
+    OPERATORS: Hash[String, Symbol]
+    ALL: Integer
+
+    @allowed: Integer
+
+    def self.format_octal: (Integer mask) -> String
+
+    def self.format_symbolic: (Integer mask) -> String
+
+    def self.parse: (String text, Integer current) -> Integer?
+
+    def self.letters: (Integer bits) -> String
+
+    def self.parse_octal: (String text) -> Integer
+
+    def initialize: (Integer current) -> void
+
+    def parse_symbolic: (String text) -> Integer?
+
+    private
+
+    def apply_clause: (String clause) -> void
+
+    def split_who: (String clause) -> [Array[String], String]
+
+    def expand_who: (String name) -> Array[String]
+
+    def apply: (String operator, Integer target, Integer bits) -> void
+
+    def assign_allowed: (Integer target, Integer bits) -> void
+
+    def add_allowed: (Integer _target, Integer bits) -> void
+
+    def remove_allowed: (Integer _target, Integer bits) -> void
+
+    def target_mask: (Array[String] who) -> Integer
+
+    def permission_bits: (String text, Array[String] who) -> Integer
+
+    def bits_for: (String char, Array[String] who) -> Integer
+
+    def permission_value: (String char, Array[String] who) -> Integer
+
+    def copy_value: (String char, Array[String] who) -> Integer
+  end
+end

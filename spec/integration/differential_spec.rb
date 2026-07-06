@@ -461,6 +461,13 @@ RSpec.describe 'rush vs dash (differential)' do
     'set a b c; shift 1 2; echo "[$*]"',
     'set a b c; shift 1abc; echo after',
     '( shift ); echo sub=$?',
+    'umask; umask -S',
+    'umask 077; umask; umask u=rwx,g=rx,o=rx; umask',
+    'umask go=; umask; echo rc=$?',
+    'ulimit; ulimit -f; ulimit -n; ulimit -Hn',
+    'ulimit -a',
+    'ulimit -Sn 64; echo "n=$(ulimit -Sn):$(ulimit -Hn)"',
+    'ulimit -f 2; echo "f=$(ulimit -f)"',
     # hash is a regular builtin: an empty cache lists nothing, -r clears, a builtin
     # name and a slash path are no-ops, an unknown name errors (status 1) but does
     # not abort. (PATH-resolving cases need a controlled PATH; covered separately.)

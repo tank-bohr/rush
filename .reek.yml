@@ -36,11 +36,15 @@ detectors:
       - Rush::Redirection::HereDocRedirect#apply
 
   # Number's left/right are a binary op's operands; CommandRunner's (argv, io) is
-  # part of the (executor, argv, io) builtin call convention.
+  # part of the (executor, argv, io) builtin call convention. The POSIX umask and
+  # ulimit mini-parsers pass stable (char/who) and (resource/target) pairs that
+  # are clearer than wrapping every tiny transition in another object.
   DataClump:
     exclude:
       - Rush::Expansion::Arithmetic::Number
       - Rush::CommandRunner
+      - Rush::UmaskMode
+      - Rush::Builtins::Ulimit
 
   # The argument is the datum, not a behaviour flag (Number#bool, Parser#accept?);
   # a coalesce (trap_signal); one factor in a compound predicate
@@ -55,6 +59,15 @@ detectors:
       - Rush::Options#set
       - Rush::Builtins::Printf#report
       - Rush::Repl#prompt_line
+      - Rush::Builtins::Ulimit#limit_text
+
+  # Tiny parser/formatter helpers naturally talk mostly about the value they are
+  # classifying; extracting them would obscure the POSIX-mode mapping.
+  FeatureEnvy:
+    exclude:
+      - Rush::Builtins::Ulimit#format_limit
+      - Rush::Builtins::Ulimit#run_request
+      - Rush::UmaskMode#split_who
 
   # Constructor config consulted in one private branch, not a per-call switch.
   BooleanParameter:

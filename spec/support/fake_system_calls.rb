@@ -5,7 +5,7 @@
 # process-spawning paths are exercised separately with doubles. Nothing here
 # touches the real OS.
 class FakeSystemCalls
-  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed
+  attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed, :limits_set
   attr_accessor :wait_status
 
   UNTRAPPABLE = %w[KILL STOP].freeze
@@ -50,6 +50,9 @@ class FakeSystemCalls
     @contents = {}
     @wait_status = ChildStatus.new(0)
     @inherited_fds = {}
+    @umask = 0o022
+    @limits = default_limits
+    @limits_set = []
   end
 
   def inherit_fd(fd, stream)
@@ -176,6 +179,27 @@ class FakeSystemCalls
     ProcessTimes.new(0.0, 0.0, 0.0, 0.0)
   end
 
+  def current_umask
+    @umask
+  end
+
+  def change_umask(mask)
+    @umask = mask
+  end
+
+  def infinity_limit
+    1 << 62
+  end
+
+  def getrlimit(resource)
+    @limits.fetch(resource)
+  end
+
+  def setrlimit(resource, soft, hard)
+    @limits[resource] = [soft, hard]
+    @limits_set << [resource, soft, hard]
+  end
+
   # Records an exec instead of replacing the process, so specs can assert it.
   attr_reader :execed
 
@@ -208,6 +232,16 @@ class FakeSystemCalls
   end
 
   private
+
+  def default_limits
+    {
+      cpu: [infinity_limit, infinity_limit], fsize: [infinity_limit, infinity_limit],
+      data: [infinity_limit, infinity_limit], stack: [8192 * 1024, infinity_limit],
+      core: [infinity_limit, infinity_limit], rss: [infinity_limit, infinity_limit],
+      memlock: [8192 * 1024, 8192 * 1024], nproc: [4096, 4096], nofile: [1024, 4096],
+      as: [infinity_limit, infinity_limit], locks: [infinity_limit, infinity_limit], rtprio: [0, 0]
+    }
+  end
 
   def node(path, key)
     attrs = @nodes.fetch(path, {})

@@ -1,0 +1,117 @@
+module Rush
+  module Builtins
+    class UlimitResource < ::Data
+      attr_reader flag: String
+      attr_reader label: String
+      attr_reader resource: Symbol
+      attr_reader scale: Integer
+
+      def self.new: (String flag, String label, Symbol resource, Integer scale) -> UlimitResource
+    end
+
+    class UlimitRequest < ::Data
+      attr_reader all: bool
+      attr_reader resource: UlimitResource
+      attr_reader target: Symbol
+      attr_reader explicit_target: bool
+      attr_reader value: String?
+
+      def self.new: (bool all, UlimitResource resource, Symbol target, bool explicit_target, String? value) -> UlimitRequest
+    end
+
+    class UlimitParseError < ::Data
+      attr_reader kind: Symbol
+      attr_reader detail: String?
+
+      def self.new: (Symbol kind, String? detail) -> UlimitParseError
+    end
+
+    ULIMIT_RESOURCE_LIST: Array[UlimitResource]
+    ULIMIT_RESOURCES: ::Hash[String, UlimitResource]
+    ULIMIT_DEFAULT_RESOURCE: UlimitResource
+    ULIMIT_TARGETS: ::Hash[String, Symbol]
+
+    # Mutable parser for ulimit's compact option clusters (`-Hn`, `-Sn`, `-a`).
+    # It returns either a UlimitRequest or a small parse-error value that the
+    # builtin turns into the user-facing diagnostic.
+    class UlimitRequestBuilder
+      extend T::Sig
+
+      @resources: ::Hash[String, UlimitResource]
+      @state: ::Hash[Symbol, untyped]
+
+      def initialize: (::Hash[String, UlimitResource] resources, UlimitResource default) -> void
+
+      def call: (Array[String] args) -> (UlimitRequest | UlimitParseError)
+
+      private
+
+      def extract_value: (Array[String] args) -> String?
+
+      def parse_options: (Array[String] args, String? value) -> (UlimitRequest | UlimitParseError)
+
+      def apply: (String arg) -> UlimitParseError?
+
+      def apply_flags: (String flags) -> UlimitParseError?
+
+      def known_flag?: (String flag) -> bool
+
+      def apply_or_error: (String flag) -> UlimitParseError?
+
+      def return_error: (String flag) -> UlimitParseError
+
+      def apply_flag: (String flag) -> void
+
+      def apply_target: (String flag) -> void
+
+      def request: (String? value) -> UlimitRequest
+
+      def error: (Symbol kind, ?String? detail) -> UlimitParseError
+    end
+
+    # `ulimit [-H|-S] [-a|-resource] [limit]` — query or set process resource
+    # limits. Values are printed in dash/POSIX units (blocks or kbytes for byte
+    # resources); `unlimited` maps to the platform's infinity value.
+    class Ulimit < Base
+      extend T::Sig
+
+      def call: () -> Status
+
+      private
+
+      def parse_request: () -> (UlimitRequest | UlimitParseError)
+
+      def parse_error: (UlimitParseError error) -> Status
+
+      def run_request: (UlimitRequest request) -> Status
+
+      def list_all: (UlimitRequest request) -> Status
+
+      def print_list_entry: (UlimitResource resource, Symbol target) -> void
+
+      def change_limit: (UlimitRequest request) -> Status
+
+      def apply_limit: (UlimitRequest request, Integer value) -> Status
+
+      def limits_for: (UlimitRequest request, Integer value) -> [Integer, Integer]
+
+      def limits_for_set: (UlimitRequest request, Integer value, Integer soft, Integer hard) -> [Integer, Integer]
+
+      def print_limit: (UlimitResource resource, Symbol target) -> Status
+
+      def limit_text: (UlimitResource resource, Symbol target) -> String
+
+      def parse_value: (String text, UlimitResource resource) -> (Integer | Status)
+
+      def format_limit: (Integer value, UlimitResource resource) -> String
+
+      def limit_error: () -> Status
+
+      def too_many: () -> Status
+
+      def illegal_option: (String option) -> Status
+
+      def illegal_number: (String text) -> Status
+    end
+  end
+end
