@@ -29,6 +29,8 @@ module Rush
     # flushes+closes them after the assignments so a later command sees the data.
     def run_bare: () -> Status
 
+    def persist_assignments: (IoTable io) -> Status
+
     # POSIX command search: special builtin, then function (so a function may
     # override a regular builtin), then regular builtin, then PATH. A redirect
     # error leaves a regular command unrun with status 2 (RedirectError reaches
@@ -53,6 +55,6 @@ module Rush
     # with_io only when a redirect actually layered a new table over the base.
     def run_function: (Array[String] argv, IoTable io) -> Status
 
-    def command_env: () -> Hash[String, String]
+    def command_env: (IoTable io) -> Hash[String, String]
   end
 end

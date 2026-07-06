@@ -137,6 +137,23 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
     end
   end
 
+  def assignment_redirect_snippets
+    ['echo $(echo err >&2) 2>f; printf "file=%s\n" "$(cat f 2>/dev/null)"',
+     'X=$(echo err >&2) /bin/true 2>f; cat f; echo "x=$X"',
+     'X=$(echo err >&2) 2>f; cat f; echo "x=$X"',
+     '2>f X=$(echo err >&2); cat f; echo "x=$X"']
+  end
+
+  it 'applies same-command redirections to assignment command substitutions like dash' do
+    Dir.mktmpdir do |dir|
+      assignment_redirect_snippets.each.with_index(1) do |snippet, index|
+        id = format('assignment-redirect-%03d', index)
+        source = "cd #{dir}; #{snippet}"
+        expect(rush(source)).to eq(dash(source)), "#{id} diverged on: #{snippet}"
+      end
+    end
+  end
+
   # Lowercase-only names keep byte-order sorting (rush) and LC_COLLATE sorting
   # (dash) in agreement, so these compare without forcing a locale.
   def glob_patterns

@@ -41,7 +41,12 @@ module Rush
     # flushes+closes them after the assignments so a later command sees the data.
     sig { returns(Status) }
     def run_bare
-      @executor.with_redirects(@command.redirects, @base_io) do
+      @executor.with_redirects(@command.redirects, @base_io) { |io| persist_assignments(io) }
+    end
+
+    sig { params(io: IoTable).returns(Status) }
+    def persist_assignments(io)
+      @executor.with_io(io) do
         @assignments.persist_to(@executor.state.variables)
         @executor.cmd_sub_status
       end
@@ -68,7 +73,7 @@ module Rush
       return run_function(argv, io) if @executor.state.functions.key?(name)
       return builtin(argv, io) if @executor.builtins.key?(name)
 
-      External.new(@executor, argv, io, command_env).call
+      External.new(@executor, argv, io, command_env(io)).call
     end
 
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
@@ -97,9 +102,9 @@ module Rush
       io.equal?(@executor.io) ? run.call : @executor.with_io(io, &run)
     end
 
-    sig { returns(T::Hash[String, String]) }
-    def command_env
-      @assignments.environment_for(@executor.state.variables)
+    sig { params(io: IoTable).returns(T::Hash[String, String]) }
+    def command_env(io)
+      @executor.with_io(io) { @assignments.environment_for(@executor.state.variables) }
     end
   end
 end

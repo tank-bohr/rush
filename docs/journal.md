@@ -659,3 +659,16 @@ command or to a no-command assignment/redirect see same-command redirections (`X
 2>f` and `X=$(echo err >&2) 2>f` write `err` to `f`). rush's stored order is now available for future
 POSIX 2.9.1 execution fixes instead of being lost at parse time; the concrete redirection/assignment
 substitution fix is tracked as `rush-n5b.20`.
+
+### Assignment command substitutions see same-command redirections
+rush-n5b.20 fixed the first semantics found while deciding simple-command source order. POSIX/dash
+split simple-command expansion into phases: command words are expanded before command redirections, so
+`echo $(echo err >&2) 2>f` leaves `f` empty; assignment RHS expansion happens after those redirections
+for both an external command and a no-command assignment/redirect, so
+`X=$(echo err >&2) /bin/true 2>f` and `X=$(echo err >&2) 2>f` write `err` to `f`. The bug was not the
+parser order anymore — it was
+that `RedirectScope` yielded the redirected `IoTable` without rebinding `Executor#io`, and
+`CommandAssignments` expands through `executor.expander`, whose command substitutions consult
+`executor.io`. Fix: keep argv expansion before `with_redirects`, but wrap only assignment persistence
+/ external environment construction in `executor.with_io(io)`. That threads redirects into assignment
+substitutions without making command-word substitutions observe them.
