@@ -81,6 +81,10 @@ class FakeSystemCalls
     4242
   end
 
+  def ppid
+    3131
+  end
+
   # Records the signal sent; a pid listed in dead_pids raises like a real kill
   # to a missing process, so the builtin's failure path is exercised.
   def kill(signal, pid)

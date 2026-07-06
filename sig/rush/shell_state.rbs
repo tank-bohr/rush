@@ -1,4 +1,16 @@
 module Rush
+  # Original shell and parent process ids used for $$ and PPID.
+  class ShellProcessIds < ::Data
+    extend T::Sig
+
+    attr_reader shell: Integer
+    attr_reader parent: Integer
+
+    def self.new: (Integer shell, Integer parent) -> ShellProcessIds
+
+    def self.for: (SystemCalls system) -> ShellProcessIds
+  end
+
   # The mutable shell state threaded through execution: shell variables,
   # the last command's status ($?, the one field with behaviour here), the shell
   # name ($0), and the session sub-objects it bundles for the rest of the
@@ -9,6 +21,7 @@ module Rush
 
     @name: String
     @shell_pid: Integer
+    @parent_pid: Integer
     @variables: ShellVariables
     @traps: TrapTable
     @last_status: Status
@@ -29,6 +42,7 @@ module Rush
     attr_reader command_hash: Hash[String, String]
     attr_reader name: String
     attr_reader shell_pid: Integer
+    attr_reader parent_pid: Integer
     attr_reader variables: ShellVariables
     attr_reader loops: LoopNesting
     attr_reader options: Options
@@ -38,7 +52,7 @@ module Rush
     attr_reader getopts: GetoptsState
     attr_reader parameters: ShellParameters
 
-    def initialize: (?environment: Environment, ?name: String, ?positional: Array[String], ?shell_pid: Integer) -> void
+    def initialize: (?environment: Environment, ?name: String, ?positional: Array[String], ?pids: ShellProcessIds) -> void
 
     def with_function_frame: [T] (Array[String] args) { () -> T } -> T
 

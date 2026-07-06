@@ -34,6 +34,10 @@ module Rush
       Process.pid
     end
 
+    def ppid
+      Process.ppid
+    end
+
     # Accumulated CPU times for the `times` builtin: a Process::Tms with utime /
     # stime for the shell and cutime / cstime for its children. Non-deterministic,
     # so the builtin's output is verified by format rather than differentially.

@@ -88,7 +88,7 @@ module Rush
 
     sig { params(system: SystemCalls).returns(ShellState) }
     def shell_state(system)
-      ShellState.new(name: @config.name, positional: @config.positionals, shell_pid: system.pid)
+      ShellState.new(name: @config.name, positional: @config.positionals, pids: ShellProcessIds.for(system))
     end
 
     sig { returns(String) }

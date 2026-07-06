@@ -3,7 +3,7 @@
 RSpec.describe Rush::ShellParameters do
   let(:state) do
     Rush::ShellState.new(environment: Rush::Environment.new('V' => 'v'), name: 'sh', positional: %w[a b c],
-                         shell_pid: 4242)
+                         pids: Rush::ShellProcessIds.new(4242, 3131))
   end
   let(:parameters) { state.parameters }
 

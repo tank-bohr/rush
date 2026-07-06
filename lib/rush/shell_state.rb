@@ -2,6 +2,16 @@
 # frozen_string_literal: true
 
 module Rush
+  # Original shell and parent process ids used for $$ and PPID.
+  ShellProcessIds = Data.define(:shell, :parent) do
+    extend T::Sig
+
+    sig { params(system: SystemCalls).returns(ShellProcessIds) }
+    def self.for(system)
+      new(system.pid, system.ppid)
+    end
+  end
+
   # The mutable shell state threaded through execution: shell variables,
   # the last command's status ($?, the one field with behaviour here), the shell
   # name ($0), and the session sub-objects it bundles for the rest of the
@@ -27,6 +37,9 @@ module Rush
 
     sig { returns(Integer) }
     attr_reader :shell_pid
+
+    sig { returns(Integer) }
+    attr_reader :parent_pid
 
     sig { returns(ShellVariables) }
     attr_reader :variables
@@ -54,11 +67,13 @@ module Rush
 
     # ShellState wires every shell sub-table; helper extraction would hide state.
     # rubocop:disable Metrics/AbcSize
-    sig { params(environment: Environment, name: String, positional: T::Array[String], shell_pid: Integer).void }
-    def initialize(environment: Environment.new, name: 'rush', positional: [], shell_pid: 0)
+    sig { params(environment: Environment, name: String, positional: T::Array[String], pids: ShellProcessIds).void }
+    def initialize(environment: Environment.new, name: 'rush', positional: [], pids: ShellProcessIds.new(0, 0))
       @name = name
-      @shell_pid = shell_pid
+      @shell_pid = pids.shell
+      @parent_pid = pids.parent
       @variables = ShellVariables.new(environment)
+      @variables.assign('PPID', @parent_pid.to_s)
       @traps = TrapTable.new
       @last_status = Status.success
       @last_background_pid = T.let(nil, T.nilable(Integer))

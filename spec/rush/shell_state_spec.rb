@@ -1,19 +1,20 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::ShellState do
-  it 'defaults to fresh variables, a success status and the name rush' do
+  it 'defaults to fresh variables, a success status, process ids and the name rush' do
     state = described_class.new
-    expect([state.name, state.shell_pid]).to eq(['rush', 0])
+    expect([state.name, state.shell_pid, state.parent_pid, state.variables.get('PPID')]).to eq(['rush', 0, 0, '0'])
     expect(state.last_status).to be_success
     expect(state.variables).to be_a(Rush::ShellVariables)
     expect(state.parameters).to be_a(Rush::ShellParameters)
   end
 
-  it 'accepts an injected environment, name and shell pid' do
+  it 'accepts an injected environment, name and process ids' do
     env = Rush::Environment.new('X' => '1')
-    state = described_class.new(environment: env, name: 'sh', shell_pid: 4242)
+    state = described_class.new(environment: env, name: 'sh', pids: Rush::ShellProcessIds.new(4242, 3131))
     expect(state.variables.get('X')).to eq('1')
-    expect([state.name, state.shell_pid]).to eq(['sh', 4242])
+    actual = [state.name, state.shell_pid, state.parent_pid, state.variables.get('PPID')]
+    expect(actual).to eq(['sh', 4242, 3131, '3131'])
   end
 
   it 'toggles and reports shell options' do

@@ -3,7 +3,10 @@
 RSpec.describe Rush::Expansion::Resolver do
   subject(:resolver) { described_class.new(executor) }
 
-  let(:state) { Rush::ShellState.new(environment: Rush::Environment.new('V' => 'v'), name: 'sh', shell_pid: 4242) }
+  let(:state) do
+    Rush::ShellState.new(environment: Rush::Environment.new('V' => 'v'), name: 'sh',
+                         pids: Rush::ShellProcessIds.new(4242, 3131))
+  end
   let(:executor) { instance_double(Rush::Executor, state: state) }
 
   before do
