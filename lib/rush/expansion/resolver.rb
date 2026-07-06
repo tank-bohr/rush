@@ -4,8 +4,8 @@
 module Rush
   module Expansion
     # Resolves a parameter name through ShellState's parameter namespace. The
-    # shell state owns variables, special parameters and positionals; the
-    # executor supplies process-specific data such as $$.
+    # shell state owns variables, special parameters and positionals, including
+    # the original shell pid exposed through $$.
     class Resolver
       extend T::Sig
 
@@ -16,8 +16,7 @@ module Rush
 
       sig { params(name: String).returns(T.nilable(String)) }
       def resolve(name)
-        pid = name == '$' ? @executor.system.pid : 0
-        @executor.state.parameters.resolve(name, pid: pid)
+        @executor.state.parameters.resolve(name)
       end
     end
   end

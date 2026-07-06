@@ -22,6 +22,8 @@ module Rush
 
     private
 
+    def run_body_status: () -> Status
+
     def resolve: (Error error) -> Status
 
     def report_fatal: (Error error) -> Status

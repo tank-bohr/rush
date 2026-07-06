@@ -42,13 +42,18 @@ module Rush
     sig { params(name: String, action: String).void }
     def set(name, action)
       @state.traps.set(name, action)
-      install_signal(name, action) unless name == Signals::EXIT
+      install_signal(name, action)
     end
 
     sig { params(name: String).void }
     def reset(name)
       @state.traps.clear(name)
-      install_signal(name, :default) unless name == Signals::EXIT
+      install_signal(name, :default)
+    end
+
+    sig { void }
+    def reset_caught_for_subshell
+      @state.traps.reset_caught.each { |name| install_signal(name, :default) }
     end
 
     private
@@ -85,6 +90,8 @@ module Rush
     # An untrappable signal (KILL/STOP) raises; keep the table entry like dash.
     sig { params(name: String, action: T.any(String, Symbol)).void }
     def install_signal(name, action)
+      return if name == Signals::EXIT
+
       @executor.system.trap_signal(name, disposition(action)) { fire_signal(name) }
     rescue ArgumentError, SystemCallError
       nil

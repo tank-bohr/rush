@@ -20,4 +20,12 @@ RSpec.describe Rush::TrapTable do
     traps.set('INT', 'c')
     expect(traps.listing).to eq([%w[EXIT b], %w[INT c], %w[TERM a]])
   end
+
+  it 'resets caught traps while preserving ignored traps for subshells' do
+    traps.set('EXIT', 'echo bye')
+    traps.set('TERM', 'echo term')
+    traps.set('INT', '')
+    expect(traps.reset_caught).to contain_exactly('EXIT', 'TERM')
+    expect(traps.listing).to eq([['INT', '']])
+  end
 end

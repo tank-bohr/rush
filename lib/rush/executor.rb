@@ -70,6 +70,11 @@ module Rush
       @trap_runner.run_exit_trap(code)
     end
 
+    sig { void }
+    def reset_caught_traps_for_subshell
+      @trap_runner.reset_caught_for_subshell
+    end
+
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
     sig { params(table: IoTable).void }

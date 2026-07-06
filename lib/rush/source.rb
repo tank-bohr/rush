@@ -31,7 +31,7 @@ module Rush
     sig { params(argv: T::Array[String], system: SystemCalls).void }
     def initialize(argv, system)
       @config = SourceConfig.for(argv, system)
-      super(system, state: shell_state)
+      super(system, state: shell_state(system))
     end
 
     sig { returns(Integer) }
@@ -86,9 +86,9 @@ module Rush
       executor.run_exit_trap(2)
     end
 
-    sig { returns(ShellState) }
-    def shell_state
-      ShellState.new(name: @config.name, positional: @config.positionals)
+    sig { params(system: SystemCalls).returns(ShellState) }
+    def shell_state(system)
+      ShellState.new(name: @config.name, positional: @config.positionals, shell_pid: system.pid)
     end
 
     sig { returns(String) }

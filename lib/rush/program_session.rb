@@ -9,7 +9,7 @@ module Rush
     extend T::Sig
 
     sig { params(system: SystemCalls, state: ShellState).void }
-    def initialize(system, state: ShellState.new)
+    def initialize(system, state: ShellState.new(shell_pid: system.pid))
       @system = system
       @executor = Executor.new(system: system, state: state)
       @reader = ProgramReader.new(aliases: executor.state.aliases) { |continuation| next_line(continuation) }

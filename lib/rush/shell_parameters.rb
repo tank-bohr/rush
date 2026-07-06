@@ -4,9 +4,8 @@
 module Rush
   # Resolves shell parameters from the namespaces a shell exposes: ordinary
   # variables, special parameters ($?, $#, $$, $0, $@/$*, $-, $!), and positional
-  # parameters ($1, $2, ...). Process-specific values, such as $$, are supplied
-  # per call so the namespace stays part of ShellState while SystemCalls remains
-  # outside it.
+  # parameters ($1, $2, ...). $$ is the original shell pid stored in ShellState,
+  # so forked subshells and command substitutions preserve it like POSIX shells.
   class ShellParameters
     extend T::Sig
 
@@ -15,9 +14,9 @@ module Rush
       @state = state
     end
 
-    sig { params(parameter: String, pid: Integer).returns(T.nilable(String)) }
-    def resolve(parameter, pid:)
-      return pid.to_s if parameter == '$'
+    sig { params(parameter: String).returns(T.nilable(String)) }
+    def resolve(parameter)
+      return @state.shell_pid.to_s if parameter == '$'
 
       special = special_parameters.fetch(parameter, nil)
       special ? special.call : ordinary_or_positional(parameter)

@@ -3,17 +3,17 @@
 RSpec.describe Rush::ShellState do
   it 'defaults to fresh variables, a success status and the name rush' do
     state = described_class.new
-    expect(state.name).to eq('rush')
+    expect([state.name, state.shell_pid]).to eq(['rush', 0])
     expect(state.last_status).to be_success
     expect(state.variables).to be_a(Rush::ShellVariables)
     expect(state.parameters).to be_a(Rush::ShellParameters)
   end
 
-  it 'accepts an injected environment and name' do
+  it 'accepts an injected environment, name and shell pid' do
     env = Rush::Environment.new('X' => '1')
-    state = described_class.new(environment: env, name: 'sh')
+    state = described_class.new(environment: env, name: 'sh', shell_pid: 4242)
     expect(state.variables.get('X')).to eq('1')
-    expect(state.name).to eq('sh')
+    expect([state.name, state.shell_pid]).to eq(['sh', 4242])
   end
 
   it 'toggles and reports shell options' do
@@ -59,9 +59,9 @@ RSpec.describe Rush::ShellState do
 
   it 'records the most recent background pid for $!' do
     state = described_class.new
-    expect(state.parameters.resolve('!', pid: 4242)).to be_nil
+    expect(state.parameters.resolve('!')).to be_nil
     state.record_background_pid(1234)
-    expect([state.last_background_pid, state.parameters.resolve('!', pid: 4242)]).to eq([1234, '1234'])
+    expect([state.last_background_pid, state.parameters.resolve('!')]).to eq([1234, '1234'])
   end
 
   it 'brackets function frames around locals, loops and positionals' do

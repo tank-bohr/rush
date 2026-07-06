@@ -36,6 +36,13 @@ module Rush
       # exit, and an uncaught return, both end the substitution with their code.
       sig { returns(Status) }
       def run_isolated
+        @executor.reset_caught_traps_for_subshell
+        status = run_isolated_status
+        Status.new(@executor.run_exit_trap(status.exitstatus))
+      end
+
+      sig { returns(Status) }
+      def run_isolated_status
         @executor.untested { @executor.run(parse) }
       rescue ExitSignal, ReturnSignal => e
         @executor.state.record_status(Status.new(e.code))
@@ -65,8 +72,7 @@ module Rush
       sig { params(write: T.untyped).returns(T.untyped) }
       def run_child(write)
         # :nocov:
-        capture(write)
-        @executor.system.exit!(@executor.state.last_status.exitstatus)
+        @executor.system.exit!(capture(write).exitstatus)
         # :nocov:
       end
 

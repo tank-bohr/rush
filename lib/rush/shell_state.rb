@@ -25,6 +25,9 @@ module Rush
     sig { returns(String) }
     attr_reader :name
 
+    sig { returns(Integer) }
+    attr_reader :shell_pid
+
     sig { returns(ShellVariables) }
     attr_reader :variables
 
@@ -51,9 +54,10 @@ module Rush
 
     # ShellState wires every shell sub-table; helper extraction would hide state.
     # rubocop:disable Metrics/AbcSize
-    sig { params(environment: Environment, name: String, positional: T::Array[String]).void }
-    def initialize(environment: Environment.new, name: 'rush', positional: [])
+    sig { params(environment: Environment, name: String, positional: T::Array[String], shell_pid: Integer).void }
+    def initialize(environment: Environment.new, name: 'rush', positional: [], shell_pid: 0)
       @name = name
+      @shell_pid = shell_pid
       @variables = ShellVariables.new(environment)
       @traps = TrapTable.new
       @last_status = Status.success

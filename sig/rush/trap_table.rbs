@@ -15,7 +15,13 @@ module Rush
 
     def action: (String name) -> String?
 
+    def reset_caught: () -> Array[String]
+
     # [name, action] pairs ordered by signal number, for `trap` with no operands.
     def listing: () -> Array[[String, String]]
+
+    private
+
+    def caught: () -> Array[String]
   end
 end

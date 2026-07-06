@@ -24,6 +24,8 @@ module Rush
       # exit, and an uncaught return, both end the substitution with their code.
       def run_isolated: () -> Status
 
+      def run_isolated_status: () -> Status
+
       def read_output: (_IoStream read, untyped pid) -> untyped
 
       def strip: (String output) -> String

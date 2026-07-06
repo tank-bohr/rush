@@ -68,8 +68,23 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
 
     it 'ends the substitution with the code when an uncaught return runs' do
       write = StringIO.new
-      described_class.new(executor, 'return 5; echo nope').capture(write)
-      expect([write.string, state.last_status.exitstatus]).to eq(['', 5])
+      status = described_class.new(executor, 'return 5; echo nope').capture(write)
+      expect([write.string, status.exitstatus, state.last_status.exitstatus]).to eq(['', 5, 5])
+    end
+
+    it 'runs an EXIT trap set inside the substitution' do
+      write = StringIO.new
+      status = described_class.new(executor, "trap 'echo cs-exit' EXIT; :").capture(write)
+      expect([write.string, status.exitstatus]).to eq(["cs-exit\n", 0])
+    end
+
+    it 'resets inherited caught traps while preserving ignored traps' do
+      state.traps.set(Rush::Signals::EXIT, 'echo parent')
+      state.traps.set('TERM', 'echo term')
+      state.traps.set('INT', '')
+      write = StringIO.new
+      described_class.new(executor, 'trap').capture(write)
+      expect(write.string).to eq("trap -- '' INT\n")
     end
 
     it 'spawns a child process that runs the child side with the writer' do

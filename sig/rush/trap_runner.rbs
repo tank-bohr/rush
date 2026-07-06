@@ -31,6 +31,8 @@ module Rush
 
     def reset: (String name) -> void
 
+    def reset_caught_for_subshell: () -> void
+
     private
 
     def fire_exit: (String action, Integer code) -> Integer

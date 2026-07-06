@@ -52,7 +52,7 @@ module Rush
     # fire the EXIT trap (which may override the code via `exit`) — like dash.
     def abort_with: (StandardError error) -> Integer
 
-    def shell_state: () -> ShellState
+    def shell_state: (SystemCalls system) -> ShellState
 
     def source: () -> String
   end

@@ -28,10 +28,22 @@ module Rush
       @actions.fetch(name, nil)
     end
 
+    sig { returns(T::Array[String]) }
+    def reset_caught
+      caught.each { |name| @actions.delete(name) }
+    end
+
     # [name, action] pairs ordered by signal number, for `trap` with no operands.
     sig { returns(T::Array[[String, String]]) }
     def listing
       @actions.sort_by { |name, _action| Signals.number(name) }
+    end
+
+    private
+
+    sig { returns(T::Array[String]) }
+    def caught
+      @actions.filter_map { |name, action| name unless action.empty? }
     end
   end
 end

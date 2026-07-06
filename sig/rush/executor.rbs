@@ -37,6 +37,8 @@ module Rush
 
     def run_exit_trap: (Integer code) -> Integer
 
+    def reset_caught_traps_for_subshell: () -> void
+
     # Permanently rebind the base IoTable (the `exec` redirection-only form),
     # unlike with_io which restores afterwards.
     def replace_io: (IoTable table) -> void

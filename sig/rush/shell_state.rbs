@@ -8,6 +8,7 @@ module Rush
     extend T::Sig
 
     @name: String
+    @shell_pid: Integer
     @variables: ShellVariables
     @traps: TrapTable
     @last_status: Status
@@ -27,6 +28,7 @@ module Rush
     attr_reader aliases: AliasTable
     attr_reader command_hash: Hash[String, String]
     attr_reader name: String
+    attr_reader shell_pid: Integer
     attr_reader variables: ShellVariables
     attr_reader loops: LoopNesting
     attr_reader options: Options
@@ -36,7 +38,7 @@ module Rush
     attr_reader getopts: GetoptsState
     attr_reader parameters: ShellParameters
 
-    def initialize: (?environment: Environment, ?name: String, ?positional: Array[String]) -> void
+    def initialize: (?environment: Environment, ?name: String, ?positional: Array[String], ?shell_pid: Integer) -> void
 
     def with_function_frame: [T] (Array[String] args) { () -> T } -> T
 

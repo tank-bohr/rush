@@ -35,6 +35,19 @@ RSpec.describe Rush::SubshellRunner do
       expect(described_class.new(executor, body('exit 3')).run_body.exitstatus).to eq(3)
     end
 
+    it 'runs an EXIT trap set inside the subshell and lets it override the status' do
+      result = described_class.new(executor, body("trap 'exit 7' EXIT; exit 3")).run_body
+      expect(result.exitstatus).to eq(7)
+    end
+
+    it 'resets inherited caught traps while preserving ignored traps' do
+      state.traps.set(Rush::Signals::EXIT, 'echo parent')
+      state.traps.set('TERM', 'echo term')
+      state.traps.set('INT', '')
+      described_class.new(executor, body('trap')).run_body
+      expect(system.stdout.string).to eq("trap -- '' INT\n")
+    end
+
     it 'treats a stray break or continue (no enclosing loop) as a no-op' do
       expect(described_class.new(executor, body('break')).run_body).to be_a(Rush::Status)
       expect(described_class.new(executor, body('continue')).run_body).to be_a(Rush::Status)
