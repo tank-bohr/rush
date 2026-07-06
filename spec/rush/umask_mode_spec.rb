@@ -13,6 +13,7 @@ RSpec.describe Rush::UmaskMode do
   it 'parses symbolic masks as edits to allowed permissions' do
     expect(described_class.parse('u=rwx,g=rx,o=rx', 0o777)).to eq(0o022)
     expect(described_class.parse('g+w', 0o022)).to eq(0o002)
+    expect(described_class.parse('g-w', 0o002)).to eq(0o022)
     expect(described_class.parse('a=rw', 0o022)).to eq(0o111)
   end
 
@@ -22,5 +23,6 @@ RSpec.describe Rush::UmaskMode do
 
   it 'rejects invalid symbolic masks' do
     expect(described_class.parse('u', 0o022)).to be_nil
+    expect(described_class.parse('u=z', 0o022)).to be_nil
   end
 end

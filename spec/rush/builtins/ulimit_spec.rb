@@ -59,6 +59,22 @@ RSpec.describe Rush::Builtins::Ulimit do
     expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: ulimit: Illegal option -z\n"])
   end
 
+  it 'rejects a bare dash as an illegal option' do
+    status = run('-')
+    expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: ulimit: Illegal option -\n"])
+  end
+
+  it 'rejects a limit operand with list-all' do
+    status = run('-a', '1')
+    expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: ulimit: too many arguments\n"])
+  end
+
+  it 'reports setrlimit failures' do
+    allow(system).to receive(:setrlimit).and_raise(Errno::EINVAL)
+    status = run('-n', '64')
+    expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: ulimit: error setting limit\n"])
+  end
+
   it 'rejects a non-numeric limit' do
     status = run('-n', 'nope')
     expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: ulimit: Illegal number: nope\n"])

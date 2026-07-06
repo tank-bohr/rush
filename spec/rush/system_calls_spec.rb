@@ -126,4 +126,23 @@ RSpec.describe Rush::SystemCalls do
     allow(Process).to receive(:times).and_return(:tms)
     expect(system.times).to eq(:tms)
   end
+
+  it 'delegates umask and resource-limit syscalls' do
+    allow(File).to receive(:umask) { |*args| args.empty? ? 0o022 : 0o077 }
+    allow(Process).to receive(:getrlimit).with(Process::RLIMIT_NOFILE).and_return([1024, 4096])
+    allow(Process).to receive(:setrlimit).with(Process::RLIMIT_NOFILE, 64, 128)
+
+    expect([system.current_umask, system.change_umask(0o077), system.infinity_limit]).to eq([0o022, 0o077,
+                                                                                             Process::RLIM_INFINITY])
+    expect(system.getrlimit(:nofile)).to eq([1024, 4096])
+    system.setrlimit(:nofile, 64, 128)
+    expect(Process).to have_received(:setrlimit).with(Process::RLIMIT_NOFILE, 64, 128)
+  end
+
+  it 'treats unavailable resource limits as infinite and unsettable' do
+    stub_const('Rush::SystemCalls::ResourceLimits::RLIMITS', missing: nil)
+
+    expect(system.getrlimit(:missing)).to eq([system.infinity_limit, system.infinity_limit])
+    expect { system.setrlimit(:missing, 1, 2) }.to raise_error(Errno::EINVAL)
+  end
 end
