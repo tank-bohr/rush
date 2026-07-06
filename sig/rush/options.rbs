@@ -1,9 +1,20 @@
 module Rush
   # The shell options toggled by `set -[+]o name` / `set -[+]x` and friends
-  # (:errexit, :nounset, :xtrace, :noglob, :verbose, :pipefail): the set of those
-  # currently on, with #set to flip one and #on? to query it.
+  # (:errexit, :nounset, :xtrace, :noglob, :verbose, :pipefail), plus the
+  # invocation-only :interactive (-i) and :stdin (-s) flags: the set of those
+  # currently on, with #set to flip one, #on? to query it, and #letters to
+  # render $-. The letter/name tables live here so the set builtin and
+  # Invocation share one vocabulary.
   class Options
     extend T::Sig
+
+    LETTERS: Hash[String, Symbol]
+
+    LONG: Hash[String, Symbol]
+
+    # $- renders enabled flags in dash's order (its option list, reversed), so
+    # differential corpus lines printing $- compare equal against the oracle.
+    DASH_ORDER: Array[[Symbol, String]]
 
     @enabled: Set[Symbol]
 
@@ -12,5 +23,8 @@ module Rush
     def set: (Symbol name, bool enabled) -> void
 
     def on?: (Symbol name) -> bool
+
+    # The current option flags as the $- special parameter renders them.
+    def letters: () -> String
   end
 end

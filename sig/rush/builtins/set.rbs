@@ -8,9 +8,9 @@ module Rush
     class Set < Base
       extend T::Sig
 
-      OPTIONS: { "a" => :allexport, "C" => :noclobber, "e" => :errexit, "u" => :nounset, "x" => :xtrace, "f" => :noglob, "v" => :verbose }
+      OPTIONS: ::Hash[String, Symbol]
 
-      LONG: { "allexport" => :allexport, "noclobber" => :noclobber, "errexit" => :errexit, "nounset" => :nounset, "xtrace" => :xtrace, "noglob" => :noglob, "verbose" => :verbose, "pipefail" => :pipefail }
+      LONG: ::Hash[String, Symbol]
 
       def call: () -> Status
 

@@ -1,0 +1,81 @@
+module Rush
+  # Consumes the leading -/+ option clusters of an `sh` argv — the set-builtin
+  # letters plus -c, -i, -s and `-o name`, ending at `--` or the first operand —
+  # leaving the operands in place. Exposes the explicit option settings and
+  # whether -c was given.
+  class InvocationFlags
+    extend T::Sig
+
+    FLAGS: Hash[String, Symbol]
+
+    attr_reader settings: Hash[Symbol, bool]
+
+    attr_reader command: bool
+
+    def initialize: (Array[String] argv) -> void
+
+    private
+
+    def cluster?: (String? arg) -> bool
+
+    def apply_cluster: (String cluster, Array[String] rest) -> void
+
+    def apply_letter: (String letter, String sign, Array[String] rest) -> void
+
+    def enable_command: (String sign) -> void
+
+    def apply_long: (String sign, String? option_name) -> void
+
+    def apply_flag: (String letter, String sign) -> void
+  end
+
+  # Parsed `sh` invocation: option flags (via InvocationFlags), then operands.
+  # Picks the program input — -c command string, script file, or stdin — and
+  # decides POSIX interactivity (-i, or no operands, no -c, and stdin and
+  # stderr both attached to a terminal), building the session it all implies.
+  class Invocation
+    extend T::Sig
+
+    @system: SystemCalls
+
+    @flags: InvocationFlags
+
+    @operands: Array[String]
+
+    @input: CommandInput | ScriptInput | StdinInput
+
+    def initialize: (Array[String] argv, SystemCalls system) -> void
+
+    # The session this invocation implies, wired to its shell state.
+    def session: () -> ProgramSession
+
+    def repl?: () -> bool
+
+    def interactive?: () -> bool
+
+    def name: () -> String
+
+    def positionals: () -> Array[String]
+
+    # The option flags the session starts with: the explicit -/+ settings plus
+    # the ones POSIX derives implicitly (s for a stdin source, i when
+    # interactive), so $- reports them like dash does.
+    def shell_flags: () -> Hash[Symbol, bool]
+
+    # The program text (read lazily: a REPL session never gets here).
+    def source: () -> String
+
+    private
+
+    def build_input: () -> (CommandInput | ScriptInput | StdinInput)
+
+    def shell_state: () -> ShellState
+
+    # POSIX sh: with no -i, interactive only when reading stdin implicitly on a
+    # terminal — no operands, and stdin and stderr both ttys. (-c with no
+    # command string never gets to run: #source rejects it first.)
+    def auto_interactive?: () -> bool
+
+    def stdin_source?: () -> bool
+  end
+end

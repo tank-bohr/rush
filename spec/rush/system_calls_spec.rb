@@ -111,6 +111,11 @@ RSpec.describe Rush::SystemCalls do
     expect([system.read_line, system.tty?]).to eq(["line\n", true])
   end
 
+  it 'reports terminal status of stderr separately' do
+    allow($stderr).to receive(:tty?).and_return(true)
+    expect(system.stderr_tty?).to be(true)
+  end
+
   it 'looks up a user home directory, returning nil for an unknown user' do
     allow(Etc).to receive(:getpwnam).with('bob').and_return(instance_double(Etc::Passwd, dir: '/home/bob'))
     allow(Etc).to receive(:getpwnam).with('ghost').and_raise(ArgumentError)

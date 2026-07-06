@@ -39,6 +39,69 @@ RSpec.describe Rush::CLI do
     expect(system.stdout.string).to eq("hi\n")
   end
 
+  it 'stays a batch when stdin is a tty but stderr is not' do
+    system = FakeSystemCalls.new(stdin: "echo hi\n", tty: true, stderr_tty: false)
+    expect(run([], system)).to eq(0)
+    expect(system.stderr.string).to eq('')
+  end
+
+  it 'forces an interactive REPL with -i, prompting on stderr' do
+    system = FakeSystemCalls.new(stdin: "echo hi\n")
+    expect(run(['-i'], system)).to eq(0)
+    expect([system.stdout.string, system.stderr.string]).to eq(["hi\n", '$ $ '])
+  end
+
+  it 'runs -i -c as a batch carrying the interactive flag in $-' do
+    system = FakeSystemCalls.new
+    expect(run(['-i', '-c', 'echo [$-]'], system)).to eq(0)
+    expect([system.stdout.string, system.stderr.string]).to eq(["[i]\n", ''])
+  end
+
+  it 'reports s in $- when reading stdin and nothing under -c' do
+    batch = FakeSystemCalls.new(stdin: "echo [$-]\n")
+    command = FakeSystemCalls.new
+    run([], batch)
+    run(['-c', 'echo [$-]'], command)
+    expect([batch.stdout.string, command.stdout.string]).to eq(["[s]\n", "[]\n"])
+  end
+
+  it 'turns -s operands into positional parameters, keeping the shell name' do
+    system = FakeSystemCalls.new(stdin: 'echo "$0:$1:$2:$#"')
+    expect(run(['-s', 'a', 'b'], system)).to eq(0)
+    expect(system.stdout.string).to eq("rush:a:b:2\n")
+  end
+
+  it 'runs a script-file operand with the path as $0 and operands as positionals' do
+    system = FakeSystemCalls.new
+    system.provide_file('run.sh', 'echo "$0:$1"')
+    expect(run(['run.sh', 'x'], system)).to eq(0)
+    expect(system.stdout.string).to eq("run.sh:x\n")
+  end
+
+  it 'applies invocation option letters, like -e aborting on the first failure' do
+    system = FakeSystemCalls.new
+    expect(run(['-e', '-c', 'false; echo after'], system)).to eq(1)
+    expect(system.stdout.string).to eq('')
+  end
+
+  it 'reports an illegal option on stderr and exits 2' do
+    system = FakeSystemCalls.new
+    expect(run(['-q', '-c', 'echo hi'], system)).to eq(2)
+    expect(system.stderr.string).to eq("rush: Illegal option -q\n")
+  end
+
+  it 'reports a missing -c argument and exits 2' do
+    system = FakeSystemCalls.new
+    expect(run(['-c'], system)).to eq(2)
+    expect(system.stderr.string).to eq("rush: -c requires an argument\n")
+  end
+
+  it 'reports an unreadable script file and exits 2' do
+    system = FakeSystemCalls.new
+    expect(run(['missing.sh'], system)).to eq(2)
+    expect(system.stderr.string).to match(/\Arush: cannot open missing\.sh/)
+  end
+
   it 'reports parse errors on stderr and returns 2' do
     system = FakeSystemCalls.new
     allow(Rush::Parser).to receive(:new).and_raise(Rush::ParseError, 'boom')

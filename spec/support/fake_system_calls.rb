@@ -26,12 +26,13 @@ class FakeSystemCalls
                     executable: false, symlink: false }.freeze
 
   # rubocop:disable Metrics/ParameterLists -- a test double accrues config knobs
-  def initialize(stdin: '', pwd: '/home/test', tty: false, homes: {}, globs: {}, dead_pids: [])
+  def initialize(stdin: '', pwd: '/home/test', tty: false, stderr_tty: nil, homes: {}, globs: {}, dead_pids: [])
     @stdin = StringIO.new(stdin)
     @stdout = StringIO.new
     @stderr = StringIO.new
     @pwd = pwd
     @tty = tty
+    @stderr_tty = stderr_tty.nil? ? tty : stderr_tty
     @homes = homes
     @globs = globs
     @dead_pids = dead_pids
@@ -75,6 +76,10 @@ class FakeSystemCalls
 
   def tty?
     @tty
+  end
+
+  def stderr_tty?
+    @stderr_tty
   end
 
   def pid

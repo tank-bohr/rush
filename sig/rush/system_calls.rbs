@@ -101,6 +101,8 @@ module Rush
 
     def tty?: () -> bool
 
+    def stderr_tty?: () -> bool
+
     # Home directory of a named user for ~user tilde expansion, or nil if there
     # is no such user.
     def home_dir: (String name) -> String?

@@ -1,0 +1,56 @@
+module Rush
+  # The program text and shell parameters implied by
+  # `-c command_string [command_name [argument...]]`.
+  class CommandInput
+    extend T::Sig
+
+    @operands: Array[String]
+
+    def initialize: (Array[String] operands) -> void
+
+    def name: () -> String
+
+    def positionals: () -> Array[String]
+
+    def source: () -> String
+  end
+
+  # The program text and shell parameters implied by a script-file operand:
+  # the path becomes $0, later operands the positional parameters, and the
+  # file is read lazily — unreadable files are an invocation error (status 2,
+  # like dash).
+  class ScriptInput
+    extend T::Sig
+
+    @operands: Array[String]
+
+    @system: SystemCalls
+
+    def initialize: (Array[String] operands, SystemCalls system) -> void
+
+    def name: () -> String
+
+    def positionals: () -> Array[String]
+
+    def source: () -> String
+  end
+
+  # The program text and shell parameters implied by reading stdin (implicitly
+  # or via -s): the operands become the positional parameters and $0 stays the
+  # shell name.
+  class StdinInput
+    extend T::Sig
+
+    @operands: Array[String]
+
+    @system: SystemCalls
+
+    def initialize: (Array[String] operands, SystemCalls system) -> void
+
+    def name: () -> String
+
+    def positionals: () -> Array[String]
+
+    def source: () -> String
+  end
+end

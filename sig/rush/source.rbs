@@ -1,32 +1,16 @@
 module Rush
-  # Parsed non-interactive input source plus the shell parameters it implies.
-  class SourceConfig < ::Data
-    extend T::Sig
-
-    attr_reader source: String
-    attr_reader name: String
-    attr_reader positionals: Array[String]
-
-    def self.new: (String source, String name, Array[String] positionals) -> SourceConfig
-
-    def self.for: (Array[String] argv, SystemCalls system) -> SourceConfig
-
-    def self.command: (Array[String] argv) -> SourceConfig
-
-    def self.stdin: (SystemCalls system) -> SourceConfig
-  end
-
-  # Runs non-interactive shell source from `-c` or stdin, command by command.
-  # It owns the batch-mode error policy: fatal syntax/expansion/builtin errors
-  # publish status 2, run the EXIT trap, and stop the remaining input.
+  # Runs non-interactive shell source from `-c`, a script file, or stdin,
+  # command by command. It owns the batch-mode error policy: fatal
+  # syntax/expansion/builtin errors publish status 2, run the EXIT trap, and
+  # stop the remaining input.
   class Source < ProgramSession
     extend T::Sig
 
-    @config: SourceConfig
+    @source: String
 
     @source_lines: Enumerator[String, void]?
 
-    def initialize: (Array[String] argv, SystemCalls system) -> void
+    def initialize: (Invocation invocation, SystemCalls system, state: ShellState) -> void
 
     def run: () -> Integer
 
@@ -52,8 +36,6 @@ module Rush
     # fire the EXIT trap (which may override the code via `exit`) — like dash.
     def abort_with: (StandardError error) -> Integer
 
-    def shell_state: (SystemCalls system) -> ShellState
-
-    def source: () -> String
+    attr_reader source: String
   end
 end

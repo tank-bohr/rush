@@ -54,7 +54,7 @@ module Rush
 
     sig { returns(String) }
     def options
-      ''
+      @state.options.letters
     end
 
     sig { returns(T.nilable(String)) }

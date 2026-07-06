@@ -62,6 +62,11 @@ module Rush
 
     # The last command's exit status ($?), recorded after each command runs;
     # returns the status it recorded (Executor#run passes it straight through).
+    # Flip a shell option, keeping the side effects options carry in sync
+    # (allexport mirrors onto the variable table); shared by the set builtin
+    # and invocation flags.
+    def set_option: (Symbol option, bool enabled) -> void
+
     def record_status: (Status status) -> Status
 
     def record_background_pid: (Integer pid) -> Integer

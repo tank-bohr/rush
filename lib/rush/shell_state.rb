@@ -123,6 +123,15 @@ module Rush
       @last_status = T.must(saved)
     end
 
+    # Flip a shell option, keeping the side effects options carry in sync
+    # (allexport mirrors onto the variable table); shared by the set builtin
+    # and invocation flags.
+    sig { params(option: Symbol, enabled: T::Boolean).void }
+    def set_option(option, enabled)
+      @options.set(option, enabled)
+      @variables.allexport = enabled if option == :allexport
+    end
+
     # The last command's exit status ($?), recorded after each command runs.
     sig { params(status: Status).returns(Status) }
     def record_status(status)

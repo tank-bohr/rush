@@ -11,12 +11,8 @@ module Rush
     class Set < Base
       extend T::Sig
 
-      OPTIONS = { 'a' => :allexport, 'C' => :noclobber, 'e' => :errexit, 'u' => :nounset,
-                  'x' => :xtrace, 'f' => :noglob, 'v' => :verbose }.freeze
-      LONG = { 'allexport' => :allexport, 'noclobber' => :noclobber,
-               'errexit' => :errexit, 'nounset' => :nounset,
-               'xtrace' => :xtrace, 'noglob' => :noglob, 'verbose' => :verbose,
-               'pipefail' => :pipefail }.freeze
+      OPTIONS = Options::LETTERS
+      LONG = Options::LONG
 
       sig { returns(Status) }
       def call
@@ -79,9 +75,7 @@ module Rush
       def toggle(option, sign)
         return unless option
 
-        enabled = sign == '-'
-        executor.state.options.set(option, enabled)
-        executor.state.variables.allexport = enabled if option == :allexport
+        executor.state.set_option(option, sign == '-')
       end
     end
   end

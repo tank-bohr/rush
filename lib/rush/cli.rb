@@ -2,10 +2,10 @@
 # frozen_string_literal: true
 
 module Rush
-  # Entry point: dispatch to the interactive REPL or the non-interactive source
-  # runner and return the process exit code. Supports `-c command`, a batch
-  # program on stdin, and an interactive REPL when invoked with no arguments on a
-  # terminal.
+  # Entry point: parse the invocation, run the session it implies (interactive
+  # REPL or non-interactive source), and return the process exit code. A
+  # malformed command line — unknown option, missing -c/-o argument, unreadable
+  # script file — reports on stderr and exits 2, like dash.
   class CLI
     extend T::Sig
 
@@ -22,14 +22,10 @@ module Rush
 
     sig { returns(Integer) }
     def run
-      repl? ? Repl.new(@system).run : Source.new(@argv, @system).run
-    end
-
-    private
-
-    sig { returns(T::Boolean) }
-    def repl?
-      @argv.empty? && @system.tty?
+      Invocation.new(@argv, @system).session.run
+    rescue InvocationError => e
+      @system.stderr.puts("rush: #{e.message}")
+      2
     end
   end
 end

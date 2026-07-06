@@ -16,6 +16,11 @@ module Rush
   # Raised during word expansion (e.g. ${x:?msg}, bad substitution).
   class ExpansionError < Error; end
 
+  # A malformed command line at shell startup (unknown option, a missing -c/-o
+  # argument, an unreadable script file): reported on stderr and the process
+  # exits with status 2, matching dash.
+  class InvocationError < Error; end
+
   # Raised by the `test`/`[` builtin on a malformed expression (mapped to exit 2).
   class TestError < Error; end
 

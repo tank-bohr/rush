@@ -27,6 +27,22 @@ RSpec.describe Rush::ShellParameters do
     expect([parameters.resolve('-'), parameters.resolve('!')]).to eq(['', nil])
   end
 
+  it 'renders $- flags in the dash order, so the oracle comparison holds' do
+    %i[allexport noclobber errexit nounset xtrace noglob verbose].each { |name| state.options.set(name, true) }
+    expect(parameters.resolve('-')).to eq('uaCvxfe')
+  end
+
+  it 'includes the invocation-only stdin and interactive flags in $-' do
+    state.options.set(:stdin, true)
+    state.options.set(:interactive, true)
+    expect(parameters.resolve('-')).to eq('si')
+  end
+
+  it 'gives pipefail no $- letter, like dash' do
+    state.options.set(:pipefail, true)
+    expect(parameters.resolve('-')).to eq('')
+  end
+
   it 'resolves $!' do
     state.record_background_pid(1234)
     expect(parameters.resolve('!')).to eq('1234')

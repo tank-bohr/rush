@@ -2,36 +2,17 @@
 # frozen_string_literal: true
 
 module Rush
-  # Parsed non-interactive input source plus the shell parameters it implies.
-  SourceConfig = Data.define(:source, :name, :positionals) do
-    extend T::Sig
-
-    sig { params(argv: T::Array[String], system: SystemCalls).returns(SourceConfig) }
-    def self.for(argv, system)
-      argv.first == '-c' ? command(argv) : stdin(system)
-    end
-
-    sig { params(argv: T::Array[String]).returns(SourceConfig) }
-    def self.command(argv)
-      new(argv.fetch(1, ''), argv.fetch(2, 'rush'), argv.drop(3))
-    end
-
-    sig { params(system: SystemCalls).returns(SourceConfig) }
-    def self.stdin(system)
-      new(system.stdin.read, 'rush', [])
-    end
-  end
-
-  # Runs non-interactive shell source from `-c` or stdin, command by command.
-  # It owns the batch-mode error policy: fatal syntax/expansion/builtin errors
-  # publish status 2, run the EXIT trap, and stop the remaining input.
+  # Runs non-interactive shell source from `-c`, a script file, or stdin,
+  # command by command. It owns the batch-mode error policy: fatal
+  # syntax/expansion/builtin errors publish status 2, run the EXIT trap, and
+  # stop the remaining input.
   class Source < ProgramSession
     extend T::Sig
 
-    sig { params(argv: T::Array[String], system: SystemCalls).void }
-    def initialize(argv, system)
-      @config = SourceConfig.for(argv, system)
-      super(system, state: shell_state(system))
+    sig { params(invocation: Invocation, system: SystemCalls, state: ShellState).void }
+    def initialize(invocation, system, state:)
+      @source = T.let(invocation.source, String)
+      super(system, state: state)
     end
 
     sig { returns(Integer) }
@@ -86,14 +67,7 @@ module Rush
       executor.run_exit_trap(2)
     end
 
-    sig { params(system: SystemCalls).returns(ShellState) }
-    def shell_state(system)
-      ShellState.new(name: @config.name, positional: @config.positionals, pids: ShellProcessIds.for(system))
-    end
-
     sig { returns(String) }
-    def source
-      @config.source
-    end
+    attr_reader :source
   end
 end

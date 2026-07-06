@@ -699,3 +699,19 @@ epic: **waitpid ownership** — a SIGCHLD self-pipe reaper doing `waitpid(-1, WN
 steals statuses from the synchronous `waitpid2` calls in `PipelineRunner`/`BackgroundRunner`,
 so all child reaping must be centralized into one owner (a job table the synchronous waits
 consult) before any job-control feature can land.
+
+### Interactive-shell detection — dash's $- order, and `set -i` as a dash extension
+Implementing sh invocation (rush-mw1.1) produced durable oracle findings. (1) dash renders $-
+in the **reverse of its internal optlist order** — empirically `uaCvxsife` for the letters rush
+supports — neither alphabetical nor flag-setting order; `Options::DASH_ORDER` pins it so corpus
+lines printing $- compare equal. (2) dash accepts `set -i` / `set -s` at runtime (its `set`
+shares the invocation option parser), toggling flags POSIX's `set` does not define; rush's set
+keeps its ignore-unknown-letters policy, so `set -i` is a silent no-op — accepted divergence,
+the standard is silent. (3) `dash -o` with **no argument** at invocation prints the `set -o`
+settings table claiming every option is "on" (a dash quirk that looks like a bug); rush rejects
+it with "-o requires an argument" per the synopsis. Two behaviour fixes rode along: `rush -c`
+with no command string used to run an empty program successfully — now an invocation error,
+exit 2, like dash; and a script-file operand (`rush file.sh args...`) used to be silently
+ignored in favour of stdin — it now runs the file with $0/positionals set. Auto-interactivity
+follows POSIX (stdin AND stderr both ttys) rather than probing dash's tty behaviour, which a
+pipe-based oracle cannot observe.

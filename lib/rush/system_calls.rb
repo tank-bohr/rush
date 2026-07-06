@@ -157,13 +157,18 @@ module Rush
     end
 
     # Interactive-REPL support: read one line of input (nil at EOF) and report
-    # whether standard input is a terminal.
+    # whether standard input / standard error are terminals (POSIX interactivity
+    # requires both).
     def read_line
       stdin.gets
     end
 
     def tty?
       stdin.tty?
+    end
+
+    def stderr_tty?
+      stderr.tty?
     end
 
     # Home directory of a named user for ~user tilde expansion, or nil if there
