@@ -1,7 +1,7 @@
 module Rush
   # Runs a multi-stage pipeline: a pipe between each pair of stages, every stage
   # forked, the parent's pipe ends closed, then waitpid for all. The pipeline's
-  # status is the last stage's.
+  # status is normally the last stage's, or the rightmost non-zero stage's under pipefail.
   class PipelineRunner
     extend T::Sig
 
@@ -56,5 +56,11 @@ module Rush
     def close_all: (Array[[ IO, IO ]] pipes) -> void
 
     def wait: (Array[Integer?] pids) -> Status
+
+    def wait_statuses: (Array[Integer?] pids) -> Array[Status]
+
+    def wait_status: (Integer pid) -> Status
+
+    def pipefail?: () -> bool
   end
 end

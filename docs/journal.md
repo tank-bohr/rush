@@ -630,3 +630,11 @@ oracle matches the native development oracle. The smoke calls the actual `Proces
 rush subprocess, so it verifies the impure port without changing the developer's login shell limits.
 The boundary is still Docker's boundary, not magic isolation: daemon policy, cgroups, capabilities,
 and `--ulimit` settings decide the container's ceiling.
+
+### `set -o pipefail` — status selection only
+`pipefail` is intentionally just a pipeline status-selection rule in `PipelineRunner`: all stages are
+still forked, all pids are still waited, and only after that do we choose either the normal last-stage
+status or (when enabled) the rightmost non-zero status, falling back to 0 when every stage succeeds.
+Keeping it below `AST::Pipeline` means the existing `!` and `set -e` machinery automatically sees the
+pipefail-adjusted status: `! false | true` inverts success without pipefail, but inverts failure with
+pipefail; `set -e -o pipefail; false | true` aborts at the same leaf `exit_on_error` checkpoint.

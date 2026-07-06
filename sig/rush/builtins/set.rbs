@@ -4,13 +4,13 @@ module Rush
     # `-o name`/`+o name` long form) and, when operands follow (or after `--`),
     # replace the positional parameters. With no operands the parameters are left
     # unchanged; an unknown option is ignored. Options: -a/allexport, -C/noclobber,
-    # -e/errexit, -u/nounset, -x/xtrace, -f/noglob, -v/verbose.
+    # -e/errexit, -u/nounset, -x/xtrace, -f/noglob, -v/verbose, pipefail.
     class Set < Base
       extend T::Sig
 
       OPTIONS: { "a" => :allexport, "C" => :noclobber, "e" => :errexit, "u" => :nounset, "x" => :xtrace, "f" => :noglob, "v" => :verbose }
 
-      LONG: { "allexport" => :allexport, "noclobber" => :noclobber, "errexit" => :errexit, "nounset" => :nounset, "xtrace" => :xtrace, "noglob" => :noglob, "verbose" => :verbose }
+      LONG: { "allexport" => :allexport, "noclobber" => :noclobber, "errexit" => :errexit, "nounset" => :nounset, "xtrace" => :xtrace, "noglob" => :noglob, "verbose" => :verbose, "pipefail" => :pipefail }
 
       def call: () -> Status
 

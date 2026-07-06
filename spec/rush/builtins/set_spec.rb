@@ -134,6 +134,13 @@ RSpec.describe Rush::Builtins::Set do
     expect(state.options.on?(:errexit)).to be(false)
   end
 
+  it 'toggles pipefail by long name' do
+    run('-o', 'pipefail')
+    expect(state.options.on?(:pipefail)).to be(true)
+    run('+o', 'pipefail')
+    expect(state.options.on?(:pipefail)).to be(false)
+  end
+
   it 'uses the long option name after -o at the current parser position' do
     run('-v', '-o', 'errexit', 'arg')
     expect([state.options.on?(:verbose), state.options.on?(:errexit), state.positional]).to eq([true, true, %w[arg]])

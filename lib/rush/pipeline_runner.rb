@@ -5,7 +5,8 @@ module Rush
   # Runs a multi-stage pipeline: a pipe between each pair of stages, every stage
   # forked (so they run concurrently and never deadlock on a full pipe buffer),
   # the parent's pipe ends closed, then waitpid for all. The pipeline's status is
-  # the last stage's. A stage is an arbitrary command — a simple command, but
+  # normally the last stage's, or the rightmost non-zero stage's under pipefail.
+  # A stage is an arbitrary command — a simple command, but
   # also a group/subshell/if/while/for/case or a function call — so it is run via
   # the executor with the stage's pipe ends bound as the base IoTable.
   # `start_stage` is the one irreducible fork/exit wrapper; the child-side
@@ -125,9 +126,23 @@ module Rush
       # fork returns the child pid in the parent (nil only in the child, which
       # exit!s and never reaches here), so compact only quiets the nominal
       # Integer?; a pipeline always has >= 2 stages, so fetch(-1) has a status.
-      status = T.let(nil, T.nilable(Status))
-      pids.compact.each { |pid| status = Status.of(@executor.system.waitpid2(pid).last) }
-      T.must(status)
+      statuses = PipelineStatuses.new(wait_statuses(pids))
+      pipefail? ? statuses.pipefail : statuses.last_stage
+    end
+
+    sig { params(pids: T::Array[T.nilable(Integer)]).returns(T::Array[Status]) }
+    def wait_statuses(pids)
+      pids.filter_map { |pid| wait_status(pid) if pid }
+    end
+
+    sig { params(pid: Integer).returns(Status) }
+    def wait_status(pid)
+      Status.of(@executor.system.waitpid2(pid).last)
+    end
+
+    sig { returns(T::Boolean) }
+    def pipefail?
+      @executor.state.options.on?(:pipefail)
     end
   end
 end

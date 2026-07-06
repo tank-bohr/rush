@@ -50,6 +50,17 @@ RSpec.describe 'rush vs dash (differential execution/control corpus)' do
     'set -e; if x=$(false); then echo t; else echo e; fi',
     'set -e; x=$(true) y=$(false); echo unreached',
     'set -e; v=$(false) || echo recovered; echo after',
+    # pipefail changes a pipeline's status from the last stage to the rightmost
+    # non-zero stage; all-zero pipelines stay successful, +o disables it, and !
+    # negates the pipefail-adjusted status.
+    'false | true; echo $?',
+    'set -o pipefail; false | true; echo $?',
+    'set -o pipefail; true | false; echo $?',
+    'set -o pipefail; (exit 3) | (exit 7) | true; echo $?',
+    'set -o pipefail; true | true; echo $?',
+    'set -o pipefail; set +o pipefail; false | true; echo $?',
+    'set -o pipefail; ! false | true; echo $?',
+    'set -e -o pipefail; false | true; echo no',
     # break and continue are successful builtins: they leave $? at 0, both after
     # the loop and (for continue) in the next iteration's body. A loop that exits
     # normally still reports its last body status.

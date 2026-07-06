@@ -1,0 +1,14 @@
+module Rush
+  # Chooses the observable status for a completed multi-stage pipeline.
+  class PipelineStatuses
+    extend T::Sig
+
+    @entries: Array[Status]
+
+    def initialize: (Array[Status] entries) -> void
+
+    def last_stage: () -> Status
+
+    def pipefail: () -> Status
+  end
+end

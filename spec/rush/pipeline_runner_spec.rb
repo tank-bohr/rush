@@ -19,8 +19,32 @@ RSpec.describe Rush::PipelineRunner do
       expect([forked, status.exitstatus]).to eq([3, 3])
     end
 
+    it 'uses the last stage status unless pipefail is set' do
+      stub_wait_statuses(1 => 5, 2 => 0)
+      status = described_class.new(executor, [echo('a'), echo('b')]).send(:wait, [1, 2])
+      expect(status.exitstatus).to eq(0)
+    end
+
+    it 'uses the rightmost non-zero stage status when pipefail is set' do
+      state.options.set(:pipefail, true)
+      stub_wait_statuses(1 => 5, 2 => 7, 3 => 0)
+      status = described_class.new(executor, [echo('a'), echo('b')]).send(:wait, [1, 2, 3])
+      expect(status.exitstatus).to eq(7)
+    end
+
+    it 'returns success for an all-successful pipefail pipeline' do
+      state.options.set(:pipefail, true)
+      stub_wait_statuses(1 => 0, 2 => 0)
+      status = described_class.new(executor, [echo('a'), echo('b')]).send(:wait, [1, 2])
+      expect(status).to be_success
+    end
+
     def status_double(code)
       instance_double(Process::Status, exitstatus: code, termsig: nil)
+    end
+
+    def stub_wait_statuses(codes)
+      allow(system).to receive(:waitpid2) { |pid| [pid, status_double(codes.fetch(pid))] }
     end
   end
 

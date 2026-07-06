@@ -3,8 +3,8 @@
 
 module Rush
   # The shell options toggled by `set -[+]o name` / `set -[+]x` and friends
-  # (:errexit, :nounset, :xtrace, :noglob, :verbose): the set of those currently
-  # on, with #set to flip one and #on? to query it.
+  # (:errexit, :nounset, :xtrace, :noglob, :verbose, :pipefail): the set of those
+  # currently on, with #set to flip one and #on? to query it.
   class Options
     extend T::Sig
 
