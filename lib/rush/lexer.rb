@@ -4,6 +4,7 @@
 require 'strscan'
 require_relative 'lexer/operator_table'
 require_relative 'lexer/lex_state'
+require_relative 'lexer/source_lines'
 require_relative 'lexer/scanner_predicates'
 require_relative 'lexer/token_predicates'
 require_relative 'lexer/substitution_reader'
@@ -28,12 +29,13 @@ module Rush
     IO_NUMBER = /\d+(?=[<>])/
     HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
-    sig { params(source: String, interactive: T::Boolean, aliases: T.nilable(AliasTable)).void }
-    def initialize(source, interactive: false, aliases: nil)
+    sig { params(source: String, interactive: T::Boolean, aliases: T.nilable(AliasTable), line_offset: Integer).void }
+    def initialize(source, interactive: false, aliases: nil, line_offset: 0)
       @scanner = StringScanner.new(source)
       @aliases = AliasExpander.new(aliases)
       @interactive = interactive
       @state = LexState.new
+      @lines = SourceLines.new(@scanner, line_offset)
       @awaiting = nil
       @heredocs = []
     end
@@ -108,10 +110,12 @@ module Rush
     # returns nil so next_token re-reads from the new frame.
     sig { returns(T.nilable([T.untyped, T.untyped])) }
     def word
-      scanned = WordScanner.next_word(@scanner)
+      scanned = @lines.word { WordScanner.next_word(@scanner) }
       token = TokenClassifier.new(scanned, @state).call
       replacement = alias_for(token, scanned)
-      replacement ? splice(replacement) : finish(token)
+      return splice(replacement) if replacement
+
+      @awaiting ? delimiter(token.last) : token
     end
 
     sig { params(token: [T.untyped, T.untyped], word: AST::Word).returns(T.nilable(AliasExpander::Replacement)) }
@@ -128,15 +132,11 @@ module Rush
       nil
     end
 
-    sig { params(token: [T.untyped, T.untyped]).returns([T.untyped, T.untyped]) }
-    def finish(token)
-      @awaiting ? delimiter(token.last) : token
-    end
-
     sig { params(word: T.untyped).returns([T.untyped, T.untyped]) }
     def delimiter(word)
       holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
-                           quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip)
+                           quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip,
+                           source_line: word.source_line)
       @awaiting = nil
       @heredocs << holder
       [:WORD, holder]
@@ -146,8 +146,10 @@ module Rush
     # read each body from the lines that follow, in the order the `<<`s appeared.
     sig { returns([T.untyped, T.untyped]) }
     def heredoc_newline
+      start = @scanner.pos
       HeredocReader.new(@scanner, interactive: @interactive).fill(@heredocs)
       @heredocs = []
+      @lines.heredoc_newline(start)
       [:NEWLINE, "\n"]
     end
   end

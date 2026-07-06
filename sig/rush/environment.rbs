@@ -10,6 +10,8 @@ module Rush
 
     @readonly: Set[String]
 
+    @dynamic_lineno: bool
+
     def initialize: (?Hash[String, String] source) -> void
 
     def get: (String name) -> String?
@@ -21,6 +23,8 @@ module Rush
     def readonly: (String name) -> void
 
     def unset: (String name) -> void
+
+    def update_lineno: (Integer line) -> String?
 
     def exported: () -> Hash[String, String]
   end

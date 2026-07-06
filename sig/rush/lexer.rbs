@@ -15,6 +15,8 @@ module Rush
 
     @state: LexState
 
+    @lines: SourceLines
+
     @awaiting: Symbol?
 
     @heredocs: Array[HereDoc]
@@ -29,7 +31,7 @@ module Rush
     # (some operators are literal strings), and a non-heredoc op just misses.
     HEREDOC_OPS: Hash[untyped, Symbol]
 
-    def initialize: (String source, ?interactive: bool, ?aliases: AliasTable?) -> void
+    def initialize: (String source, ?interactive: bool, ?aliases: AliasTable?, ?line_offset: Integer) -> void
 
     def location: () -> Integer
 
@@ -61,8 +63,6 @@ module Rush
     def alias_for: ([ untyped, untyped ] token, AST::Word word) -> AliasExpander::Replacement?
 
     def splice: (AliasExpander::Replacement replacement) -> nil
-
-    def finish: ([ untyped, untyped ] token) -> [ untyped, untyped ]
 
     def delimiter: (AST::Word word) -> [ untyped, untyped ]
 

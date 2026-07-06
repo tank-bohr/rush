@@ -7,15 +7,23 @@ module Rush
   class HereDoc
     extend T::Sig
 
-    @delimiter: String
+    # Immutable metadata captured from the delimiter token.
+    class Definition < ::Data
+      attr_reader delimiter: String
+      attr_reader quoted: bool
+      attr_reader strip: bool
+      attr_reader source_line: Integer
 
-    @quoted: bool
+      def self.new: (String delimiter, bool quoted, bool strip, Integer source_line) -> Definition
+    end
 
-    @strip: bool
+    @definition: Definition
 
     @body: AST::Word
 
     attr_reader body: AST::Word
+
+    def initialize: (delimiter: String, quoted: bool, strip: bool, ?source_line: Integer) -> void
 
     attr_reader delimiter: String
 
@@ -23,7 +31,7 @@ module Rush
 
     attr_reader strip: bool
 
-    def initialize: (delimiter: String, quoted: bool, strip: bool) -> void
+    attr_reader source_line: Integer
 
     # The lexer fills the body — an AST::Word — once it has gathered the body
     # lines at the next newline; it is the only writer, so #body stays read-only.

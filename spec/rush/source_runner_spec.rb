@@ -53,6 +53,11 @@ RSpec.describe Rush::SourceRunner do
     expect(out).to eq("1\n")
   end
 
+  it 'updates LINENO as eval/dot source is read' do
+    run("echo $LINENO\nif true\nthen echo $LINENO\nfi\n")
+    expect(out).to eq("1\n3\n")
+  end
+
   it 'runs the earlier commands before a later syntax error, then raises' do
     expect { run("echo a\nbad )\n") }.to raise_error(Rush::ParseError)
     expect(out).to eq("a\n")

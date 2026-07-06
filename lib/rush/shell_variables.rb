@@ -11,7 +11,7 @@ module Rush
     extend T::Sig
     extend Forwardable
 
-    def_delegators :@environment, :get, :export, :readonly, :unset, :exported
+    def_delegators :@environment, :get, :export, :readonly, :unset, :exported, :update_lineno
     def_delegators :@scope, :pwd, :move_to, :seed_pwd, :current_pwd,
                    :begin_scope, :end_scope, :in_function?, :declare_local
 

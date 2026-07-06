@@ -17,10 +17,11 @@ module Rush
         sig { returns(String) }
         attr_reader :name, :literal
 
-        sig { params(name: String, literal: String).void }
-        def initialize(name, literal)
+        sig { params(name: String, literal: String, source_line: Integer).void }
+        def initialize(name, literal, source_line)
           @name = name
           @literal = literal
+          @source_line = source_line
         end
 
         sig { params(tail: T::Array[AST::WordSegment[T.untyped]]).returns(AST::Assignment) }
@@ -33,7 +34,7 @@ module Rush
         sig { params(tail: T::Array[AST::WordSegment[T.untyped]]).returns(AST::Word) }
         def word(tail)
           remainder = AST::LiteralSegment.new(literal.delete_prefix("#{name}="), false)
-          AST::Word.new([remainder] + tail)
+          AST::Word.new([remainder] + tail, source_line: @source_line)
         end
       end
 
@@ -118,7 +119,7 @@ module Rush
         return unless literal
 
         name = capture(literal)
-        name ? AssignmentHead.new(name, literal) : nil
+        name ? AssignmentHead.new(name, literal, @word.source_line) : nil
       end
 
       sig { returns(T.nilable(String)) }

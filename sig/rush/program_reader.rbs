@@ -18,6 +18,8 @@ module Rush
 
     @buffer: String
 
+    @lines: SourceLineCounter
+
     def initialize: (?aliases: AliasTable) { (bool buffered) -> String? } -> void
 
     # The next complete program, or :eof. Raises ParseError on a real syntax
@@ -28,6 +30,8 @@ module Rush
     private
 
     def read_more: () -> (AST::List | :eof | :more)
+
+    def record_line: (String line) -> void
 
     def attempt: (String source) -> (AST::List | :more)
 

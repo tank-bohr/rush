@@ -4,12 +4,16 @@ module Rush
     # :clobber), an unexpanded target Word, and an optional explicit fd parsed
     # from a leading IO_NUMBER (nil means the kind's default fd).
     class Redirect < ::Data
+      extend T::Sig
+
       attr_reader kind: Symbol
 
       # Word, or a HereDoc holder for <<-style redirects — kept untyped.
       attr_reader target: untyped
 
       attr_reader io_number: Integer?
+
+      def source_line: () -> Integer
 
       def self.new: (kind: Symbol, target: untyped, io_number: Integer?) -> Redirect
                   | (Symbol kind, untyped target, Integer? io_number) -> Redirect

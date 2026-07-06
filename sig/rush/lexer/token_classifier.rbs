@@ -13,7 +13,9 @@ module Rush
         attr_reader name: String
         attr_reader literal: String
 
-        def initialize: (String name, String literal) -> void
+        @source_line: Integer
+
+        def initialize: (String name, String literal, Integer source_line) -> void
 
         def assignment: (Array[AST::WordSegment[untyped]] tail) -> AST::Assignment
 

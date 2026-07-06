@@ -1,0 +1,24 @@
+module Rush
+  # Tracks absolute source line numbers while ProgramReader buffers one complete
+  # program. Each Lexer sees only the current buffer, so the counter supplies the
+  # offset that makes word/source-line metadata absolute within the caller's
+  # source stream.
+  class SourceLineCounter
+    extend T::Sig
+
+    @line_number: Integer
+    @buffer_start: Integer
+
+    def initialize: () -> void
+
+    def start: (String line) -> void
+
+    def continue: (String line) -> void
+
+    def offset: () -> Integer
+
+    private
+
+    def advance: (String line) -> void
+  end
+end

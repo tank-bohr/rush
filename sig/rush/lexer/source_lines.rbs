@@ -1,0 +1,25 @@
+module Rush
+  class Lexer
+    # Tracks source line numbers for tokens produced from a StringScanner. The
+    # lexer itself owns tokenization; this helper only maps consumed scanner text
+    # to absolute source lines.
+    class SourceLines
+      extend T::Sig
+
+      @scanner: StringScanner
+      @line: Integer
+
+      def initialize: (StringScanner scanner, Integer offset) -> void
+
+      def word: () { () -> AST::Word } -> AST::Word
+
+      def heredoc_newline: (Integer start) -> void
+
+      private
+
+      def count_newlines_since: (Integer start) -> void
+
+      def consumed_since: (Integer start) -> String
+    end
+  end
+end

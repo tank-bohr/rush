@@ -10,24 +10,36 @@ module Rush
   class HereDoc
     extend T::Sig
 
+    # Immutable metadata captured from the delimiter token.
+    Definition = Data.define(:delimiter, :quoted, :strip, :source_line)
+
     sig { returns(AST::Word) }
     attr_reader :body
 
+    sig { params(delimiter: String, quoted: T::Boolean, strip: T::Boolean, source_line: Integer).void }
+    def initialize(delimiter:, quoted:, strip:, source_line: 1)
+      @definition = Definition.new(delimiter, quoted, strip, source_line)
+      @body = AST::Word.new([], source_line: source_line)
+    end
+
     sig { returns(String) }
-    attr_reader :delimiter
+    def delimiter
+      @definition.delimiter
+    end
 
     sig { returns(T::Boolean) }
-    attr_reader :quoted
+    def quoted
+      @definition.quoted
+    end
 
     sig { returns(T::Boolean) }
-    attr_reader :strip
+    def strip
+      @definition.strip
+    end
 
-    sig { params(delimiter: String, quoted: T::Boolean, strip: T::Boolean).void }
-    def initialize(delimiter:, quoted:, strip:)
-      @delimiter = delimiter
-      @quoted = quoted
-      @strip = strip
-      @body = AST::Word.new([])
+    sig { returns(Integer) }
+    def source_line
+      @definition.source_line
     end
 
     # The lexer fills the body — an AST::Word — once it has gathered the body

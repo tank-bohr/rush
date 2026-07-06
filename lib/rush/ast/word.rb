@@ -9,16 +9,17 @@ module Rush
     class Word < Node
       extend T::Sig
 
-      attr_reader :segments
+      attr_reader :segments, :source_line
 
-      sig { params(segments: T::Array[WordSegment[T.untyped]]).void }
-      def initialize(segments)
+      sig { params(segments: T::Array[WordSegment[T.untyped]], source_line: Integer).void }
+      def initialize(segments, source_line: 1)
         @segments = segments
+        @source_line = source_line
       end
 
-      sig { params(text: String).returns(Word) }
-      def self.literal(text)
-        new([LiteralSegment.new(text, false)])
+      sig { params(text: String, source_line: Integer).returns(Word) }
+      def self.literal(text, source_line: 1)
+        new([LiteralSegment.new(text, false)], source_line: source_line)
       end
 
       sig { returns(String) }

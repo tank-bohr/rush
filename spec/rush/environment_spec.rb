@@ -39,4 +39,24 @@ RSpec.describe Rush::Environment do
     env.readonly('A')
     expect { env.unset('A') }.to raise_error(Rush::ReadonlyError)
   end
+
+  it 'keeps LINENO dynamic until user code assigns or unsets it' do
+    env = described_class.new({})
+    env.update_lineno(2)
+    env.assign('LINENO', 'fixed')
+    env.update_lineno(3)
+    expect(env.get('LINENO')).to eq('fixed')
+
+    other = described_class.new({})
+    other.update_lineno(4)
+    other.unset('LINENO')
+    other.update_lineno(5)
+    expect(other.get('LINENO')).to be_nil
+  end
+
+  it 'does not make an inherited LINENO dynamic' do
+    env = described_class.new('LINENO' => '99')
+    env.update_lineno(2)
+    expect(env.get('LINENO')).to eq('99')
+  end
 end

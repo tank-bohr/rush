@@ -19,6 +19,14 @@ RSpec.describe Rush::Lexer do
     expect(word.literal_text).to eq('echo')
   end
 
+  it 'records source lines on word tokens' do
+    lexer = described_class.new("echo\nnext", line_offset: 4)
+    first = lexer.next_token.last
+    lexer.next_token
+    second = lexer.next_token.last
+    expect([first.source_line, second.source_line]).to eq([5, 6])
+  end
+
   it 'separates words, semicolons and newlines while skipping blanks' do
     expect(symbols("a b;c\nd")).to eq([:WORD, :WORD, ';', :WORD, :NEWLINE, :WORD])
   end

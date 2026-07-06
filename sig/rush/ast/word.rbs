@@ -8,11 +8,15 @@ module Rush
 
       @segments: Array[WordSegment[untyped]]
 
+      @source_line: Integer
+
       attr_reader segments: Array[WordSegment[untyped]]
 
-      def initialize: (Array[WordSegment[untyped]] segments) -> void
+      attr_reader source_line: Integer
 
-      def self.literal: (String text) -> Word
+      def initialize: (Array[WordSegment[untyped]] segments, ?source_line: Integer) -> void
+
+      def self.literal: (String text, ?source_line: Integer) -> Word
 
       def literal_text: () -> String
 

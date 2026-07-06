@@ -11,13 +11,21 @@ module Rush
 
       @redirects: Array[Redirect]
 
+      @source_line: Integer
+
       attr_reader assignments: Array[Assignment]
 
       attr_reader words: Array[Word]
 
       attr_reader redirects: Array[Redirect]
 
-      def initialize: (Array[Assignment] assignments, Array[Word] words, Array[Redirect] redirects) -> void
+      attr_reader source_line: Integer
+
+      def self.from_parts: (Array[untyped] parts) -> SimpleCommand
+
+      def self.source_line: (Array[untyped] parts) -> Integer
+
+      def initialize: (Array[Assignment] assignments, Array[Word] words, Array[Redirect] redirects, ?source_line: Integer) -> void
 
       def execute: (Executor executor) -> Status
     end

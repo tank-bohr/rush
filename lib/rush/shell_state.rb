@@ -133,5 +133,10 @@ module Rush
     def record_background_pid(pid)
       @last_background_pid = pid
     end
+
+    sig { params(line: Integer).void }
+    def record_lineno(line)
+      @variables.update_lineno(line)
+    end
   end
 end

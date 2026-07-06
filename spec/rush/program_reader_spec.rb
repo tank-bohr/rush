@@ -25,6 +25,13 @@ RSpec.describe Rush::ProgramReader do
     expect([r.next_program, r.next_program, r.next_program].last).to eq(:eof)
   end
 
+  it 'keeps absolute source lines across successive parses' do
+    r = reader("echo a\n", "echo b\n")
+    first = r.next_program.entries.first.and_or.commands.first
+    second = r.next_program.entries.first.and_or.commands.first
+    expect([first.source_line, second.source_line]).to eq([1, 2])
+  end
+
   it 'finalises an unterminated here-document at end of input' do
     expect(reader("cat <<EOF\n", "body\n").next_program).to be_a(Rush::AST::List)
   end

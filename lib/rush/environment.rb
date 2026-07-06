@@ -12,6 +12,7 @@ module Rush
       @vars = source.dup
       @exported = source.keys.to_set
       @readonly = Set.new
+      @dynamic_lineno = !@vars.key?('LINENO')
     end
 
     sig { params(name: String).returns(T.nilable(String)) }
@@ -23,6 +24,7 @@ module Rush
     def assign(name, value)
       raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
 
+      @dynamic_lineno &&= name != 'LINENO'
       @vars[name] = value
     end
 
@@ -40,8 +42,14 @@ module Rush
     def unset(name)
       raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
 
+      @dynamic_lineno &&= name != 'LINENO'
       @vars.delete(name)
       @exported.delete(name)
+    end
+
+    sig { params(line: Integer).returns(T.nilable(String)) }
+    def update_lineno(line)
+      @vars['LINENO'] = line.to_s if @dynamic_lineno
     end
 
     sig { returns(T::Hash[String, String]) }

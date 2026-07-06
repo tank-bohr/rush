@@ -65,5 +65,7 @@ module Rush
     def record_status: (Status status) -> Status
 
     def record_background_pid: (Integer pid) -> Integer
+
+    def record_lineno: (Integer line) -> void
   end
 end

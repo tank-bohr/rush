@@ -21,6 +21,7 @@ module Rush
       @next_line = next_line
       @aliases = aliases
       @buffer = +''
+      @lines = SourceLineCounter.new
     end
 
     # The next complete program, or :eof. Raises ParseError on a real syntax
@@ -42,12 +43,18 @@ module Rush
       line = @next_line.call(!@buffer.empty?)
       return finish unless line
 
+      record_line(line)
       attempt(@buffer << line)
+    end
+
+    sig { params(line: String).void }
+    def record_line(line)
+      @buffer.empty? ? @lines.start(line) : @lines.continue(line)
     end
 
     sig { params(source: String).returns(T.any(AST::List, Symbol)) }
     def attempt(source)
-      Parser.new(Lexer.new(source, interactive: true, aliases: @aliases)).parse
+      Parser.new(Lexer.new(source, interactive: true, aliases: @aliases, line_offset: @lines.offset)).parse
     rescue IncompleteInput
       :more
     end
@@ -56,7 +63,7 @@ module Rush
     def finish
       return :eof if @buffer.empty?
 
-      Parser.new(Lexer.new(@buffer, interactive: false, aliases: @aliases)).parse
+      Parser.new(Lexer.new(@buffer, interactive: false, aliases: @aliases, line_offset: @lines.offset)).parse
     end
   end
 end

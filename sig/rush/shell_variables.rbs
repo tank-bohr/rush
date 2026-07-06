@@ -30,6 +30,8 @@ module Rush
 
     def unset: (String name) -> void
 
+    def update_lineno: (Integer line) -> String?
+
     def exported: () -> Hash[String, String]
 
     def move_to: (String pwd) -> void
