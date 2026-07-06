@@ -24,5 +24,10 @@ module Rush
     def prompt: () -> Prompt
 
     def execute: (AST::List program) -> void
+
+    # POSIX 2.8.1: where a non-interactive shell would exit (status 2, per
+    # Source#abort_with), the interactive shell reports the diagnostic,
+    # publishes the same status as $?, and returns to the prompt.
+    def recover: (StandardError error) -> void
   end
 end

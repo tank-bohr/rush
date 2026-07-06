@@ -116,10 +116,11 @@ module Rush
         variables.move_to(executor.system.expand_path(dir, variables.current_pwd))
       end
 
+      # A failed cd exits 2, matching the dash oracle (POSIX only asks for >0).
       sig { params(message: String).returns(Status) }
       def report(message)
         stderr.puts("rush: cd: #{message}")
-        failure
+        failure(2)
       end
     end
   end

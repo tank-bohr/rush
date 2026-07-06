@@ -61,6 +61,11 @@ RSpec.describe Rush::Repl do
     expect([out, err.include?('missing')]).to eq(["after\n", true])
   end
 
+  it 'publishes status 2 as $? after a reported error, like a batch abort' do
+    out, = session("readonly x=1\nx=2\necho [$?]\nfi\necho [$?]\n")
+    expect(out).to eq("[2]\n[2]\n")
+  end
+
   it 'fires the EXIT trap when the session ends at end of input' do
     out, = session("trap 'echo bye' EXIT\necho body\n")
     expect(out).to eq("body\nbye\n")

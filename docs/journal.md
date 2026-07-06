@@ -730,3 +730,16 @@ deferred: `Lexer::ParamScanner` now serves DollarScanner (raising IncompleteInpu
 interactive word can ask for another line), HeredocBody and Prompt::Text (plain ParseError —
 their inputs are already complete). Prompts sit on stderr, which the differential corpus
 ignores by design, so behaviour is pinned by unit specs; dash parity was checked by hand.
+
+### Interactive §2.8.1 audit — errors must publish $?=2, and cd exits 2
+rush-mw1.4 diffed `rush -i` against `dash -i` across the POSIX 2.8.1 error table (piped stdin:
+prompts and diagnostics land on ignored stderr, so `[stdout, exitstatus]` stays comparable —
+the trick that makes interactive semantics differentially testable at all). The shell already
+survived every error class correctly; what it got wrong was **$?**: dash publishes 2 after a
+reported interactive error — the same status a batch abort publishes — while rush left $?
+untouched. `Repl#recover` now mirrors `Source#abort_with`. The sweep also caught a plain batch
+bug the corpus had never probed: cd's failure status was 1 where dash exits 2 (POSIX only asks
+for >0; the oracle wins) — fixed and pinned in the language corpus. Also confirmed: `set -e`
+exits even an interactive shell, and `exit` with a bad operand ends the session with status 2,
+in both shells. The 2.8.1 interactive column is now a permanent differential corpus file
+(spec/integration/differential/interactive_spec.rb).

@@ -20,7 +20,7 @@ module Rush
     def read_program
       super
     rescue ParseError => e
-      report(e)
+      recover(e)
       :error
     end
 
@@ -46,7 +46,16 @@ module Rush
     rescue ReturnSignal
       nil
     rescue ExpansionError, ReadonlyError, BuiltinError => e
-      report(e)
+      recover(e)
+    end
+
+    # POSIX 2.8.1: where a non-interactive shell would exit (status 2, per
+    # Source#abort_with), the interactive shell reports the diagnostic,
+    # publishes the same status as $?, and returns to the prompt.
+    sig { params(error: StandardError).void }
+    def recover(error)
+      report(error)
+      executor.state.record_status(Status.failure(2))
     end
   end
 end

@@ -99,9 +99,9 @@ RSpec.describe Rush::Builtins::Cd do
     expect(system.stderr.string).to include('HOME not set')
   end
 
-  it 'reports an error for a missing directory' do
+  it 'reports an error for a missing directory, exiting 2 like dash' do
     system.fail_chdir_with(Errno::ENOENT)
-    expect(cd('/nope')).not_to be_success
+    expect(cd('/nope').exitstatus).to eq(2)
     expect(system.stderr.string).to eq("rush: cd: /nope: No such file or directory\n")
   end
 end

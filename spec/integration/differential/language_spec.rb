@@ -33,6 +33,7 @@ RSpec.describe 'rush vs dash (differential language corpus)' do
     '[ -r /dev/null ] && echo y',
     '[ -s /dev/null ]; echo $?',
     '[ -f /no/such/rush_xyz ]; echo $?',
+    'cd /nonexistent-rush-xyz 2>/dev/null; echo [$?]',
     'echo [$-]',
     'set -e; echo [$-]',
     'set -aCefuvx; echo [$-]',
