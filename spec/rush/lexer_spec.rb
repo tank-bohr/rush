@@ -43,6 +43,22 @@ RSpec.describe Rush::Lexer do
     expect(symbols('cat 2>f >>g')).to eq([:WORD, :IO_NUMBER, '>', :WORD, :DGREAT, :WORD])
   end
 
+  it 'splices a line continuation inside an operator, like dash' do
+    expect(symbols("true &\\\n& echo hi")).to eq(%i[WORD AND_IF WORD WORD])
+  end
+
+  it 'splices repeated continuations inside one operator' do
+    expect(symbols("a &\\\n\\\n& b")).to eq(%i[WORD AND_IF WORD])
+  end
+
+  it 'keeps the shorter operator when the continuation joins nothing' do
+    expect(symbols("a &\\\nb")).to eq([:WORD, '&', :WORD])
+  end
+
+  it 'sees through a continuation between an IO number and its redirection' do
+    expect(symbols("cat 2\\\n>f")).to eq([:WORD, :IO_NUMBER, '>', :WORD])
+  end
+
   it 'recognizes an assignment word in command-prefix position' do
     symbol, value = described_class.new('X=1').next_token
     expect(symbol).to eq(:ASSIGNMENT_WORD)

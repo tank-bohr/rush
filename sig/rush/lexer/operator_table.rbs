@@ -7,6 +7,8 @@ module Rush
     module OperatorTable
       OPERATORS: { "<<-" => :DLESSDASH, "&&" => :AND_IF, "||" => :OR_IF, ">>" => :DGREAT, "<<" => :DLESS, ";;" => :DSEMI, "<>" => :LESSGREAT, ">|" => :CLOBBER, ">&" => :GREATAND, "<&" => :LESSAND, "<" => "<", ">" => ">", "|" => "|", "&" => "&", ";" => ";", "(" => "(", ")" => ")" }
 
+      CONTINUATION: Regexp
+
       PATTERN: untyped
     end
   end

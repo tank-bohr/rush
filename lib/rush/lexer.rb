@@ -30,7 +30,9 @@ module Rush
     # end is left for the word scanner, which asks for the next line instead
     # of ending the token stream.
     INSIGNIFICANT = /(?:[ \t]+|#[^\n]*|\\\n(?=.))+/m
-    IO_NUMBER = /\d+(?=[<>])/
+    # "Immediately before < or >" sees through spliced continuations, like the
+    # operator matcher: dash-verified, `2\<newline>>f` redirects fd 2.
+    IO_NUMBER = /\d+(?=(?:\\\n)*[<>])/
     HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
 
     sig { params(source: String, interactive: T::Boolean, aliases: T.nilable(AliasTable), line_offset: Integer).void }
@@ -102,11 +104,14 @@ module Rush
       matched ? operator_token(matched) : nil
     end
 
+    # The match may carry line continuations between its characters (see
+    # OperatorTable::PATTERN); splicing them out recovers the operator.
     sig { params(matched: String).returns([T.untyped, T.untyped]) }
     def operator_token(matched)
-      symbol = OperatorTable::OPERATORS.fetch(matched)
+      operator = matched.gsub(OperatorTable::CONTINUATION, '')
+      symbol = OperatorTable::OPERATORS.fetch(operator)
       @awaiting = HEREDOC_OPS.fetch(symbol, nil)
-      [symbol, matched]
+      [symbol, operator]
     end
 
     # Classify the word, then (only a plain WORD, never a reserved word or a

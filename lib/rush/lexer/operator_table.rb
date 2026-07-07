@@ -15,7 +15,18 @@ module Rush
         '<' => '<', '>' => '>', '|' => '|', '&' => '&', ';' => ';', '(' => '(', ')' => ')'
       }.freeze
 
-      PATTERN = Regexp.union(OPERATORS.keys.sort_by { |op| -op.length }).freeze
+      # POSIX 2.2.1 removes a backslash-newline before tokenization — even between
+      # the characters of one operator: dash splices it at the character read
+      # (pgetc_eatbnl), so `&\<newline>&` lexes as `&&`. Each alternative therefore
+      # admits continuation pairs between its characters; the lexer splices them
+      # back out of the match before looking the operator up.
+      CONTINUATION = /\\\n/
+
+      splice = "(?:#{CONTINUATION.source})*"
+      longest_first = OPERATORS.keys.sort_by { |op| -op.length }
+      PATTERN = Regexp.new(
+        longest_first.map { |op| op.chars.map { |char| Regexp.escape(char) }.join(splice) }.join('|')
+      ).freeze
     end
   end
 end

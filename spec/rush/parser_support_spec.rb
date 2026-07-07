@@ -118,6 +118,11 @@ RSpec.describe Rush::ParserSupport do
     expect(command.words.map(&:literal_text)).to eq(['echo', 'a\\'])
   end
 
+  it 'parses a here-document whose operator is split by a line continuation' do
+    redirect = first_command("cat <\\\n<EOF\nhi there\nEOF\n").redirects.first
+    expect([redirect.kind, redirect.target.body.literal_text]).to eq([:heredoc, "hi there\n"])
+  end
+
   it 'parses a function definition' do
     node = first_command('greet() { echo hi; }')
     expect([node.class, node.name]).to eq([Rush::AST::FunctionDef, 'greet'])

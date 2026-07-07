@@ -824,3 +824,21 @@ one): spawn `rush -i` on a pseudo-terminal, watch PS1 get drawn, run an edited l
 interactive POSIX shell — invocation detection, PS1/PS2, §2.8.1 error policy, startup files,
 signal dispositions, line editing — all inside the Ruby-VM platform boundary the phase-4 split
 drew. Job control (rush-mv8) remains the deferred out-of-platform epic.
+
+### Operators see through backslash-newline — the last 2.2.1 seam closes
+rush-u9x, the divergence slice 10g documented: dash splices continuations at the character
+read (`pgetc_eatbnl`), so `&\<newline>&` is `&&`; rush's operator matcher matched literal
+operator text and produced two `&` tokens. The fix is not a character-level filter under the
+whole scanner — single quotes forbid that (the pair is literal there), and 10g's seams already
+cover words, quotes and heredoc data. Instead, the fourth and final seam: OperatorTable::PATTERN
+interleaves `(?:\\\n)*` between the characters of every multi-character operator (maximal-munch
+order unchanged — alternation still tries longest originals first), and the lexer splices the
+pairs back out of the match before the table lookup, so the emitted token carries the logical
+operator. The same blindness hid in IO_NUMBER's lookahead — `2\<newline>>f` must still redirect
+fd 2 (dash-verified) — one `(?:\\\n)*` in the lookahead fixes it, and the between-token
+INSIGNIFICANT skip already swallows the pair once the digits are consumed. Interactive PS2
+needed nothing new: `true &\` at buffer end matches the short `&`, the trailing pair reaches
+the word scanner, IncompleteInput pulls the next line, and the re-lex of the joined buffer sees
+the spliced operator — dash's prompt behaviour for free from 10g's mechanism. Splitting `<<-`
+as `<<\<newline>-` still tab-strips, `>\<newline>&1` still dups (both dash-verified). 300
+fuzzed split-operator programs match dash on [stdout, exitstatus] exactly.
