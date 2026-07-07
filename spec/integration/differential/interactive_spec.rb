@@ -28,10 +28,30 @@ RSpec.describe 'rush vs dash (differential interactive-error corpus)' do
     "set -e\nfalse\necho never\n"             # errexit still exits an interactive shell
   ]
 
-  corpus.each do |script|
+  # Signals sent by the shell to itself ($$) exercise the interactive
+  # dispositions without a pty: TERM/QUIT are ignored, INT aborts the current
+  # line and publishes 130, traps override and `trap -` restores the ignores,
+  # and a subshell falls back to the OS default.
+  signal_corpus = [
+    "kill -TERM $$; echo alive\necho next $?\n",
+    "kill -QUIT $$; echo alive\necho next $?\n",
+    "kill -INT $$; echo skipped\necho next $?\n",
+    "kill -INT $$ && echo A\necho B $?\n",
+    "trap 'echo got' TERM\nkill -TERM $$\necho after $?\n",
+    "trap 'echo got' INT\nkill -INT $$\necho after $?\n",
+    "trap 'echo got' TERM\ntrap - TERM\nkill -TERM $$\necho alive $?\n",
+    "(kill -TERM $$); echo sub $?\n"
+  ]
+
+  (corpus + signal_corpus).each do |script|
     it "matches dash -i for #{script.inspect}" do
       expect(rush_argv(['-i'], script)).to eq(dash_argv(['-i'], script))
     end
+  end
+
+  it 'matches dash exiting 130 when an interactive -c command is interrupted' do
+    args = ['-i', '-c', 'kill -INT $$; echo after']
+    expect(rush_argv(args)).to eq(dash_argv(args))
   end
 
   it 'matches dash reading the ENV file for interactive shells only' do

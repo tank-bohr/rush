@@ -34,6 +34,8 @@ RSpec.describe 'rush vs dash (differential language corpus)' do
     '[ -s /dev/null ]; echo $?',
     '[ -f /no/such/rush_xyz ]; echo $?',
     'cd /nonexistent-rush-xyz 2>/dev/null; echo [$?]',
+    'kill -TERM $$; echo alive',
+    'kill -INT $$; echo alive',
     "echo a \\\nb",
     "true && \\\necho hi",
     "ec\\\nho joined",

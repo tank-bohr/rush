@@ -13,7 +13,14 @@ module Rush
 
     @exiting: Integer?
 
+    @base: Hash[String, Proc]
+
     def initialize: (Executor executor) -> void
+
+    # The session's base dispositions (the interactive INT/QUIT/TERM handlers):
+    # what `trap - SIG` and an untouched signal fall back to instead of the OS
+    # default. Subshells drop them (POSIX: caught signals reset in subshells).
+    def install_base: (Hash[String, Proc] handlers) -> void
 
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
     # shell exits with: the given code, unless the trap itself runs `exit`. $?
@@ -45,6 +52,15 @@ module Rush
 
     # An untrappable signal (KILL/STOP) raises; keep the table entry like dash.
     def install_signal: (String name, (String | :default) action) -> void
+
+    # :default falls back to the session's base handler when one is installed
+    # (an interactive shell survives INT/QUIT/TERM); otherwise the OS default.
+    def install: (String name, String? disposition) -> void
+
+    # Subshells reset the base handlers to the true OS default before the
+    # per-trap reset, so a forked child dies on ^C like any non-interactive
+    # process.
+    def drop_base: () -> void
 
     # '' ignores the signal, :default restores it; a command string installs the
     # handler block (nil disposition), matching SystemCalls#trap_signal.

@@ -121,6 +121,17 @@ RSpec.describe Rush::SystemCalls do
     expect(system.privileged?).to be(true)
   end
 
+  it 'retries a wait interrupted by the interactive SIGINT handler' do
+    calls = 0
+    allow(Process).to receive(:waitpid2) do
+      calls += 1
+      raise Rush::Interrupted, 'interrupted' if calls == 1
+
+      [7, :reaped]
+    end
+    expect(system.waitpid2(7)).to eq([7, :reaped])
+  end
+
   it 'looks up a user home directory, returning nil for an unknown user' do
     allow(Etc).to receive(:getpwnam).with('bob').and_return(instance_double(Etc::Passwd, dir: '/home/bob'))
     allow(Etc).to receive(:getpwnam).with('ghost').and_raise(ArgumentError)

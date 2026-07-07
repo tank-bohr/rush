@@ -71,6 +71,31 @@ RSpec.describe Rush::Repl do
     expect(out).to eq("[2]\n[2]\n")
   end
 
+  it 'installs the interactive signal handlers when the state is interactive' do
+    system = FakeSystemCalls.new(stdin: '')
+    state = Rush::ShellState.new
+    state.set_option(:interactive, true)
+    described_class.new(system, state: state).run
+    expect(system.traps_installed.map(&:first)).to include('INT', 'QUIT', 'TERM')
+    expect { system.trap_block('INT').call(2) }.to raise_error(Rush::Interrupted)
+    expect([system.trap_block('QUIT').call(3), system.trap_block('TERM').call(15)]).to eq([nil, nil])
+  end
+
+  it 'turns an interrupt while reading into $?=130 and a fresh prompt' do
+    system = FakeSystemCalls.new
+    reads = [-> { raise Rush::Interrupted, 'interrupted' }, -> { "echo [$?]\n" }, -> {}]
+    allow(system).to receive(:read_line) { reads.shift.call }
+    code = described_class.new(system).run
+    expect([system.stdout.string, code]).to eq(["[130]\n", 0])
+  end
+
+  it 'turns an interrupt during a command into $?=130, keeping the session' do
+    system = FakeSystemCalls.new(stdin: "sleepy\necho [$?]\n")
+    allow(Rush::External).to receive(:new).and_raise(Rush::Interrupted, 'interrupted')
+    code = described_class.new(system).run
+    expect([system.stdout.string, code]).to eq(["[130]\n", 0])
+  end
+
   it 'reports a broken startup file and still serves the session' do
     system = FakeSystemCalls.new(stdin: "echo main [$?]\n")
     system.provide_file('/etc/profile', "bad )\n")

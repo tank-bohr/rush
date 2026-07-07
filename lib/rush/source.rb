@@ -18,6 +18,8 @@ module Rush
     sig { returns(Integer) }
     def run
       super
+    rescue Interrupted
+      executor.run_exit_trap(130)
     rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
       abort_with(e)
     end

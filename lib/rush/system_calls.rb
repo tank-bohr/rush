@@ -22,8 +22,13 @@ module Rush
       Process.spawn(env, [argv.first, argv.first], *argv.drop(1), options)
     end
 
+    # EINTR-style retry: an interactive SIGINT raises Interrupted at a safe
+    # point inside the blocking wait; the child is dying from the same signal,
+    # so wait again and reap it rather than leaking a zombie.
     def waitpid2(pid)
       Process.waitpid2(pid)
+    rescue Interrupted
+      retry
     end
 
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]

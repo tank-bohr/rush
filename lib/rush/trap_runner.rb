@@ -15,6 +15,16 @@ module Rush
       @executor = executor
       @state = executor.state
       @exiting = nil
+      @base = T.let({}, T::Hash[String, Proc])
+    end
+
+    # The session's base dispositions (the interactive INT/QUIT/TERM handlers):
+    # what `trap - SIG` and an untouched signal fall back to instead of the OS
+    # default. Subshells drop them (POSIX: caught signals reset in subshells).
+    sig { params(handlers: T::Hash[String, Proc]).void }
+    def install_base(handlers)
+      @base = handlers
+      handlers.each_key { |name| install_signal(name, :default) }
     end
 
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
@@ -53,6 +63,7 @@ module Rush
 
     sig { void }
     def reset_caught_for_subshell
+      drop_base
       @state.traps.reset_caught.each { |name| install_signal(name, :default) }
     end
 
@@ -92,9 +103,29 @@ module Rush
     def install_signal(name, action)
       return if name == Signals::EXIT
 
-      @executor.system.trap_signal(name, disposition(action)) { fire_signal(name) }
+      install(name, disposition(action))
     rescue ArgumentError, SystemCallError
       nil
+    end
+
+    # :default falls back to the session's base handler when one is installed
+    # (an interactive shell survives INT/QUIT/TERM); otherwise the OS default.
+    sig { params(name: String, disposition: T.nilable(String)).void }
+    def install(name, disposition)
+      base = @base.fetch(name, nil)
+      return @executor.system.trap_signal(name, nil) { base.call } if disposition == 'DEFAULT' && base
+
+      @executor.system.trap_signal(name, disposition) { fire_signal(name) }
+    end
+
+    # Subshells reset the base handlers to the true OS default before the
+    # per-trap reset, so a forked child dies on ^C like any non-interactive
+    # process.
+    sig { void }
+    def drop_base
+      dropped = @base
+      @base = {}
+      dropped.each_key { |name| install_signal(name, :default) }
     end
 
     # '' ignores the signal, :default restores it; a command string installs the

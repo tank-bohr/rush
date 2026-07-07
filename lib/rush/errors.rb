@@ -21,6 +21,12 @@ module Rush
   # exits with status 2, matching dash.
   class InvocationError < Error; end
 
+  # SIGINT in an interactive shell: the installed handler raises this at the
+  # next safe point, unwinding the current line back to the session, which
+  # publishes 130 (128+SIGINT) as $? and re-prompts — dash behaviour. Batch
+  # shells never install the handler and die with the OS default.
+  class Interrupted < Error; end
+
   # Raised by the `test`/`[` builtin on a malformed expression (mapped to exit 2).
   class TestError < Error; end
 

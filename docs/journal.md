@@ -793,3 +793,20 @@ One divergence, documented and deferred (rush-u9x, P4): dash splices at the char
 With this and the case fix, **the full real-host startup corpus is clean**: `rush -l` on this
 Arch box runs /etc/profile plus every /etc/profile.d/*.sh to completion (rush-9q8 closed) —
 the login shell works against unmodified system files.
+
+### Interactive signals — self-kill probes make dispositions differentially testable
+rush-mw1.5. Interactive shells install INT/QUIT/TERM as handler *blocks*, never SIG_IGN: a
+Ruby handler resets to the OS default across spawn/exec so children stay killable, where
+SIG_IGN would be inherited. INT's handler raises Interrupted at the next VM safe point — it
+unwinds the current line back to the session (Repl#survive publishes $?=130 and re-prompts; an
+interactive `-c` exits 130 through its EXIT trap), aborts the REPL's blocking read, and
+SystemCalls#waitpid2 retries EINTR-style so an interrupted foreground wait still reaps the
+dying child instead of leaking a zombie. TrapRunner grew a base-disposition table: `trap`
+overrides the interactive defaults, `trap - SIG` restores *them* rather than the OS default
+(dash-verified), and subshells drop them so a forked child dies on ^C. Two lessons worth
+keeping. (1) Signal.trap invokes handlers with the signal number; a strict `-> {}` lambda dies
+with ArgumentError — invisibly, because the failure happens in trap context — so handlers must
+be non-lambda procs. (2) `kill -SIG $$` from inside the shell exercises every disposition
+without a pty: ignore, abort-line-with-130, trap override, `trap -` restore and subshell
+default are all plain differential corpus lines now, stable because Ruby delivers the pending
+trap at the very next safe point after the kill builtin returns.

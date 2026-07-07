@@ -3,8 +3,8 @@ module Rush
   # turn reads a complete command (continuation lines prompted with PS2) and runs
   # it against one persistent ShellState, so variables and functions survive
   # across lines. Prompts come from the PS1/PS2 shell variables (see Prompt) and
-  # go to stderr; `exit` and end-of-input (Ctrl-D) end the loop; parse and
-  # expansion errors are reported without ending the session. Line
+  # go to stderr; `exit` and end-of-input (Ctrl-D) end the loop; errors and
+  # SIGINT are reported without ending the session (see #survive). Line
   # editing/history and job control are deferred to later slices.
   class Repl < ProgramSession
     extend T::Sig
@@ -29,9 +29,20 @@ module Rush
 
     def execute: (AST::List program) -> void
 
+    # The interactive survival policy: a recoverable error or a SIGINT reports,
+    # publishes its status as $?, and hands `fallback` back so the session
+    # carries on where a batch shell would abort.
+    def survive: (:error fallback) { () -> (AST::List | :eof | :error) } -> (AST::List | :eof | :error)
+               | (nil fallback) { () -> void } -> void
+
     # POSIX 2.8.1: where a non-interactive shell would exit (status 2, per
     # Source#abort_with), the interactive shell reports the diagnostic,
-    # publishes the same status as $?, and returns to the prompt.
+    # publishes the same status as $?, and returns to the prompt. A SIGINT
+    # publishes 130 instead, with a fresh line and no diagnostic.
     def recover: (StandardError error) -> void
+
+    # ^C: a fresh line, $? = 130 (128+SIGINT), back to the prompt (dash
+    # behaviour whether the signal arrived at the prompt or mid-command).
+    def interrupt: () -> void
   end
 end

@@ -13,6 +13,7 @@ module Rush
       @system = system
       @startup = startup
       @executor = Executor.new(system: system, state: state)
+      InteractiveSignals.install(@executor) if state.options.on?(:interactive)
       @reader = ProgramReader.new(aliases: executor.state.aliases) { |continuation| next_line(continuation) }
     end
 

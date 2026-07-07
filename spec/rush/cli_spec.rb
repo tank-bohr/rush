@@ -123,6 +123,19 @@ RSpec.describe Rush::CLI do
     expect(system.stdout.string).to eq('')
   end
 
+  it 'exits an interactive -c command with 130 on an interrupt, firing the EXIT trap' do
+    system = FakeSystemCalls.new
+    allow(Rush::External).to receive(:new).and_raise(Rush::Interrupted, 'interrupted')
+    expect(run(['-i', '-c', "trap 'echo bye' EXIT; sleepy; echo never"], system)).to eq(130)
+    expect(system.stdout.string).to eq("bye\n")
+  end
+
+  it 'does not install interactive signal handlers for a batch shell' do
+    system = FakeSystemCalls.new
+    run(['-c', ':'], system)
+    expect(system.traps_installed).to eq([])
+  end
+
   it 'reports parse errors on stderr and returns 2' do
     system = FakeSystemCalls.new
     allow(Rush::Parser).to receive(:new).and_raise(Rush::ParseError, 'boom')
