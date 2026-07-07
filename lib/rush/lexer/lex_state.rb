@@ -18,7 +18,7 @@ module Rush
       ].freeze, T::Array[T.any(String, Symbol)])
       NEUTRAL = T.let(%i[ASSIGNMENT_WORD IO_NUMBER].freeze, T::Array[Symbol])
       OPENERS = T.let({ For: :Done, While: :Done, Until: :Done, If: :Fi,
-                        Case: :Esac, Lbrace: :Rbrace, '(': ')' }.freeze,
+                        Case: :Esac, Lbrace: :Rbrace, '(' => ')' }.freeze,
                       T::Hash[T.any(String, Symbol), T.any(String, Symbol)])
       TRANSITIONS = {
         %i[normal For] => :for_name, %i[case_body For] => :for_name,

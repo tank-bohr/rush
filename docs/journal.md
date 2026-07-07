@@ -842,3 +842,25 @@ the word scanner, IncompleteInput pulls the next line, and the re-lex of the joi
 the spliced operator — dash's prompt behaviour for free from 10g's mechanism. Splitting `<<-`
 as `<<\<newline>-` still tab-strips, `>\<newline>&1` still dups (both dash-verified). 300
 fuzzed split-operator programs match dash on [stdout, exitstatus] exactly.
+
+### Mutation-hardening the lexer — specs that assert values, and one dead hash key
+rush-8v8: `rake mutant:check[Rush::Lexer*,95.0]` scored 90.98% (310 alive of 3435). Three
+lessons. (1) **Token-symbol assertions are half a spec**: lexer_spec's `symbols` helper drops
+values, so `[:IO_NUMBER, nil]`, `[symbol, nil]` and `Integer(digits, 9)` all survived — killed
+by asserting whole `[symbol, value]` pairs and segment `[value, quoted]` shapes. (2) **A
+dedicated spec file changes Mutant's test selection**: TokenClassifier and SourceLines had no
+`describe` of their own, so their mutations ran against lexer_spec; adding
+token_classifier_spec/source_lines_spec *replaces* that selection, so the new file must cover
+everything the old one killed or the score drops. Direct state-machine specs on LexState
+(drive `advance`, assert predicates with strict `be(true)/be(false)`) took it from 135 alive
+to 7. (3) **A surviving mutant can be a code finding, not a spec gap**: the OPENERS entry for
+subshells was written `'(': ')'` — a *symbol* key `:'('`, unreachable because the lexer emits
+the *string* `'('` — so the compound stack never saw subshells and the guard mutants were
+unkillable; fixing the key to `'(' => ')'` made the guards observable (a later-arm `(pattern)`
+must not restore case_arm) and behavior stays corpus-identical. The 53 still-alive (98.46%,
+gate green) are catalogued equivalents: sig-noise (`T.let` generics, `T.must`), guards
+provably redundant under spec_helper's silenced sorbet call-validation (`capture(nil)`,
+`lookup`'s nil check, `unless literal`), `if/else nil` truthiness twins, and defensive
+branches unreachable through real token streams (dash rejects `case<newline>subject`, so
+forced case_subject classification can't be observed). Chasing those would pin implementation
+noise, not behavior.

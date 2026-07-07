@@ -29,7 +29,7 @@ RSpec.describe Rush::Lexer::SubstitutionReader do
   end
 
   it 'raises IncompleteInput on an unterminated arithmetic body' do
-    expect { reader('1 + 2').arithmetic }.to raise_error(Rush::IncompleteInput)
+    expect { reader('1 + 2').arithmetic }.to raise_error(Rush::IncompleteInput, /unterminated/)
   end
 
   it 'raises a ParseError when the arithmetic body is malformed' do

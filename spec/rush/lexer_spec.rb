@@ -59,6 +59,34 @@ RSpec.describe Rush::Lexer do
     expect(symbols("cat 2\\\n>f")).to eq([:WORD, :IO_NUMBER, '>', :WORD])
   end
 
+  it 'carries the fd value on IO_NUMBER, decimal even with a leading zero' do
+    expect(described_class.new('08>f').next_token).to eq([:IO_NUMBER, 8])
+  end
+
+  it 'reads a multi-digit IO number in base ten' do
+    expect(described_class.new('10>f').next_token).to eq([:IO_NUMBER, 10])
+  end
+
+  it 'emits the logical operator as the value of a spliced token' do
+    expect(described_class.new("&\\\n&").next_token).to eq([:AND_IF, '&&'])
+  end
+
+  it 'emits NEWLINE with its literal value' do
+    lexer = described_class.new("a\nb")
+    lexer.next_token
+    expect(lexer.next_token).to eq([:NEWLINE, "\n"])
+  end
+
+  it 'defaults word source lines to line one' do
+    expect(described_class.new('echo').next_token.last.source_line).to eq(1)
+  end
+
+  it 'asks for more input when a continuation ends the interactive buffer' do
+    lexer = described_class.new("echo a\\\n", interactive: true)
+    lexer.next_token
+    expect { lexer.next_token }.to raise_error(Rush::IncompleteInput)
+  end
+
   it 'recognizes an assignment word in command-prefix position' do
     symbol, value = described_class.new('X=1').next_token
     expect(symbol).to eq(:ASSIGNMENT_WORD)
@@ -167,12 +195,45 @@ RSpec.describe Rush::Lexer do
 
     it 'signals incomplete input for an unterminated here-document when interactive' do
       lexer = described_class.new("cat <<EOF\nbody\n", interactive: true)
-      expect { loop { break if lexer.next_token == [false, false] } }.to raise_error(Rush::IncompleteInput)
+      expect { loop { break if lexer.next_token == [false, false] } }
+        .to raise_error(Rush::IncompleteInput, /unterminated here-document/)
+    end
+
+    it 'keeps a quoted-delimiter body one literal, unparsed segment' do
+      holder = tokens("cat <<'EOF'\nhi $name\nEOF\n")[2].last
+      expect(holder.body.segments.map { |s| segment_kind(s) }).to eq([:literal])
+      expect(holder.body.segments.first.literal_value).to eq("hi $name\n")
+    end
+
+    it 'keeps leading tabs in a plain << body' do
+      holder = tokens("cat <<EOF\n\tkeep\nEOF\n")[2].last
+      expect(holder.body.literal_text).to eq("\tkeep\n")
     end
 
     it 'parses an unquoted body for later expansion' do
       holder = tokens("cat <<EOF\nhi $name\nEOF\n")[2].last
       expect(holder.body.segments.map { |s| segment_kind(s) }).to eq(%i[literal param literal])
+    end
+
+    it 'marks a partially quoted delimiter and stamps its source line' do
+      holder = tokens("\ncat <<E\"O\"F\nx\nEOF\n")[3].last
+      expect([holder.delimiter, holder.quoted, holder.source_line]).to eq(['EOF', true, 2])
+    end
+
+    it 'takes only the delimiter word as heredoc metadata, not the next word' do
+      toks = tokens("cat <<EOF foo\nx\nEOF\n")
+      expect(toks[3].last).to be_a(Rush::AST::Word)
+    end
+
+    it 'fills each pending here-document exactly once' do
+      toks = tokens("cat <<EOF\nx\nEOF\necho hi\n")
+      expect(toks.map(&:first)).to eq(%i[WORD DLESS WORD NEWLINE WORD WORD NEWLINE])
+      expect(toks[2].last.body.literal_text).to eq("x\n")
+    end
+
+    it 'counts heredoc body lines into following source lines' do
+      toks = tokens("cat <<EOF\nbody\nEOF\necho hi")
+      expect(toks[4].last.source_line).to eq(4)
     end
   end
 

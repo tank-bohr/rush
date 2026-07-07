@@ -34,11 +34,33 @@ RSpec.describe Rush::Lexer::HeredocBody do
     expect(scan('a\\zb').literal_text).to eq('a\\zb')
   end
 
+  it 'drops a backslash-newline pair as a line continuation' do
+    expect(scan("a\\\nb").literal_text).to eq('ab')
+  end
+
+  it 'collapses an escaped backslash' do
+    expect(scan('a\\\\nb').literal_text).to eq('a\\nb')
+  end
+
   it 'treats a lone $ that starts no name as literal' do
     expect(scan('cost $ 5').literal_text).to eq('cost $ 5')
   end
 
   it 'raises on an unterminated ${' do
     expect { scan('${x') }.to raise_error(Rush::ParseError, /unterminated/)
+  end
+
+  it 'captures substitution and arithmetic bodies verbatim' do
+    segments = scan('$(echo hi)`date`$((1 + 2))').segments
+    expect(segments.map(&:value)).to eq(['echo hi', 'date', '1 + 2'])
+  end
+
+  it 'marks every heredoc segment unquoted' do
+    segments = scan('a $x $(c) `d` $((1))').segments
+    expect(segments.map(&:quoted)).to all(be(false))
+  end
+
+  it 'carries the parameter reference on a param segment' do
+    expect(scan('$x').segments.first.value.name).to eq('x')
   end
 end

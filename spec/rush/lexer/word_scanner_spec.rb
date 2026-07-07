@@ -40,6 +40,11 @@ RSpec.describe Rush::Lexer::WordScanner do
     expect { scan("a\\\n", interactive: true) }.to raise_error(Rush::IncompleteInput, /continuation/)
   end
 
+  it 'joins a mid-buffer continuation without asking for more input' do
+    word, = scan("a\\\nb c", interactive: true)
+    expect(word.literal_text).to eq('ab')
+  end
+
   it 'ends the word at a continuation that ends the final buffer' do
     expect(field("a\\\n")).to eq('a')
   end
@@ -131,5 +136,53 @@ RSpec.describe Rush::Lexer::WordScanner do
   it 'keeps a backtick substitution inside double quotes, marked quoted' do
     segment = scan('"`date`"').first.segments.first
     expect([segment_kind(segment), segment.value, segment.quoted]).to eq([:command, 'date', true])
+  end
+
+  describe 'segment quoting flags' do
+    def shape(source)
+      scan(source).first.segments.map { |segment| [segment.value, segment.quoted] }
+    end
+
+    it 'marks a bare param segment unquoted and a double-quoted one quoted' do
+      expect(scan('$x').first.segments.first.quoted).to be(false)
+      expect(scan('"$x"').first.segments.map { |s| [segment_kind(s), s.quoted] }).to eq([[:param, true]])
+    end
+
+    it 'marks a bare backtick substitution unquoted' do
+      expect(scan('`date`').first.segments.first.quoted).to be(false)
+    end
+
+    it 'keeps double-quoted literal content as one quoted segment' do
+      expect(shape('"ab"')).to eq([['ab', true]])
+    end
+
+    it 'keeps an escaped special the only quoted segment of its quotes' do
+      expect(shape('"\\$"')).to eq([['$', true]])
+    end
+
+    it 'keeps the backslash before an ordinary character in double quotes' do
+      expect(shape('"\\z"')).to eq([['\\', true], ['z', true]])
+    end
+
+    it 'keeps a lone quoted dollar a quoted literal' do
+      expect(shape('"$"')).to eq([['$', true]])
+    end
+
+    it 'reads a double-quoted command substitution as exactly one segment' do
+      expect(scan('"`c`"').first.segments.map { |s| segment_kind(s) }).to eq([:command])
+      expect(scan('"$x"').first.segments.map { |s| segment_kind(s) }).to eq([:param])
+    end
+
+    it 'keeps empty single quotes as one empty quoted segment' do
+      expect(shape("''")).to eq([['', true]])
+    end
+
+    it 'marks a bare escaped character quoted' do
+      expect(shape('\\z')).to eq([['z', true]])
+    end
+
+    it 'keeps a trailing backslash as one unquoted literal' do
+      expect(shape('a\\')).to eq([['a\\', false]])
+    end
   end
 end
