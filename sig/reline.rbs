@@ -1,0 +1,8 @@
+# Minimal surface of the Reline line editor rush drives (see
+# SystemCalls#edit_line): prompt-drawing readline with history, and the
+# output stream the prompt is drawn on.
+module Reline
+  def self.readline: (String prompt, bool add_history) -> String?
+
+  def self.output=: (IO io) -> IO
+end

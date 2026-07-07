@@ -35,7 +35,24 @@ module Rush
 
     sig { params(continuation: T::Boolean).returns(T.nilable(String)) }
     def prompt_line(continuation)
-      system.stderr.print(continuation ? prompt.continuation : prompt.primary)
+      text = continuation ? prompt.continuation : prompt.primary
+      system.tty? ? edited_line(text) : plain_line(text)
+    end
+
+    # A terminal gets Reline: line editing and in-memory history, prompt drawn
+    # by the editor. Reline strips the newline the reader needs to keep lines
+    # apart, so it is restored here.
+    sig { params(text: String).returns(T.nilable(String)) }
+    def edited_line(text)
+      line = system.edit_line(text)
+      return unless line
+
+      "#{line}\n"
+    end
+
+    sig { params(text: String).returns(T.nilable(String)) }
+    def plain_line(text)
+      system.stderr.print(text)
       system.read_line
     end
 

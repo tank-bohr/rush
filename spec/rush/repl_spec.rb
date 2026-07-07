@@ -46,6 +46,19 @@ RSpec.describe Rush::Repl do
     expect(err).to eq('$ [0]> [1]> > > [0]> ')
   end
 
+  it 'reads through the line editor on a terminal, letting it draw the prompts' do
+    system = FakeSystemCalls.new(stdin: "echo hi\nexit 3\n", tty: true)
+    code = described_class.new(system).run
+    expect([system.stdout.string, system.stderr.string, code]).to eq(["hi\n", '', 3])
+    expect(system.edited_prompts).to eq(['$ ', '$ '])
+  end
+
+  it 'hands the continuation prompt to the line editor too' do
+    system = FakeSystemCalls.new(stdin: "if true\nthen echo ok\nfi\n", tty: true)
+    code = described_class.new(system).run
+    expect([system.stdout.string, system.edited_prompts, code]).to eq(["ok\n", ['$ ', '> ', '> ', '$ '], 0])
+  end
+
   it 'returns the last command status at end of input' do
     _, _, code = session("false\n")
     expect(code).to eq(1)

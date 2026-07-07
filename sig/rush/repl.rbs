@@ -25,6 +25,13 @@ module Rush
 
     def prompt_line: (bool continuation) -> String?
 
+    # A terminal gets Reline: line editing and in-memory history, prompt drawn
+    # by the editor. Reline strips the newline the reader needs to keep lines
+    # apart, so it is restored here.
+    def edited_line: (String text) -> String?
+
+    def plain_line: (String text) -> String?
+
     def prompt: () -> Prompt
 
     def execute: (AST::List program) -> void

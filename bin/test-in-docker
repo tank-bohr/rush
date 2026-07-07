@@ -20,4 +20,4 @@ docker run --rm \
   -v "$BUNDLE_VOLUME:/bundle" \
   -w /work \
   "$IMAGE" \
-  sh -lc 'mkdir -p "$HOME" "$BUNDLE_PATH" && bundle install --jobs "$BUNDLE_JOBS" --retry "$BUNDLE_RETRY" && bundle exec rake && docker/syscall-smoke.sh'
+  sh -lc 'mkdir -p "$HOME" "$BUNDLE_PATH" && bundle install --jobs "$BUNDLE_JOBS" --retry "$BUNDLE_RETRY" && bundle exec rake && docker/syscall-smoke.sh && bundle exec ruby docker/reline-smoke.rb'

@@ -31,6 +31,7 @@ Gem::Specification.new do |spec|
   # racc provides BOTH the `racc` compiler (dev/build) and the `racc/parser`
   # runtime that the generated parser requires, so a single dependency covers both.
   spec.add_dependency 'racc', '~> 1.7', '>= 1.7.3'
+  spec.add_dependency 'reline', '~> 0.6'
 
   # The inline `sig {}` Sorbet annotations need sorbet-runtime at load time, so it
   # is a real runtime dependency (the deliberate trade for the second, inline type

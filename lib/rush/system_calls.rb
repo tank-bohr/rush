@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'etc'
+require 'reline'
 require 'tempfile'
 require_relative 'system_calls/file_tests'
 require_relative 'system_calls/process_identity'
@@ -161,6 +162,17 @@ module Rush
     def read_line
       stdin.gets
     end
+
+    # Interactive line editing: Reline draws the prompt (on stderr, like the
+    # plain path), records the line into its in-memory history, and returns nil
+    # at EOF. A real-terminal path the test harness cannot drive; the Docker
+    # gate's pty smoke exercises it.
+    # :nocov:
+    def edit_line(prompt)
+      Reline.output = stderr
+      Reline.readline(prompt, true)
+    end
+    # :nocov:
 
     def tty?
       stdin.tty?

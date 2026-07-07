@@ -96,6 +96,12 @@ module Rush
     # whether standard input is a terminal.
     def read_line: () -> String?
 
+    # Interactive line editing: Reline draws the prompt (on stderr, like the
+    # plain path), records the line into its in-memory history, and returns nil
+    # at EOF. A real-terminal path the test harness cannot drive; the Docker
+    # gate's pty smoke exercises it.
+    def edit_line: (String prompt) -> String?
+
     def tty?: () -> bool
 
     def stderr_tty?: () -> bool

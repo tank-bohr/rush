@@ -54,6 +54,7 @@ class FakeSystemCalls
   # rubocop:enable Metrics/ParameterLists
 
   def setup_registries
+    @edited_prompts = []
     @kills = []
     @traps_installed = []
     @trap_blocks = {}
@@ -85,6 +86,15 @@ class FakeSystemCalls
 
   def read_line
     @stdin.gets
+  end
+
+  # The line-editor seam: records the prompt Reline would draw and hands back
+  # the next stdin line without its newline, like Reline.readline.
+  attr_reader :edited_prompts
+
+  def edit_line(prompt)
+    @edited_prompts << prompt
+    @stdin.gets&.chomp
   end
 
   def tty?

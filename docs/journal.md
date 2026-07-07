@@ -810,3 +810,17 @@ be non-lambda procs. (2) `kill -SIG $$` from inside the shell exercises every di
 without a pty: ignore, abort-line-with-130, trap override, `trap -` restore and subshell
 default are all plain differential corpus lines now, stable because Ruby delivers the pending
 trap at the very next safe point after the kill builtin returns.
+
+### Reline — one seam, pty proof in the Docker gate; the interactive epic closes
+rush-mw1.3 finished phase 4's interactive epic. Reline (ships with Ruby; now an explicit
+gemspec dependency) is a single SystemCalls seam: `edit_line` draws the prompt on stderr like
+the plain path and records in-memory history, and is used only when stdin is a tty — pipes and
+specs keep the raw read_line path, so the entire differential and unit surface is unchanged.
+One subtlety: Reline strips the trailing newline ProgramReader needs to keep lines apart;
+Repl#edited_line restores it. The :nocov: boundary is real-terminal-only, so its end-to-end
+proof is a pty smoke (docker/reline-smoke.rb, wired into the Docker gate beside the ulimit
+one): spawn `rush -i` on a pseudo-terminal, watch PS1 get drawn, run an edited line, confirm
+`exit 7` survives the editor. With slices 10b–10i the epic is complete: rush is an honest
+interactive POSIX shell — invocation detection, PS1/PS2, §2.8.1 error policy, startup files,
+signal dispositions, line editing — all inside the Ruby-VM platform boundary the phase-4 split
+drew. Job control (rush-mv8) remains the deferred out-of-platform epic.

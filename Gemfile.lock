@@ -3,6 +3,7 @@ PATH
   specs:
     rush (0.1.0)
       racc (~> 1.7, >= 1.7.3)
+      reline (~> 0.6)
       sorbet-runtime (~> 0.5)
 
 GEM
