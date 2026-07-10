@@ -123,7 +123,7 @@ require_relative 'rush/builtins/umask'
 require_relative 'rush/builtins/ulimit'
 require_relative 'rush/builtins/wait'
 require_relative 'rush/builtins/jobs'
-require_relative 'rush/builtins/no_job_control'
+require_relative 'rush/builtins/job_resume'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'

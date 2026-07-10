@@ -167,27 +167,6 @@ RSpec.describe Rush::JobTable do
     end
   end
 
-  describe '#wait_all' do
-    it 'collects every known background job, leaving none running' do
-      table.record(9)
-      table.record(11)
-      system.provide_child(11, 5)
-      system.provide_child(9, 4)
-      table.wait_all
-      expect(table.ordered.map(&:running?)).to eq([false, false])
-      expect([table.wait_for(9).exitstatus, table.wait_for(11).exitstatus]).to eq([4, 5])
-    end
-
-    it 'passes a stopped job without blocking (dash: wait with no operands answers 0 at once)' do
-      table.record(9)
-      table.control.engage(nil)
-      system.provide_stopped(9, 19)
-      table.poll
-      expect { table.wait_all }.not_to raise_error
-      expect(table.current.stopped?).to be(true)
-    end
-  end
-
   describe 'stopped jobs (rush-mv8.4)' do
     before { table.control.engage(nil) }
 

@@ -34,7 +34,7 @@ module Rush
     # 0); a real parent always records a positive one.
     sig { params(pid: Integer).void }
     def record(pid)
-      @jobs[pid] = Job.new(free_number, pid) if pid.positive?
+      @jobs[pid] = Job.new(free_number, pid, origin: @control.origin) if pid.positive?
     end
 
     # A foreground job a WUNTRACED wait handed back as stopped (^Z): it
@@ -44,7 +44,9 @@ module Rush
     sig { params(pids: T::Array[Integer], stopsig: Integer).void }
     def adopt_stopped(pids, stopsig)
       leader = pids.fetch(0)
-      (@jobs[leader] ||= Job.new(free_number, leader, members: pids)).stop(stopsig) if leader.positive?
+      return unless leader.positive?
+
+      (@jobs[leader] ||= Job.new(free_number, leader, members: pids, origin: @control.origin)).stop(stopsig)
     end
 
     # Newest first: the jobs builtin's display order, and what makes the
@@ -89,12 +91,6 @@ module Rush
       Status.success
     end
 
-    # The wait builtin, no operands: collect every known background job.
-    sig { void }
-    def wait_all
-      @jobs.each_key { |pid| wait_for(pid) }
-    end
-
     # A forked child environment starts with no jobs of its own (POSIX 2.12):
     # the parent's children are not waitable here — wait by pid reports 127
     # and a %id reports No such job, as dash does in a real (non-tail-
@@ -123,6 +119,14 @@ module Rush
       end
     rescue Errno::ECHILD
       nil
+    end
+
+    # fg's wait (rush-mv8.5): every member — the leader through its entry,
+    # the rest through the stash-aware await — the verdict carrying any
+    # stop, exactly like a fresh foreground pipeline's.
+    sig { params(job: Job).returns(Status) }
+    def settle_members(job)
+      PipelineStatuses.new(job.members.map { |pid| wait_for(pid) || await(pid) }).verdict
     end
 
     # The exit builtin with a stopped job: refused with "You have stopped
@@ -167,10 +171,10 @@ module Rush
       @control.monitor ? @system.wait_stoppable(pid) : @system.waitpid2(pid)
     end
 
+    # Job#finish answers non-nil, so a known pid never falls to the stash.
     sig { params(pid: Integer, status: Process::Status).void }
     def store(pid, status)
-      job = @jobs[pid]
-      job ? job.finish(status) : (@stash[pid] = status)
+      @jobs[pid]&.finish(status) || (@stash[pid] = status)
     end
   end
 end

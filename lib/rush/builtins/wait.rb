@@ -30,9 +30,11 @@ module Rush
 
       private
 
+      # No operands: collect every known job — a stopped one answers its
+      # 128+stopsig at once, so wait never blocks on it (dash-probed).
       sig { returns(Status) }
       def all
-        executor.jobs.wait_all
+        executor.jobs.ordered.each { |job| executor.jobs.wait_for(job.pid) }
         success
       end
 

@@ -1192,3 +1192,39 @@ flag or helper it replaced.
 Verified: full rake green (2056 specs, 99.97%/99.79%), the extended differential corpus
 (8 jc-stop lines) matches dash 0.5.13, and the pty smoke — including the ^Z act — passes
 natively; ^Z on a pipeline is exercised there by the whole-group stop.
+
+### fg and bg come alive — and the whole resume dance fits off-tty
+rush-mv8.5 replaced the phase-5 stubs. The probing surprise that shaped the slice: **fg
+needs no terminal**. SIGCONT plus a WUNTRACED wait is the entire choreography off-tty, so
+thirteen jc-fgbg corpus lines pin nearly everything differentially — fg resuming a
+self-stopped job (status 0, entry freed — dash frees what it fg-waited), fg carrying the
+job's exit code (probed 7), bg resuming into the background (`wait` then answers 0), both
+on already-running jobs, multiple operands looping with the last status winning (probed:
+`fg %1 %2` foregrounds both in turn), a second ^Z re-parking under the same number with
+$? = 148, and fg on a dead-but-remembered entry answering its recorded 137 from memory.
+fg's stdout line — dash prints the job's command text — hides behind >/dev/null until the
+text column lands (mv8.6); rush prints an empty placeholder line, bg prints "[n]".
+
+The refusal is a per-job bit, not a mode: dash stamps each jobtab entry with the jobctl in
+force when it was created, so a job born under -m is resumable after `set +m`, and a job
+born without never becomes resumable however hard you set -m (probed both directions,
+corpus-pinned). That bit is Job#controlled? — an :origin symbol stamped by
+Control#origin — and both refusal messages stay byte-identical to the phase-5 stubs the
+new builtins replaced (fg/bg resolve first, then refuse, dash's operand-aborting sh_error
+shape through the same JobError path as a bad %id).
+
+Fg's wait reuses the whole mv8.3/8.4 machinery: JobControl#foreground hands the terminal
+over and adopts a re-stop, JobTable#settle_members waits every member — the leader through
+its entry (harvest), the rest through the stash-aware await — and PipelineStatuses picks
+the verdict, so a resumed pipeline behaves exactly like a fresh foreground one. Design
+churn worth recording: reek chased the resume choreography to its right home — the
+mark-running-and-SIGCONT pair became Job#continue(system) (FeatureEnvy kept flagging every
+helper that touched `job` twice), and Job now stores a rush Status instead of the raw
+Process::Status, which required Status to learn termsig (the jobs listing must tell
+Killed from Done(137) — information the 128+signal code alone destroys) and dissolved
+three nil-check smells in one move. The pty smoke grew the resume act: ^Z, bg, its wait
+settling 0, another ^Z, fg blocking through the job's remaining run, the session carrying
+on — dash and rush byte-for-byte on the extracted picture.
+
+Verified: full rake green (2069 specs, 99.95%/99.58%), differential job-control corpus now
+49 lines, pty smoke green natively and in the container.

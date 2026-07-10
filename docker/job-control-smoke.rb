@@ -18,6 +18,9 @@
 #   - ^Z on a foreground job hands the prompt back with $? = 148, the job
 #     parked Stopped in the table; exit is refused once ("You have stopped
 #     jobs."); after a kill+CONT the job is waitable as 137 (rush-mv8.4)
+#   - bg resumes a stopped job in the background (its wait settles 0), and
+#     fg reattaches one — SIGCONT, terminal handover, a real foreground
+#     wait — with the session carrying on after both (rush-mv8.5)
 #   - set +m drops m from $-, rejoins the original group and hands the
 #     terminal back; the session keeps working after every handover
 #   - the exit status survives the whole dance
@@ -50,7 +53,9 @@ class JobControlSmoke
       { stop_signals_ignored: @buffer.include?('SIGS:adone'), ctrl_z_status: number(/ZST:(\d+)/),
         ctrl_z_job_listed: @buffer.include?('ZJOBS:stopped'),
         exit_refused: @buffer.include?('You have stopped jobs.'),
-        refused_exit_status: number(/ZALIVE:(\d+)/), killed_job_waits: number(/ZW:(\d+)/) }
+        refused_exit_status: number(/ZALIVE:(\d+)/), killed_job_waits: number(/ZW:(\d+)/),
+        bg_resumes: number(/BGW:(\d+)/), fg_stop_status: number(/FST:(\d+)/),
+        fg_resumes_and_waits: number(/FGW:(\d+)/) }
     end
 
     def pid
@@ -119,6 +124,17 @@ class JobControlSmoke
     # rush with mv8.6) and wait %% would answer "no current job" instead.
     'kill -9 %%; kill -CONT %%; sleep 0.2; wait %%; echo ZW:$?',
     { sync: /ZW:\d/ },
+    ["sleep 2\r", 1.2],
+    [CTRL_Z, 1.0],
+    'bg %%',
+    'wait %%; echo BGW:$?',
+    { sync: /BGW:\d/ },
+    ["sleep 2\r", 1.2],
+    [CTRL_Z, 1.0],
+    'echo FST:$?',
+    'fg %%',
+    'echo FGW:$?',
+    { sync: /FGW:\d/ },
     'set +m',
     'echo FLAGS2:[$-]',
     "sh -c 'echo OFF: $(ps -o pgid=,tpgid= -p $$)'",
@@ -131,7 +147,7 @@ class JobControlSmoke
     spawn_owns_tty: true, pipeline_owns_tty: true, subshell_owns_tty: true,
     cmdsub_tty_stays: true, background_tty_stays: true, stop_signals_ignored: true,
     ctrl_z_status: 148, ctrl_z_job_listed: true, exit_refused: true, refused_exit_status: 0,
-    killed_job_waits: 137,
+    killed_job_waits: 137, bg_resumes: 0, fg_stop_status: 148, fg_resumes_and_waits: 0,
     plus_m_flags: 'si', plus_m_rejoins: true, alive_after: true, exit_status: 7
   }.freeze
 
@@ -142,7 +158,7 @@ class JobControlSmoke
     puts 'rush job-control pty smoke ok: monitor by default, terminal follows every foreground job ' \
          '(spawn/pipeline/subshell), stays home for cmdsub/background, TSTP+TTOU ignored, ' \
          '^Z parks a Stopped job ($?=148, exit refused once, waitable after kill), ' \
-         'set +m restores — byte-for-byte the dash picture'
+         'bg and fg resume it, set +m restores — byte-for-byte the dash picture'
   end
 
   private
@@ -172,7 +188,7 @@ class JobControlSmoke
   end
 
   def feed(inp, pid)
-    Timeout.timeout(60) { run_script(inp, pid) }
+    Timeout.timeout(90) { run_script(inp, pid) }
   rescue Timeout::Error
     kill_hard(pid)
     abort "job-control smoke: #{@label} stopped or hung; transcript:\n#{@buffer}"

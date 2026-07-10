@@ -147,4 +147,38 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
       end
     end
   end
+
+  # fg and bg (rush-mv8.5), off-tty: SIGCONT + wait need no terminal, so the
+  # whole resume choreography is corpus-pinnable — fg's stdout goes to
+  # /dev/null (dash prints the command text; rush's column arrives with
+  # rush-mv8.6). The per-job job-control bit outlives set +m and never
+  # appears retroactively (probed).
+  resume = [
+    "set -m; sh -c 'kill -TSTP $$'; fg %1 >/dev/null; echo st:$?; " \
+    'j=$(mktemp); jobs > "$j"; wc -l < "$j"; rm -f "$j"',
+    "set -m; sh -c 'kill -TSTP $$; exit 7'; fg %1 >/dev/null; echo st:$?",
+    "set -m; sh -c 'kill -TSTP $$'; fg >/dev/null; echo st:$?",
+    "set -m; sh -c 'kill -TSTP $$; echo resumed'; bg %1 >/dev/null; wait %1; echo w:$?",
+    'set -m; sleep 0.2 & fg %1 >/dev/null; echo st:$?',
+    'set -m; sleep 0.2 & bg %1 >/dev/null; echo b:$?; wait %1; echo w:$?',
+    "set -m; sh -c 'kill -TSTP $$'; set +m; fg %1 >/dev/null; echo st:$?",
+    'sleep 0.2 & set -m; fg %1 >/dev/null; echo st:$?; wait %1',
+    "set -m; sh -c 'kill -TSTP $$; kill -TSTP $$'; fg %1 >/dev/null; echo st:$?; " \
+    'j=$(mktemp); jobs > "$j"; sed -e "s/Stopped.*/Stopped/" "$j"; rm -f "$j"; kill -9 %1; kill -CONT %1',
+    "set -m; sh -c 'kill -TSTP $$; exit 3'; sh -c 'kill -TSTP $$; exit 5'; fg %1 %2 >/dev/null; echo st:$?",
+    "set -m; sh -c 'kill -TSTP $$'; kill -9 %1; kill -CONT %1; sleep 0.2; wait %1 >/dev/null; " \
+    'fg %1 >/dev/null; echo st:$?',
+    'set -m; fg >/dev/null; echo st:$?',
+    "set -m; sh -c 'kill -TSTP $$'; bg %9 >/dev/null; echo b:$?; kill -9 %1; kill -CONT %1"
+  ].freeze
+
+  describe 'fg and bg' do
+    resume.each.with_index(1) do |snippet, index|
+      id = format('jc-fgbg-%03d', index)
+
+      it "#{id}: matches dash under Timeout for: #{snippet}" do
+        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      end
+    end
+  end
 end

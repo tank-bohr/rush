@@ -17,9 +17,18 @@ RSpec.describe Rush::Builtins::Wait do
 
   it 'succeeds with no operands after collecting every background job' do
     launch(9, 4)
+    launch(11, 5)
     expect(run).to be_success
-    expect(executor.jobs.current.running?).to be(false)
-    expect(run('9').exitstatus).to eq(4)
+    expect(executor.jobs.ordered.map(&:running?)).to eq([false, false])
+    expect([run('9').exitstatus, run('11').exitstatus]).to eq([4, 5])
+  end
+
+  it 'passes a stopped job without blocking (dash: wait with no operands answers 0 at once)' do
+    executor.jobs.control.engage(nil)
+    launch(9, 4)
+    executor.jobs.current.stop(19)
+    expect(run).to be_success
+    expect(executor.jobs.current.stopped?).to be(true)
   end
 
   it 'returns the status of a background job pid' do

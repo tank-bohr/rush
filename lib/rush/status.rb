@@ -19,10 +19,14 @@ module Rush
     sig { returns(T.nilable(Integer)) }
     attr_reader :stopsig
 
-    sig { params(exitstatus: Integer, stopsig: T.nilable(Integer)).void }
-    def initialize(exitstatus, stopsig: nil)
+    sig { returns(T.nilable(Integer)) }
+    attr_reader :termsig
+
+    sig { params(exitstatus: Integer, stopsig: T.nilable(Integer), termsig: T.nilable(Integer)).void }
+    def initialize(exitstatus, stopsig: nil, termsig: nil)
       @exitstatus = exitstatus
       @stopsig = stopsig
+      @termsig = termsig
     end
 
     sig { returns(T::Boolean) }
@@ -65,7 +69,8 @@ module Rush
     def self.of(process_status)
       return stopped(process_status.stopsig.to_i) if process_status.stopped?
 
-      new(process_status.exitstatus || (process_status.termsig.to_i + 128))
+      signal = process_status.termsig
+      new(process_status.exitstatus || (signal.to_i + 128), termsig: signal)
     end
 
     sig { params(stopsig: Integer).returns(Status) }

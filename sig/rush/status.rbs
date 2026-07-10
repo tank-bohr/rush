@@ -10,7 +10,9 @@ module Rush
 
     attr_reader stopsig: Integer?
 
-    def initialize: (Integer exitstatus, ?stopsig: Integer?) -> void
+    attr_reader termsig: Integer?
+
+    def initialize: (Integer exitstatus, ?stopsig: Integer?, ?termsig: Integer?) -> void
 
     def success?: () -> bool
 

@@ -1,0 +1,42 @@
+module Rush
+  module Builtins
+    # Shared base of fg and bg: %id resolution, the per-job job-control
+    # refusal, SIGCONT to the group (rush-mv8.5).
+    class JobResume < Base
+      extend T::Sig
+
+      def call: () -> Status
+
+      private
+
+      def resume_one: (String? spec) -> Status
+
+      # bg lists and leaves the job in the background; fg waits.
+      def resume: (JobTable::Job job) -> Status
+
+      def refusal: (String? spec) -> String
+
+      def bad: (String message) -> Status
+    end
+
+    # `fg [%id...]`: SIGCONT, terminal handover, foreground wait.
+    class Fg < JobResume
+      extend T::Sig
+
+      private
+
+      def resume: (JobTable::Job job) -> Status
+
+      def settle: (JobTable::Job job) -> Status
+    end
+
+    # `bg [%id...]`: SIGCONT, the entry runs on in the background.
+    class Bg < JobResume
+      extend T::Sig
+
+      private
+
+      def resume: (JobTable::Job job) -> Status
+    end
+  end
+end

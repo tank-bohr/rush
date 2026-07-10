@@ -48,6 +48,14 @@ module Rush
         release
       end
 
+      # What a job created right now is born as: dash stamps each jobtab
+      # entry with the jobctl in force at makejob time (probed across
+      # -m/+m flips); only :monitored jobs may be fg/bg-resumed.
+      sig { returns(Symbol) }
+      def origin
+        @monitor ? :monitored : :plain
+      end
+
       # dash's job_warning: the first exit with a stopped job warns and is
       # refused; the window it opens lets the very next command's exit
       # through, and two interactive ticks re-arm it (a batch shell never

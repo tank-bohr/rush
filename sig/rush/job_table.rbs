@@ -22,24 +22,31 @@ module Rush
 
       @members: Array[Integer]
 
-      @raw: Process::Status?
+      @origin: Symbol
 
-      @stopsig: Integer?
+      @result: Status?
 
       attr_reader number: Integer
 
       attr_reader members: Array[Integer]
 
-      attr_reader raw: Process::Status?
+      def initialize: (Integer number, Integer pid, ?members: Array[Integer], ?origin: Symbol) -> void
 
-      attr_reader stopsig: Integer?
+      # Created under monitor mode, so fg/bg may resume it (rush-mv8.5).
+      def controlled?: () -> bool
 
-      def initialize: (Integer number, Integer pid, ?members: Array[Integer]) -> void
+      def stopsig: () -> Integer?
 
       # A stop parks the job; anything else settles it for good.
-      def finish: (Process::Status raw) -> void
+      def finish: (Process::Status raw) -> Status
 
       def stop: (Integer stopsig) -> void
+
+      # fg/bg's SIGCONT: a stopped job runs again.
+      def resume: () -> void
+
+      # Resume + SIGCONT to the group; ESRCH (already gone) settles.
+      def continue: (SystemCalls system) -> void
 
       # Reap once: the first harvest fills raw from the supplied wait;
       # repeats answer from memory (dash never frees an entry on wait).
@@ -60,9 +67,7 @@ module Rush
 
       private
 
-      def settled_state: () -> String
-
-      def done_state: () -> String
+      def settled_state: (Status result) -> String
     end
 
     @system: SystemCalls
@@ -107,9 +112,6 @@ module Rush
     # live job, or nil when the pid is not a known job (POSIX: 127).
     def wait_for: (Integer pid) -> Status?
 
-    # The wait builtin, no operands: collect every known background job.
-    def wait_all: () -> void
-
     # A forked child environment starts with no jobs of its own (POSIX 2.12):
     # the parent's children are not waitable here — wait by pid reports 127
     # and a %id reports No such job, as dash does in a real (non-tail-
@@ -125,6 +127,9 @@ module Rush
     def poll: () -> void
 
     # The stopped-jobs exit guard (the Control's dash-job_warning window).
+    # fg's wait over every member of a resumed job (rush-mv8.5).
+    def settle_members: (Job job) -> Status
+
     def refuse_exit?: () -> bool
 
     private
