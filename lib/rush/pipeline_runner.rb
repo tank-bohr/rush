@@ -8,7 +8,10 @@ module Rush
   # normally the last stage's, or the rightmost non-zero stage's under pipefail.
   # A stage is an arbitrary command — a simple command, but
   # also a group/subshell/if/while/for/case or a function call — so it is run via
-  # the executor with the stage's pipe ends bound as the base IoTable.
+  # the executor with the stage's pipe ends bound as the base IoTable. Each stage
+  # is a subshell environment (POSIX 2.12): exit/return end only the stage, loop
+  # control is inert, traps reset, and a fatal error aborts just that stage —
+  # SubshellRunner#run_body is exactly that resolution, so stages run through it.
   # `start_stage` is the one irreducible fork/exit wrapper; the child-side
   # `run_stage` (and its fd setup) is tested directly.
   class PipelineRunner
@@ -108,7 +111,8 @@ module Rush
     sig { params(stage: Stage).returns(Status) }
     def run_stage(stage)
       close_unused(stage)
-      @executor.with_io(stage.io(@executor.io)) { @executor.run(@commands.fetch(stage.index)) }
+      body = @commands.fetch(stage.index)
+      @executor.with_io(stage.io(@executor.io)) { SubshellRunner.new(@executor, body).run_body }
     end
 
     sig { params(stage: Stage).void }

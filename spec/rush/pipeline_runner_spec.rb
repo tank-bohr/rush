@@ -83,5 +83,28 @@ RSpec.describe Rush::PipelineRunner do
       runner([echo('a'), echo('b')]).send(:run_stage, stage(0, [[read, StringIO.new]]))
       expect(read).to be_closed
     end
+
+    it 'resolves exit inside a stage to its status like a subshell (dash: exit 4 | exit 6 is 6)' do
+      status = runner([echo('a'), parse_stage('exit 5')]).send(:run_stage, stage(1, [[StringIO.new, StringIO.new]]))
+      expect(status.exitstatus).to eq(5)
+    end
+
+    it 'treats loop control inside a stage as inert subshell noise' do
+      status = runner([parse_stage('break'), echo('b')]).send(:run_stage, stage(0, [[StringIO.new, StringIO.new]]))
+      expect(status).to be_success
+    end
+
+    it 'runs an EXIT trap set inside a stage with the stage io' do
+      pipes = [[StringIO.new, StringIO.new]]
+      runner([parse_stage('{ trap "echo bye" EXIT; :; }'), echo('b')]).send(:run_stage, stage(0, pipes))
+      expect(pipes[0].last.string).to eq("bye\n")
+    end
+
+    it 'aborts only the stage on a fatal error, with status 2' do
+      state.variables.assign('x', '1')
+      state.variables.readonly('x')
+      status = runner([echo('a'), parse_stage('x=2')]).send(:run_stage, stage(1, [[StringIO.new, StringIO.new]]))
+      expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: x: is read only\n"])
+    end
   end
 end

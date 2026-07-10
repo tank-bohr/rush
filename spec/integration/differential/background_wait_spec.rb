@@ -29,6 +29,7 @@ RSpec.describe 'rush vs dash (differential background/wait corpus)' do
     'exit 3 & wait 99999 $!; echo $?',
     'exit 3 & wait $!; wait; echo $?',
     'true | false & wait $!; echo $?',
+    'exit 4 | exit 6 & wait $!; echo $?',
     'sleep 5 & p=$!; kill -9 $p; wait $p; echo $?',
     # subshells: a live job is not the subshell's child (status 0, as dash),
     # an unknown pid stays 127, and a status the parent already reaped during

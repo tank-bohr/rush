@@ -892,3 +892,17 @@ racy in dash itself (its pre-fork zombie poll decides 7 vs 0); rush defers oppor
 polling to the epic's jobs/notifications slice. Two ride-along gaps filed: `exit 4 | exit 6`
 crashes rush — ExitSignal escapes the pipeline-stage fork block (rush-txc) — and async lists
 neither get /dev/null stdin nor ignore SIGINT/SIGQUIT in the child (rush-tbd).
+
+### Pipeline stages are subshell environments — run_stage reuses SubshellRunner
+rush-txc, found by the wait slice: `exit 4 | exit 6` crashed rush with an uncaught ExitSignal
+traceback out of the stage child's fork block — run_stage ran the body bare, without the
+shell-control resolution every other forked body has. The fix is reuse, not new code: a stage
+routes through `SubshellRunner#run_body`, exactly like BackgroundRunner already did. The
+dash-probed resolution table, now pinned as corpus lines: exit/return end only their stage
+(`exit 4 | exit 6` → 6; the real process boundary truncates, `true | exit 300` → 44); a bare
+`return` outside any function acts like exit (dash-verified, → 7); loop control is inert
+noise (`break | true` breaks nothing, `continue` likewise); an EXIT trap set inside a stage
+fires with the stage's io — `{ trap "echo bye" EXIT; true; } | cat` sends bye through the
+pipe; and a fatal error (readonly assignment) aborts just that stage with status 2 while the
+shell carries on. The `exit 4 | exit 6 & wait $!` corpus line the wait slice had to drop is
+restored.

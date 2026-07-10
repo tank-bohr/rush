@@ -181,7 +181,22 @@ RSpec.describe 'rush vs dash (differential execution/control corpus)' do
     "trap 'echo rc=$?' EXIT\ntrue\nbad )",
     "trap 'echo bye' EXIT\nreadonly x=1\nx=2\necho after",
     "trap 'echo rc=$?' EXIT\nset -u\necho \"$missing\"\necho after",
-    "trap 'exit 9' EXIT\necho one\nbad )"
+    "trap 'exit 9' EXIT\necho one\nbad )",
+    # a pipeline stage is a subshell environment (POSIX 2.12): exit/return end
+    # only the stage (a real process boundary truncates to 0-255), loop control
+    # is inert, an EXIT trap set inside fires with the stage's io, and a fatal
+    # error aborts just that stage with status 2
+    'exit 4 | exit 6; echo $?',
+    'true | exit 5; echo $?',
+    'exit 5 | true; echo $?',
+    'true | exit 300; echo $?',
+    'true | return 7; echo $?',
+    'f() { return 3; }; true | f; echo $?',
+    'while true; do break | true; echo once; break; done; echo out',
+    'i=0; while [ $i -lt 2 ]; do i=$((i+1)); true | continue; echo body; done; echo done',
+    'true | { trap "echo bye" EXIT; true; }; echo $?',
+    '{ trap "echo bye" EXIT; true; } | cat; echo $?',
+    'readonly x=1; true | { x=2; echo unreached; }; echo $?'
   ].freeze
 
   corpus.each.with_index(1) do |snippet, index|
