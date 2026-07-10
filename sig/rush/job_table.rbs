@@ -1,0 +1,52 @@
+module Rush
+  # The single owner of child reaping (the design risk epic rush-mv8 recorded):
+  # every synchronous wait routes through #await, so no two waits can steal
+  # each other's statuses. While no background job is running an await targets
+  # its pid directly; once an asynchronous list has launched, it reaps
+  # whichever child exits next and files foreign statuses — a background job's
+  # under its pid (where the wait builtin finds it), a sibling foreground
+  # child's in a stash its own await consults first. Background statuses stay
+  # remembered after reaping, so repeated `wait $pid` keeps answering
+  # (dash-verified).
+  class JobTable
+    extend T::Sig
+
+    @system: SystemCalls
+
+    @jobs: Hash[Integer, Symbol | Status]
+
+    @stash: Hash[Integer, Status]
+
+    def initialize: (SystemCalls system) -> void
+
+    # A background launch: the pid becomes known to the wait builtin. Fake fork
+    # ports return no child pid (mapped to 0); a real parent always records a
+    # positive one.
+    def record: (Integer pid) -> void
+
+    # Blocking wait for a foreground child's status. Waiting in a subshell for
+    # a job launched before the fork raises ECHILD — the job is the parent's
+    # child, not ours; dash reports success there.
+    def await: (Integer pid) -> Status
+
+    # The wait builtin, one pid: a remembered status, a blocking wait on a live
+    # background job, or nil when the pid is not a known child (POSIX: 127).
+    def wait_for: (Integer pid) -> Status?
+
+    # The wait builtin, no operands: collect every known background job.
+    def wait_all: () -> void
+
+    private
+
+    def reap_until: (Integer target) -> Status
+
+    # waitpid(-1) only when a background job could exit meanwhile; the direct
+    # form cannot reap a foreign child, keeping the plain foreground path
+    # byte-identical to the pre-table behaviour.
+    def reap_one: (Integer target) -> [ Integer, Process::Status ]
+
+    def background_running?: () -> bool
+
+    def store: (Integer pid, Status status) -> void
+  end
+end

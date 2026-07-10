@@ -64,6 +64,7 @@ class FakeSystemCalls
     @nodes = {}
     @contents = {}
     @wait_status = ChildStatus.new(0)
+    @children = []
     @inherited_fds = {}
     @umask = 0o022
     @limits = default_limits
@@ -253,8 +254,25 @@ class FakeSystemCalls
     nil
   end
 
+  # Child-process model for the JobTable: provide_child queues a reapable
+  # child. waitpid2(-1) reaps the next queued one and raises ECHILD when none
+  # remain, like the real OS; a specific pid reaps that child if queued, else
+  # falls back to the legacy single wait_status knob.
+  def provide_child(pid, exitstatus)
+    @children << [pid, ChildStatus.new(exitstatus)]
+  end
+
   def waitpid2(pid)
-    [pid, @wait_status]
+    return next_child if pid == -1
+
+    index = @children.index { |child| child.first == pid }
+    index ? @children.delete_at(index) : [pid, @wait_status]
+  end
+
+  def next_child
+    raise Errno::ECHILD if @children.empty?
+
+    @children.shift
   end
 
   def chdir(path)

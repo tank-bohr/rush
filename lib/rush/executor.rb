@@ -33,6 +33,9 @@ module Rush
     sig { returns(TrapRunner) }
     attr_reader :trap_runner
 
+    sig { returns(JobTable) }
+    attr_reader :jobs
+
     sig { params(system: SystemCalls, state: ShellState, builtins: Builtins::Registry).void }
     def initialize(system:, state:, builtins: Builtins.default_registry)
       @system = system
@@ -44,6 +47,7 @@ module Rush
       @redirect_scope = RedirectScope.new(self)
       @errexit = ErrexitContext.new(@state)
       @trap_runner = TrapRunner.new(self)
+      @jobs = JobTable.new(@system)
       @state.variables.seed_pwd(@system.pwd)
     end
 

@@ -2,17 +2,17 @@
 
 RSpec.describe Rush::External do
   let(:system) { instance_double(Rush::SystemCalls) }
-  let(:executor) { instance_double(Rush::Executor, system: system) }
+  let(:jobs) { instance_double(Rush::JobTable) }
+  let(:executor) { instance_double(Rush::Executor, system: system, jobs: jobs) }
   let(:io) { Rush::IoTable.standard(FakeSystemCalls.new) }
 
   def run(argv, table = io)
     described_class.new(executor, argv, table, {}).call
   end
 
-  it 'spawns the program and translates its exit status' do
-    process_status = instance_double(Process::Status, exitstatus: 3, termsig: nil)
+  it 'spawns the program and awaits its status through the job table' do
     allow(system).to receive(:spawn).and_return(11)
-    allow(system).to receive(:waitpid2).with(11).and_return([11, process_status])
+    allow(jobs).to receive(:await).with(11).and_return(Rush::Status.new(3))
     expect(run(%w[prog a]).exitstatus).to eq(3)
   end
 

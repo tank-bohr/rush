@@ -52,8 +52,7 @@ module Rush
       def read_output(read, pid)
         output = read.read
         read.close
-        _pid, status = @executor.system.waitpid2(pid)
-        @executor.record_cmd_sub_status(Status.of(status))
+        @executor.record_cmd_sub_status(@executor.jobs.await(pid))
         output
       end
 

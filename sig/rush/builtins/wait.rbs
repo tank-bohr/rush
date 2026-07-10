@@ -1,0 +1,37 @@
+module Rush
+  module Builtins
+    # `wait [pid...]`: with no operands, wait for every known background job
+    # (status 0); with pids, wait for each and return the last operand's
+    # status — 127 when it is not a known child. POSIX gives an unknown last
+    # operand its 127 even after a known one; dash instead keeps the last
+    # known operand's status — the standard wins (journal). A malformed
+    # operand reports on stderr with status 2, and wait is a regular builtin,
+    # so the shell carries on (dash-verified).
+    class Wait < Base
+      extend T::Sig
+
+      # dash's operand shape: an explicit + sign is accepted; a value past
+      # INT_MAX overflows like a non-numeric one; a leading dash reads as an
+      # (unsupported) option, except the bare `-`, which is a bad number.
+      NUMERIC: Regexp
+
+      def call: () -> Status
+
+      private
+
+      def all: () -> Status
+
+      def each_pid: (Array[String] args) -> Status
+
+      def parse: (String operand) -> Integer?
+
+      def awaited: (Integer pid) -> Status
+
+      def bad: (String operand) -> Status
+
+      def diagnosis: (String operand) -> String
+
+      def option?: (String operand) -> bool
+    end
+  end
+end

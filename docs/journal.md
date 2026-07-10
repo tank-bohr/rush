@@ -864,3 +864,31 @@ provably redundant under spec_helper's silenced sorbet call-validation (`capture
 branches unreachable through real token streams (dash rejects `case<newline>subject`, so
 forced case_subject classification can't be observed). Chasing those would pin implementation
 noise, not behavior.
+
+### wait lands on a centralized JobTable — the reaper risk dissolves as a standalone slice
+rush-iwh. Two discoveries reframed the deferred job-control epic. First, `wait` was missing
+entirely — `rush: wait: not found`, 127 — and it is a **mandatory XCU builtin**, not part of
+the fg/bg User Portability option: a hole in the phase-3 core, not job control. Second, more
+than half of rush-mv8 turns out to be differentially testable without a pty (dash keeps a job
+table, `wait`, `jobs` and `%id`s working with no `set -m` and no terminal). The slice
+implements the epic's prescribed first move on its own: `JobTable` is now the **single owner
+of child reaping** — External, PipelineRunner, SubshellRunner and CommandSubstitution all wait
+through `JobTable#await`. While no background job is running, await targets its pid directly
+(so every existing pid-specific spec stub still holds); once an async list has launched it
+reaps `waitpid2(-1)` and files foreign statuses — a background job's under its pid, a sibling
+foreground child's in a stash its own await consults first. That routing is what makes
+`false & sleep 0.3; (wait $!)` match dash's `sub=1`: the parent reaps the dead job *during*
+the foreground sleep, so the fork inherits a remembered status. Background statuses stay
+remembered after reaping (`wait $!; wait $!` answers twice, dash-verified); background
+zombies now get collected by any foreground wait as a side effect. Oracle findings worth
+keeping: `wait`'s operand parser accepts an explicit `+`, eats one leading `--`, reads `-5`
+as an illegal *option* but bare `-` as an illegal *number*, and overflows past INT_MAX like a
+non-numeric (all status 2, shell carries on — a regular builtin, so no BuiltinError); waiting
+in a subshell for the parent's child hits ECHILD, which dash maps to status 0. One divergence
+where the standard wins over the oracle: POSIX gives an unknown *last* pid operand its 127
+(`wait $! 99999` → 127; bash agrees), while dash keeps the last known operand's status —
+pinned in unit specs, kept out of the corpus. Also kept out: `exit 7 & (wait $!)`, inherently
+racy in dash itself (its pre-fork zombie poll decides 7 vs 0); rush defers opportunistic
+polling to the epic's jobs/notifications slice. Two ride-along gaps filed: `exit 4 | exit 6`
+crashes rush — ExitSignal escapes the pipeline-stage fork block (rush-txc) — and async lists
+neither get /dev/null stdin nor ignore SIGINT/SIGQUIT in the child (rush-tbd).

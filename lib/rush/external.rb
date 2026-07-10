@@ -18,8 +18,7 @@ module Rush
 
     sig { returns(Status) }
     def call
-      _pid, status = system.waitpid2(system.spawn(@env, @argv, spawn_options))
-      Status.of(status)
+      @executor.jobs.await(system.spawn(@env, @argv, spawn_options))
     rescue Errno::ENOENT, Errno::EACCES => e
       error_status(e)
     end

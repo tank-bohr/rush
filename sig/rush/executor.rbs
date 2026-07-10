@@ -15,6 +15,7 @@ module Rush
     @redirect_scope: RedirectScope
     @errexit: ErrexitContext
     @trap_runner: TrapRunner
+    @jobs: JobTable
     @cmd_sub_status: Status
 
     attr_reader system: SystemCalls
@@ -25,6 +26,7 @@ module Rush
     attr_reader io: IoTable
     attr_reader cmd_sub_status: Status
     attr_reader trap_runner: TrapRunner
+    attr_reader jobs: JobTable
 
     def initialize: (system: SystemCalls, state: ShellState, ?builtins: Builtins::Registry) -> void
 

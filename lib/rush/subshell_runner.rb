@@ -17,7 +17,7 @@ module Rush
 
     sig { returns(Status) }
     def call
-      Status.of(@executor.system.waitpid2(spawn_child).last)
+      @executor.jobs.await(spawn_child)
     end
 
     # The subshell is a fresh top level: exit (or an uncaught return) ends it

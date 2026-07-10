@@ -137,7 +137,7 @@ module Rush
 
     sig { params(pid: Integer).returns(Status) }
     def wait_status(pid)
-      Status.of(@executor.system.waitpid2(pid).last)
+      @executor.jobs.await(pid)
     end
 
     sig { returns(T::Boolean) }

@@ -2,9 +2,10 @@
 # frozen_string_literal: true
 
 module Rush
-  # Runs an asynchronous list entry in a forked subshell. The parent records the
-  # child pid for $! and immediately returns success (launch semantics); the
-  # child resolves shell-control exceptions to an exit status like a subshell.
+  # Runs an asynchronous list entry in a forked subshell. The parent records
+  # the child pid for $! and in the job table (where the wait builtin finds
+  # it) and immediately returns success (launch semantics); the child resolves
+  # shell-control exceptions to an exit status like a subshell.
   class BackgroundRunner
     extend T::Sig
 
@@ -16,7 +17,9 @@ module Rush
 
     sig { returns(Status) }
     def call
-      @executor.state.record_background_pid(spawn_child)
+      pid = spawn_child
+      @executor.state.record_background_pid(pid)
+      @executor.jobs.record(pid)
       Status.success
     end
 
