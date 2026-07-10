@@ -1011,3 +1011,25 @@ tail: bucket 3 (differential-covered but unit-thin classes — trap_runner 128, 
 123, pipeline_runner 72, shell_state 65: their oracle runs rush in subprocesses mutant
 cannot see) plus per-file equivalents; porting corpus lessons into unit specs is filed as
 backlog, not debt the gate hides.
+
+### Bucket 3 falls — corpus lessons become unit specs, and mutant finds `sh -`
+rush-211.9 ported the dash-corpus-proven behaviors of the six unit-thin classes into direct
+specs, taking the full project from 95.22% to 96.84% (839 alive of 26553). Per-file:
+trap_runner 68.4→96.5, invocation 82.1→99.5, shell_state 71.7→98.7, getopts_state 77.5→95.3,
+pipeline_runner 83.3→97.0, parser_support 85.2→98.3. The transferable lessons. (1) **Mutant's
+test selection follows the describe constant**: the whole EXIT-trap machinery was guarded by
+executor_spec and the differential corpus — invisible for TrapRunner subjects; the same
+behaviors asserted in trap_runner_spec killed 100+ mutants without new knowledge, just new
+placement. (2) **In-process session runs port differential lessons cheaply**: Invocation's
+state/startup wiring became observable by running whole sessions on the fake — $0/$1/$$
+through -c, login profiles from a provided /etc/profile, the ENV file only when interactive.
+(3) **Structural AST assertions let nil-branch mutants live**: parser_support_spec checked
+node classes and item counts, so make_if with a nil branch or a case item with nil patterns
+survived; executing the built AST (if/elif/else, case alternation, loop bodies) is what
+kills them. (4) A state machine with public cursors (GetoptsState) wants direct stepping
+specs, not just its builtin's. And mutation pressure paid off with a second real bug: **rush
+opened a file named `-`** where POSIX and dash consume a lone `-` like `--` (`echo 'echo hi'
+| sh -` failed with status 2) — fixed in InvocationFlags, pinned by unit and differential
+lines. Exit-trap masking rides as a bonus lesson: run_exit_trap publishes the terminating
+code as $?, so exiting_status mutants hid until the action changed $? before a bare exit
+('false; exit').

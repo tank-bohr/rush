@@ -41,4 +41,98 @@ RSpec.describe Rush::TrapRunner do
     runner.reset_caught_for_subshell
     expect(system.traps_installed.last(2)).to eq([%w[INT SYSTEM_DEFAULT], %w[TERM SYSTEM_DEFAULT]])
   end
+
+  it 'resets only the caught traps for a subshell, keeping the ignored ones' do
+    runner.set('HUP', 'echo got')
+    runner.set('USR1', '')
+    runner.reset_caught_for_subshell
+    expect([executor.state.traps.action('HUP'), executor.state.traps.action('USR1')]).to eq([nil, ''])
+  end
+
+  it 'clears the recorded action on reset' do
+    runner.set('HUP', 'echo got')
+    runner.reset('HUP')
+    expect(executor.state.traps.action('HUP')).to be_nil
+  end
+
+  it 'installs IGNORE for an empty action string' do
+    runner.set('USR2', '')
+    expect(system.traps_installed).to eq([%w[USR2 IGNORE]])
+  end
+
+  it 'keeps the table entry when the OS refuses the disposition (KILL, like dash)' do
+    runner.set('KILL', 'echo x')
+    expect(executor.state.traps.action('KILL')).to eq('echo x')
+  end
+
+  it 'never installs an OS disposition for the EXIT pseudo-signal' do
+    runner.set(Rush::Signals::EXIT, 'echo bye')
+    expect(system.traps_installed).to be_empty
+  end
+
+  it 'preserves $? across a delivered signal action (POSIX 2.14)' do
+    runner.set('USR1', 'true')
+    executor.state.record_status(Rush::Status.new(7))
+    system.trap_block('USR1').call
+    expect(executor.state.last_status.exitstatus).to eq(7)
+  end
+
+  it 'does nothing when the action was cleared under a live handler' do
+    runner.set('USR1', 'echo got')
+    executor.state.traps.clear('USR1')
+    expect { system.trap_block('USR1').call }.not_to raise_error
+    expect(system.stdout.string).to eq('')
+  end
+
+  it 'parses the action with the shell aliases visible (dash-verified)' do
+    executor.state.aliases.define('greet', 'echo hi')
+    runner.set('USR1', 'greet')
+    system.trap_block('USR1').call
+    expect(system.stdout.string).to eq("hi\n")
+  end
+
+  it 'swallows a broken trap action without killing the shell' do
+    runner.set('USR1', 'if')
+    expect { system.trap_block('USR1').call }.not_to raise_error
+  end
+
+  describe '#run_exit_trap' do
+    it 'returns the code untouched when no EXIT trap is set' do
+      expect(runner.run_exit_trap(3)).to eq(3)
+    end
+
+    it 'runs the EXIT action with $? published as the terminating code' do
+      runner.set(Rush::Signals::EXIT, 'echo rc=$?')
+      expect(runner.run_exit_trap(7)).to eq(7)
+      expect(system.stdout.string).to eq("rc=7\n")
+    end
+
+    it 'lets an explicit exit inside the action override the exit code' do
+      runner.set(Rush::Signals::EXIT, 'exit 9')
+      expect(runner.run_exit_trap(3)).to eq(9)
+    end
+
+    it 'lets a bare exit in the action report the terminating status' do
+      runner.set(Rush::Signals::EXIT, 'exit')
+      expect(runner.run_exit_trap(5)).to eq(5)
+    end
+
+    it 'bare exit reports the terminating status even after the action changed $?' do
+      runner.set(Rush::Signals::EXIT, 'false; exit')
+      expect(runner.run_exit_trap(5)).to eq(5)
+    end
+
+    it 'clears the exiting status once the action has run' do
+      runner.set(Rush::Signals::EXIT, 'true')
+      runner.run_exit_trap(5)
+      expect(runner.exiting_status).to eq(0)
+    end
+  end
+
+  describe '#exiting_status' do
+    it 'falls back to the last command status when the shell is not exiting' do
+      executor.state.record_status(Rush::Status.new(4))
+      expect(runner.exiting_status).to eq(4)
+    end
+  end
 end

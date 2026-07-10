@@ -47,6 +47,17 @@ RSpec.describe Rush::Invocation do
       expect([inv.source, inv.name]).to eq(["echo dashc\n", '-c'])
     end
 
+    it 'consumes an obsolescent lone - like --, reading stdin (dash-verified)' do
+      inv = invocation(['-'], system: FakeSystemCalls.new(stdin: "echo hi\n"))
+      expect([inv.source, inv.name]).to eq(["echo hi\n", 'rush'])
+    end
+
+    it 'treats operands after a lone - as the script file' do
+      system = FakeSystemCalls.new
+      system.provide_file('run.sh', "echo hi\n")
+      expect(invocation(['-', 'run.sh'], system: system).name).to eq('run.sh')
+    end
+
     it 'lets +s with an operand fall through to the script file' do
       system = FakeSystemCalls.new
       system.provide_file('run.sh', "echo hi\n")
@@ -120,6 +131,11 @@ RSpec.describe Rush::Invocation do
       expect(invocation([]).interactive?).to be(false)
     end
 
+    it 'is not interactive when only stderr is a tty' do
+      inv = invocation([], system: FakeSystemCalls.new(tty: false, stderr_tty: true))
+      expect(inv.interactive?).to be(false)
+    end
+
     it 'is not interactive on a terminal once -c is given' do
       inv = invocation(['-c', ':'], system: FakeSystemCalls.new(tty: true))
       expect(inv.interactive?).to be(false)
@@ -166,6 +182,83 @@ RSpec.describe Rush::Invocation do
     end
   end
 
+  describe '#session' do
+    it 'builds a REPL for an interactive terminal shell and a Source otherwise' do
+      expect(invocation([], system: FakeSystemCalls.new(tty: true)).session).to be_a(Rush::Repl)
+      expect(invocation(['-c', ':']).session).to be_a(Rush::Source)
+    end
+
+    it 'wires the state: $0, positionals and the shell pid reach the program' do
+      system = FakeSystemCalls.new
+      invocation(['-c', 'echo $0 $1 $$', 'nm', 'a'], system: system).session.run
+      expect(system.stdout.string).to eq("nm a 4242\n")
+    end
+
+    it 'wires the flags: -e aborts the batch at the first failure' do
+      system = FakeSystemCalls.new
+      invocation(['-e', '-c', 'false; echo unreached'], system: system).session.run
+      expect(system.stdout.string).to eq('')
+    end
+
+    it 'runs the login profiles before the program' do
+      system = FakeSystemCalls.new
+      system.provide_file('/etc/profile', "echo prof\n")
+      invocation(['-l', '-c', 'echo main'], system: system).session.run
+      expect(system.stdout.string).to eq("prof\nmain\n")
+    end
+
+    it 'skips the profiles for a non-login batch' do
+      system = FakeSystemCalls.new
+      system.provide_file('/etc/profile', "echo prof\n")
+      invocation(['-c', 'echo main'], system: system).session.run
+      expect(system.stdout.string).to eq("main\n")
+    end
+
+    it 'runs a terminal session through the REPL loop' do
+      system = FakeSystemCalls.new(tty: true, stdin: "echo hi\n")
+      invocation([], system: system).session.run
+      expect(system.stdout.string).to eq("hi\n")
+    end
+
+    it 'builds a batch Source for non-interactive stdin' do
+      inv = invocation([], system: FakeSystemCalls.new(stdin: "echo hi\n"))
+      expect(inv.session).to be_a(Rush::Source)
+    end
+
+    it 'wires the state into the REPL: $$ is the shell pid' do
+      system = FakeSystemCalls.new(tty: true, stdin: "echo $$\n")
+      invocation([], system: system).session.run
+      expect(system.stdout.string).to eq("4242\n")
+    end
+
+    it 'wires the startup into the REPL: a login terminal reads the profile' do
+      system = FakeSystemCalls.new(tty: true, stdin: "echo hi\n", program_name: '-rush')
+      system.provide_file('/etc/profile', "echo prof\n")
+      invocation([], system: system).session.run
+      expect(system.stdout.string).to eq("prof\nhi\n")
+    end
+
+    it 'reads the file named by ENV only when interactive' do
+      ENV['ENV'] = 'rc.sh'
+      batch = FakeSystemCalls.new(stdin: "echo main\n")
+      batch.provide_file('rc.sh', "echo rc\n")
+      invocation([], system: batch).session.run
+      expect(batch.stdout.string).to eq("main\n")
+      tty = FakeSystemCalls.new(tty: true, stdin: "echo main\n")
+      tty.provide_file('rc.sh', "echo rc\n")
+      invocation([], system: tty).session.run
+      expect(tty.stdout.string).to eq("rc\nmain\n")
+    ensure
+      ENV.delete('ENV')
+    end
+
+    it 'leaves the caller argv untouched' do
+      argv = ['-c', ':']
+      invocation(argv)
+      expect(argv).to eq(['-c', ':'])
+    end
+  end
+
   describe '#shell_flags implicit flags' do
     it 'marks a stdin source with s and an interactive session with i' do
       inv = invocation(['-i'])
@@ -178,6 +271,10 @@ RSpec.describe Rush::Invocation do
 
     it 'marks -c as neither stdin nor interactive' do
       expect(invocation(['-c', ':']).shell_flags).to include(stdin: false, interactive: false)
+    end
+
+    it 'never marks a -c invocation as a stdin source, even under -s' do
+      expect(invocation(['-s', '-c', ':']).shell_flags).to include(stdin: false)
     end
   end
 end

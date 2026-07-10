@@ -25,6 +25,58 @@ RSpec.describe Rush::ShellState do
     expect(state.options.on?(:nounset)).to be(false)
   end
 
+  it 'seeds OPTIND at 1 with a fresh getopts state and an empty trap table' do
+    state = described_class.new
+    expect([state.variables.get('OPTIND'), state.traps.listing]).to eq(['1', []])
+    expect(state.getopts).to be_a(Rush::GetoptsState)
+  end
+
+  it 'seeds the positional parameters from the constructor, empty by default' do
+    expect(described_class.new(positional: %w[a b]).positional.to_a).to eq(%w[a b])
+    expect(described_class.new.positional.empty?).to be(true)
+  end
+
+  it 'starts with empty function, alias and command-hash tables' do
+    state = described_class.new
+    expect([state.functions.key?('f'), state.aliases.key?('a'), state.command_hash]).to eq([false, false, {}])
+  end
+
+  it 'flips options through set_option like the set builtin' do
+    state = described_class.new
+    state.set_option(:errexit, true)
+    expect(state.options.on?(:errexit)).to be(true)
+    state.set_option(:errexit, false)
+    expect(state.options.on?(:errexit)).to be(false)
+  end
+
+  it 'mirrors allexport onto the variable table (set -a)' do
+    state = described_class.new(environment: Rush::Environment.new({}))
+    state.set_option(:allexport, true)
+    state.variables.assign('N', '1')
+    expect(state.variables.exported).to include('N' => '1')
+  end
+
+  it 'does not touch the allexport mirror for other options' do
+    state = described_class.new(environment: Rush::Environment.new({}))
+    state.set_option(:errexit, true)
+    state.variables.assign('N', '1')
+    expect(state.variables.exported).not_to include('N' => '1')
+  end
+
+  it 'turns the allexport mirror back off (set +a)' do
+    state = described_class.new(environment: Rush::Environment.new({}))
+    state.set_option(:allexport, true)
+    state.set_option(:allexport, false)
+    state.variables.assign('N', '1')
+    expect(state.variables.exported).not_to include('N' => '1')
+  end
+
+  it 'tracks LINENO through record_lineno' do
+    state = described_class.new(environment: Rush::Environment.new({}))
+    state.record_lineno(4)
+    expect(state.variables.get('LINENO')).to eq('4')
+  end
+
   it 'tracks loop nesting depth for break/continue' do
     state = described_class.new
     expect(state.loops.any?).to be(false)

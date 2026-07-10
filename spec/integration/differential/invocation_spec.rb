@@ -11,6 +11,8 @@ RSpec.describe 'rush vs dash (differential invocation corpus)' do
 
   corpus = [
     [[], "echo [$-]\n"],
+    [['-'], "echo lone-dash\n"],
+    [['-e', '-'], "echo [$-]\n"],
     [['-s'], "echo [$-]\n"],
     [['-s', 'a', 'b'], 'echo "[$1-$2-$#]"'],
     [['-i'], "echo [$-]\n"],

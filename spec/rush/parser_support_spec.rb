@@ -140,4 +140,68 @@ RSpec.describe Rush::ParserSupport do
   it 'raises IncompleteInput when the input ends mid-construct' do
     expect { parser.on_error(0, false, []) }.to raise_error(Rush::IncompleteInput)
   end
+
+  it 'spells the full diagnostic: location, token name and text' do
+    expect { parse('echo )') }
+      .to raise_error(Rush::ParseError, 'syntax error at 6: unexpected ")" `)`')
+    expect { parse('fi') }
+      .to raise_error(Rush::ParseError, 'syntax error at 2: unexpected Fi `fi`')
+  end
+
+  it 'spells the incomplete-input message the REPL relies on' do
+    expect { parse('if true; then') }
+      .to raise_error(Rush::IncompleteInput, 'unexpected end of input')
+  end
+
+  describe 'executing the built AST (the semantic actions observed end to end)' do
+    let(:system) { FakeSystemCalls.new }
+    let(:state) { Rush::ShellState.new(environment: Rush::Environment.new({})) }
+    let(:executor) { Rush::Executor.new(system: system, state: state) }
+
+    def run(src)
+      executor.run(parse(src))
+      system.stdout.string
+    end
+
+    it 'runs ;- and newline-separated entries in order' do
+      expect(run("echo a; echo b\necho c")).to eq("a\nb\nc\n")
+    end
+
+    it 'keeps the & separator on the entry it follows (async launch, no output here)' do
+      expect(run('echo a & echo b')).to eq("b\n")
+      expect(run('echo t &')).to eq("b\n")
+    end
+
+    it 'wires and-or chains left to right with the real operators' do
+      expect(run('false && echo a || echo b; true && echo c')).to eq("b\nc\n")
+    end
+
+    it 'attaches the redirects to the compound command they follow' do
+      expect(run('if true; then echo x; fi > f; echo out')).to eq("out\n")
+      expect(system.files.fetch('f').string).to eq("x\n")
+    end
+
+    it 'wires all three if branches' do
+      expect(run('if false; then echo t; elif true; then echo e; else echo n; fi')).to eq("e\n")
+      expect(run('if false; then echo t; else echo n; fi')).to eq("e\nn\n")
+    end
+
+    it 'wires loop conditions and bodies' do
+      expect(run('i=1; while [ $i -le 2 ]; do echo w$i; i=$((i+1)); done')).to eq("w1\nw2\n")
+      expect(run('until [ $i -gt 3 ]; do echo u$i; i=$((i+1)); done')).to eq("w1\nw2\nu3\n")
+    end
+
+    it 'wires case patterns and bodies' do
+      expect(run('case b in a) echo A;; b|c) echo B;; esac')).to eq("B\n")
+      expect(run('case z in a) echo A;; *) echo D;; esac')).to eq("B\nD\n")
+    end
+
+    it 'wires for-loop names, words and bodies' do
+      expect(run('for x in a b; do echo f$x; done')).to eq("fa\nfb\n")
+    end
+
+    it 'wires function bodies to their names' do
+      expect(run('f() { echo fn$1; }; f z')).to eq("fnz\n")
+    end
+  end
 end

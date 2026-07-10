@@ -39,12 +39,49 @@ RSpec.describe Rush::PipelineRunner do
       expect(status).to be_success
     end
 
+    it 'opens a pipe per stage boundary and closes every parent end after forking' do
+      pipes_made = []
+      allow(system).to receive(:pipe) { (pipes_made << [StringIO.new, StringIO.new]).last }
+      allow(system).to receive(:fork).and_return(11, 12, 13)
+      allow(system).to receive(:waitpid2) { |pid| [pid, status_double(0)] }
+      described_class.new(executor, [echo('a'), echo('b'), echo('c')]).call
+      expect(pipes_made.size).to eq(2)
+      expect(pipes_made.flatten).to all(be_closed)
+    end
+
     def status_double(code)
       instance_double(Process::Status, exitstatus: code, termsig: nil)
     end
 
     def stub_wait_statuses(codes)
       allow(system).to receive(:waitpid2) { |pid| [pid, status_double(codes.fetch(pid))] }
+    end
+  end
+
+  describe 'Stage geometry' do
+    let(:pipes) { Array.new(2) { [StringIO.new, StringIO.new] } }
+
+    def stage(index)
+      Rush::PipelineRunner::Stage.new(index, pipes, 3)
+    end
+
+    it 'wires stdin from the previous pipe and stdout to the next' do
+      expect([stage(0).input, stage(0).output]).to eq([nil, pipes.fetch(0).last])
+      expect([stage(1).input, stage(1).output]).to eq([pipes.fetch(0).first, pipes.fetch(1).last])
+      expect([stage(2).input, stage(2).output]).to eq([pipes.fetch(1).first, nil])
+    end
+
+    it 'keeps only its own pipe ends' do
+      expect(stage(0).ends).to eq([pipes.fetch(0).last])
+      expect(stage(1).ends).to eq([pipes.fetch(0).first, pipes.fetch(1).last])
+    end
+
+    it 'layers its ends over the base io table, keeping the base elsewhere' do
+      base = Rush::IoTable.standard(FakeSystemCalls.new)
+      expect([stage(0).io(base).get(0), stage(0).io(base).get(1)]).to eq([base.get(0), pipes.fetch(0).last])
+      expect([stage(1).io(base).get(0), stage(1).io(base).get(1)])
+        .to eq([pipes.fetch(0).first, pipes.fetch(1).last])
+      expect([stage(2).io(base).get(0), stage(2).io(base).get(1)]).to eq([pipes.fetch(1).first, base.get(1)])
     end
   end
 

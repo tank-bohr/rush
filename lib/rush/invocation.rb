@@ -22,7 +22,10 @@ module Rush
       @settings = T.let({}, T::Hash[Symbol, T::Boolean])
       @command = T.let(false, T::Boolean)
       apply_cluster(T.must(argv.shift), argv) while cluster?(argv.first)
-      argv.shift if argv.first == '--'
+      # `--` or the obsolescent lone `-` ends the options and is consumed
+      # (POSIX sh synopsis; dash-verified: `sh -` reads stdin, `sh - file`
+      # runs the file, while a `-` after the -c string stays $0).
+      argv.shift if ['--', '-'].include?(argv.first)
     end
 
     private
