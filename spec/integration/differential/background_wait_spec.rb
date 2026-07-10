@@ -31,6 +31,20 @@ RSpec.describe 'rush vs dash (differential background/wait corpus)' do
     'true | false & wait $!; echo $?',
     'exit 4 | exit 6 & wait $!; echo $?',
     'sleep 5 & p=$!; kill -9 $p; wait $p; echo $?',
+    # async isolation (POSIX 2.9.3.1 / 2.11, job control disabled): the child
+    # starts with SIGINT/SIGQUIT ignored — a real SIG_IGN that survives exec
+    # and nested subshells, which `trap` overrides and `trap - INT` resets to
+    # the OS default — while TERM still kills. The settle sleep matters: dash
+    # has the same fork race, and an instant kill beats the child's SIG_IGN
+    # setup in both shells.
+    'sleep 0.4 & sleep 0.1; kill -INT $!; wait $!; echo st=$?',
+    'sleep 0.4 & sleep 0.1; kill -QUIT $!; wait $!; echo st=$?',
+    '( sleep 0.4 ) & sleep 0.1; kill -INT $!; wait $!; echo st=$?',
+    '{ trap "echo got" INT; sleep 0.4; } & sleep 0.1; kill -INT $!; wait $!; echo st=$?',
+    '{ trap - INT; sleep 0.4; } & sleep 0.1; kill -INT $!; wait $!; echo st=$?',
+    'sleep 0.4 & sleep 0.1; kill $!; wait $!; echo st=$?',
+    # async stdin is /dev/null unless the list redirects it itself
+    "cat <<E & wait $!\nhd\nE\necho st=$?",
     # subshells: a live job is not the subshell's child (status 0, as dash),
     # an unknown pid stays 127, and a status the parent already reaped during
     # a foreground wait is inherited as remembered. (The dead-but-unreaped
@@ -50,5 +64,10 @@ RSpec.describe 'rush vs dash (differential background/wait corpus)' do
     it "#{id}: matches dash for: #{snippet}" do
       expect(rush(snippet)).to eq(dash(snippet))
     end
+  end
+
+  it 'wait-inp: async stdin is /dev/null, not the pipe feeding the shell' do
+    snippet = 'cat & wait $!; echo st=$?'
+    expect(rush(snippet, "hi\n")).to eq(dash(snippet, "hi\n"))
   end
 end

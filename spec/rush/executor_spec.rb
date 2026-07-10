@@ -112,7 +112,7 @@ RSpec.describe Rush::Executor do
     executor.trap_runner.set('INT', '')
     executor.reset_caught_traps_for_subshell
     expect(target.traps.listing).to eq([['INT', '']])
-    expect(system.traps_installed).to eq([['TERM', nil], %w[INT IGNORE], %w[TERM DEFAULT]])
+    expect(system.traps_installed).to eq([['TERM', nil], %w[INT IGNORE], %w[TERM SYSTEM_DEFAULT]])
   end
 
   it 'temporarily swaps io and restores it after success or failure' do

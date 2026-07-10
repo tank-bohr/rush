@@ -113,7 +113,7 @@ module Rush
     sig { params(name: String, disposition: T.nilable(String)).void }
     def install(name, disposition)
       base = @base.fetch(name, nil)
-      return @executor.system.trap_signal(name, nil) { base.call } if disposition == 'DEFAULT' && base
+      return @executor.system.trap_signal(name, nil) { base.call } if disposition == 'SYSTEM_DEFAULT' && base
 
       @executor.system.trap_signal(name, disposition) { fire_signal(name) }
     end
@@ -128,11 +128,14 @@ module Rush
       dropped.each_key { |name| install_signal(name, :default) }
     end
 
-    # '' ignores the signal, :default restores it; a command string installs the
-    # handler block (nil disposition), matching SystemCalls#trap_signal.
+    # '' ignores the signal; :default restores the true OS disposition
+    # (SYSTEM_DEFAULT = SIG_DFL — Ruby's plain 'DEFAULT' instead simulates the
+    # signal by raising, which dies as an uncaught-exception traceback where
+    # dash dies silently by signal); a command string installs the handler
+    # block (nil disposition), matching SystemCalls#trap_signal.
     sig { params(action: T.any(String, Symbol)).returns(T.nilable(String)) }
     def disposition(action)
-      { '' => 'IGNORE', :default => 'DEFAULT' }.fetch(action, nil)
+      { '' => 'IGNORE', :default => 'SYSTEM_DEFAULT' }.fetch(action, nil)
     end
 
     # Run a delivered signal's action, restoring $? so the interrupted code is

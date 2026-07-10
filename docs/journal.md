@@ -906,3 +906,22 @@ fires with the stage's io — `{ trap "echo bye" EXIT; true; } | cat` sends bye 
 pipe; and a fatal error (readonly assignment) aborts just that stage with status 2 while the
 shell carries on. The `exit 4 | exit 6 & wait $!` corpus line the wait slice had to drop is
 restored.
+
+### Async children isolate themselves — /dev/null stdin, soft SIG_IGN, and a Ruby trap gotcha
+rush-tbd. POSIX 2.9.3.1/2.11 with job control disabled: an asynchronous list's child reads
+stdin from /dev/null (its own redirections may rebind it — a heredoc still wins) and starts
+with SIGINT/SIGQUIT ignored. BackgroundRunner#isolate now does both in the forked child. The
+dash-probed shape of the ignore is *soft*: a real SIG_IGN — surviving exec into externals and
+inheriting into nested subshells at the OS level — but installed OFF the trap table, so
+`trap "..." INT` inside the child overrides it and `trap - INT` restores the OS default, not
+the ignore (all corpus-pinned). Ordering matters: the subshell trap reset must run before the
+ignores — an interactive session's base handlers reinstall OS defaults as they drop, which
+would undo them; the repeat reset inside SubshellRunner#run_body is then a no-op. Two
+durable lessons. (1) The `kill` right after `&` is a genuine race in dash too: an instant
+`kill -INT $!` beats the child's SIG_IGN setup in both shells (130 five out of five), while a
+0.1s settle flips both to the ignore — corpus lines carry the settle sleep. (2) Ruby's
+`Signal.trap(sig, 'DEFAULT')` is NOT the OS default: it installs Ruby's own handler that
+raises Interrupt/SignalException, so a "default" INT died as an uncaught-exception traceback
+where dash dies silently by signal (observably the same 128+n status — Ruby re-kills itself —
+but with stderr noise). TrapRunner's :default now maps to 'SYSTEM_DEFAULT' (true SIG_DFL);
+`trap "..." USR1; trap - USR1; kill -USR1 $$` exits 138 cleanly in both shells.

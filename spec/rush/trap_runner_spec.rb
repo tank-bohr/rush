@@ -33,12 +33,12 @@ RSpec.describe Rush::TrapRunner do
   it 'resets to the OS default for signals without a base handler' do
     runner.set('HUP', 'echo got')
     runner.reset('HUP')
-    expect(system.traps_installed.last).to eq(%w[HUP DEFAULT])
+    expect(system.traps_installed.last).to eq(%w[HUP SYSTEM_DEFAULT])
   end
 
   it 'drops base handlers to the OS default for a subshell' do
     install_base
     runner.reset_caught_for_subshell
-    expect(system.traps_installed.last(2)).to eq([%w[INT DEFAULT], %w[TERM DEFAULT]])
+    expect(system.traps_installed.last(2)).to eq([%w[INT SYSTEM_DEFAULT], %w[TERM SYSTEM_DEFAULT]])
   end
 end

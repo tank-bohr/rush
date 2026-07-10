@@ -44,14 +44,14 @@ RSpec.describe Rush::Builtins::Trap do
     run('x', 'INT')
     expect(run('INT')).to be_success
     expect(traps.action('INT')).to be_nil
-    expect(system.traps_installed).to eq([['INT', nil], %w[INT DEFAULT]])
+    expect(system.traps_installed).to eq([['INT', nil], %w[INT SYSTEM_DEFAULT]])
   end
 
   it 'resets a signal given a non-identical "-" action string' do
     run('x', 'INT')
     expect(run(+'-', 'INT')).to be_success
     expect(traps.action('INT')).to be_nil
-    expect(system.traps_installed).to eq([['INT', nil], %w[INT DEFAULT]])
+    expect(system.traps_installed).to eq([['INT', nil], %w[INT SYSTEM_DEFAULT]])
   end
 
   it 'lists active traps as quoted lines ordered by signal number' do
@@ -85,10 +85,10 @@ RSpec.describe Rush::Builtins::Trap do
     expect(system.traps_installed).to eq([['INT', nil]])
   end
 
-  it 'installs IGNORE for an ignored signal and DEFAULT on reset' do
+  it 'installs IGNORE for an ignored signal and the OS default on reset' do
     run('', 'INT')
     run('-', 'INT')
-    expect(system.traps_installed).to eq([%w[INT IGNORE], %w[INT DEFAULT]])
+    expect(system.traps_installed).to eq([%w[INT IGNORE], %w[INT SYSTEM_DEFAULT]])
   end
 
   it 'does not install an OS handler for the EXIT pseudo-signal' do

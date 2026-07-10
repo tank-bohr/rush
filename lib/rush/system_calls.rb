@@ -53,7 +53,7 @@ module Rush
     end
 
     # Install a signal disposition for `trap`: a command string ('IGNORE' /
-    # 'DEFAULT') or, when nil, the block to run when the signal arrives. Mutating
+    # 'SYSTEM_DEFAULT') or, when nil, the block to run when the signal arrives. Mutating
     # the process's real signal handlers cannot run under the test harness.
     def trap_signal(name, command, &block)
       Signal.trap(name, command || block)
