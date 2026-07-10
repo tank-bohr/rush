@@ -11,5 +11,21 @@ matcher:
     - Rush*
   ignore:
     - Rush::Parser*
+    # Process-boundary wrappers (the same ones SimpleCov marks :nocov:):
+    # their bodies replace or split the process (fork / exit! / real signal
+    # dispositions / kill delivery) or need a real terminal (Reline), so no
+    # in-process example can observe a mutation. Their behaviour is proven
+    # by the differential corpus, subprocess specs and the Docker pty
+    # smokes, which all run rush out-of-process (rush-211.8).
+    - Rush::SystemCalls#fork
+    - Rush::SystemCalls#exit!
+    - Rush::SystemCalls#kill
+    - Rush::SystemCalls#trap_signal
+    - Rush::SystemCalls#edit_line
+    - Rush::BackgroundRunner#spawn_child
+    - Rush::BackgroundRunner#run_child
+    - Rush::SubshellRunner#spawn_child
+    - Rush::SubshellRunner#run_child
+    - Rush::PipelineRunner#start_stage
 mutation:
   timeout: 5.0

@@ -28,4 +28,14 @@ RSpec.describe Rush::Signals do
   it 'maps a canonical name back to its signal number' do
     expect(described_class.number('TERM')).to eq(15)
   end
+
+  it 'describes the common signals like strsignal, as the jobs listing prints them' do
+    expect([described_class.description(9), described_class.description(15)])
+      .to eq(%w[Killed Terminated])
+  end
+
+  it 'falls back to the signal name, then to Signal N' do
+    expect([described_class.description(5), described_class.description(99)])
+      .to eq(['TRAP', 'Signal 99'])
+  end
 end

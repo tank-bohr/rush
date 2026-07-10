@@ -6,10 +6,11 @@ module Rush
   # the POSIX signal table, names match case-insensitively and without a "SIG"
   # prefix, and 0/EXIT denote the pseudo-signal that fires when the shell exits.
   # An unknown spec resolves to nil so `trap` can report "bad trap" (dash parity).
+  # Methods are explicit singletons: module_function would define a second,
+  # instance-side copy that callers never reach — dead weight mutant proved
+  # unkillable (journal, rush-211.8).
   module Signals
     extend T::Sig
-
-    module_function
 
     EXIT = 'EXIT'
     NUMBERS = {
@@ -23,7 +24,7 @@ module Rush
     NAMES = NUMBERS.invert.freeze
 
     sig { params(spec: String).returns(T.nilable(String)) }
-    def decode(spec)
+    def self.decode(spec)
       return NUMBERS.fetch(spec.to_i, nil) if spec.match?(/\A\d+\z/)
 
       name = spec.upcase
@@ -31,7 +32,7 @@ module Rush
     end
 
     sig { params(name: String).returns(Integer) }
-    def number(name)
+    def self.number(name)
       NAMES.fetch(name)
     end
 
@@ -46,7 +47,7 @@ module Rush
     }.freeze
 
     sig { params(number: Integer).returns(String) }
-    def description(number)
+    def self.description(number)
       DESCRIPTIONS.fetch(number) { NUMBERS.fetch(number, "Signal #{number}") }
     end
   end

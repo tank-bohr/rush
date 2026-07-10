@@ -987,3 +987,27 @@ catalogued equivalents: T.let generic noise, T.must under spec_helper's silenced
 `bad(e)` vs `bad(e.message)` (string interpolation calls to_s, which is message), `!=` vs
 `!eql?`/`!equal?` on deduplicated frozen literals, `send` vs `__send__`, `report(job, nil)`
 niling into the same empty string, and a redundant-return shape.
+
+### The whole project crosses the mutant gate — module_function's unkillable twin
+rush-211.8: the first full-project run scored 94.24% (26727 mutations, 1540 alive); applying
+the bucket plan landed 95.22% (26546 after ignores, 1268 alive), gate green. The findings
+worth keeping. (1) **module_function breeds an unkillable twin**: it defines every method
+twice, and while specs call the singleton copy, mutant mutates the instance copy — no test
+can ever fail. Signals scored 3.5% purely from this artifact; explicit `def self.` methods
+took it to 96.5% (with a description() spec riding along). (2) **:nocov: and mutant-ignore
+are the same boundary**: the ten process-boundary wrappers (SystemCalls fork/exit!/kill/
+trap_signal/edit_line, the runners' spawn_child/run_child, start_stage) are now matcher
+ignores with the rationale written into .mutant.yml — their proof lives in the subprocess
+specs, the differential corpus and the pty smokes, all invisible to in-process mutation.
+(3) **equal?-mutants hide behind frozen-literal deduplication**: `name != 'LINENO'` mutated
+to `!name.equal?('LINENO')` survived because the spec's literal and the lib's literal are
+the same deduplicated object; the spec now passes `'LINENO'.dup` — the shape of real user
+input. (4) **A masked side effect needs a second act to observe**: unset dropping the export
+mark was invisible because exported() slices @vars (the deleted name vanishes either way) —
+only reassigning after unset tells; likewise declare_local_operand as a no-op survived a
+spec that checked scope restoration but never that the local took effect inside it.
+Environment 80.1%→98.0%, ShellVariables 71.7%→97.8%. What remains alive is the catalogued
+tail: bucket 3 (differential-covered but unit-thin classes — trap_runner 128, invocation
+123, pipeline_runner 72, shell_state 65: their oracle runs rush in subprocesses mutant
+cannot see) plus per-file equivalents; porting corpus lessons into unit specs is filed as
+backlog, not debt the gate hides.
