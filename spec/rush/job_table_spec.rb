@@ -50,7 +50,7 @@ RSpec.describe Rush::JobTable do
     end
 
     it 'maps a signalled child to 128 + signal' do
-      signalled = Struct.new(:exitstatus, :termsig).new(nil, 9)
+      signalled = FakeSystemCalls::ChildStatus.new(nil, 9)
       allow(system).to receive(:waitpid2).with(5).and_return([5, signalled])
       expect(table.await(5).exitstatus).to eq(137)
     end
@@ -151,7 +151,7 @@ RSpec.describe Rush::JobTable do
     end
 
     it 'drops the job-control environment — a forked child is no root and never reclaims the tty' do
-      table.control.hold(Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242))
+      table.control.engage(Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242))
       table.clear_for_subshell
       expect([table.control.root, table.control.terminal]).to eq([false, nil])
     end
@@ -160,10 +160,10 @@ RSpec.describe Rush::JobTable do
   describe '#control' do
     it 'holds the acquired terminal until released (set +m)' do
       terminal = Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242)
-      table.control.hold(terminal)
-      expect(table.control.terminal).to be(terminal)
-      table.control.hold(nil)
-      expect(table.control.terminal).to be_nil
+      table.control.engage(terminal)
+      expect([table.control.terminal, table.control.monitor]).to eq([terminal, true])
+      table.control.release
+      expect([table.control.terminal, table.control.monitor]).to eq([nil, false])
     end
   end
 
@@ -176,6 +176,96 @@ RSpec.describe Rush::JobTable do
       table.wait_all
       expect(table.ordered.map(&:running?)).to eq([false, false])
       expect([table.wait_for(9).exitstatus, table.wait_for(11).exitstatus]).to eq([4, 5])
+    end
+
+    it 'passes a stopped job without blocking (dash: wait with no operands answers 0 at once)' do
+      table.record(9)
+      table.control.engage(nil)
+      system.provide_stopped(9, 19)
+      table.poll
+      expect { table.wait_all }.not_to raise_error
+      expect(table.current.stopped?).to be(true)
+    end
+  end
+
+  describe 'stopped jobs (rush-mv8.4)' do
+    before { table.control.engage(nil) }
+
+    it 'reaps a stop through the monitored wait: 128+stopsig, entry parked Stopped' do
+      table.record(9)
+      system.provide_stopped(9, 20)
+      expect(table.wait_for(9).exitstatus).to eq(148)
+      expect([table.current.stopped?, table.current.finished?]).to eq([true, false])
+    end
+
+    it 'answers a stopped job repeatably, then follows its death once reaped' do
+      table.record(9)
+      system.provide_stopped(9, 20)
+      table.poll
+      expect(table.wait_for(9).exitstatus).to eq(148)
+      system.provide_signalled(9, 9)
+      table.poll
+      expect(table.wait_for(9).exitstatus).to eq(137)
+    end
+
+    it 'awaits a foreground child through the stoppable wait under monitor' do
+      allow(system).to receive(:wait_stoppable).and_call_original
+      system.provide_stopped(5, 20)
+      status = table.await(5)
+      expect([status.exitstatus, status.stopsig]).to eq([148, 20])
+      expect(system).to have_received(:wait_stoppable).with(5)
+    end
+
+    it 'keeps waitpid(-1) reaping while a stopped job could still change state' do
+      table.record(9)
+      system.provide_stopped(9, 19)
+      table.poll
+      allow(system).to receive(:wait_stoppable).and_call_original
+      system.provide_child(5, 3)
+      expect(table.await(5).exitstatus).to eq(3)
+      expect(system).to have_received(:wait_stoppable).with(-1)
+    end
+
+    it 'stashes a foreign sibling stop for its own await to consume' do
+      table.record(9)
+      system.provide_stopped(5, 20)
+      system.provide_child(7, 3)
+      expect(table.await(7).exitstatus).to eq(3)
+      expect(table.await(5).exitstatus).to eq(148)
+    end
+  end
+
+  describe '#adopt_stopped' do
+    it 'parks a ^Z-stopped foreground pipeline as one Stopped entry, leader first' do
+      table.adopt_stopped([50, 51], 20)
+      job = table.current
+      expect([job.number, job.pid, job.members, job.stopped?]).to eq([1, 50, [50, 51], true])
+    end
+
+    it 'ignores the fake fork sentinel leader pid 0' do
+      table.adopt_stopped([0], 20)
+      expect(table.current).to be_nil
+    end
+  end
+
+  describe '#refuse_exit? / #tick_warning (dash job_warning)' do
+    it 'never refuses without a stopped job' do
+      table.record(9)
+      expect(table.refuse_exit?).to be(false)
+    end
+
+    it 'refuses once, lets an immediate retry through, and re-arms two ticks later' do
+      table.adopt_stopped([50], 20)
+      expect(table.refuse_exit?).to be(true)
+      table.control.tick_warning
+      expect(table.refuse_exit?).to be(false)
+      table.control.tick_warning
+      expect(table.refuse_exit?).to be(true)
+    end
+
+    it 'never re-arms without ticks (a batch shell exits on the second try)' do
+      table.adopt_stopped([50], 20)
+      expect([table.refuse_exit?, table.refuse_exit?, table.refuse_exit?]).to eq([true, false, false])
     end
   end
 end

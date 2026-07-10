@@ -88,13 +88,14 @@ module Rush
 
     # The whole pipeline is one job: under job control its group (led by the
     # first stage) owns the terminal until every stage has settled, so the
-    # reclaim wraps the full wait, not each stage's.
+    # reclaim wraps the full wait, not each stage's — and a ^Z parks all of
+    # it as one Stopped entry.
     sig { returns(Status) }
     def call
       pipes = build_pipes
       pids = start_stages(pipes)
       close_all(pipes)
-      @executor.job_control.foreground(pids.fetch(0)) { wait(pids) }
+      @executor.job_control.foreground(pids) { wait(pids) }
     end
 
     private
@@ -141,7 +142,7 @@ module Rush
     sig { params(pids: T::Array[Integer]).returns(Status) }
     def wait(pids)
       statuses = PipelineStatuses.new(pids.map { |pid| wait_status(pid) })
-      pipefail? ? statuses.pipefail : statuses.last_stage
+      pipefail? ? statuses.pipefail_verdict : statuses.verdict
     end
 
     sig { params(pid: Integer).returns(Status) }

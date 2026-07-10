@@ -141,28 +141,40 @@ RSpec.describe Rush::JobControl do
   describe '#foreground (terminal handover around a wait)' do
     it 'gives the terminal to the job group for the wait and reclaims it after' do
       tty_control.enable(tty_system.stderr)
-      seen = tty_control.foreground(77) { tty_system.handovers.dup }
+      seen = nil
+      tty_control.foreground([77]) do
+        seen = tty_system.handovers.dup
+        Rush::Status.success
+      end
       expect(seen).to eq([4242, 77])
       expect(tty_system.handovers).to eq([4242, 77, 4242])
     end
 
     it 'reclaims the terminal even when the wait is interrupted' do
       tty_control.enable(tty_system.stderr)
-      expect { tty_control.foreground(77) { raise Rush::Interrupted, 'interrupted' } }
+      expect { tty_control.foreground([77]) { raise Rush::Interrupted, 'interrupted' } }
         .to raise_error(Rush::Interrupted)
       expect(tty_system.handovers.last).to eq(4242)
     end
 
     it 'runs the wait bare without a held terminal' do
       control.enable(system.stderr)
-      expect(control.foreground(77) { :waited }).to eq(:waited)
+      expect(control.foreground([77]) { Rush::Status.new(3) }.exitstatus).to eq(3)
       expect(system.handovers).to be_empty
     end
 
     it 'runs the wait bare for a fake fork pid of 0' do
       tty_control.enable(tty_system.stderr)
-      tty_control.foreground(0) { :waited }
+      tty_control.foreground([0]) { Rush::Status.success }
       expect(tty_system.handovers).to eq([4242])
+    end
+
+    it 'parks a stopped foreground job in the table on the way out (^Z)' do
+      tty_control.enable(tty_system.stderr)
+      status = tty_control.foreground([77, 78]) { Rush::Status.stopped(20) }
+      job = tty_executor.jobs.current
+      expect(status.exitstatus).to eq(148)
+      expect([job&.pid, job&.members, job&.stopped?]).to eq([77, [77, 78], true])
     end
   end
 

@@ -66,32 +66,19 @@ module Rush
 
       # dash's column layout: "[n] mark " (plus "pid " under -l), the state,
       # then padding so the (empty, off-tty) command text starts at column 34.
-      # A displayed finished job is freed; the bare-pid style never frees.
+      # A displayed finished job is freed — a Stopped one is not: it is still
+      # alive, and dash keeps listing it (probed) — and the bare-pid style
+      # never frees.
       sig { params(job: JobTable::Job, pid_field: String).void }
       def report(job, pid_field)
-        stdout.puts("[#{job.number}] #{mark(job)} #{pid_field}#{state(job)}".ljust(33))
-        executor.jobs.forget(job) unless job.running?
+        stdout.puts("[#{job.number}] #{mark(job)} #{pid_field}#{job.display_state}".ljust(33))
+        executor.jobs.forget(job) if job.finished?
       end
 
       sig { params(job: JobTable::Job).returns(String) }
       def mark(job)
         index = T.must(executor.jobs.ordered.index(job))
         ['+', '-'].fetch(index, ' ')
-      end
-
-      sig { params(job: JobTable::Job).returns(String) }
-      def state(job)
-        raw = job.raw
-        raw ? finished_state(raw) : 'Running'
-      end
-
-      sig { params(raw: Process::Status).returns(String) }
-      def finished_state(raw)
-        signal = raw.termsig
-        return Signals.description(signal) if signal
-
-        code = T.must(raw.exitstatus)
-        code.zero? ? 'Done' : "Done(#{code})"
       end
 
       sig { params(message: String).returns(Status) }

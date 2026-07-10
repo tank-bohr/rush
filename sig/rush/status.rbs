@@ -8,9 +8,17 @@ module Rush
 
     attr_reader exitstatus: Integer
 
-    def initialize: (Integer exitstatus) -> void
+    attr_reader stopsig: Integer?
+
+    def initialize: (Integer exitstatus, ?stopsig: Integer?) -> void
 
     def success?: () -> bool
+
+    # The job this status describes is stopped, not gone (rush-mv8.4).
+    def stopped?: () -> bool
+
+    # The same verdict carrying a sibling stage's stop signal.
+    def with_stop: (Integer? stopsig) -> Status
 
     def self.success: () -> instance
 
@@ -18,5 +26,7 @@ module Rush
 
     # A signalled process reports no exitstatus; POSIX maps it to 128 + signal.
     def self.of: (::Process::Status process_status) -> instance
+
+    def self.stopped: (Integer stopsig) -> instance
   end
 end

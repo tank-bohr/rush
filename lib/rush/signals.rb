@@ -50,5 +50,18 @@ module Rush
     def self.description(number)
       DESCRIPTIONS.fetch(number) { NUMBERS.fetch(number, "Signal #{number}") }
     end
+
+    # strsignal(3) again, for the stop signals as the jobs listing shows a
+    # Stopped entry: plain for ^Z's TSTP, qualified for the others (dash
+    # prints the same strings, probed).
+    STOPPED = {
+      19 => 'Stopped (signal)', 20 => 'Stopped',
+      21 => 'Stopped (tty input)', 22 => 'Stopped (tty output)'
+    }.freeze
+
+    sig { params(number: Integer).returns(String) }
+    def self.stop_description(number)
+      STOPPED.fetch(number, 'Stopped')
+    end
   end
 end

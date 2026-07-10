@@ -17,13 +17,27 @@ RSpec.describe Rush::Status do
 
   describe '.of' do
     it 'uses the process exit status when the child exited normally' do
-      process_status = instance_double(Process::Status, exitstatus: 5, termsig: nil)
+      process_status = instance_double(Process::Status, exitstatus: 5, termsig: nil, stopped?: false)
       expect(described_class.of(process_status).exitstatus).to eq(5)
     end
 
     it 'maps a terminating signal to 128 + signal' do
-      process_status = instance_double(Process::Status, exitstatus: nil, termsig: 9)
+      process_status = instance_double(Process::Status, exitstatus: nil, termsig: 9, stopped?: false)
       expect(described_class.of(process_status).exitstatus).to eq(137)
+    end
+
+    it 'maps a WUNTRACED stop to 128 + stopsig, keeping the signal (rush-mv8.4)' do
+      process_status = instance_double(Process::Status, exitstatus: nil, termsig: nil, stopped?: true, stopsig: 20)
+      status = described_class.of(process_status)
+      expect([status.exitstatus, status.stopsig, status.stopped?]).to eq([148, 20, true])
+    end
+  end
+
+  describe '.stopped' do
+    it 'builds a stopped status; plain statuses are never stopped' do
+      expect(described_class.stopped(19).exitstatus).to eq(147)
+      expect(described_class.stopped(19).stopped?).to be(true)
+      expect(described_class.new(148).stopped?).to be(false)
     end
   end
 end

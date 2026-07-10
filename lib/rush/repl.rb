@@ -61,8 +61,12 @@ module Rush
       @prompt ||= T.let(Prompt.new(executor), T.nilable(Prompt))
     end
 
+    # Each interactive turn ticks the stopped-jobs exit warning (dash's
+    # cmdloop decrements job_warning per iteration): a refused exit repeated
+    # as the very next command goes through, anything later re-arms it.
     sig { params(program: AST::List).void }
     def execute(program)
+      executor.jobs.control.tick_warning
       survive(nil) { super }
     rescue ReturnSignal
       nil

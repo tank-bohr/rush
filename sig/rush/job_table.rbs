@@ -20,27 +20,49 @@ module Rush
 
       @number: Integer
 
-      @pid: Integer
+      @members: Array[Integer]
 
       @raw: Process::Status?
 
+      @stopsig: Integer?
+
       attr_reader number: Integer
 
-      attr_reader pid: Integer
+      attr_reader members: Array[Integer]
 
       attr_reader raw: Process::Status?
 
-      def initialize: (Integer number, Integer pid) -> void
+      attr_reader stopsig: Integer?
 
+      def initialize: (Integer number, Integer pid, ?members: Array[Integer]) -> void
+
+      # A stop parks the job; anything else settles it for good.
       def finish: (Process::Status raw) -> void
+
+      def stop: (Integer stopsig) -> void
 
       # Reap once: the first harvest fills raw from the supplied wait;
       # repeats answer from memory (dash never frees an entry on wait).
       def harvest: () { () -> Process::Status } -> Status
 
+      def pid: () -> Integer
+
       def running?: () -> bool
 
+      def stopped?: () -> bool
+
+      def finished?: () -> bool
+
       def status: () -> Status
+
+      # The jobs listing's state column (dash statusfmt vocabulary).
+      def display_state: () -> String
+
+      private
+
+      def settled_state: () -> String
+
+      def done_state: () -> String
     end
 
     @system: SystemCalls
@@ -61,6 +83,9 @@ module Rush
     # as dash numbers slots. Fake fork ports return no child pid (mapped to
     # 0); a real parent always records a positive one.
     def record: (Integer pid) -> void
+
+    # A ^Z-stopped foreground job becomes a Stopped table entry.
+    def adopt_stopped: (Array[Integer] pids, Integer stopsig) -> void
 
     # Newest first: the jobs builtin's display order, and what makes the
     # first entry the current job (+) and the second the previous one (-).
@@ -99,6 +124,9 @@ module Rush
     # finished since the last synchronous wait.
     def poll: () -> void
 
+    # The stopped-jobs exit guard (the Control's dash-job_warning window).
+    def refuse_exit?: () -> bool
+
     private
 
     def settle: (Integer pid) -> Process::Status
@@ -111,8 +139,6 @@ module Rush
     # form cannot reap a foreign child, keeping the plain foreground path
     # byte-identical to the pre-table behaviour.
     def reap_one: (Integer target) -> [ Integer, Process::Status ]
-
-    def background_running?: () -> bool
 
     def store: (Integer pid, Process::Status status) -> void
   end

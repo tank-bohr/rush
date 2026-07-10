@@ -33,7 +33,7 @@ RSpec.describe Rush::External do
     allow(system).to receive(:spawn).and_return(11)
     allow(jobs).to receive(:await).with(11).and_return(Rush::Status.success)
     run(%w[prog])
-    expect(job_control).to have_received(:foreground).with(11)
+    expect(job_control).to have_received(:foreground).with([11])
   end
 
   it 'spawns the command as its own process-group leader under job control (dash-probed)' do

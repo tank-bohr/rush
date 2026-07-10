@@ -5,6 +5,8 @@
 # process-spawning paths are exercised separately with doubles. Nothing here
 # touches the real OS.
 class FakeSystemCalls
+  include FakeJobControl
+
   attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed, :limits_set,
               :program_name, :pgids_set
   attr_accessor :wait_status, :job_control_supported
@@ -13,8 +15,13 @@ class FakeSystemCalls
 
   # A Process::Status stand-in: fork is a no-op so no child truly runs, and a
   # spec sets `wait_status` to control the status a command substitution sees.
-  # termsig is nil for a plain exit, the signal number for a signalled child.
-  ChildStatus = Struct.new(:exitstatus, :termsig)
+  # termsig is nil for a plain exit, the signal number for a signalled child;
+  # stopsig marks a WUNTRACED-visible stop (rush-mv8.4).
+  ChildStatus = Struct.new(:exitstatus, :termsig, :stopsig) do
+    def stopped?
+      !stopsig.nil?
+    end
+  end
 
   # A Process::Tms stand-in for the `times` builtin; zeros keep the format
   # deterministic (the real times are non-deterministic).
@@ -261,90 +268,6 @@ class FakeSystemCalls
 
   def fork
     nil
-  end
-
-  # Job-control seams: fork_grouped forks through the (stubbable) fork and
-  # records the [pid, pgid] pair a real double setpgid would issue — plus,
-  # in tty_leaders, which children were forked carrying the terminal; the
-  # platform gate is a knob so specs can exercise the unsupported refusal.
-  def fork_grouped(group, tty = nil)
-    pid = fork
-    return pid unless pid
-
-    @pgids_set << [pid, group]
-    @tty_leaders << pid if tty
-    pid
-  end
-
-  def setpgid(pid, pgid)
-    @pgids_set << [pid, pgid]
-  end
-
-  def job_control_supported?
-    @job_control_supported
-  end
-
-  # The terminal-ownership model (rush-mv8.3): open_tty answers an in-memory
-  # tty handle whenever the fake session has one (mirroring dash's walk of
-  # /dev/tty and fds 2..0); tcsetpgrp records every handover and moves the
-  # in-model foreground; tcgetpgrp reads it back — or a queue seeded by
-  # provide_tty_foreground, so specs can start the shell in the background
-  # (the SIGTTIN wait loop).
-  attr_reader :handovers, :tty_leaders
-
-  def open_tty
-    return unless tty? || stderr_tty?
-
-    @open_tty ||= StringIO.new
-  end
-
-  def tcgetpgrp(_tty)
-    return @tty_pgrps.shift unless @tty_pgrps.empty?
-
-    @handovers.last || pgrp
-  end
-
-  def tcsetpgrp(_tty, pgid)
-    @handovers << pgid
-  end
-
-  def provide_tty_foreground(*pgrps)
-    @tty_pgrps.concat(pgrps)
-  end
-
-  def pgrp
-    4242
-  end
-
-  # Child-process model for the JobTable: provide_child queues a reapable
-  # child (provide_signalled a signal-killed one). waitpid2(-1) reaps the
-  # next queued one and raises ECHILD when none remain, like the real OS; a
-  # specific pid reaps that child if queued, else falls back to the legacy
-  # single wait_status knob. poll_child is the WNOHANG form: nil when the
-  # queue is empty rather than blocking.
-  def provide_child(pid, exitstatus)
-    @children << [pid, ChildStatus.new(exitstatus, nil)]
-  end
-
-  def provide_signalled(pid, signal)
-    @children << [pid, ChildStatus.new(nil, signal)]
-  end
-
-  def waitpid2(pid)
-    return next_child if pid == -1
-
-    index = @children.index { |child| child.first == pid }
-    index ? @children.delete_at(index) : [pid, @wait_status]
-  end
-
-  def poll_child
-    @children.shift
-  end
-
-  def next_child
-    raise Errno::ECHILD if @children.empty?
-
-    @children.shift
   end
 
   def chdir(path)

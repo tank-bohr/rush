@@ -8,17 +8,31 @@ module Rush
 
       @root: bool
 
+      @monitor: bool
+
       @terminal: Terminal?
 
+      @warning: Integer
+
       attr_reader root: bool
+
+      attr_reader monitor: bool
 
       attr_reader terminal: Terminal?
 
       def initialize: () -> void
 
-      def hold: (Terminal? terminal) -> void
+      # `set -m` accepted in the root shell (terminal nil off-tty).
+      def engage: (Terminal? terminal) -> void
+
+      def release: () -> void
 
       def fork_child: () -> void
+
+      # dash's job_warning window for the stopped-jobs exit refusal.
+      def warn_exit?: () -> bool
+
+      def tick_warning: () -> void
     end
   end
 end

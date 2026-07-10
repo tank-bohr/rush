@@ -34,9 +34,17 @@ module Rush
     # 0); a real parent always records a positive one.
     sig { params(pid: Integer).void }
     def record(pid)
-      return unless pid.positive?
+      @jobs[pid] = Job.new(free_number, pid) if pid.positive?
+    end
 
-      @jobs[pid] = Job.new(free_number, pid)
+    # A foreground job a WUNTRACED wait handed back as stopped (^Z): it
+    # becomes a job-table entry — number, the group leader as its pid, every
+    # pipeline member listed — parked Stopped, where jobs/wait/kill/%ids
+    # find it (dash keeps its jobtab entry; rush creates one on the spot).
+    sig { params(pids: T::Array[Integer], stopsig: Integer).void }
+    def adopt_stopped(pids, stopsig)
+      leader = pids.fetch(0)
+      (@jobs[leader] ||= Job.new(free_number, leader, members: pids)).stop(stopsig) if leader.positive?
     end
 
     # Newest first: the jobs builtin's display order, and what makes the
@@ -106,14 +114,22 @@ module Rush
     end
 
     # Opportunistic non-blocking reap, so the jobs builtin sees a child that
-    # finished since the last synchronous wait.
+    # finished — or, under monitor mode, stopped — since the last
+    # synchronous wait.
     sig { void }
     def poll
-      while (reaped = @system.poll_child)
+      while (reaped = @control.monitor ? @system.poll_stopped : @system.poll_child)
         store(reaped.fetch(0), reaped.fetch(1))
       end
     rescue Errno::ECHILD
       nil
+    end
+
+    # The exit builtin with a stopped job: refused with "You have stopped
+    # jobs." exactly once (the Control's dash-job_warning window).
+    sig { returns(T::Boolean) }
+    def refuse_exit?
+      @jobs.each_value.any?(&:stopped?) && @control.warn_exit?
     end
 
     private
@@ -127,8 +143,7 @@ module Rush
     # size+1 always contains one.
     sig { returns(Integer) }
     def free_number
-      taken = @jobs.each_value.map(&:number)
-      ((1..(taken.size + 1)).to_a - taken).fetch(0)
+      ((1..(@jobs.size + 1)).to_a - @jobs.each_value.map(&:number)).fetch(0)
     end
 
     sig { params(target: Integer).returns(Process::Status) }
@@ -141,17 +156,15 @@ module Rush
       end
     end
 
-    # waitpid(-1) only when a background job could exit meanwhile; the direct
-    # form cannot reap a foreign child, keeping the plain foreground path
-    # byte-identical to the pre-table behaviour.
+    # waitpid(-1) only when a background job could change state meanwhile —
+    # a stopped job still counts, its death arrives asynchronously — since
+    # the direct form cannot reap a foreign child; the plain foreground path
+    # stays byte-identical to the pre-table behaviour. Monitor mode waits
+    # WUNTRACED (dash: mflag), so ^Z answers instead of hanging the shell.
     sig { params(target: Integer).returns([Integer, Process::Status]) }
     def reap_one(target)
-      @system.waitpid2(background_running? ? -1 : target)
-    end
-
-    sig { returns(T::Boolean) }
-    def background_running?
-      @jobs.each_value.any?(&:running?)
+      pid = @jobs.each_value.any? { |job| !job.finished? } ? -1 : target
+      @control.monitor ? @system.wait_stoppable(pid) : @system.waitpid2(pid)
     end
 
     sig { params(pid: Integer, status: Process::Status).void }

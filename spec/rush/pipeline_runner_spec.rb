@@ -71,7 +71,7 @@ RSpec.describe Rush::PipelineRunner do
     end
 
     def status_double(code)
-      instance_double(Process::Status, exitstatus: code, termsig: nil)
+      instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false)
     end
 
     def stub_wait_statuses(codes)

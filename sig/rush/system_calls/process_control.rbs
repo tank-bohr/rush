@@ -12,7 +12,13 @@ module Rush
 
       def waitpid2: (Integer pid) -> [ Integer, Process::Status ]
 
+      # The monitor-mode blocking wait: WUNTRACED also answers a stop.
+      def wait_stoppable: (Integer pid) -> [ Integer, Process::Status ]
+
       def poll_child: () -> [ Integer, Process::Status ]?
+
+      # The monitor-mode WUNTRACED poll.
+      def poll_stopped: () -> [ Integer, Process::Status ]?
 
       def setpgid: (Integer pid, Integer pgid) -> void
 

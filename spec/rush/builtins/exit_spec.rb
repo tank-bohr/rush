@@ -26,4 +26,12 @@ RSpec.describe Rush::Builtins::Exit do
     expect { described_class.new(executor, %w[exit -1], io).call }.to raise_error(Rush::BuiltinError)
     expect { described_class.new(executor, %w[exit abc], io).call }.to raise_error(Rush::BuiltinError)
   end
+
+  it 'refuses the first exit with a stopped job — warning, status 0 — and allows the retry (dash)' do
+    executor.jobs.adopt_stopped([50], 20)
+    expect(described_class.new(executor, %w[exit 3], io).call).to be_success
+    expect(system.stderr.string).to eq("You have stopped jobs.\n")
+    expect { described_class.new(executor, %w[exit 3], io).call }
+      .to raise_error(Rush::ExitSignal) { |signal| expect(signal.code).to eq(3) }
+  end
 end

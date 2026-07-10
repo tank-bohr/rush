@@ -6,7 +6,7 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
   def status_double(code)
-    instance_double(Process::Status, exitstatus: code, termsig: nil)
+    instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false)
   end
 
   describe '#call (parent side)' do

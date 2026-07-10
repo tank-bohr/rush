@@ -71,7 +71,7 @@ module Rush
     # rootshell guard, probed via nested groups and subshell `set -m`).
     sig { returns(T::Boolean) }
     def monitored?
-      control.root && options.on?(:monitor)
+      control.monitor
     end
 
     # Fork one member of a foreground job, into `leader`'s process group
@@ -81,7 +81,7 @@ module Rush
     # flip it.
     sig { params(leader: T.nilable(Integer), child_main: T.proc.returns(T.untyped)).returns(Integer) }
     def launch(leader: nil, &child_main)
-      return fork_plain(&child_main) unless monitored?
+      return @executor.system.fork(&child_main) || 0 unless monitored?
 
       group = leader&.positive? ? leader : 0
       @executor.system.fork_grouped(group, handover_tty(group), &child_main) || 0
@@ -91,7 +91,7 @@ module Rush
     # the terminal — probed: the tty stays with the shell.
     sig { params(child_main: T.proc.returns(T.untyped)).returns(Integer) }
     def launch_background(&child_main)
-      return fork_plain(&child_main) unless monitored?
+      return @executor.system.fork(&child_main) || 0 unless monitored?
 
       @executor.system.fork_grouped(0, &child_main) || 0
     end
@@ -100,20 +100,27 @@ module Rush
     # group, taking it back once the job settles, however the wait ends
     # (dash's waitforjob). The give here is the parent-side settle — it also
     # covers the spawn path, which has no child-side hook — and without a
-    # held terminal the wait runs bare.
-    sig do
-      type_parameters(:U)
-        .params(leader: Integer, blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
+    # held terminal the wait runs bare. A wait that answers "stopped" (^Z
+    # under the WUNTRACED waits) parks the whole job in the table on the
+    # way out, where jobs/wait/kill find it.
+    sig { params(pids: T::Array[Integer], blk: T.proc.returns(Status)).returns(Status) }
+    def foreground(pids, &blk)
+      status = holding_terminal(pids.fetch(0), &blk)
+      @executor.jobs.adopt_stopped(pids, T.must(status.stopsig)) if status.stopped?
+      status
     end
-    def foreground(leader, &blk)
+
+    private
+
+    # The parent-side terminal handover around a foreground wait; bare
+    # without a held terminal (or for a fake fork's pid-0 launch).
+    sig { params(leader: Integer, blk: T.proc.returns(Status)).returns(Status) }
+    def holding_terminal(leader, &blk)
       terminal = control.terminal
       return yield unless terminal && leader.positive?
 
       terminal.while_given(leader, &blk)
     end
-
-    private
 
     # The root-shell side of `set -m`: with a reachable tty, the full dash
     # setjobctl dance; without one, grouping only — an error only for an
@@ -130,18 +137,19 @@ module Rush
     # back here.
     sig { params(terminal: Terminal).void }
     def enable_with_terminal(terminal)
-      control.hold(terminal)
+      control.engage(terminal)
       @executor.trap_runner.set_base('TSTP', IGNORE)
       @executor.trap_runner.set_base('TTOU', IGNORE)
       options.set(:monitor, true)
     end
 
-    # Off-tty monitor is grouping plus the SIGTSTP ignore alone (probed:
-    # dash leaves TTOU stopping the shell there).
+    # Off-tty monitor is grouping, WUNTRACED waits and the SIGTSTP ignore
+    # alone (probed: dash leaves TTOU stopping the shell there).
     sig { params(stderr: T.untyped).void }
     def enable_off_tty(stderr)
       return refuse(stderr, "can't access tty; job control turned off") if interactive?
 
+      control.engage(nil)
       @executor.trap_runner.set_base('TSTP', IGNORE)
       options.set(:monitor, true)
     end
@@ -153,7 +161,7 @@ module Rush
       @executor.trap_runner.set_base('TSTP', nil)
       @executor.trap_runner.set_base('TTOU', nil)
       control.terminal&.restore
-      control.hold(nil)
+      control.release
     end
 
     # The tty a freshly forked job leader should take with it (dash
@@ -164,11 +172,6 @@ module Rush
       return if group.nonzero?
 
       control.terminal&.tty
-    end
-
-    sig { params(child_main: T.proc.returns(T.untyped)).returns(Integer) }
-    def fork_plain(&child_main)
-      @executor.system.fork(&child_main) || 0
     end
 
     sig { params(stderr: T.untyped, message: String).void }

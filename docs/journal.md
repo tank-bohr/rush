@@ -1136,3 +1136,59 @@ calls), and running the gate surfaced a pre-existing container-only failure unre
 this slice — two real_shell_spec inherited-fd examples see their writes reversed inside the
 ruby:4.0.5-slim image while passing natively; reproduced on the previous main tip in the
 same image, filed as rush-erq. The job-control smoke itself runs green inside the container.
+
+### ^Z lands: WUNTRACED waits, the Stopped state, and the exit guard
+rush-mv8.4: under monitor mode every blocking wait goes through waitpid2(…, WUNTRACED)
+(SystemCalls#wait_stoppable, paired with a WNOHANG|WUNTRACED poll_stopped), so a foreground
+job the terminal — or a kill — stops hands control back to the shell instead of hanging it.
+The probes rewrote two assumptions. (1) **WUNTRACED is keyed on mflag, not the terminal**:
+non-interactive `dash -m -c 'sleep 6; …'` on a pty continues past a stopped job with
+$? = 148, and plain off-tty `set -m; sh -c 'kill -TSTP $$'` does the same — which makes
+almost the whole slice pinnable by the ordinary differential corpus, no pty needed
+(jc-stop-001..008). (2) **The stopped-jobs exit guard is not interactive-only**: batch dash
+prints "You have stopped jobs." and refuses the first exit too (the refused exit answers
+$? = 0 and the script carries on); what IS interactive-only is the re-arm — dash's
+job_warning decrements once per cmdloop turn, so an exit repeated as the very next command
+goes through while anything later re-arms the warning, and a batch shell (nothing ticks)
+warns exactly once. Both live in JobTable::Control#warn_exit?/tick_warning with the Repl
+ticking per turn, dash's globals to the letter.
+
+The state model: Status learns stopsig (128+sig as the code, the signal riding along), and
+a stopped wait parks the WHOLE job — JobControl#foreground adopts it into the table as one
+entry, leader pid plus every pipeline member (Job grows members for mv8.5's fg/bg) — where
+jobs/wait/kill/%ids find it. Stopped entries answer `wait %1` with 148 immediately and
+repeatably, keep their slot when displayed (only finished jobs are freed — probed), and a
+later reap of the real death flips them Done — the corpus pins the 137-after-kill dance.
+The single-owner strategy needed one adjustment: a stopped job still counts as alive for
+the waitpid(-1) decision, since its death arrives asynchronously. Mixed pipelines follow
+dash's getstatus: `stopped | exit5` answers 5 while the job parks Stopped (probed both
+orders), expressed as Status#with_stop riding any stage's stop signal onto the verdict.
+The jobs listing prints the glibc strsignal vocabulary — Stopped, Stopped (signal),
+Stopped (tty input/output) — from a Signals.stop_description table.
+
+Corpus lessons. **A `jobs | sed` projection is unusable**: dash's forked pipeline stage
+still lists the parent's jobs while rush's clear_for_subshell empties the table — a real,
+previously invisible divergence (filed rush-r6i, bundled with mv8.6's rendering work);
+`jobs > file` redirects (no fork) project the state column deterministically instead, sed
+stripping the command-text column that arrives with mv8.6. **Pipeline stops stay out of
+the off-tty corpus**: `sh -c 'kill -TSTP $$'` inside a pipeline stops only the grandchild,
+and rush's stage supervisor — which dash EV_EXIT-execs away, the recorded mv8.7
+divergence — then blocks in a non-WUNTRACED wait (its subshell cleared the monitor bit),
+exactly as dash's own `{ …; }`-wrapped stage would; the real whole-group ^Z, where the
+supervisors stop too and the WUNTRACED wait settles, is the pty smoke's job.
+
+The smoke grew the ^Z act (sleep 100, raw \x1a, ZST/ZJOBS/ZALIVE/ZW markers) and two
+harness lessons worth keeping: the writer must not outrun the shell — a slow interpreter
+start let the ^Z land while rush still chewed the queued backlog, stopping the wrong job,
+so marker-wait {sync:} barriers now pace the script — and the kill-then-wait probe must be
+ONE line: an intervening prompt lets dash's pre-prompt notifier report-and-free the killed
+entry (mv8.6 behaviour) and `wait %%` answers "No current job" instead of 137. Lint
+pressure again shaped the design: reek's ivar budget pushed the exit-warning window into
+Control and Job onto a members-array (pid = its head), ControlParameter split the polls
+into a poll_child/poll_stopped pair mirroring waitpid2/wait_stoppable, and FeatureEnvy
+moved the state column's vocabulary onto Job#display_state — each a better home than the
+flag or helper it replaced.
+
+Verified: full rake green (2056 specs, 99.97%/99.79%), the extended differential corpus
+(8 jc-stop lines) matches dash 0.5.13, and the pty smoke — including the ^Z act — passes
+natively; ^Z on a pipeline is exercised there by the whole-group stop.

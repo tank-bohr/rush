@@ -22,5 +22,10 @@ module Rush
     DESCRIPTIONS: Hash[Integer, String]
 
     def self.description: (Integer number) -> String
+
+    # strsignal(3) for the stop signals, as the jobs listing shows Stopped.
+    STOPPED: Hash[Integer, String]
+
+    def self.stop_description: (Integer number) -> String
   end
 end

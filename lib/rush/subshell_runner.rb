@@ -18,7 +18,7 @@ module Rush
     sig { returns(Status) }
     def call
       pid = @executor.job_control.launch { run_child }
-      @executor.job_control.foreground(pid) { @executor.jobs.await(pid) }
+      @executor.job_control.foreground([pid]) { @executor.jobs.await(pid) }
     end
 
     # The subshell is a fresh top level: exit (or an uncaught return) ends it

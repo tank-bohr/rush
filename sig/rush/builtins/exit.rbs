@@ -11,6 +11,8 @@ module Rush
 
       private
 
+      def refuse_stopped: () -> Status
+
       def code: () -> untyped
     end
   end

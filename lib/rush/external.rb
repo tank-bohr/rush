@@ -22,7 +22,7 @@ module Rush
     sig { returns(Status) }
     def call
       pid = system.spawn(@env, @argv, spawn_options)
-      @executor.job_control.foreground(pid) { @executor.jobs.await(pid) }
+      @executor.job_control.foreground([pid]) { @executor.jobs.await(pid) }
     rescue Errno::ENOENT, Errno::EACCES => e
       error_status(e)
     end

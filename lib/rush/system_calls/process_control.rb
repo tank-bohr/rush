@@ -28,11 +28,28 @@ module Rush
         retry
       end
 
+      # The monitor-mode blocking wait (rush-mv8.4): WUNTRACED also returns a
+      # child the terminal (or a kill) has STOPPED, so ^Z hands control back
+      # to the shell instead of hanging it — dash waits this way whenever
+      # mflag is on, interactive or not (probed: $? = 148 off-tty too).
+      def wait_stoppable(pid)
+        Process.waitpid2(pid, Process::WUNTRACED)
+      rescue Interrupted
+        retry
+      end
+
       # Non-blocking reap of any finished child: [pid, status], or nil while
       # children exist but none has exited. Raises ECHILD, like waitpid2, when
       # there are no children at all.
       def poll_child
         Process.waitpid2(-1, Process::WNOHANG)
+      end
+
+      # The monitor-mode poll (pairs with wait_stoppable as poll_child pairs
+      # with waitpid2): WUNTRACED, so the jobs builtin also sees a background
+      # job freshly SIGSTOPped since the last wait.
+      def poll_stopped
+        Process.waitpid2(-1, Process::WNOHANG | Process::WUNTRACED)
       end
 
       # Place a process into a process group (pid 0 = the caller, pgid 0 = its

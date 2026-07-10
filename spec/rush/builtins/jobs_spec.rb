@@ -67,6 +67,25 @@ RSpec.describe Rush::Builtins::Jobs do
     expect(system.stderr.string).to eq("jobs: No such job: %9\n")
   end
 
+  it 'renders every Stopped flavour by stop signal, exactly as dash prints strsignal' do
+    record(11, 12, 13, 14)
+    executor.jobs.control.engage(nil)
+    [[11, 20], [12, 19], [13, 21], [14, 22]].each { |pid, sig| system.provide_stopped(pid, sig) }
+    run
+    expect(system.stdout.string.split("\n").map(&:rstrip))
+      .to eq(['[4] + Stopped (tty output)', '[3] - Stopped (tty input)',
+              '[2]   Stopped (signal)', '[1]   Stopped'])
+  end
+
+  it 'keeps a Stopped entry after displaying it — only finished jobs are freed (dash-probed)' do
+    record(11)
+    executor.jobs.control.engage(nil)
+    system.provide_stopped(11, 20)
+    run
+    run
+    expect(system.stdout.string.split("\n").map(&:rstrip)).to eq(['[1] + Stopped', '[1] + Stopped'])
+  end
+
   it 'rejects an unknown flag with status 2' do
     expect(run('-x').exitstatus).to eq(2)
     expect(system.stderr.string).to eq("jobs: Illegal option -x\n")

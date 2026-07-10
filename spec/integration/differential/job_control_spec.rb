@@ -76,11 +76,13 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
     'set -m; trap "echo x" TSTP; trap - TSTP; kill -TSTP $$; echo alive'
   ].freeze
 
-  tstp.each.with_index(1) do |snippet, index|
-    id = format('jc-tstp-%03d', index)
+  describe 'the shell-side SIGTSTP ignore' do
+    tstp.each.with_index(1) do |snippet, index|
+      id = format('jc-tstp-%03d', index)
 
-    it "#{id}: matches dash under Timeout for: #{snippet}" do
-      Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      it "#{id}: matches dash under Timeout for: #{snippet}" do
+        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      end
     end
   end
 
@@ -108,5 +110,41 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
   it 'jc-inp: a monitored background job keeps the shell stdin (no /dev/null redirect)' do
     snippet = 'set -m; cat & wait $!; echo st=$?'
     expect(rush(snippet, "hi\n")).to eq(dash(snippet, "hi\n"))
+  end
+
+  # Stopped jobs off-tty (rush-mv8.4): monitor waits are WUNTRACED, so a
+  # foreground job that stops itself hands 148 back and parks as a Stopped
+  # entry — the script continues past it, wait answers immediately and
+  # repeatably, jobs keeps listing it (projected through sed: the command
+  # text column arrives with rush-mv8.6), and exit is refused exactly once.
+  # Pipeline stops stay out: off-tty only the $$-signalled grandchild stops,
+  # and rush's stage supervisor (which dash EV_EXIT-execs away — the mv8.7
+  # divergence) blocks either shell's parent when the group is not signalled
+  # as a whole; the real whole-group ^Z is the pty smoke's job. Everything
+  # under Timeout: the failure mode of a missing WUNTRACED is a hung shell.
+  # The orphaned stopped children die on their own (kernel HUP+CONT) once
+  # the shells exit.
+  stopped = [
+    "set -m; sh -c 'kill -TSTP $$'; echo st:$?; kill -9 %1; kill -CONT %1",
+    "set -m; sh -c 'kill -TSTP $$'; wait %1; echo w:$?; wait %1; echo w2:$?; kill -9 %1",
+    "set -m; sh -c 'kill -TSTP $$'; wait; echo wall:$?; kill -9 %1",
+    "set -m; sh -c 'kill -TSTP $$'; j=$(mktemp); jobs > \"$j\"; sed -e 's/Stopped.*/Stopped/' \"$j\"; " \
+    "jobs > \"$j\"; sed -e 's/Stopped.*/Stopped/' \"$j\"; rm -f \"$j\"; kill -9 %1",
+    "set -m; sh -c 'kill -TSTP $$'; kill %1; echo k:$?; j=$(mktemp); jobs > \"$j\"; " \
+    "sed -e 's/Stopped.*/Stopped/' \"$j\"; rm -f \"$j\"; kill -9 %1",
+    "set -m; sh -c 'kill -TSTP $$'; kill -9 %1; kill -CONT %1; sleep 0.2; wait %1; echo w:$?",
+    "set -m; sh -c 'kill -TSTP $$'; exit 3",
+    "set -m; sh -c 'kill -TSTP $$'; exit 3; exit 4",
+    "set -m; sh -c 'kill -TSTP $$'; exit 3; echo mid:$?; exit 4"
+  ].freeze
+
+  describe 'stopped jobs' do
+    stopped.each.with_index(1) do |snippet, index|
+      id = format('jc-stop-%03d', index)
+
+      it "#{id}: matches dash under Timeout for: #{snippet}" do
+        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      end
+    end
   end
 end

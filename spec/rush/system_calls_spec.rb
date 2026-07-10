@@ -18,6 +18,23 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  describe '#wait_stoppable' do
+    it 'waits WUNTRACED, so a stopped child answers too' do
+      allow(Process).to receive(:waitpid2).with(7, Process::WUNTRACED).and_return([7, :stopped])
+      expect(system.wait_stoppable(7)).to eq([7, :stopped])
+    end
+  end
+
+  describe '#poll_child / #poll_stopped' do
+    it 'polls WNOHANG, adding WUNTRACED only for the monitor-mode form' do
+      allow(Process).to receive(:waitpid2).and_return(nil)
+      system.poll_child
+      expect(Process).to have_received(:waitpid2).with(-1, Process::WNOHANG)
+      system.poll_stopped
+      expect(Process).to have_received(:waitpid2).with(-1, Process::WNOHANG | Process::WUNTRACED)
+    end
+  end
+
   describe '#pgrp' do
     it 'reports the process group through Process.getpgrp' do
       expect(system.pgrp).to eq(Process.getpgrp)
@@ -40,13 +57,6 @@ RSpec.describe Rush::SystemCalls do
     it 'admits no vocabulary for an unknown unix (job control degrades to grouping-only)' do
       stub_const('RbConfig::CONFIG', RbConfig::CONFIG.merge('host_os' => 'solaris2.11'))
       expect(system.terminal_family).to be_nil
-    end
-  end
-
-  describe '#poll_child' do
-    it 'reaps any child without blocking (WNOHANG), nil when none has exited' do
-      allow(Process).to receive(:waitpid2).with(-1, Process::WNOHANG).and_return(nil)
-      expect(system.poll_child).to be_nil
     end
   end
 
