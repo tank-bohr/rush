@@ -75,7 +75,12 @@ module Rush
       def toggle(option, sign)
         return unless option
 
-        executor.state.set_option(option, sign == '-')
+        enabled = sign == '-'
+        # Monitor carries side effects (SIGTSTP disposition, tty check) and can
+        # refuse, so it routes through the job-control policy, not bare state.
+        return executor.state.set_option(option, enabled) unless option == :monitor
+
+        enabled ? executor.job_control.enable(stderr) : executor.job_control.disable
       end
     end
   end

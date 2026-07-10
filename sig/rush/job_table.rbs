@@ -49,7 +49,11 @@ module Rush
 
     @stash: Hash[Integer, Process::Status]
 
+    @root: bool
+
     def initialize: (SystemCalls system) -> void
+
+    attr_reader root: bool
 
     # A background launch: the pid becomes job [n] — the lowest free number,
     # as dash numbers slots. Fake fork ports return no child pid (mapped to

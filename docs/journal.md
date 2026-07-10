@@ -1033,3 +1033,45 @@ opened a file named `-`** where POSIX and dash consume a lone `-` like `--` (`ec
 lines. Exit-trap masking rides as a bonus lesson: run_exit_trap publishes the terminating
 code as $?, so exiting_status mutants hid until the action changed $? before a bare exit
 ('false; exit').
+
+### Phase 6 opens: `set -m` lands off-tty — the flag, the ignore, and the groups
+rush-mv8 unfroze, and its recorded design risk dissolved on contact: the phase-5 JobTable
+already IS the single waitpid owner (every synchronous wait routes through jobs.await /
+wait_for; foreign statuses stash), so rush-mv8.1 closed by audit with no code. The
+consequence is architectural: no SIGCHLD self-pipe reaper will ever be needed — pre-prompt
+notifications can poll WNOHANG at prompt time exactly like dash's showjobs, and WUNTRACED
+(mv8.4) is a flag change inside the one owner.
+
+The slice itself was carried by an oracle discovery: **dash 0.5.13 runs monitor mode
+without a terminal**. Non-interactive `set -m` is silent and fully real off-tty — every
+forked job gets its own process group — while the tty dance is interactive-only ("can't
+access tty; job control turned off", flag dropped, at startup and runtime alike). That
+made almost the whole slice pinnable by the ordinary differential corpus, no pty needed.
+Probing lessons: (1) **EV_EXIT lies to probes** — a tail-position command execs in place,
+so "the single command shares the shell's group" was an artifact until a trailing `true`
+forced the fork; re-probed, every forked job (background list, pipeline with the first
+stage as leader, subshell, single external command) groups, while command substitution and
+anything inside a forked child never does (dash's rootshell guard). (2) Only SIGTSTP gets
+the shell-side ignore non-interactively — TTOU/TTIN still stop the shell (probed; the
+interactive trio arrives with the terminal in mv8.3).
+
+Implementation fell out of existing seams. The monitor-TSTP disposition is *exactly* the
+interactive-signals base-disposition model: a user trap beats it in either order, `trap -`
+restores the ignore rather than the OS default, `set +m` restores the default, forked
+children drop it, exec'd children never see it (handler block, not SIG_IGN) — all probed,
+all landed as one TrapRunner#set_base seam (nil removes). JobControl is a stateless policy
+view (Executor builds it on demand); the root-shell bit lives in JobTable#root, flipped by
+the same clear_for_subshell that already marks forked children. Grouping is
+SystemCalls#fork_grouped — the double setpgid on both sides of the fork, where POSIX's
+"pgid 0 means the pid itself" lets the kernel do the leader/joiner defaulting with no
+branches — plus `pgroup: true` on the spawn path (External), which is the same dance done
+kernel-side. POSIX 2.9.3.1/2.11 flip under -m: background jobs keep default SIGINT
+(st=130, dash-verified) and keep the shell's stdin (no /dev/null); BackgroundRunner#isolate
+reads monitored? before enter_subshell switches it off. Corpus technique: pgid predicates
+compare group equality (`same`/`diff`/`grouped`/`own`) so no nondeterministic pid ever
+prints, and the TSTP lines run under Timeout because a broken disposition STOPS the shell —
+a hang, not a failure. Stopped-foreground lines (dash reports 148 via WUNTRACED) stay out
+of the corpus until mv8.4: rush would block today. Lint pressure earned its keep twice:
+reek's ControlParameter split toggle(bool) into enable/disable, and FeatureEnvy pushed the
+setpgid choreography out of the policy into SystemCalls::ProcessControl — which then
+naturally absorbed waitpid2/poll_child as the reaping+grouping syscall cluster.

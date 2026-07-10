@@ -17,7 +17,7 @@ module Rush
 
     sig { returns(Status) }
     def call
-      @executor.jobs.await(spawn_child)
+      @executor.jobs.await(@executor.job_control.launch { run_child })
     end
 
     # The subshell is a fresh top level: exit (or an uncaught return) ends it
@@ -53,13 +53,6 @@ module Rush
     def report_fatal(error)
       @executor.io.get(2).puts("rush: #{error.message}")
       Status.failure(2)
-    end
-
-    sig { returns(Integer) }
-    def spawn_child
-      # :nocov:
-      @executor.system.fork { run_child } || 0
-      # :nocov:
     end
 
     sig { returns(T.noreturn) }

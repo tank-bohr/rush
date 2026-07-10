@@ -27,6 +27,18 @@ module Rush
       handlers.each_key { |name| install_signal(name, :default) }
     end
 
+    # Flip one base disposition without disturbing the rest — `set -m` adds and
+    # removes SIGTSTP's this way mid-session (nil removes). A user trap on the
+    # signal keeps the disposition it installed (dash-verified in both orders);
+    # the base table still updates underneath, so a later `trap -` falls back
+    # correctly.
+    sig { params(name: String, handler: T.nilable(Proc)).void }
+    def set_base(name, handler)
+      @base.delete(name)
+      @base[name] = handler if handler
+      install_signal(name, :default) unless @state.traps.action(name)
+    end
+
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
     # shell exits with: the given code, unless the trap itself runs `exit`. $?
     # inside the trap is that same code (POSIX 2.14), so it is published first.

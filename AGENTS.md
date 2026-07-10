@@ -11,8 +11,9 @@ knowledge lives in `docs/` and the backlog lives in beads (see "Where things liv
 
 **Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate ✓ · 3 full POSIX scripting ✓ ·
 4 interactive shell ✓ · 5 job control, terminal-free half ✓ (wait, JobTable, jobs, %ids;
-"rush = dash without terminal control") — the terminal half (set -m, working fg/bg,
-tcsetpgrp, SIGTSTP) remains the deferred epic `rush-mv8`.
+"rush = dash without terminal control") · 6 job control, terminal half (epic `rush-mv8`,
+in progress): set -m + process groups + SIGTSTP ignore ✓; tcsetpgrp handover, WUNTRACED/
+Stopped, working fg/bg, pre-prompt notifications remain (`rush-mv8.3`..`.6`).
 Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
 
 ## Build & Test

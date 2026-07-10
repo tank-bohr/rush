@@ -94,6 +94,8 @@ module Rush
 
     # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
     # outside a tested context aborts the shell with that status.
+    def job_control: () -> JobControl
+
     def exit_on_error: (Status status) -> Status
 
   end

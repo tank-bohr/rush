@@ -12,16 +12,16 @@ module Rush
     extend T::Sig
 
     LETTERS = { 'a' => :allexport, 'C' => :noclobber, 'e' => :errexit, 'u' => :nounset,
-                'x' => :xtrace, 'f' => :noglob, 'v' => :verbose }.freeze
+                'x' => :xtrace, 'f' => :noglob, 'v' => :verbose, 'm' => :monitor }.freeze
     LONG = { 'allexport' => :allexport, 'noclobber' => :noclobber,
              'errexit' => :errexit, 'nounset' => :nounset,
              'xtrace' => :xtrace, 'noglob' => :noglob, 'verbose' => :verbose,
-             'pipefail' => :pipefail }.freeze
+             'pipefail' => :pipefail, 'monitor' => :monitor }.freeze
     # $- renders enabled flags in dash's order (its option list, reversed), so
     # differential corpus lines printing $- compare equal against the oracle.
     DASH_ORDER = T.let([[:nounset, 'u'], [:allexport, 'a'], [:noclobber, 'C'], [:verbose, 'v'],
-                        [:xtrace, 'x'], [:stdin, 's'], [:interactive, 'i'], [:noglob, 'f'],
-                        [:errexit, 'e']].freeze, T::Array[[Symbol, String]])
+                        [:xtrace, 'x'], [:stdin, 's'], [:monitor, 'm'], [:interactive, 'i'],
+                        [:noglob, 'f'], [:errexit, 'e']].freeze, T::Array[[Symbol, String]])
 
     sig { void }
     def initialize

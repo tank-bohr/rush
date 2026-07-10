@@ -141,6 +141,28 @@ RSpec.describe Rush::Builtins::Set do
     expect(state.options.on?(:pipefail)).to be(false)
   end
 
+  it 'routes -m through the job-control policy: option plus SIGTSTP base disposition' do
+    run('-m')
+    expect(state.options.on?(:monitor)).to be(true)
+    expect(system.traps_installed.last).to eq(['TSTP', nil])
+    run('+m')
+    expect(state.options.on?(:monitor)).to be(false)
+  end
+
+  it 'routes the long monitor name through the same policy' do
+    run('-o', 'monitor')
+    expect(state.options.on?(:monitor)).to be(true)
+    run('+o', 'monitor')
+    expect(state.options.on?(:monitor)).to be(false)
+  end
+
+  it 'reports the job-control refusal on the builtin stderr (interactive, no tty)' do
+    state.set_option(:interactive, true)
+    expect(run('-m')).to be_success
+    expect([state.options.on?(:monitor), io.get(2).string])
+      .to eq([false, "rush: can't access tty; job control turned off\n"])
+  end
+
   it 'uses the long option name after -o at the current parser position' do
     run('-v', '-o', 'errexit', 'arg')
     expect([state.options.on?(:verbose), state.options.on?(:errexit), state.positional]).to eq([true, true, %w[arg]])

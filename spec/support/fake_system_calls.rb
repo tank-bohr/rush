@@ -6,8 +6,8 @@
 # touches the real OS.
 class FakeSystemCalls
   attr_reader :stdin, :stdout, :stderr, :files, :chdirs, :pwd, :kills, :traps_installed, :limits_set,
-              :program_name
-  attr_accessor :wait_status
+              :program_name, :pgids_set
+  attr_accessor :wait_status, :job_control_supported
 
   UNTRAPPABLE = %w[KILL STOP].freeze
 
@@ -60,12 +60,20 @@ class FakeSystemCalls
     @chdir_error = nil
     @nodes = {}
     @contents = {}
-    @wait_status = ChildStatus.new(0)
-    @children = []
     @inherited_fds = {}
     @umask = 0o022
     @limits = default_limits
     @limits_set = []
+    setup_process_model
+  end
+
+  # The child-process side of the fake: reapable children, their statuses, and
+  # the job-control knobs (recorded setpgid pairs, the platform gate).
+  def setup_process_model
+    @wait_status = ChildStatus.new(0)
+    @children = []
+    @pgids_set = []
+    @job_control_supported = true
   end
 
   def inherit_fd(fd, stream)
@@ -249,6 +257,19 @@ class FakeSystemCalls
 
   def fork
     nil
+  end
+
+  # Job-control seams: fork_grouped forks through the (stubbable) fork and
+  # records the [pid, pgid] pair a real double setpgid would issue; the
+  # platform gate is a knob so specs can exercise the unsupported refusal.
+  def fork_grouped(group)
+    pid = fork
+    @pgids_set << [pid, group] if pid
+    pid
+  end
+
+  def job_control_supported?
+    @job_control_supported
   end
 
   # Child-process model for the JobTable: provide_child queues a reapable

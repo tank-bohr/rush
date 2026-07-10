@@ -47,7 +47,9 @@ module Rush
 
     def build_pipes: () -> Array[[ IO, IO ]]
 
-    def start_stage: (Stage stage) -> Integer?
+    def start_stages: (Array[[ IO, IO ]] pipes) -> Array[Integer]
+
+    def start_stage: (Stage stage, Integer? leader) -> Integer
 
     def run_stage: (Stage stage) -> Status
 
@@ -55,9 +57,7 @@ module Rush
 
     def close_all: (Array[[ IO, IO ]] pipes) -> void
 
-    def wait: (Array[Integer?] pids) -> Status
-
-    def wait_statuses: (Array[Integer?] pids) -> Array[Status]
+    def wait: (Array[Integer] pids) -> Status
 
     def wait_status: (Integer pid) -> Status
 

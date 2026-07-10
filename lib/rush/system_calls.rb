@@ -6,6 +6,7 @@ require 'reline'
 require 'tempfile'
 require_relative 'system_calls/file_tests'
 require_relative 'system_calls/process_identity'
+require_relative 'system_calls/process_control'
 require_relative 'system_calls/resource_limits'
 
 module Rush
@@ -15,28 +16,13 @@ module Rush
   class SystemCalls
     include FileTests
     include ProcessIdentity
+    include ProcessControl
     include ResourceLimits
 
     # Run argv as an external program. The [cmd, argv0] form forbids the shell
     # path even for a single-word command, so `spawn` never re-interprets words.
     def spawn(env, argv, options)
       Process.spawn(env, [argv.first, argv.first], *argv.drop(1), options)
-    end
-
-    # EINTR-style retry: an interactive SIGINT raises Interrupted at a safe
-    # point inside the blocking wait; the child is dying from the same signal,
-    # so wait again and reap it rather than leaking a zombie.
-    def waitpid2(pid)
-      Process.waitpid2(pid)
-    rescue Interrupted
-      retry
-    end
-
-    # Non-blocking reap of any finished child: [pid, status], or nil while
-    # children exist but none has exited. Raises ECHILD, like waitpid2, when
-    # there are no children at all.
-    def poll_child
-      Process.waitpid2(-1, Process::WNOHANG)
     end
 
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]

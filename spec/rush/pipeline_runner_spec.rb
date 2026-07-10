@@ -39,6 +39,15 @@ RSpec.describe Rush::PipelineRunner do
       expect(status).to be_success
     end
 
+    it 'groups every stage under the first stage leader when job control is on (dash: one group per job)' do
+      executor.job_control.enable(system.stderr)
+      allow(system).to receive(:pipe) { [StringIO.new, StringIO.new] }
+      allow(system).to receive(:fork).and_return(11, 12, 13)
+      allow(system).to receive(:waitpid2) { |pid| [pid, status_double(0)] }
+      described_class.new(executor, [echo('a'), echo('b'), echo('c')]).call
+      expect(system.pgids_set).to eq([[11, 0], [12, 11], [13, 11]])
+    end
+
     it 'opens a pipe per stage boundary and closes every parent end after forking' do
       pipes_made = []
       allow(system).to receive(:pipe) { (pipes_made << [StringIO.new, StringIO.new]).last }

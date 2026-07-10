@@ -30,8 +30,6 @@ module Rush
     # OS default (dash-verified).
     def isolate: () -> void
 
-    def spawn_child: () -> Integer
-
     def run_child: () -> bot
   end
 end

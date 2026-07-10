@@ -89,7 +89,7 @@ module Rush
     sig { returns(Status) }
     def call
       pipes = build_pipes
-      pids = @commands.each_index.map { |index| start_stage(Stage.new(index, pipes, @commands.size)) }
+      pids = start_stages(pipes)
       close_all(pipes)
       wait(pids)
     end
@@ -101,11 +101,21 @@ module Rush
       Array.new(@commands.size - 1) { @executor.system.pipe }
     end
 
-    sig { params(stage: Stage).returns(T.nilable(Integer)) }
-    def start_stage(stage)
-      # :nocov:
-      @executor.system.fork { @executor.system.exit!(run_stage(stage).exitstatus) }
-      # :nocov:
+    # Stages fork sequentially, each joining the first stage's process group
+    # under job control (dash: one group per pipeline, first process is the
+    # leader). Because stage 0's group is settled — parent-side setpgid —
+    # before stage 1 is even forked, later members can never race the group
+    # into existence.
+    sig { params(pipes: T::Array[[IO, IO]]).returns(T::Array[Integer]) }
+    def start_stages(pipes)
+      @commands.each_index.with_object([]) do |index, pids|
+        pids << start_stage(Stage.new(index, pipes, @commands.size), pids.first)
+      end
+    end
+
+    sig { params(stage: Stage, leader: T.nilable(Integer)).returns(Integer) }
+    def start_stage(stage, leader)
+      @executor.job_control.launch(leader: leader) { @executor.system.exit!(run_stage(stage).exitstatus) }
     end
 
     sig { params(stage: Stage).returns(Status) }
@@ -125,18 +135,10 @@ module Rush
       pipes.each { |pipe| pipe.each(&:close) }
     end
 
-    sig { params(pids: T::Array[T.nilable(Integer)]).returns(Status) }
+    sig { params(pids: T::Array[Integer]).returns(Status) }
     def wait(pids)
-      # fork returns the child pid in the parent (nil only in the child, which
-      # exit!s and never reaches here), so compact only quiets the nominal
-      # Integer?; a pipeline always has >= 2 stages, so fetch(-1) has a status.
-      statuses = PipelineStatuses.new(wait_statuses(pids))
+      statuses = PipelineStatuses.new(pids.map { |pid| wait_status(pid) })
       pipefail? ? statuses.pipefail : statuses.last_stage
-    end
-
-    sig { params(pids: T::Array[T.nilable(Integer)]).returns(T::Array[Status]) }
-    def wait_statuses(pids)
-      pids.filter_map { |pid| wait_status(pid) if pid }
     end
 
     sig { params(pid: Integer).returns(Status) }

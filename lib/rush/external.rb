@@ -30,10 +30,14 @@ module Rush
       @executor.system
     end
 
-    # close_others closes inherited fds >= 3 (e.g. pipeline pipe ends) in the child.
+    # close_others closes inherited fds >= 3 (e.g. pipeline pipe ends) in the
+    # child. Under job control the command is a job of its own: pgroup: true
+    # has the kernel start it as its own process-group leader — the spawn-path
+    # equivalent of the fork paths' double setpgid, with no race at all.
     sig { returns(T::Hash[T.any(Integer, Symbol), T.untyped]) }
     def spawn_options
-      @io.to_spawn_options.merge(close_others: true)
+      base = @io.to_spawn_options.merge(close_others: true)
+      @executor.job_control.monitored? ? base.merge(pgroup: true) : base
     end
 
     sig { params(error: SystemCallError).returns(Status) }

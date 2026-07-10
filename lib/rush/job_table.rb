@@ -66,7 +66,14 @@ module Rush
       @system = system
       @jobs = T.let({}, T::Hash[Integer, Job])
       @stash = T.let({}, T::Hash[Integer, Process::Status])
+      @root = T.let(true, T::Boolean)
     end
+
+    # Still the root shell: job-control machinery (process grouping, the
+    # SIGTSTP base disposition) acts only here, never in a forked child
+    # environment — dash's rootshell guard (JobControl consults this).
+    sig { returns(T::Boolean) }
+    attr_reader :root
 
     # A background launch: the pid becomes job [n] — the lowest free number,
     # as dash numbers slots. Fake fork ports return no child pid (mapped to
@@ -129,11 +136,12 @@ module Rush
     # A forked child environment starts with no jobs of its own (POSIX 2.12):
     # the parent's children are not waitable here — wait by pid reports 127
     # and a %id reports No such job, as dash does in a real (non-tail-
-    # optimized) subshell.
+    # optimized) subshell. It is no root shell either (see #root?).
     sig { void }
     def clear_for_subshell
       @jobs.clear
       @stash.clear
+      @root = false
     end
 
     # The jobs builtin, after displaying a finished entry: dash frees

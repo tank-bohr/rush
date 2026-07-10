@@ -28,8 +28,6 @@ module Rush
 
     def report_fatal: (Error error) -> Status
 
-    def spawn_child: () -> Integer
-
     def run_child: () -> bot
   end
 end

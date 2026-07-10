@@ -3,17 +3,41 @@
 RSpec.describe Rush::External do
   let(:system) { instance_double(Rush::SystemCalls) }
   let(:jobs) { instance_double(Rush::JobTable) }
-  let(:executor) { instance_double(Rush::Executor, system: system, jobs: jobs) }
+  let(:job_control) { instance_double(Rush::JobControl, monitored?: false) }
+  let(:executor) { instance_double(Rush::Executor, system: system, jobs: jobs, job_control: job_control) }
   let(:io) { Rush::IoTable.standard(FakeSystemCalls.new) }
 
   def run(argv, table = io)
     described_class.new(executor, argv, table, {}).call
   end
 
+  def capture_spawn_options
+    options = nil
+    allow(system).to receive(:spawn) do |_env, _argv, opts|
+      options = opts
+      11
+    end
+    allow(jobs).to receive(:await).with(11).and_return(Rush::Status.success)
+    -> { options }
+  end
+
   it 'spawns the program and awaits its status through the job table' do
     allow(system).to receive(:spawn).and_return(11)
     allow(jobs).to receive(:await).with(11).and_return(Rush::Status.new(3))
     expect(run(%w[prog a]).exitstatus).to eq(3)
+  end
+
+  it 'spawns the command as its own process-group leader under job control (dash-probed)' do
+    allow(job_control).to receive(:monitored?).and_return(true)
+    options = capture_spawn_options
+    run(%w[prog])
+    expect(options.call).to include(pgroup: true)
+  end
+
+  it 'spawns without a process group while monitor is off' do
+    options = capture_spawn_options
+    run(%w[prog])
+    expect(options.call).not_to include(:pgroup)
   end
 
   it 'returns 127 and a message when the program is not found' do

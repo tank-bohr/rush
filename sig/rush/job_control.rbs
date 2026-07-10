@@ -1,0 +1,43 @@
+module Rush
+  # The monitor-mode (`set -m`) policy: whether job control is active here,
+  # and the side effects of flipping the flag (SIGTSTP base disposition, tty
+  # check, the double-setpgid fork dance). Stateless — Executor builds one on
+  # demand; the root-shell bit lives in the JobTable.
+  class JobControl
+    extend T::Sig
+
+    TSTP_IGNORE: Proc
+
+    @executor: Executor
+
+    def initialize: (Executor executor) -> void
+
+    # `set -m`: side effects + flag together; warns and leaves the flag off
+    # when refused (platform gate, or interactive without a tty).
+    def enable: (_IoStream stderr) -> void
+
+    # `set +m`: the flag drops and SIGTSTP returns to the OS default.
+    def disable: () -> void
+
+    # Invocation-time -m: re-run the flag through #enable once the executor
+    # exists, so an interactive shell without a tty drops it like dash.
+    def startup: () -> void
+
+    # Process grouping is active: monitor on and this is the root shell.
+    def monitored?: () -> bool
+
+    # Fork one member of a job, into `leader`'s process group (its own
+    # when none) under job control.
+    def launch: (?leader: Integer?) { () -> void } -> Integer
+
+    private
+
+    def refuse: (_IoStream stderr, String message) -> void
+
+    def tty?: () -> bool
+
+    def interactive?: () -> bool
+
+    def options: () -> Options
+  end
+end

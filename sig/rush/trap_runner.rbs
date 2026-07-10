@@ -25,6 +25,8 @@ module Rush
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
     # shell exits with: the given code, unless the trap itself runs `exit`. $?
     # inside the trap is that same code (POSIX 2.14), so it is published first.
+    def set_base: (String name, Proc? handler) -> void
+
     def run_exit_trap: (Integer code) -> Integer
 
     # The status a bare `exit` reports: while the EXIT trap runs, the status the

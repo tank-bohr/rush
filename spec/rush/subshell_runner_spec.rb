@@ -19,6 +19,14 @@ RSpec.describe Rush::SubshellRunner do
       allow(system).to receive(:waitpid2).with(42).and_return([42, status_double(3)])
       expect(described_class.new(executor, body('false')).call.exitstatus).to eq(3)
     end
+
+    it 'places the subshell in its own process group under job control (dash-probed)' do
+      executor.job_control.enable(system.stderr)
+      allow(system).to receive(:fork).and_return(42)
+      allow(system).to receive(:waitpid2).with(42).and_return([42, status_double(0)])
+      described_class.new(executor, body('true')).call
+      expect(system.pgids_set).to eq([[42, 0]])
+    end
   end
 
   describe '#run_body (child side)' do

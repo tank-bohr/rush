@@ -1,0 +1,19 @@
+module Rush
+  class SystemCalls
+    # Process-group control for job control (rush-mv8), mixed into SystemCalls;
+    # the terminal-handover slice adds tcsetpgrp/tcgetpgrp here.
+    module ProcessControl
+      def waitpid2: (Integer pid) -> [ Integer, Process::Status ]
+
+      def poll_child: () -> [ Integer, Process::Status ]?
+
+      def setpgid: (Integer pid, Integer pgid) -> void
+
+      def fork_grouped: (Integer group) { () -> void } -> Integer?
+
+      def grouped_child: (Integer group) { () -> void } -> void
+
+      def job_control_supported?: () -> bool
+    end
+  end
+end

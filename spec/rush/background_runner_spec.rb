@@ -49,4 +49,31 @@ RSpec.describe Rush::BackgroundRunner do
     described_class.new(executor, node).run_body
     expect(system.traps_installed.reverse.find { |name, _command| name == 'INT' }).to eq(%w[INT IGNORE])
   end
+
+  context 'when job control (set -m) is on' do
+    before { executor.job_control.enable(system.stderr) }
+
+    it 'places the job in its own process group (parent side of the double setpgid)' do
+      allow(system).to receive(:fork).and_return(1234)
+      described_class.new(executor, node).call
+      expect(system.pgids_set).to eq([[1234, 0]])
+    end
+
+    it 'leaves the child stdin alone — the job sits in its own group (dash-probed)' do
+      seen = nil
+      capture = Class.new(Rush::AST::Node) do
+        define_method(:execute) do |ex|
+          seen = ex.io.get(0)
+          Rush::Status.success
+        end
+      end
+      described_class.new(executor, capture.new).run_body
+      expect(seen).to be(system.stdin)
+    end
+
+    it 'leaves SIGINT and SIGQUIT at their defaults (POSIX 2.11 applies only without job control)' do
+      described_class.new(executor, node).run_body
+      expect(system.traps_installed).not_to include(%w[INT IGNORE], %w[QUIT IGNORE])
+    end
+  end
 end

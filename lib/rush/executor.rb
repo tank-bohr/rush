@@ -51,6 +51,14 @@ module Rush
       @state.variables.seed_pwd(@system.pwd)
     end
 
+    # The job-control policy over this executor: a stateless view, so it is
+    # built on demand — the one durable bit (root shell or forked child) lives
+    # with the job table, which already tracks subshell entry.
+    sig { returns(JobControl) }
+    def job_control
+      JobControl.new(self)
+    end
+
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
     # command unrun with status 2; the shell carries on (RedirectError).
     sig { params(node: AST::Node).returns(Status) }
@@ -76,10 +84,12 @@ module Rush
     end
 
     # Entering a forked child environment (subshell, pipeline stage, async
-    # list, command substitution): caught traps reset (POSIX 2.11) and the job
-    # table empties — the parent's jobs are not this environment's children
-    # (POSIX 2.12: wait on them reports 127, a %id reports No such job; the
-    # value of $! itself survives). dash-verified on every forked shape.
+    # list, command substitution): caught traps reset (POSIX 2.11), and the
+    # job table empties — the parent's jobs are not this environment's
+    # children (POSIX 2.12: wait on them reports 127, a %id reports No such
+    # job; the value of $! itself survives) — which also switches job-control
+    # machinery off (dash: root shell only). dash-verified on every forked
+    # shape.
     sig { void }
     def enter_subshell
       @trap_runner.reset_caught_for_subshell
