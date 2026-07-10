@@ -104,15 +104,22 @@ RSpec.describe Rush::Executor do
     expect(executor.run_exit_trap(3)).to eq(3)
   end
 
-  it 'resets caught traps and signal dispositions for a subshell' do
+  it 'resets caught traps and signal dispositions on entering a subshell' do
     target = state
     executor = build(target)
     executor.trap_runner.set(Rush::Signals::EXIT, 'echo exit')
     executor.trap_runner.set('TERM', 'echo term')
     executor.trap_runner.set('INT', '')
-    executor.reset_caught_traps_for_subshell
+    executor.enter_subshell
     expect(target.traps.listing).to eq([['INT', '']])
     expect(system.traps_installed).to eq([['TERM', nil], %w[INT IGNORE], %w[TERM SYSTEM_DEFAULT]])
+  end
+
+  it 'drops the job table on entering a subshell (POSIX 2.12: not our children)' do
+    executor = build(state)
+    executor.jobs.record(9)
+    executor.enter_subshell
+    expect(executor.jobs.wait_for(9)).to be_nil
   end
 
   it 'temporarily swaps io and restores it after success or failure' do

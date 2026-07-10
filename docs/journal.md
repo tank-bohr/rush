@@ -925,3 +925,20 @@ raises Interrupt/SignalException, so a "default" INT died as an uncaught-excepti
 where dash dies silently by signal (observably the same 128+n status — Ruby re-kills itself —
 but with stderr noise). TrapRunner's :default now maps to 'SYSTEM_DEFAULT' (true SIG_DFL);
 `trap "..." USR1; trap - USR1; kill -USR1 $$` exits 138 cleanly in both shells.
+
+### Forked children drop the job table — and dash's EV_EXIT had been lying to the probes
+rush-rg2, first slice of the terminal-free job-control half. Re-probing subshell wait
+semantics falsified a theory this journal recorded two slices ago: `exit 7 & (wait $!)`
+returning 7 in dash was not a "pre-fork zombie poll" and not racy — it was **EV_EXIT**, dash's
+tail-call optimization. A `( list )` in tail position never forks; the "subshell" probes were
+running in dash's main shell, where its own children are waitable. Appending `; echo tail`
+forces the real fork, and every shape flips to 127 — live pid, remembered status and unknown
+pid alike — with bash agreeing ("not a child of this shell"). The real semantics, now
+implemented and corpus-pinned: **a forked child environment starts with no jobs of its own**
+(POSIX 2.12) — Executor#enter_subshell (né reset_caught_traps_for_subshell) clears the job
+table alongside the trap reset, covering subshells, pipeline stages, async children and
+command substitutions in one seam; the value of $! itself survives. One documented divergence
+replaces the wrong one: in tail position dash's optimization leaks main-shell wait-ability
+(`sleep 0.3 & (wait $!)` → 0 in dash, 127 in rush) — the standard's subshell semantics side
+with 127, and such forms stay out of the corpus. dash's cmd-subst has the same leak for a
+single-builtin body (`$(jobs)` sees the parent's table where `$(wait $!; echo)` does not).

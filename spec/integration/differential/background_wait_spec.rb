@@ -45,14 +45,20 @@ RSpec.describe 'rush vs dash (differential background/wait corpus)' do
     'sleep 0.4 & sleep 0.1; kill $!; wait $!; echo st=$?',
     # async stdin is /dev/null unless the list redirects it itself
     "cat <<E & wait $!\nhd\nE\necho st=$?",
-    # subshells: a live job is not the subshell's child (status 0, as dash),
-    # an unknown pid stays 127, and a status the parent already reaped during
-    # a foreground wait is inherited as remembered. (The dead-but-unreaped
-    # shape `exit 7 & (wait $!)` is inherently racy in dash — whether its
-    # pre-fork poll caught the zombie decides 7 vs 0 — so it stays out.)
-    'sleep 0.3 & (wait $!; echo sub=$?)',
+    # forked child environments start with no jobs of their own (POSIX 2.12):
+    # wait by pid reports 127 in a real subshell, a pipeline stage, an async
+    # child and a command substitution alike. Tail-position `( )` forms stay
+    # out of the corpus: dash's EV_EXIT optimization runs those in the main
+    # shell without forking, so its waits succeed where a true subshell
+    # reports 127 (bash agrees with 127; the standard's subshell semantics
+    # win — journal).
+    'sleep 0.3 & (wait $!; echo sub=$?); echo tail',
+    'exit 7 & (wait $!; echo sub=$?); echo tail',
+    'false & sleep 0.3; (wait $!; echo sub=$?); echo tail',
     '(wait 99999; echo sub=$?)',
-    'false & sleep 0.3; (wait $!; echo sub=$?)',
+    'sleep 0.2 & true | { wait $!; echo st=$?; }',
+    'sleep 0.3 & { wait $!; echo inner=$?; } & wait; echo tail',
+    'false & sleep 0.1; echo "x$(wait $!; echo =$?)"; echo tail',
     # wait is a known regular builtin
     'command -v wait',
     'type wait'

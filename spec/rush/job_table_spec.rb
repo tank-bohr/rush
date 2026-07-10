@@ -53,10 +53,21 @@ RSpec.describe Rush::JobTable do
       expect(table.wait_for(9).exitstatus).to eq(4)
     end
 
-    it 'reports success for a job the enclosing shell forked (ECHILD, as dash does)' do
+    it 'reports success when the child is gone (the defensive ECHILD guard)' do
       table.record(9)
       expect(table.wait_for(9)).to be_success
       expect(table.wait_for(9)).to be_success
+    end
+  end
+
+  describe '#clear_for_subshell' do
+    it 'forgets recorded jobs and stashed statuses (a forked child has none)' do
+      table.record(9)
+      system.provide_child(7, 2)
+      system.provide_child(5, 3)
+      table.await(5)
+      table.clear_for_subshell
+      expect([table.wait_for(9), table.wait_for(7)]).to eq([nil, nil])
     end
   end
 

@@ -24,9 +24,10 @@ module Rush
     # positive one.
     def record: (Integer pid) -> void
 
-    # Blocking wait for a foreground child's status. Waiting in a subshell for
-    # a job launched before the fork raises ECHILD — the job is the parent's
-    # child, not ours; dash reports success there.
+    # Blocking wait for a foreground child's status. ECHILD is a defensive
+    # guard: entries never outlive their environment (forked children clear
+    # the table), so a wait on a vanished child answers success rather than
+    # crashing.
     def await: (Integer pid) -> Status
 
     # The wait builtin, one pid: a remembered status, a blocking wait on a live
@@ -35,6 +36,12 @@ module Rush
 
     # The wait builtin, no operands: collect every known background job.
     def wait_all: () -> void
+
+    # A forked child environment starts with no jobs of its own (POSIX 2.12):
+    # the parent's children are not waitable here — wait by pid reports 127
+    # and a %id reports No such job, as dash does in a real (non-tail-
+    # optimized) subshell.
+    def clear_for_subshell: () -> void
 
     private
 

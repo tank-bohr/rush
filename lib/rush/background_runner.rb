@@ -34,16 +34,16 @@ module Rush
 
     # POSIX 2.9.3.1 / 2.11 with job control disabled: an async child reads
     # stdin from /dev/null (its own redirections may rebind it) and starts
-    # with SIGINT/SIGQUIT ignored. The subshell trap reset must run first —
-    # an interactive session's base handlers reinstall OS defaults as they
-    # drop, which would undo the ignores (the repeat reset inside
-    # SubshellRunner#run_body is then a no-op). The ignores are a real
+    # with SIGINT/SIGQUIT ignored. The subshell entry (trap reset + job-table
+    # clear) must run first — an interactive session's base handlers
+    # reinstall OS defaults as they drop, which would undo the ignores (the
+    # repeat inside SubshellRunner#run_body is then a no-op). The ignores are a real
     # SIG_IGN, kept off the trap table: they survive exec and nested
     # subshells, while `trap` overrides them and `trap - INT` restores the
     # OS default (dash-verified).
     sig { void }
     def isolate
-      @executor.reset_caught_traps_for_subshell
+      @executor.enter_subshell
       %w[INT QUIT].each { |name| @executor.system.trap_signal(name, 'IGNORE') { nil } }
       @executor.replace_io(@executor.io.with(0, @executor.system.open_file(File::NULL, 'r')))
     end

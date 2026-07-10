@@ -75,9 +75,15 @@ module Rush
       @trap_runner.run_exit_trap(code)
     end
 
+    # Entering a forked child environment (subshell, pipeline stage, async
+    # list, command substitution): caught traps reset (POSIX 2.11) and the job
+    # table empties — the parent's jobs are not this environment's children
+    # (POSIX 2.12: wait on them reports 127, a %id reports No such job; the
+    # value of $! itself survives). dash-verified on every forked shape.
     sig { void }
-    def reset_caught_traps_for_subshell
+    def enter_subshell
       @trap_runner.reset_caught_for_subshell
+      @jobs.clear_for_subshell
     end
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),

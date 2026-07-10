@@ -29,9 +29,10 @@ module Rush
       @jobs[pid] = :running if pid.positive?
     end
 
-    # Blocking wait for a foreground child's status. Waiting in a subshell for
-    # a job launched before the fork raises ECHILD — the job is the parent's
-    # child, not ours; dash reports success there.
+    # Blocking wait for a foreground child's status. ECHILD is a defensive
+    # guard: entries never outlive their environment (forked children clear
+    # the table), so a wait on a vanished child answers success rather than
+    # crashing.
     sig { params(pid: Integer).returns(Status) }
     def await(pid)
       @stash.delete(pid) || reap_until(pid)
@@ -54,6 +55,16 @@ module Rush
     sig { void }
     def wait_all
       @jobs.each_key { |pid| wait_for(pid) }
+    end
+
+    # A forked child environment starts with no jobs of its own (POSIX 2.12):
+    # the parent's children are not waitable here — wait by pid reports 127
+    # and a %id reports No such job, as dash does in a real (non-tail-
+    # optimized) subshell.
+    sig { void }
+    def clear_for_subshell
+      @jobs.clear
+      @stash.clear
     end
 
     private

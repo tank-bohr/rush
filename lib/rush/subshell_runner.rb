@@ -26,7 +26,7 @@ module Rush
     # on — without letting the exception escape the fork.
     sig { returns(Status) }
     def run_body
-      @executor.reset_caught_traps_for_subshell
+      @executor.enter_subshell
       status = run_body_status
       Status.new(@executor.run_exit_trap(status.exitstatus))
     end

@@ -36,7 +36,7 @@ module Rush
       # exit, and an uncaught return, both end the substitution with their code.
       sig { returns(Status) }
       def run_isolated
-        @executor.reset_caught_traps_for_subshell
+        @executor.enter_subshell
         status = run_isolated_status
         Status.new(@executor.run_exit_trap(status.exitstatus))
       end
