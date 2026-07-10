@@ -75,5 +75,15 @@ RSpec.describe Rush::BackgroundRunner do
       described_class.new(executor, node).run_body
       expect(system.traps_installed).not_to include(%w[INT IGNORE], %w[QUIT IGNORE])
     end
+
+    it 'never hands the terminal to a background job (dash-probed: the tty stays with the shell)' do
+      tty_system = FakeSystemCalls.new(tty: true)
+      tty_executor = Rush::Executor.new(system: tty_system, state: Rush::ShellState.new)
+      tty_executor.job_control.enable(tty_system.stderr)
+      allow(tty_system).to receive(:fork).and_return(1234)
+      described_class.new(tty_executor, node).call
+      expect(tty_system.tty_leaders).to be_empty
+      expect(tty_system.handovers).to eq([4242])
+    end
   end
 end

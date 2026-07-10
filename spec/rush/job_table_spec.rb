@@ -149,6 +149,22 @@ RSpec.describe Rush::JobTable do
       table.clear_for_subshell
       expect(table.await(7)).to be_success
     end
+
+    it 'drops the job-control environment — a forked child is no root and never reclaims the tty' do
+      table.control.hold(Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242))
+      table.clear_for_subshell
+      expect([table.control.root, table.control.terminal]).to eq([false, nil])
+    end
+  end
+
+  describe '#control' do
+    it 'holds the acquired terminal until released (set +m)' do
+      terminal = Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242)
+      table.control.hold(terminal)
+      expect(table.control.terminal).to be(terminal)
+      table.control.hold(nil)
+      expect(table.control.terminal).to be_nil
+    end
   end
 
   describe '#wait_all' do

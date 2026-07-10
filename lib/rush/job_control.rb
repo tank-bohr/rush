@@ -4,20 +4,25 @@
 module Rush
   # The monitor-mode (`set -m`) policy: whether job control is active here,
   # and the side effects of flipping the flag. Stateless — Executor builds one
-  # on demand; the root-shell/forked-child bit lives in the JobTable. dash
-  # 0.5.13 is the oracle throughout (probed off-tty, journal): enabling
-  # monitor ignores SIGTSTP in the shell — as a base disposition, so a user
-  # trap overrides it and `trap -` restores it — and puts every forked job
-  # (background list, pipeline, subshell, external command) into its own
-  # process group, first process as leader; command substitution stays in the
-  # shell's group. The machinery is root-shell-only: a forked child keeps `m`
-  # in $- but re-enabling there is flag-only, exactly like dash's rootshell
-  # guard. An interactive shell additionally needs tty access to turn monitor
-  # on; without one it warns and leaves the flag off.
+  # on demand; the durable bits (root shell, acquired terminal) live on the
+  # JobTable's Control. dash 0.5.13 is the oracle throughout (probed on and
+  # off a tty, journal): enabling monitor ignores SIGTSTP in the shell — as a
+  # base disposition, so a user trap overrides it and `trap -` restores it —
+  # and puts every forked job (background list, pipeline, subshell, external
+  # command) into its own process group, first process as leader; command
+  # substitution stays in the shell's group. Whenever the controlling
+  # terminal is reachable — interactive or not — the shell additionally does
+  # dash's setjobctl dance: wait until it is in the foreground, remember the
+  # terminal's owner, make itself a process-group leader, take the terminal,
+  # and ignore SIGTTOU too; foreground jobs then own the tty for the length
+  # of their run. Only an interactive shell treats a missing tty as an error
+  # (warn, flag off). The machinery is root-shell-only: a forked child keeps
+  # `m` in $- but re-enabling there is flag-only, exactly like dash's
+  # rootshell guard.
   class JobControl
     extend T::Sig
 
-    TSTP_IGNORE = T.let(proc {}, Proc)
+    IGNORE = T.let(proc {}, Proc)
 
     sig { params(executor: Executor).void }
     def initialize(executor)
@@ -27,28 +32,32 @@ module Rush
     # `set -m` (and -o monitor, and invocation-time -m via #startup). Can
     # refuse — no platform support, or an interactive shell without a tty —
     # in which case the flag stays off and the failure is only a warning, as
-    # dash's setjobctl does.
+    # dash's setjobctl does. Re-enabling while on is a no-op (dash: on ==
+    # jobctl), preserving the remembered terminal owner.
     sig { params(stderr: T.untyped).void }
     def enable(stderr)
       return refuse(stderr, 'job control not supported') unless @executor.system.job_control_supported?
-      return refuse(stderr, "can't access tty; job control turned off") if interactive? && !tty?
+      return if options.on?(:monitor)
+      return options.set(:monitor, true) unless control.root
 
-      options.set(:monitor, true)
-      @executor.trap_runner.set_base('TSTP', TSTP_IGNORE) if @executor.jobs.root
+      enable_root(stderr)
     end
 
-    # `set +m`: the flag drops and SIGTSTP returns to the OS default.
+    # `set +m`: the flag drops, SIGTSTP and SIGTTOU return to the OS default
+    # (dash setjobctl(0) runs both setsignals unconditionally), and the
+    # terminal goes back to whoever owned it at acquisition.
     sig { void }
     def disable
       options.set(:monitor, false)
-      @executor.trap_runner.set_base('TSTP', nil) if @executor.jobs.root
+      drop_monitor if control.root
     end
 
-    # Invocation-time -m (rush -m, or -i -m): the flag was set while building
-    # the shell state, before any executor existed to carry the side effects.
+    # Invocation-time -m (explicit, or defaulted on for an interactive
+    # shell like dash's mflag = iflag): the flag was set while building the
+    # shell state, before any executor existed to carry the side effects.
     # Re-run it through #enable so an interactive shell without a tty drops
-    # the flag (dash: "can't access tty" at startup), and a permitted one gets
-    # its SIGTSTP base disposition.
+    # the flag (dash: "can't access tty" at startup), and a permitted one
+    # acquires the terminal and its base dispositions.
     sig { void }
     def startup
       return unless options.on?(:monitor)
@@ -62,32 +71,114 @@ module Rush
     # rootshell guard, probed via nested groups and subshell `set -m`).
     sig { returns(T::Boolean) }
     def monitored?
-      @executor.jobs.root && options.on?(:monitor)
+      control.root && options.on?(:monitor)
     end
 
-    # Fork one member of a job, into `leader`'s process group (its own when
-    # none) under job control. Grouping is decided before the fork, so a
-    # child entering its subshell environment cannot flip it.
+    # Fork one member of a foreground job, into `leader`'s process group
+    # (its own when none) under job control; a group leader also takes the
+    # terminal, child-side, when the shell holds one. Grouping is decided
+    # before the fork, so a child entering its subshell environment cannot
+    # flip it.
     sig { params(leader: T.nilable(Integer), child_main: T.proc.returns(T.untyped)).returns(Integer) }
     def launch(leader: nil, &child_main)
-      return @executor.system.fork(&child_main) || 0 unless monitored?
+      return fork_plain(&child_main) unless monitored?
 
-      @executor.system.fork_grouped(leader&.positive? ? leader : 0, &child_main) || 0
+      group = leader&.positive? ? leader : 0
+      @executor.system.fork_grouped(group, handover_tty(group), &child_main) || 0
+    end
+
+    # An asynchronous (&) job: its own group under job control, but never
+    # the terminal — probed: the tty stays with the shell.
+    sig { params(child_main: T.proc.returns(T.untyped)).returns(Integer) }
+    def launch_background(&child_main)
+      return fork_plain(&child_main) unless monitored?
+
+      @executor.system.fork_grouped(0, &child_main) || 0
+    end
+
+    # Wait for a foreground job with the terminal handed to its process
+    # group, taking it back once the job settles, however the wait ends
+    # (dash's waitforjob). The give here is the parent-side settle — it also
+    # covers the spawn path, which has no child-side hook — and without a
+    # held terminal the wait runs bare.
+    sig do
+      type_parameters(:U)
+        .params(leader: Integer, blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def foreground(leader, &blk)
+      terminal = control.terminal
+      return yield unless terminal && leader.positive?
+
+      terminal.while_given(leader, &blk)
     end
 
     private
+
+    # The root-shell side of `set -m`: with a reachable tty, the full dash
+    # setjobctl dance; without one, grouping only — an error only for an
+    # interactive shell.
+    sig { params(stderr: T.untyped).void }
+    def enable_root(stderr)
+      terminal = Terminal.acquire(@executor.system)
+      terminal ? enable_with_terminal(terminal) : enable_off_tty(stderr)
+    end
+
+    # SIGTSTP and SIGTTOU ignored (probed under a pty; SIGTTIN keeps the OS
+    # default — that is what parks a background-started shell until fg), as
+    # base dispositions: user traps win in either order and `trap -` falls
+    # back here.
+    sig { params(terminal: Terminal).void }
+    def enable_with_terminal(terminal)
+      control.hold(terminal)
+      @executor.trap_runner.set_base('TSTP', IGNORE)
+      @executor.trap_runner.set_base('TTOU', IGNORE)
+      options.set(:monitor, true)
+    end
+
+    # Off-tty monitor is grouping plus the SIGTSTP ignore alone (probed:
+    # dash leaves TTOU stopping the shell there).
+    sig { params(stderr: T.untyped).void }
+    def enable_off_tty(stderr)
+      return refuse(stderr, "can't access tty; job control turned off") if interactive?
+
+      @executor.trap_runner.set_base('TSTP', IGNORE)
+      options.set(:monitor, true)
+    end
+
+    # The root-shell side of `set +m`: both stop-signal bases return to the
+    # OS default and the terminal, when held, goes home.
+    sig { void }
+    def drop_monitor
+      @executor.trap_runner.set_base('TSTP', nil)
+      @executor.trap_runner.set_base('TTOU', nil)
+      control.terminal&.restore
+      control.hold(nil)
+    end
+
+    # The tty a freshly forked job leader should take with it (dash
+    # forkchild's FORK_FG xtcsetpgrp): only a group leader, only while the
+    # shell holds the terminal. Joiners find the group already in front.
+    sig { params(group: Integer).returns(T.untyped) }
+    def handover_tty(group)
+      return if group.nonzero?
+
+      control.terminal&.tty
+    end
+
+    sig { params(child_main: T.proc.returns(T.untyped)).returns(Integer) }
+    def fork_plain(&child_main)
+      @executor.system.fork(&child_main) || 0
+    end
 
     sig { params(stderr: T.untyped, message: String).void }
     def refuse(stderr, message)
       stderr.puts("rush: #{message}")
     end
 
-    # The rough dash test (it walks /dev/tty then fds 0..2): monitor in an
-    # interactive shell needs a terminal to hand around. Refined to tcgetpgrp
-    # in the terminal-handover slice (rush-mv8.3).
-    sig { returns(T::Boolean) }
-    def tty?
-      @executor.system.tty? || @executor.system.stderr_tty?
+    sig { returns(JobTable::Control) }
+    def control
+      @executor.jobs.control
     end
 
     sig { returns(T::Boolean) }

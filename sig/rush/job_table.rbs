@@ -49,11 +49,13 @@ module Rush
 
     @stash: Hash[Integer, Process::Status]
 
-    @root: bool
+    @control: Control
 
     def initialize: (SystemCalls system) -> void
 
-    attr_reader root: bool
+    # The durable job-control environment (root-shell bit, acquired
+    # terminal): lives and dies with the table.
+    attr_reader control: Control
 
     # A background launch: the pid becomes job [n] — the lowest free number,
     # as dash numbers slots. Fake fork ports return no child pid (mapped to

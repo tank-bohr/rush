@@ -1075,3 +1075,64 @@ of the corpus until mv8.4: rush would block today. Lint pressure earned its keep
 reek's ControlParameter split toggle(bool) into enable/disable, and FeatureEnvy pushed the
 setpgid choreography out of the policy into SystemCalls::ProcessControl — which then
 naturally absorbed waitpid2/poll_child as the reaping+grouping syscall cluster.
+
+### The terminal changes hands: tcsetpgrp lands on IO#ioctl, and `-i` now implies `-m`
+rush-mv8.3, the slice the epic was really about: under monitor mode every foreground job's
+process group owns the controlling terminal for the length of its run, and the shell takes
+it back afterwards. Probing dash 0.5.13 under a pty (PTY.spawn driving `dash -i`) settled
+four questions the last slice left open — and corrected one of its guesses. (1) **Interactive
+dash defaults monitor on**: `$-` on a tty reads `smi` (options.c: an unset mflag resolves to
+iflag), so rush's Invocation now defaults :monitor to interactive? — which also means
+`rush -i` off-tty now *warns* "can't access tty; job control turned off" exactly like dash,
+a fidelity fix the old cli specs had pinned the absence of. (2) **The "interactive trio" is
+really a duo**: with the terminal in hand dash ignores TSTP and TTOU, but TTIN keeps the OS
+default everywhere — `kill -TTIN $$` stops even an interactive -m dash ("Stopped (tty
+input)"); that default is load-bearing, it is what parks a background-started shell in
+setjobctl's killpg(0, SIGTTIN) wait-until-foreground loop. (3) **The tty dance is gated on
+tty access, not interactivity**: non-interactive `dash -m -c` on a pty acquires the
+terminal, self-leaders (pid==pgid, sid elsewhere — probed via ps -o pid=,pgid=,sid=), hands
+the tty to each foreground job and ignores TSTP/TTOU; interactivity only decides whether a
+missing tty is an error. (4) **`set +m` really restores**: TSTP and TTOU return to SIG_DFL
+(both stop the shell again), the terminal goes back to the group that owned it at
+acquisition, and the shell rejoins that group.
+
+A probing lesson that cost a round: **stop signals sent to an orphaned process group are
+discarded by the kernel**, and PTY.spawn makes the child a session leader whose group is
+always orphaned — the first TSTP/TTOU probes answered "alive" for *any* disposition. Wrap
+the shell (`sh -c 'dash -i; ...'`) so its parent lives in the same session, and the truth
+comes out; the smoke inherits the same wrapper.
+
+Implementation: Ruby exposes no tcsetpgrp, so SystemCalls grows tcgetpgrp/tcsetpgrp over
+IO#ioctl with TIOCGPGRP/TIOCSPGRP keyed on host_os (asm-generic 0x540F/0x5410 on Linux, the
+sizeof-encoded 0x40047477/0x80047476 on darwin/BSD; an unmatched Unix gets nil and job
+control degrades to grouping-only — the epic's Fiddle-into-libc fallback was judged not
+worth a dependency for platforms rush cannot test). tcsetpgrp holds TTOU ignored (real
+SIG_IGN, scoped) for the call: the reclaim always runs from a background group, where a
+caught handler would EINTR the ioctl and a default disposition would stop the shell.
+Terminal (a new class) owns the dance: Terminal.acquire is dash's setjobctl(1) — open
+/dev/tty or a dup of the first standard tty fd, tcgetpgrp with the TTIN wait loop, remember
+`initial`, setpgid(0,0), take the tty — while give/reclaim/while_given/restore are
+forkchild's FORK_FG xtcsetpgrp, waitforjob's take-back and setjobctl(0). The handover is
+double-sided like the setpgid dance: fork-path leaders tcsetpgrp themselves child-side
+before the body runs (grouped_child), and JobControl#foreground gives parent-side right
+before the wait — which is the only side the spawn path has, so External's race window is
+the µs between spawn returning and one ioctl, against the child's whole execve. Durable
+state condensed into JobTable::Control (root-shell bit + held terminal, dropped together by
+clear_for_subshell); reek's ivar budget forced that grouping and it reads better than the
+two loose fields it replaced. FakeSystemCalls models terminal ownership (open_tty/
+tcgetpgrp/tcsetpgrp recording handovers, a foreground queue for the TTIN loop), so every
+choreography line is unit-pinned.
+
+Verified: full rake green (2012 specs, 99.93/99.56 coverage), and a new differential pty
+smoke in the Docker gate (docker/job-control-smoke.rb) that drives rush -i and dash -i
+through the same session and compares extracted *pictures* — monitor flags, self-leadering,
+job-owns-tty for spawn/pipeline/subshell (ps -o pgid=,tpgid= equality predicates, no raw
+pids), tty-stays-home for cmdsub/background, TSTP+TTOU survival, set +m rejoin, exit
+status — rush's picture is byte-for-byte dash's. Corpus untouched: everything here needs a
+tty, and the off-tty behaviour was pinned last slice.
+
+Docker-gate postscript: the container needed procps (the smoke's pgid/tpgid probes are ps
+calls), and running the gate surfaced a pre-existing container-only failure unrelated to
+this slice — two real_shell_spec inherited-fd examples see their writes reversed inside the
+ruby:4.0.5-slim image while passing natively; reproduced on the previous main tip in the
+same image, filed as rush-erq. The job-control smoke itself runs green inside the container.

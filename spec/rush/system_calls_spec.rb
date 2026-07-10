@@ -18,6 +18,31 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  describe '#pgrp' do
+    it 'reports the process group through Process.getpgrp' do
+      expect(system.pgrp).to eq(Process.getpgrp)
+    end
+  end
+
+  describe '#terminal_family' do
+    it 'knows the ioctl vocabulary of every platform rush develops on' do
+      expect(system.terminal_family).not_to be_nil
+    end
+
+    it 'maps host_os onto the linux and BSD ioctl code tables' do
+      families = %w[linux-gnu darwin24 freebsd14 dragonfly].map do |host|
+        stub_const('RbConfig::CONFIG', RbConfig::CONFIG.merge('host_os' => host))
+        system.terminal_family
+      end
+      expect(families).to eq(%i[linux bsd bsd bsd])
+    end
+
+    it 'admits no vocabulary for an unknown unix (job control degrades to grouping-only)' do
+      stub_const('RbConfig::CONFIG', RbConfig::CONFIG.merge('host_os' => 'solaris2.11'))
+      expect(system.terminal_family).to be_nil
+    end
+  end
+
   describe '#poll_child' do
     it 'reaps any child without blocking (WNOHANG), nil when none has exited' do
       allow(Process).to receive(:waitpid2).with(-1, Process::WNOHANG).and_return(nil)

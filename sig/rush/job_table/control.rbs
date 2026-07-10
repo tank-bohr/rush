@@ -1,0 +1,24 @@
+module Rush
+  class JobTable
+    # The job-control environment of this shell: the root-shell bit and,
+    # while the root shell holds one, the acquired controlling terminal —
+    # dash's rootshell guard and ttyfd/initialpgrp globals.
+    class Control
+      extend T::Sig
+
+      @root: bool
+
+      @terminal: Terminal?
+
+      attr_reader root: bool
+
+      attr_reader terminal: Terminal?
+
+      def initialize: () -> void
+
+      def hold: (Terminal? terminal) -> void
+
+      def fork_child: () -> void
+    end
+  end
+end

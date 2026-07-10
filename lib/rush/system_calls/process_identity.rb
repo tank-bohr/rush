@@ -19,6 +19,13 @@ module Rush
         Process.ppid
       end
 
+      # The shell's own process group: compared against the terminal's
+      # foreground group when job control acquires the tty (rush-mv8.3).
+      sig { returns(Integer) }
+      def pgrp
+        Process.getpgrp
+      end
+
       # Whether the shell runs with root privileges: picks the default PS1
       # ('# ' instead of '$ '), as POSIX permits for privileged users.
       sig { returns(T::Boolean) }

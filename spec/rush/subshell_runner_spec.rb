@@ -27,6 +27,17 @@ RSpec.describe Rush::SubshellRunner do
       described_class.new(executor, body('true')).call
       expect(system.pgids_set).to eq([[42, 0]])
     end
+
+    it 'hands the terminal to the subshell for the wait and reclaims after (tty job control)' do
+      tty_system = FakeSystemCalls.new(tty: true)
+      tty_executor = Rush::Executor.new(system: tty_system, state: state)
+      tty_executor.job_control.enable(tty_system.stderr)
+      allow(tty_system).to receive(:fork).and_return(42)
+      allow(tty_system).to receive(:waitpid2).with(42).and_return([42, status_double(0)])
+      described_class.new(tty_executor, body('true')).call
+      expect(tty_system.tty_leaders).to eq([42])
+      expect(tty_system.handovers).to eq([4242, 42, 4242])
+    end
   end
 
   describe '#run_body (child side)' do

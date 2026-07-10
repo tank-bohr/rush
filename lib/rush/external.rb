@@ -16,9 +16,13 @@ module Rush
       @env = env
     end
 
+    # Under job control the spawned command has no child-side hook, so the
+    # foreground wrapper's parent-side give is what hands it the terminal —
+    # right after the spawn, before the wait.
     sig { returns(Status) }
     def call
-      @executor.jobs.await(system.spawn(@env, @argv, spawn_options))
+      pid = system.spawn(@env, @argv, spawn_options)
+      @executor.job_control.foreground(pid) { @executor.jobs.await(pid) }
     rescue Errno::ENOENT, Errno::EACCES => e
       error_status(e)
     end

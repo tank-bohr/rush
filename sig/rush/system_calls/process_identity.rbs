@@ -10,6 +10,9 @@ module Rush
 
       def ppid: () -> Integer
 
+      # The shell's own process group (the terminal-acquisition compare).
+      def pgrp: () -> Integer
+
       # Whether the shell runs with root privileges: picks the default PS1
       # ('# ' instead of '$ '), as POSIX permits for privileged users.
       def privileged?: () -> bool

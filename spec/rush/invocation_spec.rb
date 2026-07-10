@@ -276,5 +276,17 @@ RSpec.describe Rush::Invocation do
     it 'never marks a -c invocation as a stdin source, even under -s' do
       expect(invocation(['-s', '-c', ':']).shell_flags).to include(stdin: false)
     end
+
+    it 'defaults monitor on for an interactive shell (dash: unset mflag resolves to iflag)' do
+      expect(invocation(['-i']).shell_flags).to include(monitor: true)
+    end
+
+    it 'defaults monitor off for a batch shell' do
+      expect(invocation(['-c', ':']).shell_flags).to include(monitor: false)
+    end
+
+    it 'lets an explicit +m beat the interactive monitor default' do
+      expect(invocation(['+m', '-i']).shell_flags).to include(monitor: false, interactive: true)
+    end
   end
 end

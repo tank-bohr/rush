@@ -86,12 +86,15 @@ module Rush
       @commands = commands
     end
 
+    # The whole pipeline is one job: under job control its group (led by the
+    # first stage) owns the terminal until every stage has settled, so the
+    # reclaim wraps the full wait, not each stage's.
     sig { returns(Status) }
     def call
       pipes = build_pipes
       pids = start_stages(pipes)
       close_all(pipes)
-      wait(pids)
+      @executor.job_control.foreground(pids.fetch(0)) { wait(pids) }
     end
 
     private

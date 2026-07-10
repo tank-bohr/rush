@@ -45,16 +45,18 @@ RSpec.describe Rush::CLI do
     expect(system.stderr.string).to eq('')
   end
 
-  it 'forces an interactive REPL with -i, prompting on stderr' do
+  it 'forces an interactive REPL with -i, prompting on stderr (and, off-tty, dropping default monitor like dash)' do
     system = FakeSystemCalls.new(stdin: "echo hi\n")
     expect(run(['-i'], system)).to eq(0)
-    expect([system.stdout.string, system.stderr.string]).to eq(["hi\n", '$ $ '])
+    warning = "rush: can't access tty; job control turned off\n"
+    expect([system.stdout.string, system.stderr.string]).to eq(["hi\n", "#{warning}$ $ "])
   end
 
-  it 'runs -i -c as a batch carrying the interactive flag in $-' do
+  it 'runs -i -c as a batch carrying the interactive flag in $- (monitor defaulted on, dropped off-tty)' do
     system = FakeSystemCalls.new
     expect(run(['-i', '-c', 'echo [$-]'], system)).to eq(0)
-    expect([system.stdout.string, system.stderr.string]).to eq(["[i]\n", ''])
+    warning = "rush: can't access tty; job control turned off\n"
+    expect([system.stdout.string, system.stderr.string]).to eq(["[i]\n", warning])
   end
 
   it 'reports s in $- when reading stdin and nothing under -c' do

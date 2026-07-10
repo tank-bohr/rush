@@ -1,12 +1,13 @@
 module Rush
   # The monitor-mode (`set -m`) policy: whether job control is active here,
-  # and the side effects of flipping the flag (SIGTSTP base disposition, tty
-  # check, the double-setpgid fork dance). Stateless — Executor builds one on
-  # demand; the root-shell bit lives in the JobTable.
+  # and the side effects of flipping the flag (base signal dispositions, the
+  # terminal-acquisition dance, the double-setpgid fork, foreground terminal
+  # handover). Stateless — Executor builds one on demand; the durable bits
+  # (root shell, acquired terminal) live on the JobTable.
   class JobControl
     extend T::Sig
 
-    TSTP_IGNORE: Proc
+    IGNORE: Proc
 
     @executor: Executor
 
@@ -16,25 +17,48 @@ module Rush
     # when refused (platform gate, or interactive without a tty).
     def enable: (_IoStream stderr) -> void
 
-    # `set +m`: the flag drops and SIGTSTP returns to the OS default.
+    # `set +m`: the flag drops, the base dispositions return to the OS
+    # default, and the terminal goes back to its owner at acquisition.
     def disable: () -> void
 
-    # Invocation-time -m: re-run the flag through #enable once the executor
-    # exists, so an interactive shell without a tty drops it like dash.
+    # Invocation-time -m (explicit or interactive-defaulted): re-run the
+    # flag through #enable once the executor exists.
     def startup: () -> void
 
     # Process grouping is active: monitor on and this is the root shell.
     def monitored?: () -> bool
 
-    # Fork one member of a job, into `leader`'s process group (its own
-    # when none) under job control.
+    # Fork one member of a foreground job, into `leader`'s process group
+    # (its own when none) under job control; a group leader takes the
+    # terminal when the shell holds one.
     def launch: (?leader: Integer?) { () -> void } -> Integer
+
+    # An asynchronous (&) job: its own group, never the terminal.
+    def launch_background: () { () -> void } -> Integer
+
+    # Wait for a foreground job with the terminal handed to its process
+    # group, reclaiming it afterwards (dash waitforjob).
+    def foreground: [U] (Integer leader) { () -> U } -> U
 
     private
 
+    def enable_root: (_IoStream stderr) -> void
+
+    def enable_with_terminal: (Terminal terminal) -> void
+
+    def enable_off_tty: (_IoStream stderr) -> void
+
+    def drop_monitor: () -> void
+
+    def handover_tty: (Integer group) -> untyped
+
+    def fork_plain: () { () -> void } -> Integer
+
     def refuse: (_IoStream stderr, String message) -> void
 
-    def tty?: () -> bool
+    def control: () -> JobTable::Control
+
+    def system: () -> SystemCalls
 
     def interactive?: () -> bool
 

@@ -15,65 +15,19 @@ module Rush
   class JobTable
     extend T::Sig
 
-    # One asynchronous job: its [n] number, pid, and — once reaped — the raw
-    # Process::Status: the wait builtin derives $? from it, and the jobs
-    # builtin renders Done(n) or a signal description.
-    class Job
-      extend T::Sig
-
-      sig { returns(Integer) }
-      attr_reader :number
-
-      sig { returns(Integer) }
-      attr_reader :pid
-
-      sig { returns(T.nilable(Process::Status)) }
-      attr_reader :raw
-
-      sig { params(number: Integer, pid: Integer).void }
-      def initialize(number, pid)
-        @number = number
-        @pid = pid
-        @raw = T.let(nil, T.nilable(Process::Status))
-      end
-
-      sig { params(raw: Process::Status).void }
-      def finish(raw)
-        @raw = raw
-      end
-
-      # Reap once: the first harvest fills raw from the supplied wait;
-      # repeats answer from memory (dash never frees an entry on wait).
-      sig { params(blk: T.proc.returns(Process::Status)).returns(Status) }
-      def harvest(&blk)
-        @raw ||= yield
-        status
-      end
-
-      sig { returns(T::Boolean) }
-      def running?
-        !@raw
-      end
-
-      sig { returns(Status) }
-      def status
-        Status.of(T.must(@raw))
-      end
-    end
-
     sig { params(system: SystemCalls).void }
     def initialize(system)
       @system = system
       @jobs = T.let({}, T::Hash[Integer, Job])
       @stash = T.let({}, T::Hash[Integer, Process::Status])
-      @root = T.let(true, T::Boolean)
+      @control = T.let(Control.new, Control)
     end
 
-    # Still the root shell: job-control machinery (process grouping, the
-    # SIGTSTP base disposition) acts only here, never in a forked child
-    # environment — dash's rootshell guard (JobControl consults this).
-    sig { returns(T::Boolean) }
-    attr_reader :root
+    # The durable job-control environment (root-shell bit, acquired
+    # terminal): JobControl's state, kept here because it lives and dies
+    # with the table — a forked child drops both together.
+    sig { returns(Control) }
+    attr_reader :control
 
     # A background launch: the pid becomes job [n] — the lowest free number,
     # as dash numbers slots. Fake fork ports return no child pid (mapped to
@@ -141,7 +95,7 @@ module Rush
     def clear_for_subshell
       @jobs.clear
       @stash.clear
-      @root = false
+      @control.fork_child
     end
 
     # The jobs builtin, after displaying a finished entry: dash frees
@@ -169,12 +123,12 @@ module Rush
       @stash.delete(pid) || reap_raw(pid)
     end
 
+    # The lowest free job number, as dash fills slots: the range up to
+    # size+1 always contains one.
     sig { returns(Integer) }
     def free_number
       taken = @jobs.each_value.map(&:number)
-      number = 1
-      number += 1 while taken.include?(number)
-      number
+      ((1..(taken.size + 1)).to_a - taken).fetch(0)
     end
 
     sig { params(target: Integer).returns(Process::Status) }

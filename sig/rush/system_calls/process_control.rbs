@@ -1,19 +1,44 @@
 module Rush
   class SystemCalls
-    # Process-group control for job control (rush-mv8), mixed into SystemCalls;
-    # the terminal-handover slice adds tcsetpgrp/tcgetpgrp here.
+    # Child-process control for the job machinery, mixed into SystemCalls:
+    # reaping, process grouping, terminal handover (tcsetpgrp/tcgetpgrp via
+    # IO#ioctl), and the platform gate.
     module ProcessControl
+      TIOCGPGRP: Hash[Symbol, Integer]
+
+      TIOCSPGRP: Hash[Symbol, Integer]
+
+      TERMINAL_FAMILIES: Hash[Regexp, Symbol]
+
       def waitpid2: (Integer pid) -> [ Integer, Process::Status ]
 
       def poll_child: () -> [ Integer, Process::Status ]?
 
       def setpgid: (Integer pid, Integer pgid) -> void
 
-      def fork_grouped: (Integer group) { () -> void } -> Integer?
+      def fork_grouped: (Integer group, ?untyped tty) { () -> void } -> Integer?
 
-      def grouped_child: (Integer group) { () -> void } -> void
+      def grouped_child: (Integer group, untyped tty) { () -> void } -> void
+
+      # The controlling terminal (an owned IO handle), or nil without one.
+      def open_tty: () -> untyped
+
+      # The terminal's foreground process group, nil when unreadable.
+      def tcgetpgrp: (untyped tty) -> Integer?
+
+      def read_pgrp: (untyped tty, Integer request) -> untyped
+
+      # Hand the terminal to a process group, SIGTTOU held ignored.
+      def tcsetpgrp: (untyped tty, Integer pgid) -> void
 
       def job_control_supported?: () -> bool
+
+      # Which ioctl vocabulary this build speaks.
+      def terminal_family: () -> Symbol?
+
+      private
+
+      def ignoring_ttou: [U] () { () -> U } -> U
     end
   end
 end

@@ -68,12 +68,16 @@ class FakeSystemCalls
   end
 
   # The child-process side of the fake: reapable children, their statuses, and
-  # the job-control knobs (recorded setpgid pairs, the platform gate).
+  # the job-control knobs (recorded setpgid pairs, the platform gate, the
+  # terminal-ownership model).
   def setup_process_model
     @wait_status = ChildStatus.new(0)
     @children = []
     @pgids_set = []
     @job_control_supported = true
+    @handovers = []
+    @tty_leaders = []
+    @tty_pgrps = []
   end
 
   def inherit_fd(fd, stream)
@@ -260,16 +264,56 @@ class FakeSystemCalls
   end
 
   # Job-control seams: fork_grouped forks through the (stubbable) fork and
-  # records the [pid, pgid] pair a real double setpgid would issue; the
+  # records the [pid, pgid] pair a real double setpgid would issue — plus,
+  # in tty_leaders, which children were forked carrying the terminal; the
   # platform gate is a knob so specs can exercise the unsupported refusal.
-  def fork_grouped(group)
+  def fork_grouped(group, tty = nil)
     pid = fork
-    @pgids_set << [pid, group] if pid
+    return pid unless pid
+
+    @pgids_set << [pid, group]
+    @tty_leaders << pid if tty
     pid
+  end
+
+  def setpgid(pid, pgid)
+    @pgids_set << [pid, pgid]
   end
 
   def job_control_supported?
     @job_control_supported
+  end
+
+  # The terminal-ownership model (rush-mv8.3): open_tty answers an in-memory
+  # tty handle whenever the fake session has one (mirroring dash's walk of
+  # /dev/tty and fds 2..0); tcsetpgrp records every handover and moves the
+  # in-model foreground; tcgetpgrp reads it back — or a queue seeded by
+  # provide_tty_foreground, so specs can start the shell in the background
+  # (the SIGTTIN wait loop).
+  attr_reader :handovers, :tty_leaders
+
+  def open_tty
+    return unless tty? || stderr_tty?
+
+    @open_tty ||= StringIO.new
+  end
+
+  def tcgetpgrp(_tty)
+    return @tty_pgrps.shift unless @tty_pgrps.empty?
+
+    @handovers.last || pgrp
+  end
+
+  def tcsetpgrp(_tty, pgid)
+    @handovers << pgid
+  end
+
+  def provide_tty_foreground(*pgrps)
+    @tty_pgrps.concat(pgrps)
+  end
+
+  def pgrp
+    4242
   end
 
   # Child-process model for the JobTable: provide_child queues a reapable

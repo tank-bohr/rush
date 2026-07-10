@@ -130,10 +130,12 @@ module Rush
 
     # The option flags the session starts with: the explicit -/+ settings plus
     # the ones POSIX derives implicitly (s for a stdin source, i when
-    # interactive), so $- reports them like dash does.
+    # interactive, and monitor defaulting to interactivity — dash's unset
+    # mflag resolves to iflag, probed: `dash -i` on a tty reports smi), so $-
+    # reports them like dash does.
     sig { returns(T::Hash[Symbol, T::Boolean]) }
     def shell_flags
-      @flags.settings.merge(stdin: stdin_source?, interactive: interactive?)
+      { monitor: interactive? }.merge(@flags.settings).merge(stdin: stdin_source?, interactive: interactive?)
     end
 
     # The program text (read lazily: a REPL session never gets here).

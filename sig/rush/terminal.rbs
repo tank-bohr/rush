@@ -1,0 +1,44 @@
+module Rush
+  # The shell's grip on its controlling terminal under job control
+  # (rush-mv8.3): who to hand it to, how to take it back, and what to
+  # restore when monitor turns off. Durable job-control state on the
+  # JobTable beside the root-shell bit.
+  class Terminal
+    extend T::Sig
+
+    @system: SystemCalls
+
+    @tty: untyped
+
+    @home: Integer
+
+    @initial: Integer
+
+    # dash setjobctl(1): the whole acquisition dance, or nil without a
+    # reachable tty.
+    def self.acquire: (SystemCalls system) -> Terminal?
+
+    def self.wait_foreground: (SystemCalls system, untyped tty) -> Integer?
+
+    def self.take: (SystemCalls system, untyped tty, Integer initial) -> Terminal
+
+    def self.abandon: (untyped tty) -> nil
+
+    attr_reader tty: untyped
+
+    def initialize: (system: SystemCalls, tty: untyped, home: Integer, initial: Integer) -> void
+
+    # A foreground job's whole run: give for the block, reclaim after.
+    def while_given: [U] (Integer pgid) { () -> U } -> U
+
+    # Hand the terminal to a foreground job's process group (dash forkchild).
+    def give: (Integer pgid) -> void
+
+    # Take the terminal back once the foreground job settles (dash waitforjob).
+    def reclaim: () -> void
+
+    # `set +m`: the terminal returns to whoever owned it at acquisition, the
+    # shell rejoins that group, and the tty handle is released.
+    def restore: () -> void
+  end
+end

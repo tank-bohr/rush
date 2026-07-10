@@ -7,6 +7,8 @@ RSpec.describe Rush::External do
   let(:executor) { instance_double(Rush::Executor, system: system, jobs: jobs, job_control: job_control) }
   let(:io) { Rush::IoTable.standard(FakeSystemCalls.new) }
 
+  before { allow(job_control).to receive(:foreground) { |_leader, &wait| wait.call } }
+
   def run(argv, table = io)
     described_class.new(executor, argv, table, {}).call
   end
@@ -25,6 +27,13 @@ RSpec.describe Rush::External do
     allow(system).to receive(:spawn).and_return(11)
     allow(jobs).to receive(:await).with(11).and_return(Rush::Status.new(3))
     expect(run(%w[prog a]).exitstatus).to eq(3)
+  end
+
+  it 'waits inside the job-control foreground wrapper, keyed on the spawned pid (terminal handover)' do
+    allow(system).to receive(:spawn).and_return(11)
+    allow(jobs).to receive(:await).with(11).and_return(Rush::Status.success)
+    run(%w[prog])
+    expect(job_control).to have_received(:foreground).with(11)
   end
 
   it 'spawns the command as its own process-group leader under job control (dash-probed)' do

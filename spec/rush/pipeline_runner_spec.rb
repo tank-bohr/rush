@@ -48,6 +48,18 @@ RSpec.describe Rush::PipelineRunner do
       expect(system.pgids_set).to eq([[11, 0], [12, 11], [13, 11]])
     end
 
+    it 'hands the terminal to the pipeline leader for the whole wait and reclaims after (tty job control)' do
+      tty_system = FakeSystemCalls.new(tty: true)
+      tty_executor = Rush::Executor.new(system: tty_system, state: state)
+      tty_executor.job_control.enable(tty_system.stderr)
+      allow(tty_system).to receive(:pipe) { [StringIO.new, StringIO.new] }
+      allow(tty_system).to receive(:fork).and_return(11, 12)
+      allow(tty_system).to receive(:waitpid2) { |pid| [pid, status_double(0)] }
+      described_class.new(tty_executor, [echo('a'), echo('b')]).call
+      expect(tty_system.tty_leaders).to eq([11])
+      expect(tty_system.handovers).to eq([4242, 11, 4242])
+    end
+
     it 'opens a pipe per stage boundary and closes every parent end after forking' do
       pipes_made = []
       allow(system).to receive(:pipe) { (pipes_made << [StringIO.new, StringIO.new]).last }

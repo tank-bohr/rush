@@ -18,7 +18,7 @@ module Rush
 
     sig { returns(Status) }
     def call
-      pid = @executor.job_control.launch { run_child }
+      pid = @executor.job_control.launch_background { run_child }
       @executor.state.record_background_pid(pid)
       @executor.jobs.record(pid)
       Status.success
