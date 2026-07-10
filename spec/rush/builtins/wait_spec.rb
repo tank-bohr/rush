@@ -88,4 +88,33 @@ RSpec.describe Rush::Builtins::Wait do
     expect(run('abc', '9').exitstatus).to eq(2)
     expect(run('9').exitstatus).to eq(3)
   end
+
+  it 'resolves %n and %% to jobs, without forgetting them' do
+    launch(9, 3)
+    expect(run('%1').exitstatus).to eq(3)
+    expect(run('%%').exitstatus).to eq(3)
+  end
+
+  it 'reports No such job for an unknown %id with status 2' do
+    launch(9, 3)
+    expect(run('%4').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("wait: No such job: %4\n")
+  end
+
+  it 'reports No current job for %% when the table is empty' do
+    expect(run('%%').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("wait: No current job\n")
+  end
+
+  it 'resolves %- to the previous job' do
+    launch(9, 3)
+    launch(11, 5)
+    expect(run('%-').exitstatus).to eq(3)
+  end
+
+  it 'reports No previous job for %- with a single job' do
+    launch(9, 3)
+    expect(run('%-').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("wait: No previous job\n")
+  end
 end

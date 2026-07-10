@@ -1,12 +1,13 @@
 module Rush
   module Builtins
-    # `wait [pid...]`: with no operands, wait for every known background job
-    # (status 0); with pids, wait for each and return the last operand's
-    # status — 127 when it is not a known child. POSIX gives an unknown last
-    # operand its 127 even after a known one; dash instead keeps the last
-    # known operand's status — the standard wins (journal). A malformed
-    # operand reports on stderr with status 2, and wait is a regular builtin,
-    # so the shell carries on (dash-verified).
+    # `wait [pid | %id ...]`: with no operands, wait for every known
+    # background job (status 0); with operands, wait for each and return the
+    # last one's status — 127 when a pid is not a known child, and a %id that
+    # resolves to no job is a status-2 error (No such job / No current job,
+    # like dash). POSIX gives an unknown last pid its 127 even after a known
+    # one; dash instead keeps the last known operand's status — the standard
+    # wins (journal). A malformed operand reports on stderr with status 2,
+    # and wait is a regular builtin, so the shell carries on (dash-verified).
     class Wait < Base
       extend T::Sig
 
@@ -21,7 +22,16 @@ module Rush
 
       def all: () -> Status
 
+      # Malformed pids are rejected up front (observationally equivalent to
+      # dash's lazy check: an already-waited job stays remembered, so a later
+      # wait answers the same); %ids validate through resolution itself.
       def each_pid: (Array[String] args) -> Status
+
+      def status_of: (String operand) -> Status
+
+      def job_pid: (String operand) -> Integer
+
+      def no_job: (JobError error) -> Status
 
       def parse: (String operand) -> Integer?
 

@@ -1,0 +1,20 @@
+module Rush
+  module Builtins
+    # fg and bg (POSIX User Portability utilities) without the terminal half
+    # of job control: resolve the target like dash — an empty table is "No
+    # current job" — then refuse, because no job here was created under job
+    # control. Always status 2, the shell carries on. One class serves both
+    # names; argv[0] prefixes the diagnostic.
+    class NoJobControl < Base
+      extend T::Sig
+
+      def call: () -> Status
+
+      private
+
+      def refusal: (String? spec) -> String
+
+      def bad: (String message) -> Status
+    end
+  end
+end

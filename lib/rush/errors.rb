@@ -44,6 +44,12 @@ module Rush
   # special-builtin error — the shell carries on.
   class RedirectError < Error; end
 
+  # A %job_id operand that resolves to no job (No such job / No current job /
+  # No previous job, dash's messages). The consuming builtin — jobs, wait,
+  # kill, fg, bg — prefixes its name, reports on stderr and fails with 2; the
+  # shell carries on.
+  class JobError < Error; end
+
   # Control-flow signal: `exit` unwinds to the top level carrying a status code.
   class ExitSignal < Error
     extend T::Sig

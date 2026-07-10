@@ -45,6 +45,13 @@ module Rush
   class BuiltinError < Error
   end
 
+  # A %job_id operand that resolves to no job (No such job / No current job /
+  # No previous job, dash's messages). The consuming builtin — jobs, wait,
+  # kill, fg, bg — prefixes its name, reports on stderr and fails with 2; the
+  # shell carries on.
+  class JobError < Error
+  end
+
   # A redirection that fails at runtime (e.g. `n>&m` duplicating a fd that is not
   # open): the command is not run and fails with status 2, but — unlike a
   # special-builtin error — the shell carries on.

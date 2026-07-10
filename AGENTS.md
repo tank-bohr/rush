@@ -10,7 +10,9 @@ diverges from POSIX, follow the standard, not dash. Keep this file small and sta
 knowledge lives in `docs/` and the backlog lives in beads (see "Where things live").
 
 **Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate ✓ · 3 full POSIX scripting ✓ ·
-4 interactive shell ✓ · job control remains a deferred epic (`rush-mv8`).
+4 interactive shell ✓ · 5 job control, terminal-free half ✓ (wait, JobTable, jobs, %ids;
+"rush = dash without terminal control") — the terminal half (set -m, working fg/bg,
+tcsetpgrp, SIGTSTP) remains the deferred epic `rush-mv8`.
 Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
 
 ## Build & Test

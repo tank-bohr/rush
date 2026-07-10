@@ -15,5 +15,12 @@ module Rush
     def self?.decode: (String spec) -> String?
 
     def self?.number: (String name) -> Integer
+
+    # strsignal(3)-style descriptions, as dash's jobs listing prints for a
+    # signalled job ("Killed", "Terminated"). Only the common ones are
+    # spelled out; the rest fall back to the signal name.
+    DESCRIPTIONS: Hash[Integer, String]
+
+    def self?.description: (Integer number) -> String
   end
 end

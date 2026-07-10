@@ -34,5 +34,20 @@ module Rush
     def number(name)
       NAMES.fetch(name)
     end
+
+    # strsignal(3)-style descriptions, as dash's jobs listing prints for a
+    # signalled job ("Killed", "Terminated"). Only the common ones are
+    # spelled out; the rest fall back to the signal name.
+    DESCRIPTIONS = {
+      1 => 'Hangup', 2 => 'Interrupt', 3 => 'Quit', 4 => 'Illegal instruction',
+      6 => 'Aborted', 8 => 'Floating point exception', 9 => 'Killed',
+      11 => 'Segmentation fault', 13 => 'Broken pipe', 14 => 'Alarm clock',
+      15 => 'Terminated'
+    }.freeze
+
+    sig { params(number: Integer).returns(String) }
+    def description(number)
+      DESCRIPTIONS.fetch(number) { NUMBERS.fetch(number, "Signal #{number}") }
+    end
   end
 end

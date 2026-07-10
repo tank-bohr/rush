@@ -32,12 +32,55 @@ RSpec.describe Rush::JobTable do
       allow(system).to receive(:waitpid2).with(5).and_return([5, signalled])
       expect(table.await(5).exitstatus).to eq(137)
     end
+
+    it 'answers success when every child is gone (the ECHILD guard)' do
+      table.record(9)
+      expect(table.await(5)).to be_success
+    end
   end
 
   describe '#record' do
     it 'ignores the fake fork sentinel pid 0' do
       table.record(0)
       expect(table.wait_for(0)).to be_nil
+    end
+
+    it 'numbers jobs from 1, reusing the lowest freed slot' do
+      table.record(11)
+      table.record(12)
+      table.forget(table.numbered(1))
+      table.record(13)
+      expect([table.numbered(1).pid, table.ordered.map(&:number)]).to eq([13, [1, 2]])
+    end
+  end
+
+  describe '#current and #previous' do
+    it 'track recency, newest first, regardless of job numbers' do
+      table.record(11)
+      table.record(12)
+      expect([table.current.pid, table.previous.pid]).to eq([12, 11])
+    end
+
+    it 'are nil while the table is empty' do
+      expect([table.current, table.previous]).to eq([nil, nil])
+    end
+  end
+
+  describe '#poll' do
+    it 'collects finished children without blocking' do
+      table.record(9)
+      system.provide_child(9, 4)
+      table.poll
+      expect(table.wait_for(9).exitstatus).to eq(4)
+    end
+
+    it 'is a no-op with nothing to reap' do
+      expect { table.poll }.not_to raise_error
+    end
+
+    it 'swallows ECHILD when there are no children at all' do
+      allow(system).to receive(:poll_child).and_raise(Errno::ECHILD)
+      expect { table.poll }.not_to raise_error
     end
   end
 

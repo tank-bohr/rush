@@ -3,13 +3,16 @@
 
 module Rush
   module Builtins
-    # `kill [-s sigspec | -sigspec | -signum] pid...` sends a signal (TERM by
-    # default) to each process; `kill -0 pid` only checks that it exists. Signal
-    # names follow Rush::Signals (case-insensitive, no "SIG" prefix); numbers go
-    # straight to the OS so the unnamed ones (16, RT, ...) still work. `kill -l N`
-    # prints the signal name for a number or wait status (128 + signal), and a
-    # bare `kill -l` lists the known names. A bad spec exits 2; a delivery that
-    # fails (no such process) exits 1.
+    # `kill [-s sigspec | -sigspec | -signum] pid|%id...` sends a signal (TERM
+    # by default) to each process; `kill -0 pid` only checks that it exists.
+    # Signal names follow Rush::Signals (case-insensitive, no "SIG" prefix);
+    # numbers go straight to the OS so the unnamed ones (16, RT, ...) still
+    # work. A %id targets the job's process group (-pid, as dash) — without
+    # the terminal half of job control no such group exists, so delivery
+    # fails "no such process", status 1, and the job survives (dash parity).
+    # `kill -l N` prints the signal name for a number or wait status (128 +
+    # signal), and a bare `kill -l` lists the known names. A bad spec or an
+    # unresolved %id exits 2; a delivery that fails exits 1.
     class Kill < Base
       extend T::Sig
 
@@ -47,6 +50,8 @@ module Rush
 
         signal = resolve(spec)
         signal ? deliver(signal, pids) : bad("#{spec}: invalid signal specification")
+      rescue JobError => e
+        bad(e.message)
       end
 
       # A numeric spec goes straight to the OS (Integer); a name decodes to its
@@ -67,9 +72,19 @@ module Rush
       # Returns a truthy OS delivery count on success, nil when delivery failed.
       sig { params(signal: T.any(Integer, String), pid: String).returns(T.nilable(Integer)) }
       def send_to(signal, pid)
-        executor.system.kill(signal, Integer(pid))
+        target = os_target(pid)
+        executor.system.kill(signal, target)
       rescue SystemCallError, ArgumentError, TypeError
         oops("#{pid}: no such process")
+      end
+
+      # A %id names the job's process group: negative pid, like dash. An
+      # unresolved %id raises JobError past the delivery loop (status 2).
+      sig { params(pid: String).returns(Integer) }
+      def os_target(pid)
+        return -JobSpec.resolve(executor.jobs, pid).pid if pid.start_with?('%')
+
+        Integer(pid)
       end
 
       sig { params(args: T::Array[String]).returns(Status) }

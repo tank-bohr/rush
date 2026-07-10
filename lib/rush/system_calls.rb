@@ -32,6 +32,13 @@ module Rush
       retry
     end
 
+    # Non-blocking reap of any finished child: [pid, status], or nil while
+    # children exist but none has exited. Raises ECHILD, like waitpid2, when
+    # there are no children at all.
+    def poll_child
+      Process.waitpid2(-1, Process::WNOHANG)
+    end
+
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]
     # form forbids the shell path, like #spawn. Returns only if the exec fails.
     def exec(env, argv, options)

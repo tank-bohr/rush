@@ -13,11 +13,8 @@ class FakeSystemCalls
 
   # A Process::Status stand-in: fork is a no-op so no child truly runs, and a
   # spec sets `wait_status` to control the status a command substitution sees.
-  ChildStatus = Struct.new(:exitstatus) do
-    def termsig
-      nil
-    end
-  end
+  # termsig is nil for a plain exit, the signal number for a signalled child.
+  ChildStatus = Struct.new(:exitstatus, :termsig)
 
   # A Process::Tms stand-in for the `times` builtin; zeros keep the format
   # deterministic (the real times are non-deterministic).
@@ -255,11 +252,17 @@ class FakeSystemCalls
   end
 
   # Child-process model for the JobTable: provide_child queues a reapable
-  # child. waitpid2(-1) reaps the next queued one and raises ECHILD when none
-  # remain, like the real OS; a specific pid reaps that child if queued, else
-  # falls back to the legacy single wait_status knob.
+  # child (provide_signalled a signal-killed one). waitpid2(-1) reaps the
+  # next queued one and raises ECHILD when none remain, like the real OS; a
+  # specific pid reaps that child if queued, else falls back to the legacy
+  # single wait_status knob. poll_child is the WNOHANG form: nil when the
+  # queue is empty rather than blocking.
   def provide_child(pid, exitstatus)
-    @children << [pid, ChildStatus.new(exitstatus)]
+    @children << [pid, ChildStatus.new(exitstatus, nil)]
+  end
+
+  def provide_signalled(pid, signal)
+    @children << [pid, ChildStatus.new(nil, signal)]
   end
 
   def waitpid2(pid)
@@ -267,6 +270,10 @@ class FakeSystemCalls
 
     index = @children.index { |child| child.first == pid }
     index ? @children.delete_at(index) : [pid, @wait_status]
+  end
+
+  def poll_child
+    @children.shift
   end
 
   def next_child

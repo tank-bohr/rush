@@ -16,7 +16,8 @@ module Rush
       'printf' => Printf, '.' => Dot, 'readonly' => Readonly, 'exec' => Exec,
       'local' => Local, 'type' => Type, 'command' => Command, 'trap' => Trap,
       'kill' => Kill, 'alias' => Alias, 'unalias' => Unalias,
-      'hash' => Hash, 'times' => Times, 'umask' => Umask, 'ulimit' => Ulimit, 'wait' => Wait
+      'hash' => Hash, 'times' => Times, 'umask' => Umask, 'ulimit' => Ulimit, 'wait' => Wait,
+      'jobs' => Jobs, 'fg' => NoJobControl, 'bg' => NoJobControl
     }.freeze
 
     sig { returns(Registry) }

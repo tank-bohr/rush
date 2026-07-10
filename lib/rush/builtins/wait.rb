@@ -3,13 +3,14 @@
 
 module Rush
   module Builtins
-    # `wait [pid...]`: with no operands, wait for every known background job
-    # (status 0); with pids, wait for each and return the last operand's
-    # status — 127 when it is not a known child. POSIX gives an unknown last
-    # operand its 127 even after a known one; dash instead keeps the last
-    # known operand's status — the standard wins (journal). A malformed
-    # operand reports on stderr with status 2, and wait is a regular builtin,
-    # so the shell carries on (dash-verified).
+    # `wait [pid | %id ...]`: with no operands, wait for every known
+    # background job (status 0); with operands, wait for each and return the
+    # last one's status — 127 when a pid is not a known child, and a %id that
+    # resolves to no job is a status-2 error (No such job / No current job,
+    # like dash). POSIX gives an unknown last pid its 127 even after a known
+    # one; dash instead keeps the last known operand's status — the standard
+    # wins (journal). A malformed operand reports on stderr with status 2,
+    # and wait is a regular builtin, so the shell carries on (dash-verified).
     class Wait < Base
       extend T::Sig
 
@@ -35,14 +36,35 @@ module Rush
         success
       end
 
+      # Malformed pids are rejected up front (observationally equivalent to
+      # dash's lazy check: an already-waited job stays remembered, so a later
+      # wait answers the same); %ids validate through resolution itself.
       sig { params(args: T::Array[String]).returns(Status) }
       def each_pid(args)
-        args.reduce(success) do |_last, operand|
-          pid = parse(operand)
-          return bad(operand) unless pid
+        malformed = args.find { |operand| !operand.start_with?('%') && !parse(operand) }
+        return bad(malformed) if malformed
 
-          awaited(pid)
-        end
+        args.map { |operand| status_of(operand) }.fetch(-1)
+      rescue JobError => e
+        no_job(e)
+      end
+
+      sig { params(operand: String).returns(Status) }
+      def status_of(operand)
+        return awaited(job_pid(operand)) if operand.start_with?('%')
+
+        awaited(T.must(parse(operand)))
+      end
+
+      sig { params(operand: String).returns(Integer) }
+      def job_pid(operand)
+        JobSpec.resolve(executor.jobs, operand).pid
+      end
+
+      sig { params(error: JobError).returns(Status) }
+      def no_job(error)
+        stderr.puts("wait: #{error.message}")
+        failure(2)
       end
 
       sig { params(operand: String).returns(T.nilable(Integer)) }

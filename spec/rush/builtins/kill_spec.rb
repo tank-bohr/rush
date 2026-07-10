@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Builtins::Kill do
-  let(:system) { FakeSystemCalls.new(dead_pids: [999]) }
+  let(:system) { FakeSystemCalls.new(dead_pids: [999, -999]) }
   let(:state) { Rush::ShellState.new }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
   let(:io) { Rush::IoTable.standard(system) }
@@ -66,6 +66,24 @@ RSpec.describe Rush::Builtins::Kill do
     expect(run('-BADD', '111').exitstatus).to eq(2)
     expect(system.kills).to be_empty
     expect(system.stderr.string).to eq("kill: BADD: invalid signal specification\n")
+  end
+
+  it 'targets a %job at its process group (negative pid, as dash)' do
+    executor.jobs.record(111)
+    expect(run('%1')).to be_success
+    expect(system.kills).to eq([['TERM', -111]])
+  end
+
+  it 'fails 2 for an unknown %id without sending anything' do
+    expect(run('%3').exitstatus).to eq(2)
+    expect(system.kills).to be_empty
+    expect(system.stderr.string).to eq("kill: No such job: %3\n")
+  end
+
+  it 'reports no such process when the job group does not exist (status 1)' do
+    executor.jobs.record(999)
+    expect(run('%1').exitstatus).to eq(1)
+    expect(system.stderr.string).to eq("kill: %1: no such process\n")
   end
 
   it 'reports usage with status 2 when given no arguments' do

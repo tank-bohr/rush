@@ -12,6 +12,11 @@ module Rush
 
     def waitpid2: (Integer pid) -> [ Integer, Process::Status ]
 
+    # Non-blocking reap of any finished child: [pid, status], or nil while
+    # children exist but none has exited. Raises ECHILD, like waitpid2, when
+    # there are no children at all.
+    def poll_child: () -> [ Integer, Process::Status ]?
+
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]
     # form forbids the shell path, like #spawn. Returns only if the exec fails.
     def exec: (Hash[String, String] env, Array[String] argv, untyped options) -> untyped

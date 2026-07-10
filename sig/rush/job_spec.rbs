@@ -1,0 +1,21 @@
+module Rush
+  # Resolves a %job_id operand (POSIX 2.12 Job Control Job ID) against the
+  # job table: % / %% / %+ name the current job, %- the previous one, %n job
+  # number n. dash keeps no command text away from a tty, so %string and
+  # %?string prefixes match nothing here — No such job, exactly like the
+  # oracle. A failed resolution raises JobError carrying dash's message; the
+  # consuming builtin prefixes its name and fails with status 2.
+  class JobSpec
+    extend T::Sig
+
+    NUMBER: Regexp
+
+    def self.resolve: (JobTable jobs, String spec) -> JobTable::Job
+
+    def self.by_number: (JobTable jobs, String spec) -> JobTable::Job
+
+    def self.missing: (String which) -> bot
+
+    def self.unknown: (String spec) -> bot
+  end
+end

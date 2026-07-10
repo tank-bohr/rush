@@ -942,3 +942,26 @@ replaces the wrong one: in tail position dash's optimization leaks main-shell wa
 (`sleep 0.3 & (wait $!)` → 0 in dash, 127 in rush) — the standard's subshell semantics side
 with 127, and such forms stay out of the corpus. dash's cmd-subst has the same leak for a
 single-builtin body (`$(jobs)` sees the parent's table where `$(wait $!; echo)` does not).
+
+### The terminal-free job table — jobs, %ids, and dash's shifting + marks
+rush-rg2's second slice lands everything job control offers away from a terminal, all of it
+pinned by a 37-line differential corpus. The oracle findings that shaped it. **Rendering** is
+byte-exact: "[n] mark state" padded so the command column starts at 34 — and stays empty,
+because dash keeps no command text off a tty (which is also why %string and %?string match
+nothing there: prefix matching runs against blank text; rush mirrors both). **Numbering**
+takes the lowest free slot; an emptied table starts at [1] again. **Lifecycle** is asymmetric
+and subtle: `wait` never frees an entry (repeats keep answering — the wait slice's b=1), but
+`jobs` displaying a finished entry frees it — after which both `wait $pid` (127) and `wait %n`
+(No such job) have forgotten it; `jobs -l` frees like the plain form, `jobs -p` frees nothing.
+**Marks recompute mid-listing**: freeing each displayed Done entry re-promotes the next to
+current before it prints, so three finished jobs all render `+` — rush matched this by
+accident of structure (a probe corrected the spec, not the code). **kill %n** targets the
+job's process group `-pid`, which does not exist without set -m: ESRCH, "No such process",
+status 1, job survives — mechanically identical in rush since its jobs share the shell's
+group. Resolution errors come in three dash flavours (No current job / No previous job / No
+such job: %X), all status 2, shared by jobs/wait/kill/fg/bg through one JobSpec resolver;
+fg/bg resolve first, then refuse ("job %1 not created under job control"). One idiom is
+knowingly broken: POSIX blesses `wait $(jobs -p)`, but rush's command substitution is a real
+forked subshell that clears the table, so it yields nothing — dash only supports it through
+its no-fork single-builtin optimization (the same EV_EXIT family leak the last slice
+documented). If that idiom ever matters, the fix is the optimization, not a special case.

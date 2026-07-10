@@ -48,6 +48,10 @@ module Rush
 
       def bad: (String message) -> Status
 
+      # A %id names the job's process group: negative pid, like dash. An
+      # unresolved %id raises JobError past the delivery loop (status 2).
+      def os_target: (String pid) -> Integer
+
       def oops: (String message) -> nil
     end
   end

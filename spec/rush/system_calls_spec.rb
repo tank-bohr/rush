@@ -18,6 +18,13 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  describe '#poll_child' do
+    it 'reaps any child without blocking (WNOHANG), nil when none has exited' do
+      allow(Process).to receive(:waitpid2).with(-1, Process::WNOHANG).and_return(nil)
+      expect(system.poll_child).to be_nil
+    end
+  end
+
   describe '#exec' do
     it 'replaces the process via Process.exec using the [cmd, argv0] form' do
       allow(Process).to receive(:exec)
