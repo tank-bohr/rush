@@ -54,6 +54,12 @@ RSpec.describe Rush::Builtins::Jobs do
     expect(system.stdout.string).to eq("#{'[1] + 11 Running'.ljust(33)}\n")
   end
 
+  it 'combines a flag with %id operands (dash: jobs -l %1)' do
+    record(11, 12)
+    expect(run('-l', '%1')).to be_success
+    expect(system.stdout.string).to eq("#{'[1] - 11 Running'.ljust(33)}\n")
+  end
+
   it 'renders the jobs %ids select, aborting on the first unknown after rendering' do
     record(11, 12)
     expect(run('%1', '%9').exitstatus).to eq(2)

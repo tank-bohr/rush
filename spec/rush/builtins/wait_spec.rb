@@ -18,6 +18,7 @@ RSpec.describe Rush::Builtins::Wait do
   it 'succeeds with no operands after collecting every background job' do
     launch(9, 4)
     expect(run).to be_success
+    expect(executor.jobs.current.running?).to be(false)
     expect(run('9').exitstatus).to eq(4)
   end
 
@@ -53,6 +54,14 @@ RSpec.describe Rush::Builtins::Wait do
 
   it 'accepts an explicit plus sign like dash' do
     expect(run('+5').exitstatus).to eq(127)
+  end
+
+  it 'reads a leading-zero pid as decimal' do
+    expect(run('08').exitstatus).to eq(127)
+  end
+
+  it 'accepts exactly INT_MAX as a pid' do
+    expect(run('2147483647').exitstatus).to eq(127)
   end
 
   it 'skips a leading -- like dash' do

@@ -11,12 +11,34 @@ RSpec.describe Rush::JobTable do
       expect(table.await(5).exitstatus).to eq(3)
     end
 
-    it 'reaps any child once a background job is running, filing its status' do
+    it 'reaps any child once a background job is running, filing the status on its entry' do
       table.record(9)
       system.provide_child(9, 1)
       system.provide_child(5, 3)
       expect(table.await(5).exitstatus).to eq(3)
+      expect(table.current.running?).to be(false)
       expect(table.wait_for(9).exitstatus).to eq(1)
+    end
+
+    it 'targets the pid directly with no live background job, waitpid(-1) once one runs' do
+      allow(system).to receive(:waitpid2).and_call_original
+      system.provide_child(5, 3)
+      table.await(5)
+      expect(system).to have_received(:waitpid2).with(5)
+      table.record(9)
+      system.provide_child(6, 0)
+      table.await(6)
+      expect(system).to have_received(:waitpid2).with(-1)
+    end
+
+    it 'returns to direct waits once every background job is reaped' do
+      table.record(9)
+      system.provide_child(9, 1)
+      table.wait_for(9)
+      allow(system).to receive(:waitpid2).and_call_original
+      system.provide_child(5, 3)
+      table.await(5)
+      expect(system).to have_received(:waitpid2).with(5)
     end
 
     it 'consults the stash before waiting, so a sibling reaped early is not lost' do
@@ -67,10 +89,10 @@ RSpec.describe Rush::JobTable do
   end
 
   describe '#poll' do
-    it 'collects finished children without blocking' do
+    it 'collects finished children without blocking, settling their entries' do
       table.record(9)
       system.provide_child(9, 4)
-      table.poll
+      expect { table.poll }.to change { table.current.running? }.from(true).to(false)
       expect(table.wait_for(9).exitstatus).to eq(4)
     end
 
@@ -96,6 +118,12 @@ RSpec.describe Rush::JobTable do
       expect(table.wait_for(9).exitstatus).to eq(4)
     end
 
+    it 'wraps the reaped process status as a shell Status' do
+      table.record(9)
+      system.provide_child(9, 0)
+      expect(table.wait_for(9)).to be_success
+    end
+
     it 'reports success when the child is gone (the defensive ECHILD guard)' do
       table.record(9)
       expect(table.wait_for(9)).to be_success
@@ -112,15 +140,25 @@ RSpec.describe Rush::JobTable do
       table.clear_for_subshell
       expect([table.wait_for(9), table.wait_for(7)]).to eq([nil, nil])
     end
+
+    it 'drops a stashed foreign status too, not just the job entries' do
+      table.record(9)
+      system.provide_child(7, 2)
+      system.provide_child(5, 3)
+      table.await(5)
+      table.clear_for_subshell
+      expect(table.await(7)).to be_success
+    end
   end
 
   describe '#wait_all' do
-    it 'collects every known background job' do
+    it 'collects every known background job, leaving none running' do
       table.record(9)
       table.record(11)
       system.provide_child(11, 5)
       system.provide_child(9, 4)
       table.wait_all
+      expect(table.ordered.map(&:running?)).to eq([false, false])
       expect([table.wait_for(9).exitstatus, table.wait_for(11).exitstatus]).to eq([4, 5])
     end
   end

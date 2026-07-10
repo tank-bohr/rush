@@ -965,3 +965,25 @@ knowingly broken: POSIX blesses `wait $(jobs -p)`, but rush's command substituti
 forked subshell that clears the table, so it yields nothing — dash only supports it through
 its no-fork single-builtin optimization (the same EV_EXIT family leak the last slice
 documented). If that idiom ever matters, the fix is the optimization, not a special case.
+
+### Mutation-hardening the job table — the fake was too kind to tell
+rush-mjb ran mutant over the phase-5 subjects: JobTable 91.14%, JobSpec 87.60%, Wait 97.08%,
+Jobs 97.40%, NoJobControl 98.85%, Kill 99.78% against the 95% gate. Two systematic lessons
+behind the weak spots. (1) **FakeSystemCalls answered pid-specific waitpid2 from the same
+child queue that waitpid(-1) drains**, so the mutants that gutted single-owner reaping —
+`background_running?` forced false, statuses filed into the stash instead of onto the job
+entry, a no-op `poll`, a no-op `wait_all` — all survived: every status still arrived, just
+via a later blocking wait. Status-value assertions cannot see the difference; the kills came
+from asserting *state transitions* (`running?` flipping across poll/wait_all/foreground
+reaps) and, twice, from spying which pid the wait actually targeted — justified because
+-1-vs-pid IS the design under test. (2) **A class with no dedicated unit spec is invisible
+to mutant even when integration lines cover it**: JobSpec was exercised only by differential
+corpus lines, which run rush in a subprocess, so gutting its NUMBER guard (turning %junk
+into an uncaught ArgumentError instead of JobError) and flipping Integer's base 10 to 0/11
+(observable via %08 and %10) survived; a direct job_spec_spec took it to 100%. A combined
+`jobs -l %1` case (dash-probed) killed the split_flag survivors. After hardening: JobTable
+98.10%, JobSpec 100%, Wait 98.83%, Jobs 98.18% — the 22 still-alive across five subjects are
+catalogued equivalents: T.let generic noise, T.must under spec_helper's silenced validation,
+`bad(e)` vs `bad(e.message)` (string interpolation calls to_s, which is message), `!=` vs
+`!eql?`/`!equal?` on deduplicated frozen literals, `send` vs `__send__`, `report(job, nil)`
+niling into the same empty string, and a redundant-return shape.
