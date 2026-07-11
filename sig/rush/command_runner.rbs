@@ -65,6 +65,8 @@ module Rush
     # with_io only when a redirect actually layered a new table over the base.
     def run_function: (Array[String] argv, IoTable io) -> Status
 
+    def invoke_function: (Array[String] argv, IoTable io) -> Status
+
     def command_env: (IoTable io) -> Hash[String, String]
   end
 end

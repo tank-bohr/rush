@@ -2126,3 +2126,27 @@ export mark is private, so Exec now uses Base#command_environment.
 
 Verified differentially across colon/export/unset/error traps/exec and command-demoted
 control cases; subject mutation gates: CommandRunner 96.79%, Exec 100%.
+
+### Function prefixes and readonly external overlays complete assignment policy (rush-no1.17)
+Functions occupy the remaining in-process middle ground: their prefix assignments are
+exported and visible during the call, writes to those prefix names are discarded on
+return, and every unrelated function side effect remains live. CommandRunner now wraps
+only the expanded prefix slice around FunctionRunner, reusing Environment#with_temporary.
+The scope encloses FunctionRunner's own local-variable scope and redirect-bound I/O;
+return, error, readonly/export/unset changes, and nested external calls therefore unwind
+through the same ensure path as regular builtins. A mutation exposed why slicing matters:
+wrapping the whole command environment would also restore unrelated variables that were
+already exported before the call, silently discarding legitimate function writes.
+
+External overlays were the one path that never called ShellVariables#assign, so a
+readonly shell name could be replaced in the child environment. CommandAssignments now
+has a side-effect-free validation pass backed by Environment#validate_assignment.
+CommandRunner builds the complete environment first, preserving assignment expansion
+and command-substitution order, then validates every overlay before constructing or
+spawning External. Direct functions and builtins continue to validate while applying
+their temporary/persistent slice, retaining sequential special-builtin effects.
+
+Verified by a 14-probe dash matrix covering function export/local/readonly/unset/return,
+unrelated exported writes, direct and command-wrapped externals, and expansion before
+readonly failure. Independent review found no issues. Subject mutation gates:
+Environment 97.49%, CommandAssignments 100%, CommandRunner 96.72%.

@@ -84,7 +84,9 @@ module Rush
 
     sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def external(argv, io)
-      External.new(@executor, argv, io, command_env(io)).call(@executor.job_control.job_text(@command))
+      environment = command_env(io)
+      @assignments.validate(@executor.state.variables)
+      External.new(@executor, argv, io, environment).call(@executor.job_control.job_text(@command))
     end
 
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
@@ -132,6 +134,12 @@ module Rush
     # with_io only when a redirect actually layered a new table over the base.
     sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def run_function(argv, io)
+      environment = command_env(io)
+      @executor.state.variables.with_temporary(temporary_env(environment)) { invoke_function(argv, io) }
+    end
+
+    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
+    def invoke_function(argv, io)
       body = @executor.state.functions.fetch(argv.fetch(0))
       run = -> { FunctionRunner.new(@executor, body, argv.drop(1)).call }
       io.equal?(@executor.io) ? run.call : @executor.with_io(io, &run)

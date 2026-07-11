@@ -17,6 +17,8 @@ module Rush
 
     def environment_for: (ShellVariables variables) -> Hash[String, String]
 
+    def validate: (ShellVariables variables) -> void
+
     private
 
     def expand: (AST::Assignment assignment) -> String

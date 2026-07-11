@@ -24,6 +24,8 @@ module Rush
 
     def assign: (String name, String value) -> String
 
+    def validate_assignment: (String name) -> void
+
     def export: (String name) -> void
 
     def readonly: (String name) -> void

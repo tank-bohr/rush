@@ -28,10 +28,14 @@ module Rush
 
     sig { params(name: String, value: String).returns(String) }
     def assign(name, value)
-      raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
-
+      validate_assignment(name)
       @dynamic_lineno &&= name != 'LINENO'
       @vars[name] = value
+    end
+
+    sig { params(name: String).void }
+    def validate_assignment(name)
+      raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
     end
 
     sig { params(name: String).void }
@@ -46,8 +50,7 @@ module Rush
 
     sig { params(name: String).void }
     def unset(name)
-      raise ReadonlyError, "#{name}: is read only" if @readonly.include?(name)
-
+      validate_assignment(name)
       @dynamic_lineno &&= name != 'LINENO'
       @vars.delete(name)
       @exported.delete(name)

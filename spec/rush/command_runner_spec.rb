@@ -76,6 +76,16 @@ RSpec.describe Rush::CommandRunner do
     expect(captured).to match([executor, ['ls'], executor.io, hash_including('X' => '1')])
   end
 
+  it 'rejects a readonly prefix before dispatching an external' do
+    env.assign('X', 'locked')
+    env.readonly('X')
+    allow(Rush::External).to receive(:new)
+    command = simple(assignments: [assignment('X', 'new')], words: [word('ls')])
+
+    expect { run(command) }.to raise_error(Rush::ReadonlyError)
+    expect(Rush::External).not_to have_received(:new)
+  end
+
   it 'forwards prefix assignments through command to its nested external' do
     captured = nil
     external = instance_double(Rush::External, call: Rush::Status.success)
@@ -140,6 +150,18 @@ RSpec.describe Rush::CommandRunner do
     state.functions.define('show', program('echo "$1:$2"'))
     run(simple(words: [word('show'), word('one'), word('two')]))
     expect(system.stdout.string).to eq("one:two\n")
+  end
+
+  it 'scopes prefix assignments around a function while keeping unrelated writes' do
+    env.assign('X', 'outer')
+    env.assign('BASE', 'old')
+    env.export('BASE')
+    state.functions.define('f', program('SEEN=$X; X=body; Y=live; BASE=changed'))
+    command = simple(assignments: [assignment('X', 'temporary')], words: [word('f')])
+
+    expect(run(command)).to be_success
+    expect([env.get('X'), env.get('SEEN'), env.get('Y'), env.get('BASE')])
+      .to eq(%w[outer temporary live changed])
   end
 
   it 'lets an exec redirection inside an unredirected function persist' do

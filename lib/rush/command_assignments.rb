@@ -31,6 +31,11 @@ module Rush
       end
     end
 
+    sig { params(variables: ShellVariables).void }
+    def validate(variables)
+      @assignments.each { |assignment| variables.validate_assignment(assignment.name) }
+    end
+
     private
 
     sig { params(assignment: AST::Assignment).returns(String) }
