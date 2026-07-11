@@ -1607,3 +1607,20 @@ controlling a branch, though the equivalent `cond && value.between?(min, ...)`
 never smelled — the csend lowers into the conditional it inspects. The range
 check moved into legal_operand?(value, min), where min is plain data and the
 caller narrows with T.must; structure, not suppression.
+
+### Flog splits its mandate: constructors to AbcSize, logic to the ratchet (rush-2vh)
+TestExpr#evaluate was the last logic method above the ShellState wiring floor —
+19.4 from three POSIX structural rules inlined into one dispatcher, exactly
+where flog and AbcSize diverge: rubocop scored the same method ~11 because ABC
+ignores nesting, while flog charges for branch depth and inline recursion.
+Naming the recursive rules (negated?, unwrap) dropped evaluate to 13.6 while
+staying the arity table XCU test specifies. A third extraction (binary_first?)
+went too far: two args references against one self call is reek's FeatureEnvy,
+so the binary-outranks check stayed inline — the smell drew the line between
+naming a rule and exiling a condition from its dispatcher. That left both >16
+scores on constructors, so the gate's mandate split: flog_max now skips
+#initialize lines — wiring breadth is AbcSize's job (cap 15, one documented
+exception) — and FLOG_METHOD_MAX ratchets 19.5 -> 16.1 over Getopts#apply at
+16.0. Both dimensions got tighter: logic methods lost the 3.4 points of
+headroom the wiring floor had been padding them with, and constructors answer
+to the stricter of the two meters as before.

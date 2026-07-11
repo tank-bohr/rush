@@ -53,10 +53,18 @@ module Rush
 
       def evaluate(args)
         return binary(args) if args.size == 3 && binary?(args[1])
-        return !evaluate(args.drop(1)) if args.first == '!'
-        return evaluate(args[1...-1].to_a) if wrapped?(args)
+        return negated?(args) if args.first == '!'
+        return unwrap(args) if wrapped?(args)
 
         primary(args)
+      end
+
+      def negated?(args)
+        !evaluate(args.drop(1))
+      end
+
+      def unwrap(args)
+        evaluate(args[1...-1].to_a)
       end
 
       # A `( … )` wrapper drops to its contents at any length (dash recurses

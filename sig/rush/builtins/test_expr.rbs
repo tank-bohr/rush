@@ -50,6 +50,10 @@ module Rush
       # around them — argument peeling, the integer/string coercions — is typed.
       def evaluate: (Array[String] args) -> bool
 
+      def negated?: (Array[String] args) -> bool
+
+      def unwrap: (Array[String] args) -> bool
+
       # A `( … )` wrapper drops to its contents at any length (dash recurses
       # through groupings POSIX leaves unspecified past four arguments); empty
       # `( )` peels to the no-argument test, which is false rather than an error.
