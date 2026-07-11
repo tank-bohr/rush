@@ -55,7 +55,7 @@ module Rush
 
       sig { params(part: String).returns(T::Boolean) }
       def match?(part)
-        @system.fnmatch(@pattern, part)
+        @system.fnmatch?(@pattern, part)
       end
     end
   end

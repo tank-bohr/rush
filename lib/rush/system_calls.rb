@@ -113,15 +113,17 @@ module Rush
       File.expand_path(path, base)
     end
 
-    def fnmatch(pattern, str)
-      File.fnmatch(pattern, str, File::FNM_DOTMATCH)
+    def fnmatch?(pattern, str)
+      ShellPattern.new(pattern).match?(str)
     end
 
-    # Pathname expansion: sorted matches for a glob pattern (backslash escapes
-    # are honoured; a leading dot is matched only by an explicit dot). Empty
-    # when nothing matches.
+    # Pathname expansion: Dir.glob discovers candidates from a version whose
+    # POSIX bracket subforms are widened to `?`; ShellPattern then filters them
+    # with the full class/equivalence/collating semantics. Dir keeps ownership
+    # of traversal, dot-file rules and sorting.
     def glob(pattern)
-      Dir.glob(pattern)
+      shell_pattern = ShellPattern.new(pattern)
+      Dir.glob(shell_pattern.glob_source).grep(shell_pattern)
     end
 
     # Sync so a builtin's write reaches the file immediately — like a pipe write

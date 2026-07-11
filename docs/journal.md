@@ -2029,3 +2029,44 @@ neighbouring gap left alone: dash traces bare assignments ('+ A=1'); rush's
 tracer only fires on commands with words — trace *content* is a separate bead
 from prefix fidelity. Verified: ~22-probe dash matrix, byte-identical stderr
 on the agreeing cases, full rake green.
+
+### POSIX bracket subforms compile once across case, removal and globbing (rush-no1.2)
+Ruby's two pattern ports both stop short of POSIX brackets: File.fnmatch treats
+`[[:alpha:]]` as nested literal punctuation, and Dir.glob returns no candidate.
+The fix keeps one language rather than three call-site translations. ShellPattern
+owns ordinary wildcard compilation (`*`, `?`, escapes and brackets); BracketScanner
+finds the OUTER close while skipping the inner `]` of `[:class:]`, `[=equiv=]` and
+`[.collating.]`; BracketExpression lowers the twelve mandatory named classes into
+Ruby regexp class syntax and the portable one-character equivalence/collating forms
+into literal members. Case and `${x#pat}`/`${x%pat}` meet it through the renamed
+predicate `SystemCalls#fnmatch?`, so the existing consumers needed no policy code.
+
+Pathname expansion reuses exactly the same matcher without reimplementing filesystem
+traversal: ShellPattern broadens each extended bracket to `?`, Dir.glob discovers the
+superset (therefore still owns slash components, symlink traversal, leading-dot rules
+and sorting), then `Enumerable#grep` filters with ShellPattern#===. Ordinary patterns
+remain byte-for-byte on File.fnmatch/Dir.glob; no-match and `set -f` remain
+GlobExpander policy. This staged shape is deliberately limited to one-character
+collating elements — Ruby exposes no portable LC_COLLATE tables for primary
+equivalence sets or locale-defined multi-character symbols — filed as rush-no1.15
+rather than pretending `[[.ch.]]` means the two-character string `ch`.
+
+Oracle adjudication: dash 0.5.13.4 does not match even `[[=a=]]` / `[[.a.]]` in the
+installed locales, while POSIX XBD 9.3.5 gives both a one-element meaning in the POSIX
+locale; the standard wins, those forms are unit-pinned and intentionally absent from
+the differential corpus. Leading `^` is unspecified for shell brackets; this dash
+accepts it as negation, so rush follows the practical oracle. The differential surface
+pins named/mixed/negated classes in all three consumers (case, removal and real
+pathnames); a 544-case scratch matrix adds Unicode alpha under the host UTF-8 locale
+and leaves only the two standard-over-dash collation forms. The first review caught
+the two structural cases the initial matrix missed: an escaped `]` must not close the
+outer bracket, and `[[.].]]` must not mistake its element for the `.]` delimiter.
+BracketScanner now skips escapes and searches nested closes only after the opener;
+BracketExpression regexp-escapes literal `[`/`]` members without leaking Ruby warnings.
+
+The same review forced the honest quote-provenance seam instead of a matcher hack:
+Pipeline#expand_pattern reuses the argv path's segment-level quote shielding (extended
+to `] - ! ^`), so case and removal patterns keep quoted metacharacters literal while
+ordinary expand_value remains flat. That closes the just-filed rush-no1.14; the broader
+operator-default field-split/glob loss remains rush-no1.10. Subject mutation gates finish
+above 95%: BracketScanner 96.01%, BracketExpression 97.43%, ShellPattern 96.76%.

@@ -71,7 +71,7 @@ module Rush
 
     def expand_path: (String path, String base) -> String
 
-    def fnmatch: (String pattern, String str) -> bool
+    def fnmatch?: (String pattern, String str) -> bool
 
     # Pathname expansion: sorted matches for a glob pattern (backslash escapes
     # are honoured; a leading dot is matched only by an explicit dot). Empty

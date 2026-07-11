@@ -17,6 +17,12 @@ RSpec.describe Rush::Expansion::PatternRemoval do
     expect(strip('%%', 'foo.tar.gz', '.*')).to eq('foo')
   end
 
+  it 'removes text selected by POSIX bracket subforms' do
+    expect([strip('#', 'a1b', '[[:alpha:]]'), strip('%', 'a1b', '[[:alpha:]]'),
+            strip('#', 'a1b', '[[=a=]]'), strip('%', 'a1b', '[[.b.]]')])
+      .to eq(%w[1b a1 1b a1])
+  end
+
   it 'leaves the value unchanged when no prefix or suffix matches' do
     expect(strip('#', 'abc', 'xyz')).to eq('abc')
     expect(strip('%', 'abc', 'xyz')).to eq('abc')

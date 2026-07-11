@@ -66,7 +66,7 @@ module Rush
 
       sig { returns(String) }
       def arg
-        @executor.expander.expand_value(sub_word(argument), tilde: @quoted ? :none : :leading)
+        @executor.expander.expand_value(sub_word(argument), tilde: tilde_mode)
       end
 
       sig { params(text: String).returns(String) }
@@ -89,7 +89,17 @@ module Rush
 
       sig { params(op: String).returns(String) }
       def strip(op)
-        PatternRemoval.new(@executor.system, op, value_text, arg).call
+        PatternRemoval.new(@executor.system, op, value_text, pattern_arg).call
+      end
+
+      sig { returns(String) }
+      def pattern_arg
+        @executor.expander.expand_pattern(sub_word(argument), tilde: tilde_mode)
+      end
+
+      sig { returns(Symbol) }
+      def tilde_mode
+        @quoted ? :none : :leading
       end
 
       sig { returns(T::Boolean) }

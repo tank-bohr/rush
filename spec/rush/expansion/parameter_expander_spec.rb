@@ -88,5 +88,11 @@ RSpec.describe Rush::Expansion::ParameterExpander do
       expect([expand('F', op: '#', arg: '*.'), expand('F', op: '##', arg: '*.')]).to eq(['tar.gz', 'gz'])
       expect([expand('F', op: '%', arg: '.*'), expand('F', op: '%%', arg: '.*')]).to eq(['foo.tar', 'foo'])
     end
+
+    it 'preserves an escaped closing bracket inside the pattern' do
+      env.assign('X', ']tail')
+
+      expect(expand('X', op: '#', arg: '[[:digit:]\\]]')).to eq('tail')
+    end
   end
 end

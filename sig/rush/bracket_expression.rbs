@@ -1,0 +1,35 @@
+module Rush
+  # One shell-pattern bracket expression. It recognizes the nested POSIX
+  # character-class, equivalence-class and collating-symbol delimiters so their
+  # inner `]` does not terminate the outer expression.
+  class BracketExpression
+    extend T::Sig
+
+    CLASS_NAMES: Array[String]
+
+    @source: String
+    @finish: Integer
+    @special: bool
+    @closed: bool
+
+    attr_reader source: String
+    attr_reader finish: Integer
+
+    def self.parse: (String pattern, Integer start) -> BracketExpression?
+
+    def initialize: (String source, Integer finish, bool special, bool closed) -> void
+    def special?: () -> bool
+    def glob_source: () -> String
+    def append_to: (String regexp, String glob, StringScanner scanner) -> void
+    def regex: () -> String
+
+    private
+
+    def regexp_body: () -> String
+    def escape_brackets: (String body) -> String
+    def negation: (String body) -> String
+    def classes: (String body) -> String
+    def collating: (String body) -> String
+    def collating_element: (String element) -> String
+  end
+end

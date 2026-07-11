@@ -176,7 +176,8 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
   # (dash) in agreement, so these compare without forcing a locale.
   def glob_patterns
     ['echo *', 'echo *.txt', 'echo *.md', 'echo ?.txt', 'echo [ab].txt',
-     'echo [!a].txt', 'echo sub/*', 'echo */*.txt', 'echo "*"', "echo '*'",
+     'echo [!a].txt', 'echo [[:alpha:]].txt', 'echo [![:digit:]].txt',
+     'echo file[[:digit:]]', 'echo sub/*', 'echo */*.txt', 'echo "*"', "echo '*'",
      'echo z*', 'set -f; echo *.txt', 'echo *.txt *.log', 'echo [a.txt',
      'echo a"*"', 'for f in *.txt; do echo "$f"; done', 'set -- *.txt; echo $#']
   end
@@ -191,6 +192,14 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
         source = "cd #{dir}; #{pattern}"
         expect(rush(source)).to eq(dash(source)), "#{id} diverged on: #{pattern}"
       end
+    end
+  end
+
+  it 'keeps an escaped closing bracket inside a pathname class like dash' do
+    Dir.mktmpdir do |dir|
+      FileUtils.touch(File.join(dir, ']'))
+      source = "cd #{dir}; echo [[:digit:]\\]]"
+      expect(rush(source)).to eq(dash(source))
     end
   end
 

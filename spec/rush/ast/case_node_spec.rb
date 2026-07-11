@@ -28,4 +28,19 @@ RSpec.describe Rush::AST::Case do
     described_class.new(word('y'), [item(%w[x y z], :body)]).execute(executor)
     expect(executor).to have_received(:run).with(:body)
   end
+
+  it 'matches a POSIX character class' do
+    allow(executor).to receive(:run).with(:body).and_return(Rush::Status.success)
+    described_class.new(word('a'), [item(['[[:alpha:]]'], :body)]).execute(executor)
+    expect(executor).to have_received(:run).with(:body)
+  end
+
+  it 'keeps a quoted character class literal' do
+    allow(executor).to receive(:run)
+    quoted = Rush::AST::Word.new([Rush::AST::LiteralSegment.new('[[:alpha:]]', true)])
+    node = described_class.new(word('a'), [Rush::AST::CaseItem.new(patterns: [quoted], body: :body)])
+
+    expect(node.execute(executor)).to be_success
+    expect(executor).not_to have_received(:run)
+  end
 end

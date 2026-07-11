@@ -165,8 +165,10 @@ RSpec.describe Rush::SystemCalls do
     expect(file).to have_received(:rewind)
   end
 
-  it 'matches glob patterns with fnmatch' do
-    expect([system.fnmatch('a*', 'abc'), system.fnmatch('a*', 'xyz')]).to eq([true, false])
+  it 'matches ordinary and POSIX-class patterns with fnmatch' do
+    expect([system.fnmatch?('a*', 'abc'), system.fnmatch?('a*', 'xyz'),
+            system.fnmatch?('[[:alpha:]]', 'a'), system.fnmatch?('[[:digit:]]', 'a')])
+      .to eq([true, false, true, false])
   end
 
   it 'delegates stat-style file tests to File' do
@@ -237,9 +239,16 @@ RSpec.describe Rush::SystemCalls do
     expect([system.home_dir('bob'), system.home_dir('ghost')]).to eq(['/home/bob', nil])
   end
 
-  it 'expands a glob pattern through Dir.glob' do
+  it 'expands an ordinary glob pattern through Dir.glob' do
     allow(Dir).to receive(:glob).with('*.rb').and_return(['a.rb'])
     expect(system.glob('*.rb')).to eq(['a.rb'])
+  end
+
+  it 'widens POSIX brackets for glob discovery and filters the candidates' do
+    allow(Dir).to receive(:glob).with('file?').and_return(%w[file1 filea filex])
+
+    expect([system.glob('file[[:digit:]]'), system.glob('file[[=a=]]'), system.glob('file[[.x.]]')])
+      .to eq([['file1'], ['filea'], ['filex']])
   end
 
   it 'reports accumulated CPU times through Process.times' do

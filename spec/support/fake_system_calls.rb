@@ -246,8 +246,8 @@ class FakeSystemCalls
     File.expand_path(path, base)
   end
 
-  def fnmatch(pattern, str)
-    File.fnmatch(pattern, str, File::FNM_DOTMATCH)
+  def fnmatch?(pattern, str)
+    Rush::ShellPattern.new(pattern).match?(str)
   end
 
   def open_file(path, _mode)

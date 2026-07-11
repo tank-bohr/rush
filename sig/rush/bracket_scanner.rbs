@@ -1,0 +1,25 @@
+module Rush
+  # Finds the outer close of a shell bracket expression without mistaking the
+  # `]` inside POSIX `[:class:]`, `[=equiv=]` or `[.collating.]` for it.
+  class BracketScanner
+    extend T::Sig
+
+    TOKEN_ENDS: Hash[String, String]
+
+    @pattern: String
+    @index: Integer
+    @special: bool
+
+    def initialize: (String pattern, Integer start) -> void
+    def call: () -> [Integer?, bool]
+
+    private
+
+    def first_index: (Integer start) -> Integer
+    def complete?: () -> bool
+    def advance: () -> void
+    def escaped_finish: () -> Integer?
+    def nested_finish: () -> Integer?
+    def finish: () -> Integer?
+  end
+end

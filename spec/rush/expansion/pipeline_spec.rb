@@ -29,6 +29,12 @@ RSpec.describe Rush::Expansion::Pipeline do
     it 'expands an assignment value to a single concatenated field' do
       expect(pipeline.expand_value(Rush::AST::Word.literal('v'))).to eq('v')
     end
+
+    it 'backslash-shields quoted metacharacters in a shell pattern' do
+      word = Rush::AST::Word.new([lit('a'), lit(']*?-!^[', quoted: true)])
+
+      expect(pipeline.expand_pattern(word)).to eq('a\\]\\*\\?\\-\\!\\^\\[')
+    end
   end
 
   it 'parameter-expands a :param segment' do

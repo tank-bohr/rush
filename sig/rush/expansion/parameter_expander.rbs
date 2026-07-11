@@ -45,6 +45,10 @@ module Rush
 
       def strip: (String op) -> String
 
+      def pattern_arg: () -> String
+
+      def tilde_mode: () -> Symbol
+
       def unbound?: () -> bool
 
       def colon?: () -> bool

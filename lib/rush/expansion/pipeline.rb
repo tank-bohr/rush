@@ -35,6 +35,13 @@ module Rush
         tilde_expand(word.segments, tilde).map { |segment| segment.expand(@executor) }.join
       end
 
+      # A case/removal pattern keeps quoting as backslash shielding so quoted
+      # metacharacters remain literal when ShellPattern compiles the result.
+      sig { params(word: AST::Word, tilde: Symbol).returns(String) }
+      def expand_pattern(word, tilde: :leading)
+        tilde_expand(word.segments, tilde).map { |segment| escape_if_quoted(segment, segment.expand(@executor)) }.join
+      end
+
       private
 
       sig { params(word: AST::Word).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
@@ -68,7 +75,7 @@ module Rush
 
       sig { params(text: String).returns(String) }
       def escape(text)
-        text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
+        text.gsub(/[\\*?\[\]\-!^]/) { |meta| "\\#{meta}" }
       end
 
       sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[FieldPart]) }

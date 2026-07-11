@@ -31,7 +31,7 @@ module Rush
 
       sig { params(executor: Executor, item: CaseItem, subject: String).returns(T::Boolean) }
       def matches?(executor, item, subject)
-        item.patterns.any? { |pattern| executor.system.fnmatch(executor.expander.expand_value(pattern), subject) }
+        item.patterns.any? { |pattern| executor.system.fnmatch?(executor.expander.expand_pattern(pattern), subject) }
       end
     end
   end
