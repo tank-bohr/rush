@@ -1636,3 +1636,27 @@ measurement). Deliberate stop: the 15.x band below is dense — five methods
 within half a point — and each further tenth would cost a full refactor;
 squeezing past it is a different day's decision, recorded here so the next
 reader knows the plateau is chosen, not forgotten.
+
+### Flay round two: 1170 -> 906, and what stays is named (rush-g9m)
+Three squeezes below the journaled sig cluster, each a seam the code had been
+hinting at. While/Until were twins down to the :while/:until symbol handed to
+LoopRunner — a ConditionLoop base holds the shape the way LoopJump does for
+break/continue. Export/Readonly shared their whole call loop, differing only
+in which marking ShellVariables applies — a Declare base keeps the loop, the
+subclasses keep their one-line declare (the NotImplementedError stub takes
+_operand: reek's UnusedParameters is right that a hook stub does not use its
+argument). And the anonymous [String, bool, bool] tuple threaded from
+Pipeline#field_parts through FieldSplitter into IfsScanner got its name —
+Expansion::FieldPart, a T.type_alias documenting text / IFS-splittable /
+field-break — which shrank four identical sig nodes below flay's radar while
+finally saying what the three booleans mean. Left deliberately: the x5 generic
+block sig cluster (Sorbet-forced, journaled at 14g), SimpleCommand's
+select-by-type triple (the T.let+each dance is the only shape both type
+checkers narrow without casts), and the similar-sig families. FLAY_THRESHOLD
+1170 -> 906.
+Wiring note: LoopRunner's RBS types its mode as the literal union
+:while | :until, so ConditionLoop#kind couldn't answer a bare Symbol — RBS
+symbol-literal types let the base declare (:while | :until) and each subclass
+narrow to its own literal, something the Sorbet side has no way to spell
+(its sigs stay Symbol). Steep caught the widening; the union is the fix,
+not a cast.

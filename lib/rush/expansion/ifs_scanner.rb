@@ -58,7 +58,7 @@ module Rush
         @skip = true
       end
 
-      sig { params(parts: T::Array[[String, T::Boolean, T::Boolean]]).returns(T::Array[String]) }
+      sig { params(parts: T::Array[FieldPart]).returns(T::Array[String]) }
       def run(parts)
         parts.each { |part| consume(part) }
         result
@@ -66,7 +66,7 @@ module Rush
 
       private
 
-      sig { params(part: [String, T::Boolean, T::Boolean]).void }
+      sig { params(part: FieldPart).void }
       def consume(part)
         text, splittable, brk = part
         open_field if brk

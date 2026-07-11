@@ -3,17 +3,11 @@
 
 module Rush
   module Builtins
-    # `readonly name[=value] ...` — assign the value (when given) and mark each
-    # name read only, so a later assignment or unset aborts (see ReadonlyError).
-    # (The `-p` listing form arrives with the variable-printing slice.)
-    class Readonly < Base
+    # `readonly name[=value] ...` — mark each name read only, so a later
+    # assignment or unset aborts (ReadonlyError); see Declare for the shared
+    # engine. (The `-p` listing form arrives with the variable-printing slice.)
+    class Readonly < Declare
       extend T::Sig
-
-      sig { returns(Status) }
-      def call
-        operands.each { |operand| declare(operand) }
-        success
-      end
 
       private
 

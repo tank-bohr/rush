@@ -52,7 +52,7 @@ module Rush
         fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
       end
 
-      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
+      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[FieldPart]) }
       def field_parts(segment)
         return splat_parts(segment) if segment.splat?
 
@@ -71,7 +71,7 @@ module Rush
         text.gsub(/[\\*?\[]/) { |meta| "\\#{meta}" }
       end
 
-      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
+      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[FieldPart]) }
       def splat_parts(segment)
         split = !segment.quoted
         @executor.state.positional.map.with_index do |element, index|

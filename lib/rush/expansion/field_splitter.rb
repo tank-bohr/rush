@@ -14,7 +14,7 @@ module Rush
         @ifs = Ifs.new(ifs)
       end
 
-      sig { params(parts: T::Array[[String, T::Boolean, T::Boolean]]).returns(T::Array[String]) }
+      sig { params(parts: T::Array[FieldPart]).returns(T::Array[String]) }
       def split(parts)
         IfsScanner.new(@ifs.whitespace, @ifs.others).run(parts)
       end

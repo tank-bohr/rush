@@ -4,20 +4,14 @@
 module Rush
   module AST
     # `while cond; do body; done` — runs the body while the condition succeeds.
-    class While < Node
+    class While < ConditionLoop
       extend T::Sig
 
-      attr_reader :condition, :body
+      private
 
-      sig { params(condition: Node, body: Node).void }
-      def initialize(condition, body)
-        @condition = condition
-        @body = body
-      end
-
-      sig { params(executor: Executor).returns(Status) }
-      def execute(executor)
-        LoopRunner.new(executor, condition, body, :while).call
+      sig { returns(Symbol) }
+      def kind
+        :while
       end
     end
   end

@@ -1,0 +1,9 @@
+module Rush
+  module Expansion
+    # One expanded fragment on its way to field splitting, as
+    # [text, splittable, break]: the text itself, whether IFS may split it
+    # (unquoted origin), and whether a new field opens before it regardless
+    # of IFS (the boundary between $@/$* elements).
+    FieldPart: untyped
+  end
+end

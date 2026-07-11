@@ -1,20 +1,12 @@
 module Rush
   module AST
     # `until cond; do body; done` — runs the body until the condition succeeds.
-    class Until < Node
+    class Until < ConditionLoop
       extend T::Sig
 
-      @condition: Node
+      private
 
-      @body: Node
-
-      attr_reader condition: Node
-
-      attr_reader body: Node
-
-      def initialize: (Node condition, Node body) -> void
-
-      def execute: (Executor executor) -> Status
+      def kind: () -> :until
     end
   end
 end

@@ -34,7 +34,7 @@ module ComplexityRake
   end
 end
 
-FLAY_THRESHOLD = 1170
+FLAY_THRESHOLD = 906
 FLOG_METHOD_MAX = 16.0
 
 desc "Structural-duplication ratchet (flay; total mass <= #{FLAY_THRESHOLD})"

@@ -1,0 +1,27 @@
+module Rush
+  module AST
+    # Shared shape of the two condition-driven loops: hold the condition and
+    # body, delegate to LoopRunner with the subclass's kind — :while runs the
+    # body while the condition succeeds, :until until it does.
+    class ConditionLoop < Node
+      extend T::Sig
+
+      @condition: Node
+
+      @body: Node
+
+      attr_reader condition: Node
+
+      attr_reader body: Node
+
+      def initialize: (Node condition, Node body) -> void
+
+      def execute: (Executor executor) -> Status
+
+      private
+
+      # The LoopRunner mode this node runs in.
+      def kind: () -> (:while | :until)
+    end
+  end
+end
