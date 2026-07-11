@@ -1,0 +1,45 @@
+module Rush
+  module Builtins
+    # The operator vocabulary of `test`/`[`, shared by the argument-count
+    # front end (TestExpr) and the recursive-descent grammar (TestGrammar).
+    # The tables map to lambdas, not method symbols, so each primary carries
+    # its operand types past both checkers (the #: types each lambda for
+    # Steep, the T.let the table for Sorbet). File primaries ask the
+    # SystemCalls port; -t parses its operand as a file-descriptor number
+    # first, rejecting non-numbers like dash's "Illegal number" (exit 2).
+    module TestOperators
+      UNARY: ::Hash[String, ^(SystemCalls, String) -> bool]
+
+      STRING: ::Hash[String, ^(String, String) -> bool]
+
+      INTEGER: ::Hash[String, ^(Integer, Integer) -> bool]
+
+      # A string that may name an integer for the numeric primaries: #value is its
+      # integer when it is a valid (optionally signed, blank-padded) decimal, else
+      # nil. Underscores and 0x are rejected, matching dash's strtol-strictness.
+      class MaybeInteger
+        @text: String
+
+        PATTERN: ::Regexp
+
+        def initialize: (String text) -> void
+
+        def valid?: () -> bool
+
+        def value: () -> Integer?
+      end
+
+      def self.unary?: (String word) -> bool
+
+      def self.binary?: (String word) -> bool
+
+      def self.unary: (String op) -> ^(SystemCalls, String) -> bool
+
+      def self.apply_binary: (String op, String lhs, String rhs) -> bool
+
+      def self.to_int: (String text) -> Integer
+
+      def self.fd_number: (String text) -> Integer
+    end
+  end
+end

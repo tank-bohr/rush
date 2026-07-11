@@ -168,6 +168,24 @@ RSpec.describe Rush::SystemCalls do
     expect(system.writable?('/f')).to be(false)
   end
 
+  it 'delegates file-type and mode-bit tests to File' do
+    allow(File).to receive_messages(pipe?: true, blockdev?: true, chardev?: true,
+                                    socket?: true, setgid?: true, setuid?: true)
+    expect([system.pipe?('/p'), system.blockdev?('/b'), system.chardev?('/c'),
+            system.socket?('/s'), system.setgid?('/g'), system.setuid?('/u')]).to all(be(true))
+  end
+
+  it 'answers tty_fd? by wrapping the descriptor without autoclose' do
+    io = instance_double(IO, tty?: true)
+    allow(IO).to receive(:new).with(5, autoclose: false).and_return(io)
+    expect(system.tty_fd?(5)).to be(true)
+  end
+
+  it 'treats an unusable descriptor number as not a terminal' do
+    allow(IO).to receive(:new).and_raise(Errno::EBADF)
+    expect(system.tty_fd?(27)).to be(false)
+  end
+
   it 'exposes the standard streams' do
     expect(system.stdin).to be($stdin)
     expect(system.stdout).to be($stdout)

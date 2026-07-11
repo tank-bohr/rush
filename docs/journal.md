@@ -1866,3 +1866,33 @@ not fixed here: SubstitutionReader's paren count is not quote-aware —
 `${a:-"x y"}` word is flat by the time the outer pipeline splits and globs
 (rush-no1.10). Verified: a 30-probe dash matrix matches on
 [stdout, exitstatus], 24 new corpus lines, full rake green.
+
+### test/[ grows its file-type primaries and the dash -a/-o grammar (rush-no1.3, rush-no1.7)
+Two beads, one seam. `test`/`[` gains the missing unary primaries — `-t`
+(isatty of a numeric fd, not a path), `-p -b -c -S` (file types), `-g -u`
+(mode bits) — and the XSI-obsolescent `-a`/`-o` connectives, adjudicated
+dash-compatible since POSIX leaves >4-argument test unspecified and the
+idiom saturates real scripts. Reading dash's test.c settled the model:
+testcmd is a tiny argc switch (binary-primary shortcut at three arguments —
+BINOP only, never -a/-o; `!` peel and `( )` strip at three/four) over a
+recursive-descent parser (oexpr/aexpr/nexpr/primary) whose t_lex classifies
+words *positionally*: a unary primary is an operand when last (`[ -n ]` is
+the non-empty test) or before a binary primary (`[ -t = -t ]` compares
+strings), and `(` at list end is a word. rush now mirrors that shape —
+TestExpr keeps the POSIX table, TestGrammar transcribes the descent with
+dash's exact cursor discipline (a leftover word is the "unexpected operator"
+error; a missing -a/-o arm is the missing expression, false, so `[ x -o ]`
+is true and both arms always evaluate: `[ x -o y -eq 3 ]` still exits 2),
+TestTokens is t_lex, TestOperators the shared lambda tables. One divergence,
+POSIX's side: dash *zeroes* rather than toggles its negation parity when it
+peels `!` twice, so `[ ! ! ! x ]` is true and `[ ! ! -n x ]` false there;
+POSIX specifies the four-argument `!` row, rush negates honestly — pinned in
+unit specs, kept out of the corpus. `-t` parses its operand with atomax
+semantics (padded/signed decimal; junk is "Illegal number", exit 2) and any
+unusable descriptor — closed, negative, bignum — is simply not a terminal,
+via the port's new tty_fd? (IO.new with autoclose: false). Lint shaped the
+result: reek's ControlParameter tolerates case/in on a parameter (and
+comparisons when the param also flows as data) but flags pure comparison
+chains, NilCheck pushed nil handling into fetch-with-block returns, and the
+flog ratchet split TestExpr#evaluate into shortcut/peel. Verified: 147-probe
+dash matrix green, 41 new corpus lines, full rake green.

@@ -33,7 +33,7 @@ class FakeSystemCalls
   ProcessTimes = Struct.new(:utime, :stime, :cutime, :cstime)
 
   NODE_DEFAULTS = { type: :file, size: 1, readable: true, writable: true,
-                    executable: false, symlink: false }.freeze
+                    executable: false, symlink: false, setgid: false, setuid: false }.freeze
 
   # rubocop:disable Metrics/ParameterLists -- a test double accrues config knobs
   def initialize(
@@ -71,6 +71,7 @@ class FakeSystemCalls
     @chdirs = []
     @chdir_error = nil
     @nodes = {}
+    @tty_fds = []
     @contents = {}
     @inherited_fds = {}
     @umask = 0o022
@@ -200,6 +201,39 @@ class FakeSystemCalls
 
   def symlink?(path)
     node(path, :symlink) == true
+  end
+
+  def pipe?(path)
+    node(path, :type) == :fifo
+  end
+
+  def blockdev?(path)
+    node(path, :type) == :block
+  end
+
+  def chardev?(path)
+    node(path, :type) == :char
+  end
+
+  def socket?(path)
+    node(path, :type) == :socket
+  end
+
+  def setgid?(path)
+    node(path, :setgid) == true
+  end
+
+  def setuid?(path)
+    node(path, :setuid) == true
+  end
+
+  # Declare a descriptor number a terminal for the test -t primary.
+  def mark_tty(fd)
+    @tty_fds << fd
+  end
+
+  def tty_fd?(fd)
+    @tty_fds.include?(fd)
   end
 
   def expand_path(path, base)

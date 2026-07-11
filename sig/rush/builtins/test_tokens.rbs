@@ -1,0 +1,39 @@
+module Rush
+  module Builtins
+    # Positional word classification for `test`/`[`, mirroring dash's t_lex:
+    # a word is an operator only in operator position. A unary primary is
+    # demoted to a plain operand when it is the last word (`[ -n ]` is the
+    # non-empty test of "-n") or when a binary primary follows with more
+    # beyond (`[ -t = -t ]` compares strings); a `(` closing the argument
+    # list is likewise a word. Everything else keeps its table kind: unary
+    # and binary primaries, `!`, the XSI-obsolescent -a/-o connectives, and
+    # the parentheses.
+    class TestTokens
+      extend T::Sig
+
+      @args: Array[String]
+
+      KINDS: ::Hash[String, Symbol]
+
+      # The t_lex demotion rules, keyed by table kind (a registry, so the
+      # classifier itself never branches on the kind it is computing).
+      DEMOTIONS: ::Hash[Symbol, ^(Array[String], Integer) -> bool]
+
+      NEVER: ^(Array[String], Integer) -> bool
+
+      def initialize: (Array[String] args) -> void
+
+      def kind_at: (Integer index) -> Symbol
+
+      # dash's isoperand: a unary primary reads as an operand when nothing
+      # follows, or when the next word is a binary primary and more follows.
+      def self.operand_position?: (Array[String] args, Integer index) -> bool
+
+      private
+
+      def positional: (String word, Integer index) -> Symbol
+
+      def primary_kind: (String word) -> Symbol
+    end
+  end
+end

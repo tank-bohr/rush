@@ -1,0 +1,64 @@
+module Rush
+  module Builtins
+    # The historical `test`/`[` grammar, transcribed from dash's recursive
+    # descent (oexpr/aexpr/nexpr/primary). POSIX leaves test beyond four
+    # arguments unspecified and marks the -a/-o connectives obsolescent, but
+    # countless real scripts use them, so rush reproduces dash here:
+    #
+    #   or      ::= and { "-o" and }         (both arms always evaluated)
+    #   and     ::= not { "-a" not }
+    #   not     ::= "!" not | primary
+    #   primary ::= "(" or ")" | unary-op word | word binary-op word | word
+    #
+    # The cursor mirrors dash's t_wp pointer discipline: it rests on the last
+    # consumed word, and a word left over after the parse is the "unexpected
+    # operator" syntax error (TestError, exit 2). A missing operand after a
+    # connective parses as the missing expression, which is false, so
+    # `[ x -o ]` is true and `[ x -a ]` is false, exactly as in dash.
+    class TestGrammar
+      @args: Array[String]
+
+      @files: SystemCalls
+
+      @tokens: TestTokens
+
+      @pos: Integer
+
+      def initialize: (Array[String] args, SystemCalls files) -> void
+
+      def truth: () -> bool
+
+      private
+
+      def kind_at: (Integer index) -> Symbol
+
+      def or_expr: (Symbol kind) -> bool
+
+      def and_expr: (Symbol kind) -> bool
+
+      # The kind of the word after the cursor, or :eoi once the current word
+      # is exhausted — dash's `if (!*t_wp) break; t_lex(t_wp + 1)`.
+      def connective: () -> Symbol
+
+      def not_expr: (Symbol kind) -> bool
+
+      # The missing expression is false, `(` opens a grouping, a unary
+      # primary applies, and any other kind reads as a word primary.
+      def primary: (Symbol kind) -> bool
+
+      def group: () -> bool
+
+      # The operand always exists: a unary primary with nothing after it is
+      # demoted to a plain operand by TestTokens, never classified :unop.
+      def unary: () -> bool
+
+      # A word primary: a binary comparison when a binary primary follows,
+      # otherwise the plain non-empty test of the word itself.
+      def word: () -> bool
+
+      def binary: () -> bool
+
+      def current: () -> String
+    end
+  end
+end

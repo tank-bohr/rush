@@ -29,9 +29,19 @@ RSpec.describe Rush::Builtins::Test do
     expect(test('!', 'x')).not_to be_success
   end
 
+  it 'treats a lone ! or ( as an ordinary non-empty word' do
+    expect(test('!')).to be_success
+    expect(test('(')).to be_success
+  end
+
+  it 'reports a binary primary missing its right operand with exit status 2' do
+    expect(test('x', '=').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: test: =: argument expected\n")
+  end
+
   it 'reports an unknown unary operator with exit status 2' do
     expect(test('-q', 'x').exitstatus).to eq(2)
-    expect(system.stderr.string).to eq("rush: test: -q: unary operator expected\n")
+    expect(system.stderr.string).to eq("rush: test: x: unexpected operator\n")
   end
 
   it 'evaluates -e/-f/-d against the filesystem' do
@@ -46,6 +56,44 @@ RSpec.describe Rush::Builtins::Test do
     system.register('/link', symlink: true)
     expect([test('-r', '/f'), test('-x', '/f'), test('-h', '/link'), test('-L', '/link')]).to all(be_success)
     expect([test('-w', '/f'), test('-s', '/f')]).to all(satisfy { |s| !s.success? })
+  end
+
+  it 'evaluates the -p/-b/-c/-S file-type primaries via the port' do
+    system.register('/fifo', type: :fifo)
+    system.register('/blk', type: :block)
+    system.register('/chr', type: :char)
+    system.register('/sock', type: :socket)
+    expect([test('-p', '/fifo'), test('-b', '/blk'), test('-c', '/chr'), test('-S', '/sock')]).to all(be_success)
+    expect([test('-p', '/blk'), test('-b', '/fifo'), test('-c', '/sock'), test('-S', '/chr'),
+            test('-p', '/none')]).to all(satisfy { |s| s.exitstatus == 1 })
+  end
+
+  it 'evaluates the -g/-u mode-bit primaries via the port' do
+    system.register('/sgid', setgid: true)
+    system.register('/suid', setuid: true)
+    expect([test('-g', '/sgid'), test('-u', '/suid')]).to all(be_success)
+    expect([test('-g', '/suid'), test('-u', '/sgid'), test('-g', '/none')])
+      .to all(satisfy { |s| s.exitstatus == 1 })
+  end
+
+  it 'tests file-descriptor numbers with -t' do
+    system.mark_tty(1)
+    expect(test('-t', '1')).to be_success
+    expect([test('-t', '0'), test('-t', '27'), test('-t', '-1')]).to all(satisfy { |s| s.exitstatus == 1 })
+  end
+
+  it 'accepts blank-padded and signed -t operands, like dash' do
+    system.mark_tty(1)
+    expect([test('-t', ' 1'), test('-t', '+1'), test('-t', '1 ')]).to all(be_success)
+  end
+
+  it 'rejects a non-numeric -t operand with exit status 2' do
+    expect(test('-t', 'x').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: test: Illegal number: x\n")
+  end
+
+  it 'treats a lone -t as the non-empty one-argument test' do
+    expect(test('-t')).to be_success
   end
 
   it 'compares strings with = and !=' do
@@ -88,7 +136,7 @@ RSpec.describe Rush::Builtins::Test do
 
   it 'reports malformed binary-looking expressions with exit status 2' do
     expect(test('a', '=', 'a', 'extra').exitstatus).to eq(2)
-    expect(system.stderr.string).to eq("rush: test: syntax error\n")
+    expect(system.stderr.string).to eq("rush: test: extra: unexpected operator\n")
   end
 
   it 'handles four-argument ! and ( ) groupings' do
@@ -118,12 +166,61 @@ RSpec.describe Rush::Builtins::Test do
   it 'does not treat a trailing ) alone as a grouping' do
     expect(test(')')).to be_success
     expect(test('x', ')').exitstatus).to eq(2)
-    expect(system.stderr.string).to eq("rush: test: x: unary operator expected\n")
+    expect(system.stderr.string).to eq("rush: test: ): unexpected operator\n")
   end
 
   it 'reports more than four ungrouped arguments with exit status 2' do
     expect(test('a', 'b', 'c', 'd', 'e').exitstatus).to eq(2)
-    expect(system.stderr.string).to eq("rush: test: syntax error\n")
+    expect(system.stderr.string).to eq("rush: test: b: unexpected operator\n")
+  end
+
+  it 'evaluates the obsolescent -a/-o binary connectives' do
+    expect([test('a', '=', 'a', '-a', 'b', '=', 'b'), test('a', '=', 'b', '-o', 'b', '=', 'b'),
+            test('x', '-a', 'y'), test('x', '-o', '')]).to all(be_success)
+    expect([test('a', '=', 'a', '-a', 'b', '=', 'c'), test('a', '=', 'b', '-o', 'b', '=', 'c'),
+            test('x', '-a', ''), test('', '-o', '')]).to all(satisfy { |s| s.exitstatus == 1 })
+  end
+
+  it 'binds -a tighter than -o and lets \( \) regroup them, like dash' do
+    expect(test('x', '-o', 'y', '-a', '')).to be_success
+    expect(test('', '-a', 'y', '-o', 'z')).to be_success
+    expect(test('(', 'x', '-o', '', ')', '-a', 'y')).to be_success
+    expect(test('(', 'x', '-a', '', ')', '-o', '(', 'y', ')')).to be_success
+  end
+
+  it 'gives ! tighter binding than -a/-o inside long expressions, like dash' do
+    expect(test('!', 'x', '-a', '!', 'y').exitstatus).to eq(1)
+    expect(test('!', '', '-o', '!', '')).to be_success
+    expect(test('x', '-a', '!', '')).to be_success
+  end
+
+  it 'peels a leading ! before a three-argument -a/-o reading, like dash' do
+    expect(test('!', 'x', '-o', 'y').exitstatus).to eq(1)
+    expect(test('!', '', '-a', 'y')).to be_success
+  end
+
+  it 'treats a missing arm after -a/-o as false rather than an error, like dash' do
+    expect(test('x', '-o')).to be_success
+    expect(test('x', '-a').exitstatus).to eq(1)
+    expect(test('1', '-eq', '1', '-a').exitstatus).to eq(1)
+  end
+
+  it 'evaluates both arms of -a/-o, so a bad right arm still errors, like dash' do
+    expect(test('x', '-o', 'y', '-eq', '3').exitstatus).to eq(2)
+    expect(system.stderr.string).to eq("rush: test: y: integer expected\n")
+  end
+
+  it 'keeps words that merely look like operators as operands' do
+    expect(test('-t', '=', '-t')).to be_success
+    expect(test('=', '-a', '=')).to be_success
+    expect(test('-n', '-a')).to be_success
+    expect(test('-z', '-a').exitstatus).to eq(1)
+    expect(test('-e', '-a', '-e').exitstatus).to eq(2)
+  end
+
+  it 'negates four-argument tests honestly where dash mis-tracks parity (POSIX wins)' do
+    expect(test('!', '!', '!', 'x').exitstatus).to eq(1) # dash answers 0 here
+    expect(test('!', '!', '-n', 'x')).to be_success      # and 1 here
   end
 
   it 'requires and strips a closing ] in the [ form' do

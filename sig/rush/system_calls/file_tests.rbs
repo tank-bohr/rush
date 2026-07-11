@@ -1,7 +1,9 @@
 module Rush
   class SystemCalls
-    # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L), mixed
-    # into SystemCalls. Thin File delegations, like the rest of the syscall port.
+    # File-test queries for the test/[ builtin (-e -f -d -r -w -x -s -h/-L,
+    # the file types -p -b -c -S, the mode bits -g -u, and the fd probe -t),
+    # mixed into SystemCalls. Thin File/IO delegations, like the rest of the
+    # syscall port.
     module FileTests
       extend T::Sig
 
@@ -20,6 +22,22 @@ module Rush
       def file_nonempty?: (String path) -> bool
 
       def symlink?: (String path) -> bool
+
+      def pipe?: (String path) -> bool
+
+      def blockdev?: (String path) -> bool
+
+      def chardev?: (String path) -> bool
+
+      def socket?: (String path) -> bool
+
+      def setgid?: (String path) -> bool
+
+      def setuid?: (String path) -> bool
+
+      # isatty(fd) for test -t: any unusable descriptor number (closed, huge,
+      # negative) is simply not a terminal, as in dash.
+      def tty_fd?: (Integer fd) -> bool
     end
   end
 end
