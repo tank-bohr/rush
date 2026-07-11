@@ -22,20 +22,20 @@ module Rush
 
       def setpgid: (Integer pid, Integer pgid) -> void
 
-      def fork_grouped: (Integer group, ?untyped tty) { () -> void } -> Integer?
+      def fork_grouped: (Integer group, ?IO? tty) { () -> void } -> Integer?
 
-      def grouped_child: (Integer group, untyped tty) { () -> void } -> void
+      def grouped_child: (Integer group, IO? tty) { () -> void } -> void
 
       # The controlling terminal (an owned IO handle), or nil without one.
-      def open_tty: () -> untyped
+      def open_tty: () -> IO?
 
       # The terminal's foreground process group, nil when unreadable.
-      def tcgetpgrp: (untyped tty) -> Integer?
+      def tcgetpgrp: (IO tty) -> Integer?
 
-      def read_pgrp: (untyped tty, Integer request) -> untyped
+      def read_pgrp: (IO tty, Integer request) -> Integer?
 
       # Hand the terminal to a process group, SIGTTOU held ignored.
-      def tcsetpgrp: (untyped tty, Integer pgid) -> void
+      def tcsetpgrp: (IO tty, Integer pgid) -> void
 
       def job_control_supported?: () -> bool
 

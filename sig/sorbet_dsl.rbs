@@ -56,7 +56,7 @@ module T
 
   def self.cast: (untyped value, untyped) -> untyped
 
-  def self.must: (untyped arg) -> untyped
+  def self.must: [X] (X? arg) -> X
 
   # Sorbet type constructors referenced inside sig {} blocks and method bodies.
   # All return untyped — Steep doesn't interpret Sorbet type expressions; it just

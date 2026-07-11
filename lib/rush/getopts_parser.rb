@@ -69,7 +69,9 @@ module Rush
   class GetoptsParser
     extend T::Sig
 
-    KEEP = T.let(Object.new.freeze, Object)
+    # Sentinel optarg: leave OPTARG untouched (a real optarg is always a
+    # String, so a Symbol can never collide with one).
+    KEEP = :keep
     # The variable updates and status produced by one getopts step.
     Result = Data.define(:name, :optarg, :optind, :message, :exitstatus)
     # The option character plus the argv word it came from.

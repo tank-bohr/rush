@@ -48,16 +48,17 @@ module Rush
   class GetoptsParser
     extend T::Sig
 
-    KEEP: Object
+    # Sentinel optarg: leave OPTARG untouched (a real optarg is a String).
+    KEEP: :keep
 
     class Result < ::Data
       attr_reader name: String
-      attr_reader optarg: untyped
+      attr_reader optarg: String | :keep | nil
       attr_reader optind: Integer
       attr_reader message: String?
       attr_reader exitstatus: Integer
 
-      def self.new: (name: String, optarg: untyped, optind: Integer, message: String?, exitstatus: Integer) -> Result
+      def self.new: (name: String, optarg: String | :keep | nil, optind: Integer, message: String?, exitstatus: Integer) -> Result
     end
 
     class Option < ::Data
@@ -101,7 +102,7 @@ module Rush
 
     def error_result: (String name, String silent_optarg, String normal_message) -> Result
 
-    def result: (String name, untyped optarg, String? message, Integer exitstatus) -> Result
+    def result: (String name, String | :keep | nil optarg, String? message, Integer exitstatus) -> Result
 
     def option: (String argument) -> Option
 

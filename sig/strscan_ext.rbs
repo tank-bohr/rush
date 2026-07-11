@@ -1,22 +1,14 @@
-# rbs's StringScanner#scan/#skip/#match? predate Ruby 3.4's String-pattern support;
-# rush passes single-char String literals (rubocop's Style/RedundantRegexpArgument
-# prefers them). Add the String overloads so code and checker agree.
+# rbs's StringScanner#scan/#skip still type only Regexp patterns, predating Ruby
+# 3.4's String-pattern support; rush passes single-char String literals (rubocop's
+# Style/RedundantRegexpArgument prefers them). `| ...` appends the String overloads
+# to the stdlib definitions — a plain redefinition would raise
+# RBS::DuplicatedMethodDefinitionError, which Steep 2.0 does not surface: it
+# silently drops the whole class to untyped (every StringScanner call stops being
+# type-checked; measured via rush-211.5.12's untyped dump).
 class StringScanner
-  def scan: (Regexp | String pattern) -> String?
+  def scan: (String pattern) -> String?
+          | ...
 
-  def skip: (Regexp | String pattern) -> Integer?
-
-  def getch: () -> String?
-
-  def peek: (Integer length) -> String
-
-  def eos?: () -> bool
-
-  def unscan: () -> self
-
-  def rest: () -> String
-
-  def terminate: () -> self
-
-  def charpos: () -> Integer
+  def skip: (String pattern) -> Integer?
+          | ...
 end

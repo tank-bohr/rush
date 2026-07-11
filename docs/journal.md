@@ -1699,3 +1699,34 @@ itself (a trailing `#:` after the whole `T.let(...)` call does *not* reach
 inside; measured). The three bare locals take a plain trailing `#:`. Steepfile
 now configures no diagnostics at all: one ignore (racc parser) is the whole
 remaining ledger.
+
+### The untyped-call sweep finds two systemic leaks, not thirteen local ones (rush-211.5.12, dissolving rush-211.5.5)
+The drift sweep was scoped as 13 stray untyped calls in 11 files; the dump
+(session tooling over Steep's TypeCheckService — StatsCalculator counts,
+so the same walk prints file:line + receiver type) measured 38 and then
+found most shared two roots. First: the `T.must` shim returned untyped —
+`[X] (X? arg) -> X` makes it a proper narrowing generic, and whole chains
+retyped at once (five calls, zero source edits). Second, the big one:
+sig/strscan_ext.rbs redefined StringScanner methods that rbs 4.0.3's stdlib
+now ships (charpos et al.) — RBS::DuplicatedMethodDefinitionError, which
+`steep check` never surfaces: it silently drops the ENTIRE class to untyped.
+Every StringScanner call in the lexer — even through declared
+`@scanner: StringScanner` ivars — stopped being type-checked, and a probe
+(`@scanner.definitely_missing?` passing green) confirmed the blindness. The
+shim now appends only the genuinely missing String-pattern overloads via the
+`| ...` syntax, and the un-poisoned class immediately caught a real gap:
+printf's Template destructured `captures` without narrowing. That one fix
+cleared all of rush-211.5.5's scanner-boundary scope (tokenizer,
+printf_formatter, scanner_predicates) — the bead closes by dissolution, like
+mv8.1 before it. The residue was honest per-site work: `T.unsafe(self).send`
+dispatch became Method-object dispatch (`method(sym).call` — same table-driven
+design, typed receivers, no T.unsafe) in jobs and command_text; the getopts
+KEEP sentinel became `:keep` so RBS can spell `String | :keep | nil` (an
+Object.new sentinel types as the useless `Object`); Redirect#target got its
+real union `Word | HereDoc` (both expand and both carry source_line — only
+command_text's post-guard word() needs a cast); tty handles are `IO`, the
+job-report/signal-report streams are `_IoStream`. Lesson pinned twice over:
+== against a literal-typed CONSTANT does not narrow in Steep (is_a?(Symbol)
+does), and untyped dumps beat per-file guessing — measure receivers, not
+files. steep stats: 99.88% typed calls; the remaining 11 are test_expr's
+dispatch (rush-211.5.6) and parser_support (rush-211.5.7).

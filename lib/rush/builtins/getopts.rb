@@ -42,7 +42,7 @@ module Rush
 
       sig { params(value: T.untyped).void }
       def update_optarg(value)
-        return if value.equal?(GetoptsParser::KEEP)
+        return if value.is_a?(Symbol) # GetoptsParser::KEEP, the only Symbol optarg
 
         value ? variables.assign('OPTARG', value) : variables.unset('OPTARG')
       end

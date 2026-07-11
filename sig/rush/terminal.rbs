@@ -8,7 +8,7 @@ module Rush
 
     @system: SystemCalls
 
-    @tty: untyped
+    @tty: IO
 
     @home: Integer
 
@@ -18,18 +18,18 @@ module Rush
     # reachable tty.
     def self.acquire: (SystemCalls system) -> Terminal?
 
-    def self.wait_foreground: (SystemCalls system, untyped tty) -> Integer?
+    def self.wait_foreground: (SystemCalls system, IO tty) -> Integer?
 
-    def self.take: (SystemCalls system, untyped tty, Integer initial) -> Terminal
+    def self.take: (SystemCalls system, IO tty, Integer initial) -> Terminal
 
-    def self.abandon: (untyped tty) -> nil
+    def self.abandon: (IO tty) -> nil
 
     # The parent-side handover around a foreground wait (bare without one).
     def self.while_held: [U] (Terminal? terminal, Integer leader) { () -> U } -> U
 
-    attr_reader tty: untyped
+    attr_reader tty: IO
 
-    def initialize: (system: SystemCalls, tty: untyped, home: Integer, initial: Integer) -> void
+    def initialize: (system: SystemCalls, tty: IO, home: Integer, initial: Integer) -> void
 
     # A foreground job's whole run: give for the block, reclaim after.
     def while_given: [U] (Integer pgid) { () -> U } -> U

@@ -14,7 +14,7 @@ module Rush
 
     # Report onto err and hand the status back, so reap sites stay
     # expressions. A closed stderr swallows the report, not the status.
-    def self.report: (Status status, untyped err) -> Status
+    def self.report: (Status status, _IoStream err) -> Status
 
     def self.report?: (Status status) -> bool
 

@@ -36,7 +36,8 @@ module Rush
 
       sig { params(style: Symbol, args: T::Array[String]).returns(Status) }
       def show(style, args)
-        each_selected(args) { |job| T.unsafe(self).send(style, job) }
+        line = method(style)
+        each_selected(args) { |job| line.call(job) }
         success
       end
 

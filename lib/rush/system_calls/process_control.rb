@@ -106,7 +106,7 @@ module Rush
       def read_pgrp(tty, request)
         buffer = [0].pack('l')
         tty.ioctl(request, buffer)
-        buffer.unpack('l').grep(Integer).first
+        buffer.unpack1('l').then { |pgid| pgid.is_a?(Integer) ? pgid : nil }
       rescue SystemCallError, IOError
         nil
       end

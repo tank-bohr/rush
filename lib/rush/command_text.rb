@@ -26,7 +26,7 @@ module Rush
 
     sig { params(node: AST::Node).returns(String) }
     def self.render(node)
-      T.unsafe(self).send(TABLE.fetch(node.class), node)
+      method(TABLE.fetch(node.class)).call(node)
     end
 
     sig { params(node: AST::List).returns(String) }
@@ -114,7 +114,7 @@ module Rush
       return '<<...' if redirect.kind == :heredoc
 
       op, fd = T.must(OPERATORS[redirect.kind])
-      "#{redirect.io_number || fd}#{op}#{word(redirect.target)}"
+      "#{redirect.io_number || fd}#{op}#{word(T.cast(redirect.target, AST::Word))}"
     end
 
     OPERATORS = T.let({

@@ -8,17 +8,18 @@ module Rush
 
       attr_reader kind: Symbol
 
-      # Word, or a HereDoc holder for <<-style redirects — kept untyped.
-      attr_reader target: untyped
+      # A Word, or the HereDoc holder for <<-style redirects (it quacks like
+      # a Word: both expand via Pipeline#expand_value and carry source_line).
+      attr_reader target: Word | HereDoc
 
       attr_reader io_number: Integer?
 
       def source_line: () -> Integer
 
-      def self.new: (kind: Symbol, target: untyped, io_number: Integer?) -> Redirect
-                  | (Symbol kind, untyped target, Integer? io_number) -> Redirect
+      def self.new: (kind: Symbol, target: Word | HereDoc, io_number: Integer?) -> Redirect
+                  | (Symbol kind, Word | HereDoc target, Integer? io_number) -> Redirect
 
-      def with: (?kind: Symbol, ?target: untyped, ?io_number: Integer?) -> Redirect
+      def with: (?kind: Symbol, ?target: Word | HereDoc, ?io_number: Integer?) -> Redirect
     end
   end
 end

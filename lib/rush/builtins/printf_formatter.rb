@@ -45,7 +45,7 @@ module Rush
           return '%' unless scan(SPEC)
 
           flags, conv = captures
-          formatter.convert(flags, conv)
+          formatter.convert(T.must(flags), T.must(conv))
         end
 
         def escape

@@ -84,7 +84,7 @@ module Rush
       def reported: () -> void
 
       # Print this job's change and settle the report (dash showjob + free).
-      def report: (JobTable table, untyped out) -> void
+      def report: (JobTable table, _IoStream out) -> void
 
       # Reap once: the first harvest fills raw from the supplied wait;
       # repeats answer from memory (dash never frees an entry on wait). A
@@ -165,7 +165,7 @@ module Rush
     def settle_members: (Job job) -> Status
 
     # dash's cmdloop showjobs(SHOW_CHANGED), before each PS1 (the Repl).
-    def announce_changed: (untyped out) -> void
+    def announce_changed: (_IoStream out) -> void
 
     private
 

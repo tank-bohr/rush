@@ -18,7 +18,7 @@ module Rush
       # The variable updates a getopts step produces: `name`, OPTARG, OPTIND.
       def store: (GetoptsParser::Result result) -> void
 
-      def update_optarg: (untyped value) -> void
+      def update_optarg: (String | :keep | nil value) -> void
 
       def report_message: (String? message) -> void
 
