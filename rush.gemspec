@@ -39,6 +39,8 @@ Gem::Specification.new do |spec|
   # checker (the `sorbet` gem) is dev-only.
   spec.add_dependency 'sorbet-runtime', '~> 0.5'
 
+  spec.add_development_dependency 'flay', '~> 2.13'
+  spec.add_development_dependency 'flog', '~> 4.8'
   spec.add_development_dependency 'mutant-rspec', '~> 0.16.3'
   spec.add_development_dependency 'rake', '~> 13.0'
   spec.add_development_dependency 'rbs', '~> 4.0'

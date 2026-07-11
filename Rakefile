@@ -7,6 +7,7 @@ require 'rubocop/rake_task'
 
 load 'tasks/compile.rake'
 load 'tasks/docker.rake'
+load 'tasks/complexity.rake'
 
 RSpec::Core::RakeTask.new(:spec)
 RuboCop::RakeTask.new(:rubocop)
@@ -120,5 +121,5 @@ task :mutant, [:subject] => :compile do |_task, args|
   sh(*command)
 end
 
-desc 'Full pipeline: compile -> rubocop -> reek -> steep -> sorbet -> spec (+ coverage gate)'
-task default: %i[compile rubocop reek steep sorbet spec]
+desc 'Full pipeline: compile -> rubocop -> reek -> flay -> flog -> steep -> sorbet -> spec (+ coverage gate)'
+task default: %i[compile rubocop reek flay flog steep sorbet spec]

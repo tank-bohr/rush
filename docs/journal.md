@@ -1457,3 +1457,28 @@ one-line JobControl facade in favour of the existing executor.jobs.control seam.
 Verified: full rake green (2270 specs, 99.98%/99.6%), the 77-line jc corpus including the
 five new stop lines, pty smoke byte-for-byte, container gate green end-to-end, and the
 original hung-probe shape returns promptly with the job parked and killable.
+
+### flay and flog join the gate — rubycritic evaluated and declined (rush-apz filed)
+The rubycritic question answered itself on inspection: it is not a reek alternative but a
+wrapper AROUND reek 6.5 (plus flog, flay and git churn), collapsed into one GPA gated only
+by --minimum-score — a new smell in a small file barely moves the aggregate where the
+current reek task fails the build outright, and the churn term punishes files for being
+edited, not for getting worse. It also drags its own simplecov in, which picks up our
+.simplecov and stomps coverage/ with a 0% report. Evaluated live (5.0.0, maintained,
+3 seconds over lib/ on Ruby 4.0.5) and declined; what it genuinely added — flay's
+structural-duplication view — landed directly instead. fasterer was probed the same
+morning and declined too: dormant since early 2024, rules frozen in the Ruby 2.x era,
+and its niche already covered by rubocop-performance, which (surprise of the day) has
+been a plugin in .rubocop.yml all along — it was Performance/RedundantBlockCall that
+reshaped the Options renderer in slice 14a.
+
+So the gate grew two baseline-pinned ratchets in tasks/complexity.rake, mirroring the
+mutant:check pattern: flay (total duplication mass over lib+exe minus the generated
+parser, threshold 2016 = today's measurement) and flog (worst single method, cap 26.0
+over today's 25.9 — ShellState#initialize, the known excluded coordinator). Thresholds
+only go down; paying debt lowers them. What flay actually found — and reek structurally
+cannot see — is one IDENTICAL seven-node save/yield/restore cluster (errexit_context ×2,
+executor ×2, loop_nesting, shell_state ×2, mass 833) plus two small clusters; filed as
+rush-apz rather than fixed inline, since extracting the seam is its own design decision.
+Wiring note: a second top-level module in the Rakefile trips Style/OneClassPerFile — the
+gates live in tasks/complexity.rake, loaded like compile.rake and docker.rake.

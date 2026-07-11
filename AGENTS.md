@@ -23,9 +23,12 @@ EV_EXIT optimization stays parked as `rush-mv8.7`). Ruby 4.0.5 (asdf); dash at
 1. **racc compile** — regenerate the parser from `grammar/shell.y`
 2. **rubocop** (style/static checks; config in `.rubocop.yml`)
 3. **reek** (code-smell ratchet; config + rationale in `.reek.yml`)
-4. **steep** (RBS type-check gate; config in `Steepfile`)
-5. **sorbet** (inline `sig {}` type-check gate; config in `sorbet/config`)
-6. **rspec** (+ SimpleCov coverage gate; 100% meaningful coverage is the target,
+4. **flay / flog** (structural-duplication and per-method complexity
+   ratchets; thresholds in `tasks/complexity.rake`, baseline-pinned, only
+   lowered)
+5. **steep** (RBS type-check gate; config in `Steepfile`)
+6. **sorbet** (inline `sig {}` type-check gate; config in `sorbet/config`)
+7. **rspec** (+ SimpleCov coverage gate; 100% meaningful coverage is the target,
    not a design-at-any-cost rule)
 
 ```bash
