@@ -5,8 +5,14 @@
 # the public port's typed surface.
 module Rush
   class SystemCalls
-    sig { params(env: T::Hash[String, String], argv: T::Array[String], options: T.untyped).returns(Integer) }
-    def spawn(env, argv, options); end
+    sig do
+      params(file: String, env: T::Hash[String, String], argv: T::Array[String], options: T.untyped)
+        .returns(Integer)
+    end
+    def spawn(file, env, argv, options); end
+
+    sig { returns(String) }
+    def default_path; end
 
     sig { params(pid: Integer).returns([Integer, Process::Status]) }
     def waitpid2(pid); end

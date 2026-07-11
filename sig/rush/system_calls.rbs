@@ -7,9 +7,17 @@ module Rush
     include ProcessIdentity
     include ProcessControl
 
-    # Run argv as an external program. The [cmd, argv0] form forbids the shell
-    # path even for a single-word command, so `spawn` never re-interprets words.
-    def spawn: (Hash[String, String] env, Array[String] argv, untyped options) -> Integer
+    # Run `file` as an external program with argv.first as the child's argv[0]
+    # — for the ordinary $PATH search the caller passes the bare command name
+    # as `file`; `command -p` passes its default-PATH resolution instead,
+    # without renaming the command (dash-probed via `$0`). The [cmd, argv0]
+    # form forbids the shell path even for a single-word command, so `spawn`
+    # never re-interprets words.
+    def spawn: (String file, Hash[String, String] env, Array[String] argv, untyped options) -> Integer
+
+    # The system default PATH (confstr _CS_PATH): the search path `command -p`
+    # uses, guaranteed to find the standard utilities regardless of $PATH.
+    def default_path: () -> String
 
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]
     # form forbids the shell path, like #spawn. Returns only if the exec fails.

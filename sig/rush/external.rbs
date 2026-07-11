@@ -17,6 +17,11 @@ module Rush
 
     def call: (?String? text) -> Status
 
+    # Run a pre-resolved file in place of the $PATH search on argv[0] (plain
+    # #call passes the bare name, `command -p` its default-PATH resolution);
+    # argv[0] itself still names the child, like dash.
+    def call_file: (String path, ?String? text) -> Status
+
     private
 
     def system: () -> SystemCalls

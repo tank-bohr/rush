@@ -15,7 +15,7 @@ RSpec.describe Rush::External do
 
   def capture_spawn_options
     options = nil
-    allow(system).to receive(:spawn) do |_env, _argv, opts|
+    allow(system).to receive(:spawn) do |_file, _env, _argv, opts|
       options = opts
       11
     end
@@ -63,6 +63,20 @@ RSpec.describe Rush::External do
     options = capture_spawn_options
     run(%w[prog])
     expect(options.call).not_to include(:pgroup)
+  end
+
+  it 'spawns the bare name for a plain call and a pre-resolved file for call_file (command -p)' do
+    allow(system).to receive(:spawn).and_return(11)
+    allow(jobs).to receive(:await).with(11).and_return(Rush::Status.success)
+    described_class.new(executor, %w[prog a], io, {}).call
+    described_class.new(executor, %w[prog a], io, {}).call_file('/default/bin/prog')
+    expect(system).to have_received(:spawn).with('prog', {}, %w[prog a], anything).ordered
+    expect(system).to have_received(:spawn).with('/default/bin/prog', {}, %w[prog a], anything).ordered
+  end
+
+  it 'translates a call_file exec failure like a plain call (126 on EACCES)' do
+    allow(system).to receive(:spawn).and_raise(Errno::EACCES)
+    expect(described_class.new(executor, %w[prog], io, {}).call_file('/default/bin/prog').exitstatus).to eq(126)
   end
 
   it 'returns 127 and a message when the program is not found' do

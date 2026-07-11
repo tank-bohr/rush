@@ -1930,3 +1930,31 @@ pre-existing and out of scope: prefix assignments (`IFS=: read x y`) are
 invisible to the builtin — all 10 diffs in the 87-probe matrix are that seam
 (worth a bead). Verified: 77/87 probes match dash, 22 new corpus lines, full
 rake green.
+
+### command -p searches the standard's PATH, not dash's, and the child keeps its name (rush-no1.5)
+`command -p true` exited 127 because the builtin only understood a literal
+leading `-v`/`-V`; `-p`, clusters (`-pv`), `--` and illegal letters all fell
+through to "run an external named -pv". The rewrite splits parsing into
+CommandOptions — leading `-p/-v/-V` clusters, `--` terminator, first bad
+letter recorded as `illegal` (rc 2, "Illegal option -z", non-aborting: probed
+that dash continues after it) — and threads `-p` as a search-path override,
+never a mutation: CommandLookup takes an optional `path:` that replaces
+$PATH in its file resolver only, so `-p -v f` still reports a function and
+`-p echo` still runs the builtin (probed: -p moves *only* the file search).
+Execution resolves through the new public CommandLookup#executable_path
+against SystemCalls#default_path = Etc.confstr(Etc::CS_PATH). Two probed
+subtleties shaped the port: dash leaves the child's PATH env untouched
+(`command -p sh -c 'echo $PATH'` shows the original), so no env merging; and
+the child's argv[0] stays the name as typed (`command -p dash -c 'echo $0'`
+prints `dash`), so spawn became spawn(file, env, argv, options) — plain
+External#call passes the bare name (kernel $PATH search as before),
+External#call_file passes the pre-resolved file. The reek gauntlet rejected
+every coalescing shortcut (`exec_path || argv.first` is a ControlParameter;
+a separate spawn_file was the third (env, argv, options) DataClump) and the
+explicit-file signature it forced is genuinely better. Divergences: dash
+resolves -p against a compiled-in defpath (/usr/sbin/ls here) where POSIX
+says the confstr value (/bin/ls) — standard wins, pinned in a unit spec and
+kept out of the corpus; and bare `command -v`/`-V` exited 127 in rush but 0
+in dash (never probed when -v landed) — realigned to the oracle. A 47-probe
+matrix matches dash on [stdout, exitstatus] except those pinned path
+strings; 18 new corpus lines; full rake green.

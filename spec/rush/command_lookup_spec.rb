@@ -74,6 +74,17 @@ RSpec.describe Rush::CommandLookup do
     expect(lookup.describe('if')).to eq('if is a shell keyword')
   end
 
+  it 'searches an explicit path override instead of $PATH (command -p)' do
+    system.register('/default/bin/tool', executable: true)
+    override = described_class.new(executor, path: '/default/bin')
+    expect([override.find('tool').terse, lookup.find('tool').known?]).to eq(['/default/bin/tool', false])
+  end
+
+  it 'resolves an executable path directly, bypassing the name resolvers' do
+    system.register('/usr/bin/if', executable: true)
+    expect([lookup.executable_path('if'), lookup.executable_path('nope_zzz')]).to eq(['/usr/bin/if', nil])
+  end
+
   it 'caches only executable matches' do
     system.register('/usr/bin/ls', executable: true)
     cache = {}

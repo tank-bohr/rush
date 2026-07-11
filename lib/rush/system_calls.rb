@@ -19,10 +19,22 @@ module Rush
     include ProcessControl
     include ResourceLimits
 
-    # Run argv as an external program. The [cmd, argv0] form forbids the shell
-    # path even for a single-word command, so `spawn` never re-interprets words.
-    def spawn(env, argv, options)
-      Process.spawn(env, [argv.first, argv.first], *argv.drop(1), options)
+    # Run `file` as an external program with argv.first as the child's argv[0]
+    # — for the ordinary $PATH search the caller passes the bare command name
+    # as `file`; `command -p` passes its default-PATH resolution instead,
+    # without renaming the command (dash-probed via `$0`). The [cmd, argv0]
+    # form forbids the shell path even for a single-word command, so `spawn`
+    # never re-interprets words.
+    def spawn(file, env, argv, options)
+      Process.spawn(env, [file, argv.first], *argv.drop(1), options)
+    end
+
+    # The system default PATH (confstr _CS_PATH): the search path `command -p`
+    # uses, guaranteed to find the standard utilities regardless of $PATH.
+    # POSIX defines _CS_PATH on every system; the coalesce only satisfies
+    # confstr's nilable signature.
+    def default_path
+      Etc.confstr(Etc::CS_PATH) || ''
     end
 
     # Replace the current process image (the `exec` builtin); the [cmd, argv0]

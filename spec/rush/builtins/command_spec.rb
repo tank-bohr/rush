@@ -17,8 +17,9 @@ RSpec.describe Rush::Builtins::Command do
     expect(system.stdout.string).to eq("echo\n/usr/bin/ls\n")
   end
 
-  it 'fails with 127 for -v of an unknown or missing name' do
-    expect([run('-v', 'nope_zzz').exitstatus, run('-v').exitstatus]).to eq([127, 127])
+  it 'fails with 127 for -v of an unknown name but exits 0 quietly with no operand (dash-probed)' do
+    expect([run('-v', 'nope_zzz').exitstatus, run('-v').exitstatus]).to eq([127, 0])
+    expect(system.stdout.string).to be_empty
   end
 
   it 'describes a name verbosely with -V like type does' do
@@ -26,10 +27,63 @@ RSpec.describe Rush::Builtins::Command do
     expect(system.stdout.string).to eq("echo is a shell builtin\n")
   end
 
-  it 'reports not found for -V of an unknown or missing name with status 127' do
+  it 'reports not found for -V of an unknown name with 127 but exits 0 with no operand (dash-probed)' do
     expect(run('-V', 'nope_zzz').exitstatus).to eq(127)
-    expect(run('-V').exitstatus).to eq(127)
-    expect(system.stdout.string).to eq("nope_zzz: not found\n: not found\n")
+    expect(run('-V').exitstatus).to eq(0)
+    expect(system.stdout.string).to eq("nope_zzz: not found\n")
+  end
+
+  # dash resolves -p against its compiled-in default path; POSIX.1-2017 says
+  # the default PATH is the confstr _CS_PATH value, so rush pins the standard:
+  # the port's default_path (the fake answers /default/bin) wins over $PATH.
+  it 'searches the default PATH for -v under -p, whatever the cluster shape' do
+    system.register('/usr/bin/ls', executable: true)
+    system.register('/default/bin/ls', executable: true)
+    expect([run('-p', '-v', 'ls'), run('-pv', 'ls'), run('-vp', 'ls')]).to all(be_success)
+    expect(system.stdout.string).to eq("/default/bin/ls\n" * 3)
+  end
+
+  it 'still reports functions and builtins under -p -v (dash-probed: -p only moves the file search)' do
+    state.functions.define('f', Rush::AST::SimpleCommand.new([], [], []))
+    expect([run('-pv', 'f'), run('-pv', 'echo')]).to all(be_success)
+    expect(system.stdout.string).to eq("f\necho\n")
+  end
+
+  it 'describes verbosely under -pV, and -V outranks -v in either order (dash-probed)' do
+    run('-pV', 'echo')
+    run('-v', '-V', 'echo')
+    run('-V', '-v', 'echo')
+    expect(system.stdout.string).to eq("echo is a shell builtin\n" * 3)
+  end
+
+  it 'runs a builtin under -p regardless of the default path' do
+    expect(run('-p', 'echo', 'hi')).to be_success
+    expect(system.stdout.string).to eq("hi\n")
+  end
+
+  it 'executes an external resolved on the default PATH under -p, keeping its name as argv[0]' do
+    system.register('/default/bin/prog', executable: true)
+    external = instance_double(Rush::External, call_file: Rush::Status.success)
+    allow(Rush::External).to receive(:new).and_return(external)
+    expect(run('-p', 'prog', 'a')).to be_success
+    expect(Rush::External).to have_received(:new).with(executor, %w[prog a], io, kind_of(Hash))
+    expect(external).to have_received(:call_file).with('/default/bin/prog')
+  end
+
+  it 'fails with 127 under -p when the command lives only on $PATH, not the default one' do
+    system.register('/usr/bin/onlyhere', executable: true)
+    expect(run('-p', 'onlyhere').exitstatus).to eq(127)
+    expect(system.stderr.string).to eq("rush: onlyhere: not found\n")
+  end
+
+  it 'rejects an unknown option letter with status 2, like dash' do
+    expect([run('-z', 'echo').exitstatus, run('-pz', 'echo').exitstatus]).to eq([2, 2])
+    expect(system.stderr.string).to eq("rush: command: Illegal option -z\n" * 2)
+  end
+
+  it 'stops option parsing at --, treating what follows as the command' do
+    expect(run('--', 'echo', 'hi')).to be_success
+    expect(system.stdout.string).to eq("hi\n")
   end
 
   it 'runs a builtin, bypassing a shadowing function' do

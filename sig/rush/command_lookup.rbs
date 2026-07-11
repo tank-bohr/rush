@@ -3,10 +3,14 @@ module Rush
   # function, a special or regular builtin, or an executable file found by
   # searching PATH (or used directly when the name contains a slash). #find runs
   # an ordered list of resolvers and returns the first Match (Unknown if none).
+  # An explicit `path:` replaces $PATH for the file search — `command -p` passes
+  # the system default PATH through it.
   class CommandLookup
     extend T::Sig
 
     @executor: Executor
+
+    @path: String?
 
     KEYWORDS: Array[String]
 
@@ -83,7 +87,7 @@ module Rush
       def cache_into: (::Hash[untyped, untyped] cache) -> void
     end
 
-    def initialize: (Executor executor) -> void
+    def initialize: (Executor executor, ?path: String?) -> void
 
     # The Match for a name (Unknown if it resolves to nothing). An alias outranks
     # a function/builtin but not a reserved word; a PATH/slash file is the last
@@ -92,6 +96,12 @@ module Rush
 
     # The `type`/`command -V` description line for a name, or nil if unknown.
     def describe: (String? name) -> String?
+
+    # The executable file for a name on the search path (the name itself when
+    # it contains a slash), or nil. Public as well as feeding #find's file
+    # resolver: `command -p` resolves an external through it without the
+    # keyword/function/builtin layers, which that builtin handles separately.
+    def executable_path: (String name) -> String?
 
     private
 
@@ -111,12 +121,12 @@ module Rush
 
     def functions: () -> FunctionTable
 
-    def path_of: (String name) -> String?
-
     def join: (String dir, String name) -> String
 
     def executable?: (String path) -> bool
 
     def dirs: () -> Array[String]
+
+    def search_path: () -> String
   end
 end

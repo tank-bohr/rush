@@ -1,0 +1,54 @@
+module Rush
+  module Builtins
+    # The parsed option prefix of the `command` builtin's argv: leading
+    # clusters of -p / -v / -V letters (repeats accumulate; -V outranks -v,
+    # as in dash), an optional `--` terminator, then the operands. A letter
+    # outside the set is recorded as `illegal` (e.g. '-z'), which `command`
+    # reports with status 2; `+x` or a lone `-` is an operand, not options.
+    class CommandOptions
+      extend T::Sig
+
+      @args: Array[String]
+
+      @flags: Array[Symbol]
+
+      LETTERS: ::Hash[String, Symbol]
+
+      # A dash followed by letters, except the bare `--` terminator (a lone
+      # dash or a +cluster is an operand — dash-probed).
+      CLUSTER: Regexp
+
+      attr_reader operands: Array[String]
+
+      attr_reader illegal: String?
+
+      def initialize: (Array[String] args) -> void
+
+      def name: () -> String?
+
+      def default_path?: () -> bool
+
+      def verify?: () -> bool
+
+      def verbose?: () -> bool
+
+      private
+
+      def consume: () -> Array[String]
+
+      def count_clusters: () -> Integer
+
+      def take: (Integer index) -> bool
+
+      def cluster?: (Integer index) -> bool
+
+      def arg_at: (Integer index) -> String
+
+      # The letter's flag (feeding take's all?-driven cluster scan), nil once
+      # the letter proves illegal.
+      def record: (String letter) -> Symbol?
+
+      def record_illegal: (String letter) -> nil
+    end
+  end
+end

@@ -1,9 +1,12 @@
 module Rush
   module Builtins
-    # `command name [arg ...]` runs name as a command, skipping shell functions
-    # (so a function can call the builtin it shadows). `command -v name` prints
-    # how name resolves — the name itself for a keyword/function/builtin, or the
-    # PATH for an external — and exits 127 when it is unknown.
+    # `command [-p] name [arg ...]` runs name as a command, skipping shell
+    # functions (so a function can call the builtin it shadows); -p searches
+    # the system default PATH (confstr _CS_PATH) for an external instead of
+    # $PATH, without changing the child's environment. `command -v name`
+    # prints how name resolves — the name itself for a keyword / function /
+    # builtin, the path for an external — and -V the long `type` form; both
+    # exit 127 for an unknown name, 0 with no operand, and -V outranks -v.
     class Command < Base
       extend T::Sig
 
@@ -11,19 +14,42 @@ module Rush
 
       private
 
-      def verify: (String? name) -> Status
+      def dispatch: (CommandOptions opts) -> Status
 
-      def verbose: (String? name) -> Status
+      # dash exits 0 for a bare `command`, `command -v` and `command -V` alike
+      # (probed); the bare run form is the colon builtin's no-op.
+      def no_name: (CommandOptions opts) -> Status
 
-      def run: (Array[String] args) -> Status
+      def verify: (CommandOptions opts) -> Status
 
-      def build_command: (Array[String] args) -> (Base | External)
+      def print_terse: (CommandLookup::Match match) -> Status
 
-      def build_named_command: (Array[String] args) -> (Base | External)
+      def verbose: (CommandOptions opts) -> Status
 
-      def build_named_command_from_builtin: (Array[String] args, _BuiltinClass? builtin) -> (Base | External)
+      def print_description: (String name, CommandLookup::Match match) -> Status
+
+      def not_described: (String name) -> Status
+
+      def lookup: (CommandOptions opts) -> CommandLookup
+
+      def default_lookup: () -> CommandLookup
+
+      def run: (CommandOptions opts) -> Status
+
+      def run_builtin: (_BuiltinClass builtin, CommandOptions opts) -> Status
+
+      def run_external: (String name, CommandOptions opts) -> Status
+
+      # The default-PATH resolution happens here in the shell (dash does the
+      # same): the resolved file is executed while argv[0] stays the name as
+      # typed, and $PATH is neither consulted nor mutated.
+      def run_on_default_path: (String name, External external) -> Status
+
+      def not_found: (String name) -> Status
 
       def exported_env: () -> ::Hash[String, String]
+
+      def illegal_option: (String letter) -> Status
     end
   end
 end

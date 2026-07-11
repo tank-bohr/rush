@@ -6,8 +6,21 @@ RSpec.describe Rush::SystemCalls do
   describe '#spawn' do
     it 'execs argv without a shell using the [cmd, argv0] form' do
       allow(Process).to receive(:spawn).and_return(99)
-      expect(system.spawn({ 'A' => '1' }, %w[ls -l], {})).to eq(99)
+      expect(system.spawn('ls', { 'A' => '1' }, %w[ls -l], {})).to eq(99)
       expect(Process).to have_received(:spawn).with({ 'A' => '1' }, %w[ls ls], '-l', {})
+    end
+
+    it 'execs an explicit file while argv[0] keeps the command name (command -p)' do
+      allow(Process).to receive(:spawn).and_return(99)
+      system.spawn('/bin/ls', {}, %w[ls -l], {})
+      expect(Process).to have_received(:spawn).with({}, ['/bin/ls', 'ls'], '-l', {})
+    end
+  end
+
+  describe '#default_path' do
+    it 'asks confstr for the system default PATH (the command -p search path)' do
+      allow(Etc).to receive(:confstr).with(Etc::CS_PATH).and_return('/bin:/usr/bin')
+      expect(system.default_path).to eq('/bin:/usr/bin')
     end
   end
 

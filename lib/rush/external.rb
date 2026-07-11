@@ -25,7 +25,15 @@ module Rush
     # parent, so 2>/dev/null suppresses its printsignal there too — probed).
     sig { params(text: T.nilable(String)).returns(Status) }
     def call(text = nil)
-      pid = system.spawn(@env, @argv, spawn_options)
+      call_file(T.must(@argv.first), text)
+    end
+
+    # Run a pre-resolved file in place of the $PATH search on argv[0] (plain
+    # #call passes the bare name, `command -p` its default-PATH resolution);
+    # argv[0] itself still names the child, like dash.
+    sig { params(path: String, text: T.nilable(String)).returns(Status) }
+    def call_file(path, text = nil)
+      pid = system.spawn(path, @env, @argv, spawn_options)
       status = @executor.job_control.foreground([pid], text: text) { @executor.jobs.await(pid) }
       SignalReport.report(status, @io.get(2))
     rescue Errno::ENOENT, Errno::EACCES => e

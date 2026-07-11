@@ -328,6 +328,20 @@ RSpec.describe 'rush vs dash (differential language corpus)' do
     'command -v ls',
     'f() { :; }; command -v f',
     'command -v nosuchcmd_zzz; echo "rc=$?"',
+    'command -v; echo "rc=$?"',
+    'command -p true; echo "rc=$?"',
+    'command -p echo hi',
+    'command -p cd /tmp; pwd',
+    'command -p nosuchcmd_zzz; echo "rc=$?"',
+    'command -pv nosuchcmd_zzz; echo "rc=$?"',
+    'command -p -v true',
+    'f() { :; }; command -p -v f',
+    'command -p -- echo hi',
+    'PATH=/nonexistent; command -p ls /usr/bin/dash; echo "rc=$?"',
+    'PATH=/nonexistent; command ls; echo "rc=$?"',
+    'command - echo hi; echo "rc=$?"',
+    'command +v ls; echo "rc=$?"',
+    'command -z echo; echo "rc=$?"',
     'echo() { echo no; }; command echo hi',
     'cd() { echo CDFUNC; }; cd /tmp; echo after',
     'cd /tmp; cd -; pwd',
@@ -338,7 +352,10 @@ RSpec.describe 'rush vs dash (differential language corpus)' do
     'command -V echo',
     'command -V set',
     'command -V if',
-    'command -V nosuch_zz; echo "rc=$?"'
+    'command -V nosuch_zz; echo "rc=$?"',
+    'command -V; echo "rc=$?"',
+    'command -pV echo',
+    'command -v -V echo; command -V -v echo'
   ].freeze
 
   corpus.each.with_index(1) do |snippet, index|

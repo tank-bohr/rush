@@ -166,6 +166,12 @@ class FakeSystemCalls
     @homes.fetch(name, nil)
   end
 
+  # The fixed default PATH `command -p` searches (the real port asks confstr
+  # _CS_PATH); specs register executables under /default/bin to be found by it.
+  def default_path
+    '/default/bin'
+  end
+
   # Register an in-memory node for the file-test predicates below.
   def register(path, **attrs)
     @nodes[path] = NODE_DEFAULTS.merge(attrs)

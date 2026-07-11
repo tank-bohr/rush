@@ -6,6 +6,8 @@ module Rush
   # function, a special or regular builtin, or an executable file found by
   # searching PATH (or used directly when the name contains a slash). #find runs
   # an ordered list of resolvers and returns the first Match (Unknown if none).
+  # An explicit `path:` replaces $PATH for the file search — `command -p` passes
+  # the system default PATH through it.
   class CommandLookup
     extend T::Sig
 
@@ -124,9 +126,10 @@ module Rush
       end
     end
 
-    sig { params(executor: Executor).void }
-    def initialize(executor)
+    sig { params(executor: Executor, path: T.nilable(String)).void }
+    def initialize(executor, path: nil)
       @executor = executor
+      @path = path
     end
 
     # The Match for a name (Unknown if it resolves to nothing). An alias outranks
@@ -141,6 +144,18 @@ module Rush
     sig { params(name: T.nilable(String)).returns(T.nilable(String)) }
     def describe(name)
       find(name).describe
+    end
+
+    # The executable file for a name on the search path (the name itself when
+    # it contains a slash), or nil. Public as well as feeding #find's file
+    # resolver: `command -p` resolves an external through it without the
+    # keyword/function/builtin layers, which that builtin handles separately.
+    sig { params(name: String).returns(T.nilable(String)) }
+    def executable_path(name)
+      return name if name.include?('/') && executable?(name)
+      return if name.include?('/')
+
+      dirs.map { |dir| join(dir, name) }.find { |candidate| executable?(candidate) }
     end
 
     private
@@ -175,7 +190,7 @@ module Rush
     def as_file(name)
       return unless name
 
-      path = path_of(name)
+      path = executable_path(name)
       path ? Executable.new(name, path) : nil
     end
 
@@ -187,14 +202,6 @@ module Rush
     sig { returns(FunctionTable) }
     def functions
       @executor.state.functions
-    end
-
-    sig { params(name: String).returns(T.nilable(String)) }
-    def path_of(name)
-      return name if name.include?('/') && executable?(name)
-      return if name.include?('/')
-
-      dirs.map { |dir| join(dir, name) }.find { |candidate| executable?(candidate) }
     end
 
     sig { params(dir: String, name: String).returns(String) }
@@ -209,7 +216,12 @@ module Rush
 
     sig { returns(T::Array[String]) }
     def dirs
-      (@executor.state.variables.get('PATH') || '').split(':', -1)
+      search_path.split(':', -1)
+    end
+
+    sig { returns(String) }
+    def search_path
+      @path || @executor.state.variables.get('PATH') || ''
     end
   end
 end
