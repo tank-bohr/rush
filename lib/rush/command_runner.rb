@@ -29,9 +29,15 @@ module Rush
 
     private
 
+    # POSIX 2.5.3: each xtrace line goes to stderr prefixed with the expanded
+    # PS4 (parameter expansion only — see Prompt). The standard repeats PS4's
+    # first character per level of indirection; rush's tracer has no nesting
+    # depth (and dash never repeats), so a single prefix is correct here.
     sig { params(argv: T::Array[String]).void }
     def trace(argv)
-      @executor.io.get(2).puts("+ #{argv.join(' ')}") if @executor.state.options.on?(:xtrace)
+      return unless @executor.state.options.on?(:xtrace)
+
+      @executor.io.get(2).puts("#{Prompt.new(@executor).trace}#{argv.join(' ')}")
     end
 
     # No command word: perform redirections then assignments (POSIX order), and

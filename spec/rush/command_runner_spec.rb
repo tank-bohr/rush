@@ -161,4 +161,20 @@ RSpec.describe Rush::CommandRunner do
     run(simple(words: [word('echo'), word('hello'), word('world')]))
     expect(system.stderr.string).to eq("+ echo hello world\n")
   end
+
+  it 'prefixes the trace with the expanded PS4' do
+    state.options.set(:xtrace, true)
+    state.variables.assign('n', '2')
+    state.variables.assign('PS4', '[$n] ')
+    run(simple(words: [word('echo'), word('hi')]))
+    expect(system.stderr.string).to eq("[2] echo hi\n")
+  end
+
+  it 're-reads PS4 for every trace line' do
+    state.options.set(:xtrace, true)
+    run(simple(words: [word('true')]))
+    state.variables.assign('PS4', '# ')
+    run(simple(words: [word('true')]))
+    expect(system.stderr.string).to eq("+ true\n# true\n")
+  end
 end

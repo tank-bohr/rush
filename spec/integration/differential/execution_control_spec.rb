@@ -60,6 +60,16 @@ RSpec.describe 'rush vs dash (differential execution/control corpus)' do
     'set -o pipefail; set +o | grep pipefail',
     'set -u; s=$(set +o); set +u; eval "$s"; echo "u:$-"',
     'set -o >/dev/null; set +o >/dev/null; echo rc=$?',
+    # set -x prefixes each trace line with the expanded PS4 (default '+ ';
+    # parameter expansion happens per trace line, so $? reflects the moment
+    # of tracing). Trace goes to stderr — outside the [stdout,exitstatus]
+    # model — so exec 2>&1 routes it into the comparison.
+    'exec 2>&1; set -x; echo hi',
+    'PS4="[trace] "; exec 2>&1; set -x; echo hi',
+    'X=Y; PS4="[$X] "; exec 2>&1; set -x; echo hi',
+    'V=zz; PS4="${V}> "; exec 2>&1; set -x; echo hi',
+    'PS4=; exec 2>&1; set -x; echo hi',
+    'PS4="[$?] "; exec 2>&1; false; set -x; echo hi',
     # pipefail changes a pipeline's status from the last stage to the rightmost
     # non-zero stage; all-zero pipelines stay successful, +o disables it, and !
     # negates the pipefail-adjusted status.

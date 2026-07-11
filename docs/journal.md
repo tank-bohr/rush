@@ -1993,3 +1993,39 @@ rake green. Named residues: heredoc bodies inside $() still close at a bare
 `` \` `` backtick nesting, the arith evaluator accepting `$(('1'))`, unquoted
 expansion eating backslashes, and `$(esac)` exiting 0 (cmd-sub bodies re-parse
 at expansion) all predate this slice and are noted for follow-up beads.
+
+### PS4 reaches the tracer, and exec 2>&1 smuggles stderr into the corpus (rush-no1.8)
+CommandRunner#trace hardcoded '+ '; POSIX 2.5.3 says each xtrace line is
+prefixed with the *expanded* PS4. The vehicle already existed: Prompt gained a
+third method — trace = render('PS4', '+ ') — so PS4 gets exactly the PS1/PS2
+treatment: re-read per trace line, ParamText (parameter expansion ONLY),
+render-time default, raw-string fallback on malformed values. Startup
+inheritance is free since Environment seeds from ENV. Probing dash found three
+divergences, adjudicated standard-over-dash and pinned in unit specs — and the
+adversarial verifier then corrected the first two readings, a lesson in
+itself: probe the *side effects*, not just the prefix (PS4='`touch /tmp/f` '
+proves dash never runs the command). First: dash does NOT execute
+substitutions in PS4 — it strips backticks unexecuted, errors $(cmd) back to
+the raw string, and genuinely expands only $((arith)); rush keeps all three
+literal per POSIX 2.5.3's parameter-expansion-only wording, which doubles as
+the recursion-safety guarantee. Second: a failing ${x?} in PS4 does not kill
+dash either — it prints a per-line diagnostic and falls back to the raw
+string (rc 0); rush's raw-string fallback is the same policy minus the
+diagnostic (stderr, outside the model). A backslash divergence is real and
+pinned: dash honors \$ as an escape during prompt expansion, ParamText keeps
+the backslash literal and expands anyway — POSIX is silent, PS1/PS2/ENV share
+the treatment.
+Third: dash initializes PS1/PS2/PS4 as *set* variables at startup ('${PS4-U}'
+prints '+ '), so explicit `unset PS4` there yields an empty prefix; rush stays
+with render-time defaults (unset → '+ '), consistent with its existing PS1/PS2
+shape. The standard's "first character repeated per level of indirection"
+needs a nesting-depth concept rush's single trace site doesn't have — and dash
+never repeats — so a single prefix is documented as correct, not simulated.
+The pleasant discovery: stderr is outside the differential model, but
+`exec 2>&1` folds trace lines into stdout, so six corpus lines pin PS4
+end-to-end anyway — including 'PS4="[$?] "; ...; false; set -x; echo hi',
+which proves expansion happens per trace line, not at assignment. Known
+neighbouring gap left alone: dash traces bare assignments ('+ A=1'); rush's
+tracer only fires on commands with words — trace *content* is a separate bead
+from prefix fidelity. Verified: ~22-probe dash matrix, byte-identical stderr
+on the agreeing cases, full rake green.
