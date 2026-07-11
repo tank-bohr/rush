@@ -1,0 +1,51 @@
+module Rush
+  class Lexer
+    # Reads the body of a $( ... ) after the consumed `$(`, up to the closing
+    # `)` (POSIX 2.6.3: any valid shell script may appear inside). Plain
+    # parentheses nest; quoted strings, backslash escapes, backticks, ${...}
+    # references and `#` comments are skipped whole (ParenRegions); and a
+    # `case` pattern's unbalanced `)` (CaseTracker) does not count. The body
+    # keeps its raw spelling — it is re-parsed at expansion time.
+    class ParenReader
+      extend T::Sig
+
+      include ParenRegions
+
+      # The longest run with no syntactic weight for paren matching.
+      PLAIN: Regexp
+
+      # Which CaseTracker event each operator character raises.
+      OPERATORS: Hash[String, Symbol]
+
+      @scanner: StringScanner
+
+      @tracker: CaseTracker
+
+      @word_start: bool
+
+      def initialize: (StringScanner scanner) -> void
+
+      def read: () -> String
+
+      private
+
+      def step: () -> String
+
+      def blank: () -> String?
+
+      def word: () -> String?
+
+      def punct: () -> String?
+
+      def semi: () -> String?
+
+      def dsemi: () -> String
+
+      def operator: () -> String?
+
+      def open_paren: () -> String?
+
+      def closer: () -> String
+    end
+  end
+end

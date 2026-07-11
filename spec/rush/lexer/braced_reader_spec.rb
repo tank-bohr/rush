@@ -73,6 +73,10 @@ RSpec.describe Rush::Lexer::BracedReader do
   end
 
   it 'raises on a trailing backslash' do
-    expect { read('a:-\\') }.to raise_error(Rush::ParseError, /unterminated \$\{/)
+    expect { read('a:-\\') }.to raise_error(Rush::ParseError, /unterminated escape/)
+  end
+
+  it 'skips a command substitution nested inside double quotes whole' do
+    expect(read('a:-"$(echo ")")"}r')).to eq(['a:-"$(echo ")")"', 'r'])
   end
 end

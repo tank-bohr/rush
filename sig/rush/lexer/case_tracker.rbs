@@ -1,0 +1,77 @@
+module Rush
+  class Lexer
+    # Tracks paren depth and `case` constructs inside a $( ... ) body so
+    # ParenReader can tell a pattern-terminating `)` (POSIX case_item — not
+    # paren-balanced) from a `)` that counts toward closing the substitution.
+    # ParenReader feeds it words and operator events; each open construct is
+    # a CaseFrame advancing :case_word → :await_in → :pattern ⇄ :body until
+    # `esac` pops it.
+    class CaseTracker
+      extend T::Sig
+
+      # Keyword words at a command position.
+      KEYWORDS: Hash[String, Symbol]
+
+      # Reserved words that keep the next word at a command position.
+      CONTINUERS: Array[String]
+
+      # What a CaseFrame word directive means to the frame stack.
+      DIRECTIVES: Hash[Symbol, Symbol]
+
+      @frames: Array[CaseFrame]
+
+      @command: bool
+
+      @depth: Integer
+
+      def initialize: () -> void
+
+      def open?: () -> bool
+
+      def word: (String text) -> void
+
+      def separator: () -> void
+
+      # dash rejects a newline between a pattern word and its `)` at parse
+      # time; abandoning the frame lets the next `)` close the substitution,
+      # so the invalid construct fails at the re-parse, as it does in dash.
+      def newline: () -> void
+
+      # After a redirection operator the next word is a target, not a command.
+      def redirect: () -> void
+
+      def dsemi: () -> void
+
+      def open_paren: () -> void
+
+      # True when the just-read `)` stays in the body: either it terminates a
+      # case pattern (swallowed, not counted) or it closes a nested paren.
+      # False only for the `)` that ends the substitution.
+      def close_paren?: () -> bool
+
+      private
+
+      def frame: () -> CaseFrame?
+
+      def state: () -> Symbol
+
+      def pattern_close?: () -> bool
+
+      # A grouped pattern `(x)` closing back to its base depth enters the
+      # item's body.
+      def finish_group: () -> void
+
+      def enter_body: () -> void
+
+      def command_word: (String text) -> void
+
+      def noop: () -> void
+
+      def pop_frame: () -> void
+
+      def open_case: () -> void
+
+      def close_case: () -> void
+    end
+  end
+end

@@ -4,8 +4,9 @@
 module Rush
   class Lexer
     # Reads the raw body of a command substitution from the shared scanner:
-    # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
-    # The body is re-parsed and executed at expansion time.
+    # $( ... ) up to the matching quote-aware `)` (via ParenReader), or
+    # ` ... ` up to the next backtick. The body is re-parsed and executed at
+    # expansion time.
     class SubstitutionReader
       extend T::Sig
 
@@ -19,8 +20,7 @@ module Rush
 
       sig { returns(String) }
       def parens
-        @depth = 1
-        (+'').tap { |body| body << paren_char until @depth.zero? }
+        ParenReader.new(@scanner).read
       end
 
       sig { returns(String) }
@@ -71,20 +71,6 @@ module Rush
         raise(ParseError, 'arithmetic: malformed') unless @scanner.scan(')')
 
         nil
-      end
-
-      sig { returns(String) }
-      def paren_char
-        unit = @scanner.getch
-        raise IncompleteInput, 'unterminated $(' unless unit
-
-        adjust(unit)
-        @depth.zero? ? '' : unit
-      end
-
-      sig { params(unit: String).void }
-      def adjust(unit)
-        @depth += DEPTH_DELTA.fetch(unit, 0)
       end
     end
   end

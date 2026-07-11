@@ -35,4 +35,11 @@ RSpec.describe Rush::Lexer::SubstitutionReader do
   it 'raises a ParseError when the arithmetic body is malformed' do
     expect { reader('1 + 2) x').arithmetic }.to raise_error(Rush::ParseError, /malformed/)
   end
+
+  # The arithmetic reader stays quote-blind by design: POSIX arithmetic has
+  # no string syntax, and dash also rejects quotes here, so a `)` inside
+  # quotes still counts. Both shells end with empty stdout and status 2.
+  it 'counts a quoted paren in an arithmetic body (dash errors here too)' do
+    expect { reader('"a)b"))').arithmetic }.to raise_error(Rush::ParseError)
+  end
 end

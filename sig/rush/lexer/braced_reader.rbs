@@ -9,7 +9,8 @@ module Rush
     # spelling — the operator word is re-scanned at expansion time.
     class BracedReader
       extend T::Sig
-      include ScannerPredicates
+
+      include QuoteSkips
 
       # The literal run per context: a quoted ${...} keeps ' ordinary.
       PLAIN: Hash[bool, Regexp]
@@ -30,15 +31,8 @@ module Rush
 
       def special: () -> String
 
-      def must_char: () -> String
-
-      def single: () -> String
-
-      def double: () -> String
-
-      def double_chunk: () -> String
-
-      def double_escape: () -> String
+      # The unterminated-input error the call site configured.
+      def error_class: () -> singleton(ParseError)
 
       # The only characters that reach here are `$` and end of input. After a
       # live `$`: `${` opens a nested reference, `$(` a substitution; a `$`

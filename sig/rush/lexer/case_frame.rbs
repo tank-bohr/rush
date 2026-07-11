@@ -1,0 +1,67 @@
+module Rush
+  class Lexer
+    # One open `case` construct inside a $( ... ) body: the paren depth it
+    # opened at, its position in the grammar — :case_word (subject expected),
+    # :await_in (the `in` word expected), :pattern, :body — and whether the
+    # current pattern opened with the optional `(` group, whose balanced
+    # close also enters the item's body.
+    class CaseFrame
+      extend T::Sig
+
+      # The per-state handler for a word before the construct's first body.
+      FRAME_WORDS: Hash[Symbol, Symbol]
+
+      # Only the word `in` moves a subject to its first pattern.
+      AFTER_SUBJECT: Hash[String, Symbol]
+
+      # `esac` in pattern position asks the tracker to pop the construct.
+      POPS: Hash[String, Symbol]
+
+      @base: Integer
+
+      @state: Symbol
+
+      @marked: bool
+
+      @grouped: bool
+
+      attr_reader state: Symbol
+
+      def initialize: (Integer base) -> void
+
+      def at?: (Integer depth) -> bool
+
+      # The directive (:pop or :none) for a word seen before the body state.
+      def word: (String text) -> Symbol
+
+      def body: () -> void
+
+      # A `(` before any pattern word opens the grouped `(pattern)` form.
+      def group: (Integer depth) -> void
+
+      def pattern?: (Integer depth) -> bool
+
+      # A pattern that already has words: a newline here is dash's parse error.
+      def marked_pattern?: (Integer depth) -> bool
+
+      def grouped?: (Integer depth) -> bool
+
+      # `;;` reopens pattern position for the next case item.
+      def reopen: (Integer depth) -> void
+
+      private
+
+      # The word after `case` is its subject, whatever it spells.
+      def subject_word: (String _text) -> Symbol
+
+      def in_word: (String text) -> Symbol
+
+      # A pattern word was seen: a following `(` is no longer the group form.
+      def pattern_word: (String text) -> Symbol
+
+      def body_at?: (Integer depth) -> bool
+
+      def pattern_start?: (Integer depth) -> bool
+    end
+  end
+end

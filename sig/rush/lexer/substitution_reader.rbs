@@ -1,8 +1,9 @@
 module Rush
   class Lexer
     # Reads the raw body of a command substitution from the shared scanner:
-    # $( ... ) with balanced parentheses, or ` ... ` up to the next backtick.
-    # The body is re-parsed and executed at expansion time.
+    # $( ... ) up to the matching quote-aware `)` (via ParenReader), or
+    # ` ... ` up to the next backtick. The body is re-parsed and executed at
+    # expansion time.
     class SubstitutionReader
       extend T::Sig
 
@@ -31,10 +32,6 @@ module Rush
       def adjust_arithmetic: (String? token) -> String?
 
       def arith_close: () -> String?
-
-      def paren_char: () -> String
-
-      def adjust: (String unit) -> void
     end
   end
 end

@@ -12,7 +12,7 @@ module Rush
     # spelling — the operator word is re-scanned at expansion time.
     class BracedReader
       extend T::Sig
-      include ScannerPredicates
+      include QuoteSkips
 
       # The literal run per context: a quoted ${...} keeps ' ordinary.
       PLAIN = { false => /[^}$\\'"`]+/, true => /[^}$\\"`]+/ }.freeze
@@ -49,37 +49,10 @@ module Rush
         dollar
       end
 
-      sig { returns(String) }
-      def must_char
-        @scanner.getch || raise(@error, 'unterminated ${')
-      end
-
-      sig { returns(String) }
-      def single
-        body = @scanner.scan(/[^']*/)
-        raise @error, 'unterminated single quote' unless @scanner.scan("'")
-
-        "'#{body}'"
-      end
-
-      sig { returns(String) }
-      def double
-        body = +'"'
-        body << double_chunk until peek?('"')
-        @scanner.getch
-        body << '"'
-      end
-
-      sig { returns(String) }
-      def double_chunk
-        @scanner.scan(/[^"\\]+/) || double_escape
-      end
-
-      sig { returns(String) }
-      def double_escape
-        raise @error, 'unterminated double quote' unless @scanner.scan('\\')
-
-        "\\#{must_char}"
+      # The unterminated-input error the call site configured.
+      sig { override.returns(T.class_of(ParseError)) }
+      def error_class
+        @error
       end
 
       # The only characters that reach here are `$` and end of input. After a

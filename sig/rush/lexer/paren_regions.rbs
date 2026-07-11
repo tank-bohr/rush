@@ -1,0 +1,43 @@
+module Rush
+  class Lexer
+    # The skip-whole regions of a $( ... ) body (ParenReader's mixin): quoted
+    # strings, backslash escapes, backticks, ${...} references, and `#`
+    # comments. A region reads as one ordinary — never keyword — word to the
+    # CaseTracker, and its text returns with the delimiters so the body keeps
+    # its raw spelling for the expansion-time re-parse.
+    module ParenRegions
+      extend T::Sig
+
+      include QuoteSkips
+
+      @scanner: StringScanner
+
+      @tracker: CaseTracker
+
+      @word_start: bool
+
+      private
+
+      def region: () -> String?
+
+      def squote: () -> String?
+
+      def dquote: () -> String?
+
+      def backtick: () -> String?
+
+      def escape: () -> String?
+
+      def dollar: () -> String?
+
+      def braced: () -> String
+
+      # A `#` at the start of a word begins a comment running to the line
+      # end (kept raw, so a `)` inside it does not count); mid-word it is an
+      # ordinary character.
+      def comment: () -> String?
+
+      def skipped: (String text) -> String
+    end
+  end
+end

@@ -1958,3 +1958,38 @@ kept out of the corpus; and bare `command -v`/`-V` exited 127 in rush but 0
 in dash (never probed when -v landed) — realigned to the oracle. A 47-probe
 matrix matches dash on [stdout, exitstatus] except those pinned path
 strings; 18 new corpus lines; full rake green.
+
+### Command substitution learns real $( ) scanning: quotes, comments, and the case hack (rush-no1.9)
+SubstitutionReader#parens counted raw parens, so `$(echo ")")` died with
+unterminated double quote where dash prints `)` — and since
+BracedReader#substitution and HeredocBody reuse #parens, `${a:-$(echo "})")}`
+and heredoc bodies broke the same way. The fix is a real scanner: ParenReader
+walks the body per POSIX 2.6.3 ("any valid shell script can be used"), in
+three pieces the gates shaped. **QuoteSkips** is BracedReader's
+single/double/escape family extracted into a shared mixin — flay sat exactly
+at its 156 ratchet, so sharing was the only move — and probing dash showed
+double quotes must recurse: `$` and backticks stay live inside `"..."`, so
+`"$(echo ")")"` skips the inner substitution whole, which transparently fixed
+the same blind spot in BracedReader itself. **Comments**: dash starts a `#`
+comment at any token start — including right after a redirect operator
+(`$(echo x>#)` hangs the paren and exits 2) — but never mid-word (`$(echo a#)`
+closes); a word-start flag the operators reset carries this. **The case
+hack**: dash accepts the unbalanced pattern paren in `$(case x in x) echo y;;
+esac)` and the standard's "any valid script" makes it mandatory, so
+CaseTracker keeps a stack of CaseFrames advancing :case_word → :await_in →
+:pattern ⇄ :body: a `)` at the construct's base depth in :pattern is swallowed
+rather than counted, a grouped `(x)` hands :pattern to :body on its balanced
+close, `;;` reopens :pattern, `esac` pops — with keyword-ness gated on a
+command-position flag that separators set, CONTINUERS (if/then/do/...) keep,
+and ordinary words clear, so `echo case`, `x=case` and `echo esac` stay words.
+reek shaped the tracker twice: ControlParameter fires on `frame&.at?(depth)`
+in a condition though a plain `at?(depth)` passes, and DataClump flagged the
+(text, depth) threading — both dissolved by making the tracker own the depth
+and dispatching keywords through registry fetches. Verified: 83 dash probes
+(75 matching; the 8 DIFFs are pre-existing residues), 37 corpus lines, full
+rake green. Named residues: heredoc bodies inside $() still close at a bare
+`)` (pinned in a unit spec); the arithmetic reader stays quote-blind by design
+(POSIX arithmetic has no strings — dash errors identically, pinned);
+`` \` `` backtick nesting, the arith evaluator accepting `$(('1'))`, unquoted
+expansion eating backslashes, and `$(esac)` exiting 0 (cmd-sub bodies re-parse
+at expansion) all predate this slice and are noted for follow-up beads.
