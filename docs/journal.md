@@ -1558,3 +1558,14 @@ Wiring note: this was the codebase's first `T.proc.void` in a sig, and steep
 type-checks sig blocks as plain Ruby against the hand-written sorbet_dsl.rbs
 stub — which knew params/returns on ProcBuilder but not void. The stub grows
 with first uses; extend it there, not with a Steepfile ignore.
+
+### The optstring becomes a value object; GetoptsParser sheds its disable (rush-37o)
+GetoptsParser sat at 109/100 because two POSIX concepts shared one class: the
+optstring operand's own semantics (a leading colon selects silent reporting,
+a trailing colon marks an argument-taking letter) and the step-parse cursor
+choreography. The optstring is now a value object — Optstring owns the
+effective letters, derives the GetoptsErrorMode, and answers valid? /
+requires_argument?; the parser walks argv against it. Same file, third class:
+getopts_parser.rb is the getopts-parsing unit the way GetoptsErrorMode already
+established. The parser is well under the cap and the third ClassLength
+disable of four is gone.

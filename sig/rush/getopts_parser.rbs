@@ -20,8 +20,31 @@ module Rush
 
   end
 
-  # Pure parser for one POSIX getopts step. It owns option-string semantics and
-  # the hidden cluster cursor; the builtin applies the returned variable updates.
+  # The getopts optstring operand (POSIX `getopts optstring name [arg...]`):
+  # a leading colon selects silent error reporting, then each option letter,
+  # `:`-suffixed when it requires an argument. Owns which letters are legal
+  # and which take arguments; the parser keeps the cursor choreography.
+  class Optstring
+    extend T::Sig
+
+    @letters: String
+
+    attr_reader error_mode: GetoptsErrorMode
+
+    def initialize: (String text) -> void
+
+    def valid?: (String option) -> bool
+
+    def requires_argument?: (String option) -> bool
+
+    private
+
+    def index: (String option) -> Integer?
+  end
+
+  # Pure parser for one POSIX getopts step. It walks the argv words and the
+  # hidden cluster cursor against the Optstring's semantics; the builtin
+  # applies the returned variable updates.
   class GetoptsParser
     extend T::Sig
 
@@ -46,9 +69,9 @@ module Rush
 
     @state: GetoptsState
 
-    @error_mode: GetoptsErrorMode
+    @optstring: Optstring
 
-    @effective_optstring: String
+    @error_mode: GetoptsErrorMode
 
     @arguments: Array[String]
 
@@ -89,11 +112,5 @@ module Rush
     def attached?: (String argument) -> bool
 
     def next_argument: () -> String?
-
-    def valid?: (String option) -> bool
-
-    def requires_argument?: (String option) -> bool
-
-    def option_index: (String option) -> Integer?
   end
 end

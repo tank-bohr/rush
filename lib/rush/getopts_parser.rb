@@ -28,9 +28,45 @@ module Rush
     end
   end
 
-  # Pure parser for one POSIX getopts step. It owns option-string semantics and
-  # the hidden cluster cursor; the builtin applies the returned variable updates.
-  class GetoptsParser # rubocop:disable Metrics/ClassLength
+  # The getopts optstring operand (POSIX `getopts optstring name [arg...]`):
+  # a leading colon selects silent error reporting, then each option letter,
+  # `:`-suffixed when it requires an argument. Owns which letters are legal
+  # and which take arguments; the parser keeps the cursor choreography.
+  class Optstring
+    extend T::Sig
+
+    sig { returns(GetoptsErrorMode) }
+    attr_reader :error_mode
+
+    sig { params(text: String).void }
+    def initialize(text)
+      @error_mode = GetoptsErrorMode.new(text.start_with?(':') ? :silent : :normal)
+      @letters = text.delete_prefix(':')
+    end
+
+    sig { params(option: String).returns(T::Boolean) }
+    def valid?(option)
+      !!(option != ':' && index(option))
+    end
+
+    sig { params(option: String).returns(T::Boolean) }
+    def requires_argument?(option)
+      position = index(option)
+      !!(position && @letters[position + 1] == ':')
+    end
+
+    private
+
+    sig { params(option: String).returns(T.nilable(Integer)) }
+    def index(option)
+      @letters.index(option)
+    end
+  end
+
+  # Pure parser for one POSIX getopts step. It walks the argv words and the
+  # hidden cluster cursor against the Optstring's semantics; the builtin
+  # applies the returned variable updates.
+  class GetoptsParser
     extend T::Sig
 
     KEEP = T.let(Object.new.freeze, Object)
@@ -42,8 +78,8 @@ module Rush
     sig { params(state: GetoptsState, optstring: String, arguments: T::Array[String], optind: Integer).void }
     def initialize(state:, optstring:, arguments:, optind:)
       @state = state
-      @error_mode = GetoptsErrorMode.new(optstring.start_with?(':') ? :silent : :normal)
-      @effective_optstring = optstring.delete_prefix(':')
+      @optstring = Optstring.new(optstring)
+      @error_mode = @optstring.error_mode
       @arguments = arguments
       @state.prepare(arguments, optind)
     end
@@ -62,8 +98,8 @@ module Rush
     sig { params(option: Option).returns(Result) }
     def dispatch(option)
       name = option.name
-      return invalid(option) unless valid?(name)
-      return argument_value(option) if requires_argument?(name)
+      return invalid(option) unless @optstring.valid?(name)
+      return argument_value(option) if @optstring.requires_argument?(name)
 
       found(name, '')
     end
@@ -102,7 +138,7 @@ module Rush
     sig { params(value: String).void }
     def consume_found(value)
       current = T.must(@state.current(@arguments))
-      return @state.consume_option(current) unless requires_argument?(@state.option(current))
+      return @state.consume_option(current) unless @optstring.requires_argument?(@state.option(current))
 
       attached_value?(current, value) ? @state.consume_attached_argument : @state.consume_detached_argument
     end
@@ -152,22 +188,6 @@ module Rush
     sig { returns(T.nilable(String)) }
     def next_argument
       @arguments[@state.current_index + 1]
-    end
-
-    sig { params(option: String).returns(T::Boolean) }
-    def valid?(option)
-      !!(option != ':' && option_index(option))
-    end
-
-    sig { params(option: String).returns(T::Boolean) }
-    def requires_argument?(option)
-      index = option_index(option)
-      !!(index && @effective_optstring[index + 1] == ':')
-    end
-
-    sig { params(option: String).returns(T.nilable(Integer)) }
-    def option_index(option)
-      @effective_optstring.index(option)
     end
   end
 end
