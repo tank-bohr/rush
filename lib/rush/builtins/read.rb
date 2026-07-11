@@ -3,10 +3,13 @@
 
 module Rush
   module Builtins
-    # `read [-r] var ...` — read a line from stdin, split it on IFS and assign the
-    # fields to the named variables (the last variable takes the remainder).
-    # Without -r a backslash escapes the next character. Returns non-zero at end
-    # of file (clearing the variables); with no variable operand it is an error.
+    # `read [-r] var ...` — read a logical line from stdin, split it on IFS and
+    # assign the fields to the named variables (the last variable takes the
+    # remainder). Without -r a backslash preserves the next character (shielding
+    # it from field splitting) and a trailing backslash continues onto the next
+    # physical line; with -r the line is taken verbatim. Returns non-zero when
+    # end of file arrives before a newline (assigning what was read); with no
+    # variable operand it is an error.
     class Read < Base
       extend T::Sig
 
@@ -14,9 +17,9 @@ module Rush
       def call
         return usage_error if names.empty?
 
-        line = stdin.gets
-        assign(cook(line))
-        line ? success : failure
+        chars, complete = ReadInput.new(stdin, raw?).call
+        assign(chars)
+        complete ? success : failure
       end
 
       private
@@ -31,19 +34,9 @@ module Rush
         raw? ? operands.drop(1) : operands
       end
 
-      sig { params(line: T.nilable(String)).returns(String) }
-      def cook(line)
-        line ? strip_escapes(line.chomp) : ''
-      end
-
-      sig { params(text: String).returns(String) }
-      def strip_escapes(text)
-        raw? ? text : text.gsub(/\\(.)/, '\1').delete_suffix('\\')
-      end
-
-      sig { params(line: String).void }
-      def assign(line)
-        fields = Expansion::ReadSplitter.new(ifs, names.size).split(line)
+      sig { params(chars: T::Array[Expansion::ReadChar]).void }
+      def assign(chars)
+        fields = Expansion::ReadSplitter.new(ifs, names.size).split(chars)
         names.each_with_index { |name, index| executor.state.variables.assign(name, fields.fetch(index)) }
       end
 

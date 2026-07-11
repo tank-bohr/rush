@@ -1,0 +1,75 @@
+module Rush
+  module Expansion
+    # The count-limited, escape-aware field scanner behind ReadSplitter — a
+    # transcription of dash's ifsbreakup(maxargs): fields split off until the
+    # variable budget is spent; the delimiter that spends it starts the
+    # remainder, which accumulates verbatim with a cut mark (dash's `r`)
+    # tracking removable trailing IFS whitespace. Escaped characters are plain
+    # content: never delimiters, they end a whitespace run (dash's region
+    # boundary) and never touch the cut mark — reproducing dash's remainder
+    # edge cases exactly (see the unit spec).
+    class ReadFieldScanner
+      extend T::Sig
+
+      # The collected fields plus the field being built, carrying dash's `r`
+      # mark: the position from which the final field's trailing text is cut.
+      class Fields
+        extend T::Sig
+
+        @done: Array[String]
+
+        @text: String
+
+        @cut: Integer?
+
+        def initialize: () -> void
+
+        def append: (String char) -> void
+
+        def empty?: () -> bool
+
+        def close: () -> void
+
+        # Records the cut position — the start of removable trailing text
+        # (dash's `r`) — keeping the earliest one until uncut clears it.
+        def cut: () -> void
+
+        def uncut: () -> void
+
+        def result: () -> Array[String]
+      end
+
+      @ifs: Ifs
+
+      @left: Integer
+
+      @fields: Fields
+
+      @spaced: bool
+
+      def initialize: (Ifs ifs, Integer count) -> void
+
+      def run: (Array[[ String, bool ]] chars) -> Array[String]
+
+      private
+
+      def consume: (String char) -> void
+
+      def shielded: (String char) -> void
+
+      def absorb: (String char) -> void
+
+      def head: (String char) -> void
+
+      def delimiter: (String char) -> void
+
+      def skip_leading: () -> void
+
+      def removable: (String char) -> void
+
+      def tail: (String char) -> void
+
+      def ifs?: (String char) -> bool
+    end
+  end
+end

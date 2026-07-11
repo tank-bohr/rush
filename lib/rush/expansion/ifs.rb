@@ -32,6 +32,16 @@ module Rush
       def others
         @chars.reject { |char| WHITESPACE.include?(char) }
       end
+
+      sig { params(char: String).returns(T::Boolean) }
+      def whitespace?(char)
+        !!(@chars.include?(char) && WHITESPACE.include?(char))
+      end
+
+      sig { params(char: String).returns(T::Boolean) }
+      def other?(char)
+        !!(@chars.include?(char) && !WHITESPACE.include?(char))
+      end
     end
   end
 end

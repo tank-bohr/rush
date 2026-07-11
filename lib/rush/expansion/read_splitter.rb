@@ -3,12 +3,11 @@
 
 module Rush
   module Expansion
-    # Field splitting for the `read` builtin: strip leading IFS whitespace, split
-    # into at most `count` fields (the last keeps the unsplit remainder, with
-    # trailing IFS whitespace removed) and pad with empty strings up to `count`.
-    # Uses the full three IFS cases (via the Ifs delimiter sets): whitespace
-    # coalesces, each non-whitespace IFS character delimits (generating empty
-    # fields), a null IFS does not split.
+    # Field splitting for the `read` builtin over an escape-annotated line:
+    # ReadFieldScanner splits on unescaped IFS delimiters into at most `count`
+    # fields (the last keeps the remainder verbatim, trailing IFS whitespace
+    # removed), and the result is padded with empty strings up to `count`.
+    # A null IFS does not split — the whole line is one field, untrimmed.
     class ReadSplitter
       extend T::Sig
 
@@ -18,36 +17,18 @@ module Rush
         @count = count
       end
 
-      sig { params(line: String).returns(T::Array[String]) }
-      def split(line)
-        return pad([line]) if @ifs.null?
+      sig { params(chars: T::Array[ReadChar]).returns(T::Array[String]) }
+      def split(chars)
+        return pad([text(chars)]) if @ifs.null?
 
-        pad(trim_last(line.sub(leading, '').split(delimiter, @count)))
+        pad(ReadFieldScanner.new(@ifs, @count).run(chars))
       end
 
       private
 
-      # A field delimiter: one non-whitespace IFS char with any adjacent IFS
-      # whitespace, or a run of IFS whitespace on its own.
-      sig { returns(Regexp) }
-      def delimiter
-        Regexp.new("#{ws}*(?:#{Regexp.union(@ifs.others).source})#{ws}*|#{ws}+")
-      end
-
-      sig { returns(Regexp) }
-      def leading
-        /\A#{ws}+/
-      end
-
-      sig { params(fields: T::Array[String]).returns(T::Array[String]) }
-      def trim_last(fields)
-        *rest, last = fields
-        last ? rest + [last.sub(/#{ws}+\z/, '')] : rest
-      end
-
-      sig { returns(String) }
-      def ws
-        "(?:#{Regexp.union(@ifs.whitespace).source})"
+      sig { params(chars: T::Array[ReadChar]).returns(String) }
+      def text(chars)
+        chars.map(&:first).join
       end
 
       sig { params(fields: T::Array[String]).returns(T::Array[String]) }

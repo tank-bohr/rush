@@ -1,9 +1,12 @@
 module Rush
   module Builtins
-    # `read [-r] var ...` — read a line from stdin, split it on IFS and assign the
-    # fields to the named variables (the last variable takes the remainder).
-    # Without -r a backslash escapes the next character. Returns non-zero at end
-    # of file (clearing the variables); with no variable operand it is an error.
+    # `read [-r] var ...` — read a logical line from stdin, split it on IFS and
+    # assign the fields to the named variables (the last variable takes the
+    # remainder). Without -r a backslash preserves the next character (shielding
+    # it from field splitting) and a trailing backslash continues onto the next
+    # physical line; with -r the line is taken verbatim. Returns non-zero when
+    # end of file arrives before a newline (assigning what was read); with no
+    # variable operand it is an error.
     class Read < Base
       extend T::Sig
 
@@ -15,11 +18,7 @@ module Rush
 
       def names: () -> Array[String]
 
-      def cook: (String? line) -> String
-
-      def strip_escapes: (String text) -> String
-
-      def assign: (String line) -> void
+      def assign: (Array[[ String, bool ]] chars) -> void
 
       def ifs: () -> String?
 

@@ -20,6 +20,10 @@ module Rush
       def whitespace: () -> Array[String]
 
       def others: () -> Array[String]
+
+      def whitespace?: (String char) -> bool
+
+      def other?: (String char) -> bool
     end
   end
 end

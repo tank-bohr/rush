@@ -5,15 +5,33 @@
 RSpec.describe 'rush vs dash (differential IO/files corpus)' do
   before { skip 'dash not installed' unless system('command -v dash > /dev/null 2>&1') }
 
-  # NB: snippets avoid backslashes in echo output — dash's echo expands XSI
-  # escapes (\t, \n, ...) while rush's echo defers that to Phase 2, so a
-  # backslash in the echoed value would diverge on echo, not on read. The -r vs
-  # non-r escape behaviour of read itself is covered by the unit spec.
+  # NB: snippets print values that may carry backslashes with printf '%s',
+  # never echo — dash's echo expands XSI escapes (\t, \n, ...), so a backslash
+  # in an echoed value would diverge on echo, not on read.
   read_corpus = [
     ['read a b c; echo "$a-$b-$c"', "x y z w\n"],
     ['read a b; echo "[$a][$b]"', "only\n"],
     ['read x; echo "rc=$?"', ''],
     ['read first rest; echo "$rest"', "one two three\n"],
+    ['read x; printf "%s.rc=%s\n" "$x" "$?"', "a\\\nb\n"],
+    ['read x; printf "%s\n" "$x"; read y; printf "%s\n" "$y"', "a\\\nb\nc\n"],
+    ['read x; printf "%s.rc=%s\n" "$x" "$?"', 'a\\'],
+    ['read x; printf "%s.rc=%s\n" "$x" "$?"', "a\\\n"],
+    ['read x; printf "%s.rc=%s\n" "$x" "$?"', 'abc'],
+    ['read x y; printf "<%s|%s>\n" "$x" "$y"', "a\\ b c\n"],
+    ['read x; printf "%s\n" "$x"', "a\\\\b\n"],
+    ['read x y; printf "<%s|%s>\n" "$x" "$y"', "a b \\ \n"],
+    ['read x y; printf "<%s|%s>\n" "$x" "$y"', "a b c\\ \n"],
+    ['read x y; printf "<%s|%s>\n" "$x" "$y"', "a b\\ \n"],
+    ['read x y; printf "<%s|%s>\n" "$x" "$y"', "\\ a b\n"],
+    ['read -r x y; printf "<%s|%s>\n" "$x" "$y"', "a\\ b c\n"],
+    ['read -r x; printf "%s\n" "$x"; read -r y; printf "%s\n" "$y"', "a\\\nb\n"],
+    ['IFS=:; read x y; printf "<%s|%s>\n" "$x" "$y"', "a\\:b:c\n"],
+    ['IFS=:; read x y; printf "<%s|%s>\n" "$x" "$y"', "a:b:\n"],
+    ['IFS=:; read x y; printf "<%s|%s>\n" "$x" "$y"', "a:b:c:\n"],
+    ['IFS=" :"; read x y; printf "<%s|%s>\n" "$x" "$y"', "a b  : \n"],
+    ['IFS=" :"; read x y; printf "<%s|%s>\n" "$x" "$y"', "a \\\n: b\n"],
+    ['IFS=; read x y; printf "<%s|%s>\n" "$x" "$y"', "a\\ b\n"],
     ['while read l; do echo "got $l"; done', "p\nq\n"],
     ['IFS=:; read a b c; echo "[$a][$b][$c]"', "x:y:z\n"],
     ['IFS=:; read a b; echo "[$a][$b]"', "x:y:z\n"],

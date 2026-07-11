@@ -35,10 +35,28 @@ RSpec.describe Rush::Builtins::Read do
     expect([env.get('cooked'), env.get('rawvar')]).to eq(['atbnc', 'a\\tb'])
   end
 
-  it 'drops a trailing unescaped backslash in cooked mode' do
-    status, = read("a\\\n", 'cooked')
+  it 'continues onto the next physical line after a trailing unescaped backslash' do
+    status, = read("a\\\nb\n", 'joined')
     expect(status).to be_success
+    expect(env.get('joined')).to eq('ab')
+  end
+
+  it 'assigns what was read but fails when a continuation hits end of file' do
+    status, = read("a\\\n", 'cooked')
+    expect(status).not_to be_success
     expect(env.get('cooked')).to eq('a')
+  end
+
+  it 'assigns a final line without a newline terminator but reports failure' do
+    status, = read('abc', 'partial')
+    expect(status).not_to be_success
+    expect(env.get('partial')).to eq('abc')
+  end
+
+  it 'shields an escaped space from field splitting' do
+    status, = read("a\\ b c\n", 'first', 'rest')
+    expect(status).to be_success
+    expect([env.get('first'), env.get('rest')]).to eq(['a b', 'c'])
   end
 
   it 'errors with exit status 2 when given no variable' do

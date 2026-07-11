@@ -1896,3 +1896,37 @@ comparisons when the param also flows as data) but flags pure comparison
 chains, NilCheck pushed nil handling into fetch-with-block returns, and the
 flog ratchet split TestExpr#evaluate into shortcut/peel. Verified: 147-probe
 dash matrix green, 41 new corpus lines, full rake green.
+
+### read learns dash's backslash algebra: continuation, gaps, and the remainder cut (rush-no1.4)
+The read builtin cooked its line with gets + gsub(/\\(.)/) + delete_suffix —
+no line continuation (printf 'a\\\nb\n' | read x gave a, dash gives ab), and
+escapes were stripped *before* splitting, so `a\ b c` split on the protected
+space. The fix places escape processing at dash's seam: ReadInput yields one
+logical line as annotated [char, escaped] pairs (an odd trailing backslash
+run joins the next physical line), and the new ReadFieldScanner splits those
+pairs escape-aware. The instructive part was the remainder semantics: dash
+probes produced apparent contradictions — `a b \ ` gives y=`b` (escaped
+space *dropped*) while `a b c\ ` gives y=`b c ` (kept) — that no local rule
+explained. Reading dash's readcmd resolved it: escaped chars live in *gaps
+between recorded regions* that ifsbreakup never scans, and ifsbreakup(maxargs)
+does count-limited splitting with a cut pointer r — the delimiter that spends
+the last variable sets r, later unescaped non-whitespace clears it, trailing
+whitespace re-sets it, gap chars touch nothing, and `*r='\0'` truncates. That
+one mechanism explains every quirk, including `a:b:` → y=`b` (an exhausting
+*non-whitespace* delimiter is cut when nothing follows, though `a:b:c:` keeps
+`b:c:`) and ws-run+one-colon trailing removal. ReadFieldScanner transcribes
+the state machine (@spaced=ifsspc, Fields@cut=r); a zero-width joint
+['', true] carries the region-boundary reset across continuations — without
+it `a \<newline>: b` with IFS=': ' absorbs the colon into the preceding
+whitespace delimiter, and dash does not. Exit status now follows dash's EOF
+rule: success iff the line ended in a newline, so partial final lines and
+continuations into EOF assign what they have and return 1. Lint shaped the
+design as usual: ControlParameter pushed the escaped-flag dispatch into the
+run block, the MemoizedInstanceVariableName/OrAssignment tug-of-war merged
+mark/mark_once into one idempotent Fields#cut (sound because r is nil until
+exhaustion), and chomp("\n") became delete_suffix — which is also more
+faithful, since plain chomp would eat a lone \r that dash keeps. Confirmed
+pre-existing and out of scope: prefix assignments (`IFS=: read x y`) are
+invisible to the builtin — all 10 diffs in the 87-probe matrix are that seam
+(worth a bead). Verified: 77/87 probes match dash, 22 new corpus lines, full
+rake green.

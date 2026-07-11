@@ -1,11 +1,10 @@
 module Rush
   module Expansion
-    # Field splitting for the `read` builtin: strip leading IFS whitespace, split
-    # into at most `count` fields (the last keeps the unsplit remainder, with
-    # trailing IFS whitespace removed) and pad with empty strings up to `count`.
-    # Uses the full three IFS cases (via the Ifs delimiter sets): whitespace
-    # coalesces, each non-whitespace IFS character delimits (generating empty
-    # fields), a null IFS does not split.
+    # Field splitting for the `read` builtin over an escape-annotated line:
+    # ReadFieldScanner splits on unescaped IFS delimiters into at most `count`
+    # fields (the last keeps the remainder verbatim, trailing IFS whitespace
+    # removed), and the result is padded with empty strings up to `count`.
+    # A null IFS does not split — the whole line is one field, untrimmed.
     class ReadSplitter
       extend T::Sig
 
@@ -15,19 +14,11 @@ module Rush
 
       def initialize: (String? ifs, Integer count) -> void
 
-      def split: (String line) -> Array[String]
+      def split: (Array[[ String, bool ]] chars) -> Array[String]
 
       private
 
-      # A field delimiter: one non-whitespace IFS char with any adjacent IFS
-      # whitespace, or a run of IFS whitespace on its own.
-      def delimiter: () -> Regexp
-
-      def leading: () -> Regexp
-
-      def trim_last: (Array[String] fields) -> Array[String]
-
-      def ws: () -> String
+      def text: (Array[[ String, bool ]] chars) -> String
 
       def pad: (Array[String] fields) -> Array[String]
     end

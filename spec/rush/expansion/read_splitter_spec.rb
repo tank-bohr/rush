@@ -2,7 +2,8 @@
 
 RSpec.describe Rush::Expansion::ReadSplitter do
   def split(line, count, ifs = nil)
-    described_class.new(ifs, count).split(line)
+    chars = line.chars.map { |char| [char, false] }
+    described_class.new(ifs, count).split(chars)
   end
 
   it 'splits a line into the requested number of fields' do
@@ -10,7 +11,7 @@ RSpec.describe Rush::Expansion::ReadSplitter do
   end
 
   it 'gives the unsplit remainder to the last field, trimming trailing whitespace' do
-    expect(split('x y z w extra', 3)).to eq(['x', 'y', 'z w extra'])
+    expect(split('x y z w extra ', 3)).to eq(['x', 'y', 'z w extra'])
   end
 
   it 'pads with empty strings when there are fewer fields than variables' do
@@ -34,6 +35,10 @@ RSpec.describe Rush::Expansion::ReadSplitter do
     expect(split('a b', 2, '')).to eq(['a b', ''])
   end
 
+  it 'keeps an escaped character with a null IFS without splitting' do
+    expect(described_class.new('', 1).split([['a', false], [' ', true], ['b', false]])).to eq(['a b'])
+  end
+
   it 'splits on a custom IFS character' do
     expect(split('a:b:c', 2, ':')).to eq(['a', 'b:c'])
   end
@@ -44,5 +49,9 @@ RSpec.describe Rush::Expansion::ReadSplitter do
 
   it 'treats whitespace adjacent to a non-whitespace delimiter as one separator' do
     expect(split('a :  b : c', 3, ' :')).to eq(%w[a b c])
+  end
+
+  it 'never splits at an escaped delimiter' do
+    expect(described_class.new(nil, 2).split([['a', false], [' ', true], ['b', false]])).to eq(['a b', ''])
   end
 end
