@@ -45,6 +45,27 @@ RSpec.describe Rush::CommandRunner do
     expect(run(simple(words: [word('true')]))).to be_success
   end
 
+  it 'persists prefix assignments on a direct special builtin without exporting new names' do
+    command = simple(assignments: [assignment('X', '1')], words: [word(':')])
+
+    expect(run(command)).to be_success
+    expect([env.get('X'), state.variables.exported]).to eq(['1', {}])
+  end
+
+  it 'persists the assignments before a direct special-builtin error' do
+    command = simple(assignments: [assignment('X', '1')], words: [word('shift'), word('5')])
+
+    expect { run(command) }.to raise_error(Rush::BuiltinError)
+    expect(env.get('X')).to eq('1')
+  end
+
+  it 'keeps command-demoted special-builtin prefix assignments temporary' do
+    command = simple(assignments: [assignment('X', '1')], words: [word('command'), word(':')])
+
+    expect(run(command)).to be_success
+    expect(env.get('X')).to be_nil
+  end
+
   it 'dispatches to an external when no builtin matches, exporting prefix assignments' do
     captured = nil
     external = instance_double(Rush::External, call: Rush::Status.success)

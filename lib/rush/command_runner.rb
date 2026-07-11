@@ -92,9 +92,17 @@ module Rush
     sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def builtin(argv, io)
       environment = command_env(io)
+      return special_builtin(argv, io, environment) if special?(argv.first)
+
       @executor.state.variables.with_temporary(temporary_env(environment)) { invoke_builtin(argv, io, environment) }
     rescue Errno::EBADF
       Status.new(1)
+    end
+
+    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
+    def special_builtin(argv, io, environment)
+      persist_environment(environment)
+      invoke_builtin(argv, io, environment)
     end
 
     sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
@@ -105,6 +113,11 @@ module Rush
     sig { params(environment: T::Hash[String, String]).returns(T::Hash[String, String]) }
     def temporary_env(environment)
       environment.slice(*@assignments.names)
+    end
+
+    sig { params(environment: T::Hash[String, String]).void }
+    def persist_environment(environment)
+      temporary_env(environment).each { |name, value| @executor.state.variables.assign(name, value) }
     end
 
     sig { params(name: T.nilable(String)).returns(T::Boolean) }

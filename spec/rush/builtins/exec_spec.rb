@@ -21,6 +21,12 @@ RSpec.describe Rush::Builtins::Exec do
     expect(system.execed).to eq([{ 'A' => '1' }, ['ls', '-l'], io.to_spawn_options.merge(close_others: true)])
   end
 
+  it 'includes the simple-command assignment environment in the replacement' do
+    environment = { 'A' => '1', 'X' => 'temporary' }
+    described_class.new(executor, %w[exec show], io, environment).call
+    expect(system.execed.fetch(0)).to eq(environment)
+  end
+
   it 'aborts the shell with 127 when the command is not found' do
     allow(system).to receive(:exec).and_raise(Errno::ENOENT)
     expect { run('nope') }.to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(127) }

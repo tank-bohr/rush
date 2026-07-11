@@ -25,7 +25,7 @@ module Rush
 
       sig { returns(T.noreturn) }
       def replace_process
-        executor.system.exec(variables.exported, operands, options)
+        executor.system.exec(command_environment, operands, options)
       rescue Errno::ENOENT
         abort_exec('not found', 127)
       rescue Errno::EACCES
@@ -48,11 +48,6 @@ module Rush
       sig { returns(T::Hash[T.any(Integer, Symbol), T.untyped]) }
       def options
         io.to_spawn_options.merge(close_others: true)
-      end
-
-      sig { returns(ShellVariables) }
-      def variables
-        executor.state.variables
       end
     end
   end

@@ -2103,3 +2103,26 @@ Two adjacent assignment gaps stay separate: direct special-builtin prefixes are 
 visible but still restore instead of persisting (rush-no1.16), and functions plus
 readonly external prefixes need the remaining policy work (rush-no1.17). Subject
 mutation gates: Environment 97.52%, Command 95.79%, CommandRunner 96.06%.
+
+### Special-builtin prefixes persist, but keep their export attribute (rush-no1.16)
+The temporary builtin scope from 15h made prefix assignments visible everywhere but
+still restored them after a direct special builtin — `X=old; X=new :` printed old.
+CommandRunner now splits at the already-authoritative `special?` decision: regular
+builtins enter Environment#with_temporary; a direct special persists only the expanded
+prefix slice before invocation. It uses the environment already built for the command,
+not CommandAssignments#persist_to, so RHS substitutions execute exactly once. `command
+:` still takes the regular path and restores its prefix, which is the property 15h
+landed.
+
+Persistence does NOT mean automatic permanent export. A newly introduced `X=1 :`
+remains a private shell variable (later printenv misses it), while an already-exported
+X keeps its export mark — plain ShellVariables#assign gives both for free. The special
+builtin itself can still change the result: `X=prefix export Y=value` persists X
+privately and Y exported; `X=prefix unset X` removes X. Prefixes persist even when the
+special errors (an EXIT trap sees X), because assignment precedes invocation.
+`exec` is the one special that consumes the per-invocation exported overlay directly:
+`X=child exec sh ...` must pass X into the replacement even though X's persistent shell
+export mark is private, so Exec now uses Base#command_environment.
+
+Verified differentially across colon/export/unset/error traps/exec and command-demoted
+control cases; subject mutation gates: CommandRunner 96.79%, Exec 100%.

@@ -21,7 +21,6 @@ module Rush
 
       def options: () -> untyped
 
-      def variables: () -> ShellVariables
     end
   end
 end
