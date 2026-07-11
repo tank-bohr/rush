@@ -64,7 +64,7 @@ module Rush
 
     sig { params(parameter: String).returns(T.nilable(String)) }
     def ordinary_or_positional(parameter)
-      return positional(parameter.to_i) if parameter.match?(/\A\d+\z/)
+      return positional(Integer(parameter, 10)) if parameter.match?(/\A\d+\z/)
 
       @state.variables.get(parameter)
     end

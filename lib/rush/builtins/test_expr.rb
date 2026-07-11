@@ -36,7 +36,7 @@ module Rush
         end
 
         def value
-          @text.to_i if valid?
+          Integer(@text, 10) if valid?
         end
       end
 

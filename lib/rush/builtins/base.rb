@@ -69,10 +69,15 @@ module Rush
       # special-builtin error (which aborts a non-interactive shell).
       sig { params(text: String, min: Integer).returns(Integer) }
       def numeric_operand(text, min: 0)
-        value = text.to_i
-        return value if text.match?(NUMERIC_OPERAND) && value.between?(min, INT_MAX)
+        value = Integer(text, 10) if text.match?(NUMERIC_OPERAND)
+        return T.must(value) if legal_operand?(value, min)
 
         raise BuiltinError, "#{argv.first}: Illegal number: #{text}"
+      end
+
+      sig { params(value: T.nilable(Integer), min: Integer).returns(T::Boolean) }
+      def legal_operand?(value, min)
+        !!value&.between?(min, INT_MAX)
       end
     end
   end

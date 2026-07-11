@@ -1587,3 +1587,23 @@ substitution, not command search — a "Definitions" composite would be
 metric-driven, not domain-driven). The disable stays with that arithmetic
 written next to it; the bead closes on the measured floor, not the wished-for
 zero.
+
+### The NumberConversion amnesty ends: eight excludes become three reasons (rush-qle)
+The bulk waiver ("regex-guarded parsers or deliberate zero semantics") hid three
+different situations. kill.rb was a stale entry — it had moved to Integer()
+long ago and needed nothing. Four files were regex-guarded parsers where the
+lenient .to_i added nothing the guard hadn't already promised: numeric_operand,
+test's MaybeInteger, $N resolution and signal-number decode now use
+Integer(_, 10) — same accepted domain (Kernel#Integer strips the blanks the
+guards allow, the sign parses, and the explicit base kills the octal
+leading-zero trap), but a future guard/conversion drift now raises instead of
+silently parsing garbage as 0. Three files remain excluded, each with its own
+one-line contract in .rubocop.yml: Process::Status nil signals pinning to 0
+(status.rb), File.size? nil counting as empty (file_tests.rb), and the test
+double mirroring the latter. The cop now runs on 173 of 176 files with every
+survivor individually justified.
+Wiring note: reek's ControlParameter reads `value&.between?(min, ...)` as min
+controlling a branch, though the equivalent `cond && value.between?(min, ...)`
+never smelled — the csend lowers into the conditional it inspects. The range
+check moved into legal_operand?(value, min), where min is plain data and the
+caller narrows with T.must; structure, not suppression.

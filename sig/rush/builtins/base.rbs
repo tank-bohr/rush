@@ -45,6 +45,8 @@ module Rush
       # rejects a non-numeric, too-small or out-of-range value with a
       # special-builtin error (which aborts a non-interactive shell).
       def numeric_operand: (String text, ?min: Integer) -> Integer
+
+      def legal_operand?: (Integer? value, Integer min) -> bool
     end
   end
 end

@@ -144,20 +144,15 @@ Lint/HeredocMethodCallPosition:
 Lint/MissingSuper:
   Exclude:
     - 'lib/rush/ast/*.rb'
-# Existing numeric conversions are either regex-guarded POSIX parsers or
-# deliberately use nil/non-numeric-to-zero semantics at OS/test boundaries. Keep
-# the cop on elsewhere so new unsafe conversions are still caught.
+# Number conversions where lenient-to-zero IS the contract, each at an OS or
+# test-double boundary (regex-guarded parsers were converted to Integer(_, 10)
+# and left the list — rush-qle):
 Lint/NumberConversion:
   Enabled: true
   Exclude:
-    - 'lib/rush/builtins/base.rb'
-    - 'lib/rush/builtins/kill.rb'
-    - 'lib/rush/builtins/test_expr.rb'
-    - 'lib/rush/shell_parameters.rb'
-    - 'lib/rush/signals.rb'
-    - 'lib/rush/status.rb'
-    - 'lib/rush/system_calls/file_tests.rb'
-    - 'spec/support/fake_system_calls.rb'
+    - 'lib/rush/status.rb'                  # nil termsig/stopsig from Process::Status pins to 0
+    - 'lib/rush/system_calls/file_tests.rb' # File.size? nil (absent file) counts as empty
+    - 'spec/support/fake_system_calls.rb'   # the double mirrors file_tests' nil-to-zero
 Performance/ArraySemiInfiniteRangeSlice:
   Enabled: true
 Performance/BigDecimalWithNumericArgument:
