@@ -14,15 +14,11 @@ module Rush
 
       @files: SystemCalls
 
-      PRIMARY: { 0 => :none?, 1 => :nonempty?, 2 => :unary }
+      FILE_UNARY: ::Hash[String, ^(SystemCalls, String) -> bool]
 
-      STRING_UNARY: { "-n" => :nonempty?, "-z" => :empty? }
+      STRING: ::Hash[String, ^(String, String) -> bool]
 
-      FILE_UNARY: { "-e" => :exist?, "-f" => :file?, "-d" => :directory?, "-r" => :readable?, "-w" => :writable?, "-x" => :executable?, "-s" => :file_nonempty?, "-h" => :symlink?, "-L" => :symlink? }
-
-      STRING: { "=" => :==, "!=" => :!= }
-
-      INTEGER: { "-eq" => :==, "-ne" => :!=, "-gt" => :>, "-ge" => :>=, "-lt" => :<, "-le" => :<= }
+      INTEGER: ::Hash[String, ^(Integer, Integer) -> bool]
 
       # A string that may name an integer for the numeric primaries: #value is its
       # integer when it is a valid (optionally signed, blank-padded) decimal, else
@@ -45,9 +41,9 @@ module Rush
 
       private
 
-      # The primaries dispatch by arity through #send/#public_send (a Symbol from
-      # the operator tables), so those calls are genuinely untyped; everything
-      # around them — argument peeling, the integer/string coercions — is typed.
+      # The operator tables dispatch through typed lambdas and the arity
+      # dispatch is a pattern match, so the whole evaluator is typed — no
+      # #send/#public_send remains.
       def evaluate: (Array[String] args) -> bool
 
       def negated?: (Array[String] args) -> bool
@@ -59,17 +55,13 @@ module Rush
       # `( )` peels to the no-argument test, which is false rather than an error.
       def wrapped?: (Array[String] args) -> bool
 
+      # The XCU argument-count table: 0 → false, 1 → non-empty, 2 → unary.
       def primary: (Array[String] args) -> bool
 
-      def none?: () -> false
+      def bad: () -> bot
 
-      def bad: (*untyped) -> bot
-
+      # -n/-z are the two string unaries (XCU test); the rest ask the files.
       def unary: (String op, String val) -> bool
-
-      def nonempty?: (String val) -> bool
-
-      def empty?: (String val) -> bool
 
       def binary?: (String? op) -> bool
 

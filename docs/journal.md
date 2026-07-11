@@ -1730,3 +1730,23 @@ job-report/signal-report streams are `_IoStream`. Lesson pinned twice over:
 does), and untyped dumps beat per-file guessing — measure receivers, not
 files. steep stats: 99.88% typed calls; the remaining 11 are test_expr's
 dispatch (rush-211.5.6) and parser_support (rush-211.5.7).
+
+### test/[ sheds its last public_send — and the sigil comes up with it (rush-211.5.6)
+The operator tables mapped to method Symbols and dispatched by
+send/public_send: legal Ruby, invisible to both checkers. The tables now map
+to lambdas (the parameter_forms/number.rb idiom — `#:` types each lambda for
+Steep, T.let types the table for Sorbet), so every binary and file primary
+carries its operand types end to end. Raising the Sorbet sigil to typed:
+true was the forcing move: Sorbet rejects `send(sym, *args)` splats outright
+(error 7019), which retired the PRIMARY arity table in favour of a pattern
+match — `in [op, val]` / `in [val]` — that reads as the XCU argument-count
+rule directly. Rubocop then vetoed the trivial `->(val) { val.empty? }`
+lambda (Style/SymbolProc), which was the right nudge: a two-entry table
+dissolved into two guard lines inside #unary, where -n/-z sit beside the
+FILE_UNARY handoff, and three one-line wrapper methods (none?, nonempty?,
+empty?) plus two constants left the file. No send/public_send remains in
+TestExpr; the 9 structurally-identical FILE_UNARY lambdas sit below flay's
+per-node mass threshold, same as number.rb's. Verified against dash beyond
+the corpus: 24 probe lines byte-identical, including the POSIX
+binary-outranks-negation shapes (test ! = x, test \( = \)) and strtol
+strictness. Untyped calls: 11 -> 10, all now in parser_support.

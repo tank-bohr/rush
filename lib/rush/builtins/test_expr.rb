@@ -1,4 +1,4 @@
-# typed: false
+# typed: true
 # frozen_string_literal: true
 
 module Rush
@@ -13,13 +13,32 @@ module Rush
     # here; file-test primaries arrive via @files. A malformed expression raises
     # TestError, which the builtin maps to exit 2.
     class TestExpr
-      PRIMARY = { 0 => :none?, 1 => :nonempty?, 2 => :unary }.freeze
-      STRING_UNARY = { '-n' => :nonempty?, '-z' => :empty? }.freeze
-      FILE_UNARY = { '-e' => :exist?, '-f' => :file?, '-d' => :directory?, '-r' => :readable?,
-                     '-w' => :writable?, '-x' => :executable?, '-s' => :file_nonempty?,
-                     '-h' => :symlink?, '-L' => :symlink? }.freeze
-      STRING = { '=' => :==, '!=' => :!= }.freeze
-      INTEGER = { '-eq' => :==, '-ne' => :!=, '-gt' => :>, '-ge' => :>=, '-lt' => :<, '-le' => :<= }.freeze
+      # The operator tables map to lambdas, not method symbols, so each
+      # primary carries its operand types past both checkers (the #: types
+      # each lambda for Steep, the T.let the table for Sorbet).
+      FILE_UNARY = T.let({
+        '-e' => ->(files, val) { files.exist?(val) },          #: ^(SystemCalls, String) -> bool
+        '-f' => ->(files, val) { files.file?(val) },           #: ^(SystemCalls, String) -> bool
+        '-d' => ->(files, val) { files.directory?(val) },      #: ^(SystemCalls, String) -> bool
+        '-r' => ->(files, val) { files.readable?(val) },       #: ^(SystemCalls, String) -> bool
+        '-w' => ->(files, val) { files.writable?(val) },       #: ^(SystemCalls, String) -> bool
+        '-x' => ->(files, val) { files.executable?(val) },     #: ^(SystemCalls, String) -> bool
+        '-s' => ->(files, val) { files.file_nonempty?(val) },  #: ^(SystemCalls, String) -> bool
+        '-h' => ->(files, val) { files.symlink?(val) },        #: ^(SystemCalls, String) -> bool
+        '-L' => ->(files, val) { files.symlink?(val) }         #: ^(SystemCalls, String) -> bool
+      }.freeze, T::Hash[String, T.proc.params(files: SystemCalls, val: String).returns(T::Boolean)])
+      STRING = T.let({
+        '=' => ->(lhs, rhs) { lhs == rhs },  #: ^(String, String) -> bool
+        '!=' => ->(lhs, rhs) { lhs != rhs }  #: ^(String, String) -> bool
+      }.freeze, T::Hash[String, T.proc.params(lhs: String, rhs: String).returns(T::Boolean)])
+      INTEGER = T.let({
+        '-eq' => ->(lhs, rhs) { lhs == rhs },  #: ^(Integer, Integer) -> bool
+        '-ne' => ->(lhs, rhs) { lhs != rhs },  #: ^(Integer, Integer) -> bool
+        '-gt' => ->(lhs, rhs) { lhs > rhs },   #: ^(Integer, Integer) -> bool
+        '-ge' => ->(lhs, rhs) { lhs >= rhs },  #: ^(Integer, Integer) -> bool
+        '-lt' => ->(lhs, rhs) { lhs < rhs },   #: ^(Integer, Integer) -> bool
+        '-le' => ->(lhs, rhs) { lhs <= rhs }   #: ^(Integer, Integer) -> bool
+      }.freeze, T::Hash[String, T.proc.params(lhs: Integer, rhs: Integer).returns(T::Boolean)])
 
       # A string that may name an integer for the numeric primaries: #value is its
       # integer when it is a valid (optionally signed, blank-padded) decimal, else
@@ -74,31 +93,27 @@ module Rush
         args.size >= 2 && args.first == '(' && args.last == ')'
       end
 
+      # The XCU argument-count table: zero arguments are false, one is the
+      # non-empty test, two a unary primary, anything longer a syntax error.
       def primary(args)
-        send(PRIMARY.fetch(args.size, :bad), *args)
+        case args
+        in [op, val] then unary(op, val)
+        in [val] then !val.empty?
+        else args.empty? ? false : bad
+        end
       end
 
-      def none?
-        false
-      end
-
-      def bad(*)
+      def bad
         raise(TestError, 'syntax error')
       end
 
+      # -n/-z are the two string unaries (XCU test); the rest ask the files.
       def unary(op, val)
-        return send(STRING_UNARY.fetch(op), val) if STRING_UNARY.key?(op)
-        return @files.public_send(FILE_UNARY.fetch(op), val) if FILE_UNARY.key?(op)
+        return !val.empty? if op == '-n'
+        return val.empty? if op == '-z'
+        return FILE_UNARY.fetch(op).call(@files, val) if FILE_UNARY.key?(op)
 
         raise TestError, "#{op}: unary operator expected"
-      end
-
-      def nonempty?(val)
-        !val.empty?
-      end
-
-      def empty?(val)
-        val.empty?
       end
 
       def binary?(op)
@@ -107,9 +122,9 @@ module Rush
 
       def binary(args)
         args => [lhs, op, rhs]
-        return lhs.public_send(STRING.fetch(op), rhs) if STRING.key?(op)
+        return STRING.fetch(op).call(lhs, rhs) if STRING.key?(op)
 
-        to_int(lhs).public_send(INTEGER.fetch(op), to_int(rhs))
+        INTEGER.fetch(op).call(to_int(lhs), to_int(rhs))
       end
 
       def to_int(text)
