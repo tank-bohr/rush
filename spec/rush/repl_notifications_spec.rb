@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-RSpec.describe 'pre-prompt job notifications' do # rubocop:disable RSpec/DescribeClass -- a Repl seam
+RSpec.describe Rush::Repl do
   let(:system) { FakeSystemCalls.new(stdin: '') }
   let(:state) { Rush::ShellState.new }
-  let(:repl) { Rush::Repl.new(system, state: state) }
+  let(:repl) { described_class.new(system, state: state) }
   let(:jobs) { repl.send(:executor).jobs }
 
   def prompt

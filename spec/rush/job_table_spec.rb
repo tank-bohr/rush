@@ -67,6 +67,11 @@ RSpec.describe Rush::JobTable do
       expect(table.wait_for(0)).to be_nil
     end
 
+    it 'stamps the entry with the rendered text it was given' do
+      table.record(9, text: 'sleep 9 | cat')
+      expect([table.current.text, table.current.controlled?]).to eq(['sleep 9 | cat', true])
+    end
+
     it 'numbers jobs from 1, reusing the lowest freed slot' do
       table.record(11)
       table.record(12)
@@ -225,9 +230,84 @@ RSpec.describe Rush::JobTable do
       table.adopt_stopped([0], 20)
       expect(table.current).to be_nil
     end
+
+    it 're-parks an existing entry: same number, members and text survive' do
+      table.adopt_stopped([50, 51], 20, 'sleep 9')
+      table.current.resume
+      table.adopt_stopped([50, 51], 19, 'ignored — the entry exists')
+      job = table.current
+      expect([job.number, job.members, job.text, job.stopsig]).to eq([1, [50, 51], 'sleep 9', 19])
+    end
+  end
+
+  describe '#settle_members (fg wait over a resumed job)' do
+    it 'waits the leader through its entry and the rest through the stash-aware await' do
+      table.control.engage(nil)
+      table.adopt_stopped([50, 51], 20, 'sleep 9')
+      table.current.resume
+      system.provide_child(50, 0)
+      system.provide_child(51, 7)
+      verdict = table.settle_members(table.current)
+      expect([verdict.exitstatus, verdict.stopped?]).to eq([7, false])
+    end
+
+    it 'carries a member stop onto the verdict' do
+      table.control.engage(nil)
+      table.adopt_stopped([50, 51], 20, 'sleep 9')
+      table.current.resume
+      system.provide_stopped(50, 20)
+      system.provide_child(51, 5)
+      verdict = table.settle_members(table.current)
+      expect([verdict.exitstatus, verdict.stopsig]).to eq([5, 20])
+    end
+  end
+
+  describe '#announce_changed (pre-prompt notifications)' do
+    it 'polls, reports every changed job newest-first to the stream, frees the finished' do
+      table.control.engage(nil)
+      table.record(9, text: 'sleep 9')
+      table.record(11, text: 'sleep 11')
+      system.provide_child(9, 0)
+      system.provide_signalled(11, 9)
+      out = StringIO.new
+      table.announce_changed(out)
+      expect(out.string).to eq("#{'[2] + Killed'.ljust(33)}sleep 11\n#{'[1] + Done'.ljust(33)}sleep 9\n")
+      expect(table.current).to be_nil
+    end
+
+    it 'reports nothing while nothing changed, and never repeats a report' do
+      table.control.engage(nil)
+      table.record(9, text: 'sleep 9')
+      out = StringIO.new
+      table.announce_changed(out)
+      system.provide_stopped(9, 20)
+      table.announce_changed(out)
+      table.announce_changed(out)
+      expect(out.string).to eq("#{'[1] + Stopped'.ljust(33)}sleep 9\n")
+      expect(table.current.stopped?).to be(true)
+    end
+  end
+
+  describe '#poll under monitor' do
+    it 'uses the stoppable poll only when the machinery is engaged' do
+      allow(system).to receive(:poll_child).and_call_original
+      allow(system).to receive(:poll_stopped).and_call_original
+      table.poll
+      expect(system).to have_received(:poll_child)
+      table.control.engage(nil)
+      table.poll
+      expect(system).to have_received(:poll_stopped)
+    end
   end
 
   describe 'Control#warn_exit? / #tick_warning (dash job_warning)' do
+    it 'starts as the root shell, machinery off, no terminal, warning disarmed' do
+      control = table.control
+      expect([control.root, control.monitor, control.terminal]).to eq([true, false, nil])
+      control.tick_warning
+      expect(control.warn_exit?).to be(true)
+    end
+
     it 'refuses once, lets an immediate retry through, and re-arms two ticks later' do
       expect(table.control.warn_exit?).to be(true)
       table.control.tick_warning

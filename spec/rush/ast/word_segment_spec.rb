@@ -78,6 +78,28 @@ RSpec.describe Rush::AST::WordSegment do
     expect(Rush::Expansion::ArithmeticExpander).to have_received(:new).with(executor, '1 + 2')
   end
 
+  describe '#canon (the dash cmdtxt spelling)' do
+    it 'passes an unquoted literal through untouched' do
+      expect(seg('a*.txt', false).canon).to eq('a*.txt')
+    end
+
+    it 'escapes backslash, double quote, dollar and backquote in a quoted literal' do
+      expect(seg('a b', true).canon).to eq('a b')
+      expect(seg('\\ " $ `', true).canon).to eq('\\\\ \\" \\$ \\`')
+    end
+
+    it 'spells a parameter through its ref, a command substitution as $(...), arithmetic raw' do
+      ref = Rush::AST::ParamRef.simple('T')
+      expect(Rush::AST::ParamSegment.new(ref, false).canon).to eq('${T}')
+      expect(Rush::AST::CommandSegment.new('date +%s', false).canon).to eq('$(...)')
+      expect(Rush::AST::ArithSegment.new('1+2', false).canon).to eq('$((1+2))')
+    end
+
+    it 'leaves the base segment abstract' do
+      expect { Rush::AST::DynamicSegment.new('x', false).canon }.to raise_error(NotImplementedError)
+    end
+  end
+
   it 'equals and eql?-s a distinct segment of the same class, value and quoted flag' do
     twin = seg('x', false)
     expect(seg('x', false)).to eq(twin)

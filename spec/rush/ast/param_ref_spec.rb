@@ -55,4 +55,20 @@ RSpec.describe Rush::AST::ParamRef do
     expect([described_class.parse('f#p').op, described_class.parse('f%p').op]).to eq(['#', '%'])
     expect([described_class.parse('f##p').op, described_class.parse('f%%p').op]).to eq(['##', '%%'])
   end
+
+  describe '#canon (the dash cmdtxt spelling)' do
+    it 'braces a simple name and a special parameter' do
+      expect(described_class.simple('T').canon).to eq('${T}')
+      expect(described_class.simple('@').canon).to eq('${@}')
+    end
+
+    it 'keeps an op and its raw argument as written' do
+      expect(described_class.parse('T:-a b').canon).to eq('${T:-a b}')
+      expect(described_class.parse('x##*/').canon).to eq('${x##*/}')
+    end
+
+    it 'spells the length form as ${#name}' do
+      expect(described_class.parse('#T').canon).to eq('${#T}')
+    end
+  end
 end

@@ -24,15 +24,17 @@ matcher:
     - Rush::SystemCalls#edit_line
     # The rush-mv8 job-control syscall cluster is the same boundary: real
     # process groups and a real controlling terminal (ioctl, SIG_IGN around
-    # it), proven by the job-control pty smoke in the Docker gate.
-    - Rush::SystemCalls#setpgid
-    - Rush::SystemCalls#fork_grouped
-    - Rush::SystemCalls#grouped_child
-    - Rush::SystemCalls#open_tty
-    - Rush::SystemCalls#tcgetpgrp
-    - Rush::SystemCalls#read_pgrp
-    - Rush::SystemCalls#tcsetpgrp
-    - Rush::SystemCalls#ignoring_ttou
+    # it), proven by the job-control pty smoke in the Docker gate. Named by
+    # the defining module — mutant identifies mixin methods there, not on
+    # the including class.
+    - Rush::SystemCalls::ProcessControl#setpgid
+    - Rush::SystemCalls::ProcessControl#fork_grouped
+    - Rush::SystemCalls::ProcessControl#grouped_child
+    - Rush::SystemCalls::ProcessControl#open_tty
+    - Rush::SystemCalls::ProcessControl#tcgetpgrp
+    - Rush::SystemCalls::ProcessControl#read_pgrp
+    - Rush::SystemCalls::ProcessControl#tcsetpgrp
+    - Rush::SystemCalls::ProcessControl#ignoring_ttou
     - Rush::BackgroundRunner#spawn_child
     - Rush::BackgroundRunner#run_child
     - Rush::SubshellRunner#spawn_child

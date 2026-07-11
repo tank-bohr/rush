@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite for the JobResume pair
+RSpec.describe Rush::Builtins::JobResume do
   let(:system) { FakeSystemCalls.new }
   let(:state) { Rush::ShellState.new }
   let(:executor) { Rush::Executor.new(system: system, state: state) }
@@ -43,77 +43,32 @@ RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite
       expect(fg('%1').exitstatus).to eq(2)
       expect(system.stderr.string).to eq("fg: job %1 not created under job control\n")
     end
-  end
 
-  describe 'with a stopped job under job control' do
-    before do
+    it 'refuses before touching later operands (dash sh_error aborts the loop)' do
       executor.jobs.control.engage(nil)
-      executor.jobs.adopt_stopped([50, 51], 20, 'sleep 100 | cat')
-    end
-
-    it 'bg resumes the group: SIGCONT to -pgid, entry Running, "[n] text" printed, status 0' do
-      expect(bg('%1')).to be_success
-      expect(system.kills).to eq([['CONT', -50]])
-      expect(executor.jobs.current.running?).to be(true)
-      expect(system.stdout.string).to eq("[1] sleep 100 | cat\n")
-    end
-
-    it 'fg resumes, waits for every member and frees the finished entry, its status as $?' do
+      executor.jobs.adopt_stopped([50], 20, 'sleep 9')
+      executor.jobs.record(60)
       system.provide_child(50, 0)
-      system.provide_child(51, 7)
-      expect(fg('%1').exitstatus).to eq(7)
-      expect(system.kills).to eq([['CONT', -50]])
-      expect(executor.jobs.current).to be_nil
-    end
-
-    it 'fg prints the command line to stdout, as dash echoes what it resumes' do
-      system.provide_child(50, 0)
-      system.provide_child(51, 0)
-      fg('%1')
-      expect(system.stdout.string).to eq("sleep 100 | cat\n")
-    end
-
-    it 'fg parks the job Stopped again, same number, when the resumed job takes another ^Z' do
-      system.provide_stopped(50, 20)
-      system.provide_stopped(51, 20)
-      expect(fg('%1').exitstatus).to eq(148)
-      job = executor.jobs.current
-      expect([job.number, job.stopped?]).to eq([1, true])
-    end
-
-    it 'fg hands the terminal to the job group for the wait and reclaims it' do
-      tty_system = FakeSystemCalls.new(tty: true)
-      tty_executor = Rush::Executor.new(system: tty_system, state: state)
-      tty_executor.job_control.enable(tty_system.stderr)
-      tty_executor.jobs.adopt_stopped([50], 20, 'sleep 9')
-      tty_system.provide_child(50, 0)
-      Rush::Builtins::Fg.new(tty_executor, %w[fg %1], Rush::IoTable.standard(tty_system)).call
-      expect(tty_system.handovers).to eq([4242, 50, 4242])
-    end
-
-    it 'fg answers the remembered status of an already-dead job and frees it (dash-probed 137)' do
-      executor.jobs.current.finish(FakeSystemCalls::ChildStatus.new(nil, 9))
-      expect(fg('%1').exitstatus).to eq(137)
-      expect(executor.jobs.current).to be_nil
+      expect(bg('%2', '%1').exitstatus).to eq(2)
+      expect(system.kills).to be_empty
+      expect(system.stderr.string).to eq("bg: job %2 not created under job control\n")
     end
 
     it 'loops multiple operands, the last status winning (dash fg %1 %2)' do
+      executor.jobs.control.engage(nil)
+      executor.jobs.adopt_stopped([50], 20, 'sleep 50')
       executor.jobs.adopt_stopped([60], 20, 'sleep 60')
       system.provide_child(50, 3)
-      system.provide_child(51, 3)
       system.provide_child(60, 5)
       expect(fg('%1', '%2').exitstatus).to eq(5)
       expect(system.kills).to eq([['CONT', -50], ['CONT', -60]])
     end
 
-    it 'swallows ESRCH when the group is already gone' do
-      dead = FakeSystemCalls.new(dead_pids: [-50])
-      dead_executor = Rush::Executor.new(system: dead, state: state)
-      dead_executor.jobs.control.engage(nil)
-      dead_executor.jobs.adopt_stopped([50], 20, 'sleep 9')
-      dead_executor.jobs.current.finish(FakeSystemCalls::ChildStatus.new(nil, 9))
-      status = Rush::Builtins::Fg.new(dead_executor, %w[fg %1], Rush::IoTable.standard(dead)).call
-      expect(status.exitstatus).to eq(137)
+    it 'resumes the current job when no operand is given' do
+      executor.jobs.control.engage(nil)
+      executor.jobs.adopt_stopped([50], 20, 'sleep 9')
+      system.provide_child(50, 4)
+      expect(fg.exitstatus).to eq(4)
     end
   end
 end

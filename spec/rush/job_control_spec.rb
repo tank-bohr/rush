@@ -272,4 +272,40 @@ RSpec.describe Rush::JobControl do
       expect(system.tty_leaders).to be_empty
     end
   end
+
+  describe '#launch_background' do
+    it 'forks plainly while monitor is off' do
+      allow(system).to receive(:fork).and_return(50)
+      expect(control.launch_background { nil }).to eq(50)
+      expect(system.pgids_set).to be_empty
+    end
+
+    it 'gives the job its own group under monitor, never the terminal' do
+      tty_control.enable(tty_system.stderr)
+      allow(tty_system).to receive(:fork).and_return(50)
+      expect(tty_control.launch_background { nil }).to eq(50)
+      expect(tty_system.pgids_set).to include([50, 0])
+      expect(tty_system.tty_leaders).to be_empty
+    end
+
+    it 'maps a fake fork (no child pid) to 0' do
+      control.enable(system.stderr)
+      expect(control.launch_background { nil }).to eq(0)
+    end
+  end
+
+  describe '#job_text' do
+    def body(source)
+      Rush::Parser.new(Rush::Lexer.new(source)).parse
+    end
+
+    it 'renders the command under monitor mode' do
+      control.enable(system.stderr)
+      expect(control.job_text(body('sleep $T | cat'))).to eq('sleep ${T} | cat')
+    end
+
+    it 'keeps no text without job control (dash stores cmdtext for jobctl jobs alone)' do
+      expect(control.job_text(body('sleep 5'))).to be_nil
+    end
+  end
 end

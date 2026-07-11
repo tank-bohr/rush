@@ -1276,3 +1276,30 @@ entirely and invisible to the corpus; filed as rush-hkp rather than smuggled in 
 Verified: full rake green (2140 specs, 99.93%/99.39%), differential job-control corpus 72
 lines, the pty smoke now also asserts the pre-prompt Stopped/Killed announcements with
 their command text — dash and rush byte-for-byte, natively and in the container.
+
+### The mutant gate after the epic: two mechanical blind spots and a real tail
+The first full-project mutant run after rush-mv8 scored 92.70% against the 95% gate (29598
+mutations, 2160 alive) — and the post-mortem is more instructive than the number. Two
+thirds of the drop was mutant-blindness, not test weakness. (1) **Matcher names follow the
+defining module**: .mutant.yml ignored Rush::SystemCalls#tcsetpgrp, but mutant identifies
+mixin methods as Rush::SystemCalls::ProcessControl#tcsetpgrp — the whole :nocov: syscall
+cluster (275 mutations) ran un-ignored and untested. (2) **The rush-211.9 describe-constant
+lesson struck again**, this time from the other side: spec/rush/builtins/job_resume_spec.rb
+described a STRING ('fg and bg'), so mutant selected no meaningful tests for
+Builtins::JobResume/Fg/Bg — 258 alive at 2-3% kill rates over code with real behavioural
+specs. Splitting into three constant-keyed files (JobResume base behaviours exercised
+through the concrete subclasses) took the trio to 95%+ with barely a new assertion. The
+same re-keying applied to the notifications spec (now describe Rush::Repl).
+
+The honest third: the epic's new classes were behaviourally covered but mutant-thin —
+Job 43% killed (display_state strings, the changed lifecycle, report, continue), Terminal
+26% (the whole acquire dance was only reachable through job_control_spec, the wrong
+constant), Status#with_stop, LiteralSegment#canon (covered only via command_text_spec —
+wrong constant again), JobControl#launch_background (tested via background_runner_spec —
+wrong constant), JobTable#settle_members/announce_changed (via the string-described
+specs). Direct, constant-keyed specs — the display_state matrix, the .acquire/.while_held
+cluster, stopsig-across-states, job_control_supported? across host_os values, adopt
+re-parking idempotence — brought the full project to 96.49% (1031 alive), gate green. The
+meta-lesson consolidated: with mutant in the toolchain, WHERE a behaviour is asserted
+matters as much as THAT it is asserted — every new class wants its own constant-keyed
+spec file from birth, and mixin ignores must name the module, not the includer.

@@ -35,9 +35,27 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  describe '#ppid / #program_name' do
+    it 'delegates the parent pid and the invocation name' do
+      allow(Process).to receive(:ppid).and_return(77)
+      expect(system.ppid).to eq(77)
+      expect(system.program_name).to eq($PROGRAM_NAME)
+    end
+  end
+
   describe '#pgrp' do
     it 'reports the process group through Process.getpgrp' do
       expect(system.pgrp).to eq(Process.getpgrp)
+    end
+  end
+
+  describe '#job_control_supported?' do
+    it 'holds on every unix and drops only on Windows builds' do
+      verdicts = %w[linux-gnu darwin24 freebsd14 solaris2.11 mswin64 mingw32 cygwin].map do |host|
+        stub_const('RbConfig::CONFIG', RbConfig::CONFIG.merge('host_os' => host))
+        system.job_control_supported?
+      end
+      expect(verdicts).to eq([true, true, true, true, false, false, false])
     end
   end
 
