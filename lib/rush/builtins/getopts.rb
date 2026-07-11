@@ -27,11 +27,17 @@ module Rush
 
       sig { params(result: GetoptsParser::Result).returns(Status) }
       def apply(result)
+        store(result)
+        report_message(result.message)
+        Status.new(result.exitstatus)
+      end
+
+      # The variable updates a getopts step produces: `name`, OPTARG, OPTIND.
+      sig { params(result: GetoptsParser::Result).void }
+      def store(result)
         variables.assign(name, result.name)
         update_optarg(result.optarg)
         variables.assign('OPTIND', result.optind.to_s)
-        report_message(result.message)
-        Status.new(result.exitstatus)
       end
 
       sig { params(value: T.untyped).void }

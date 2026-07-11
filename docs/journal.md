@@ -1624,3 +1624,15 @@ exception) — and FLOG_METHOD_MAX ratchets 19.5 -> 16.1 over Getopts#apply at
 16.0. Both dimensions got tighter: logic methods lost the 3.4 points of
 headroom the wiring floor had been padding them with, and constructors answer
 to the stricter of the two meters as before.
+
+### The flog ratchet lands on 16.0 and rests (rush-16y)
+The last method above the line, Getopts#apply at 16.0, was doing the two
+things its own Result doc names separately — "the variable updates and status
+produced by one getopts step" — so the three variable writes moved into
+#store(result) and apply kept the reporting and the Status. Worst logic method
+is now 15.8 (Read#assign / LoopJump#call), and FLOG_METHOD_MAX pins at a round
+16.0 with real headroom for the first time (every earlier cap sat 0.1 over its
+measurement). Deliberate stop: the 15.x band below is dense — five methods
+within half a point — and each further tenth would cost a full refactor;
+squeezing past it is a different day's decision, recorded here so the next
+reader knows the plateau is chosen, not forgotten.

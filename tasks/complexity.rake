@@ -35,7 +35,7 @@ module ComplexityRake
 end
 
 FLAY_THRESHOLD = 1170
-FLOG_METHOD_MAX = 16.1
+FLOG_METHOD_MAX = 16.0
 
 desc "Structural-duplication ratchet (flay; total mass <= #{FLAY_THRESHOLD})"
 task :flay do
