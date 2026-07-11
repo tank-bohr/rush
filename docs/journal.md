@@ -1750,3 +1750,27 @@ per-node mass threshold, same as number.rb's. Verified against dash beyond
 the corpus: 24 probe lines byte-identical, including the POSIX
 binary-outranks-negation shapes (test ! = x, test \( = \)) and strtol
 strictness. Untyped calls: 11 -> 10, all now in parser_support.
+
+### ParserSupport is typed glue with one named boundary, not a boundary file (rush-211.5.7)
+The classification decision the epic tail hinged on: does the hand-written
+module racc mixes its `---- inner` into count toward typed coverage, or is it
+generated-adjacent and excused? The dump answered: of its 10 untyped calls,
+7 were on values whose shape the grammar guarantees deterministically — the
+list-accumulation pairs (an and_or plus the separator the grammar rewrites
+once it sees what follows) and the simple-command part arrays. Those are now
+`type list_entry = [AST::Node, String]` and
+`type command_part = Assignment | Word | Redirect`, and the factories type
+end to end — Steep even accepts the in-place `entries.last[1] = sep` tuple
+rewrite. What remains untyped is exactly 3 calls on one value: on_error's
+lookahead, which racc hands back as whatever the semantic stack held — or
+literal `false` at end of input. That is the module's one deliberate
+boundary, named as such in the .rbs above the racc-surface block
+(parse/do_parse/next_token/on_error). The Sorbet sigil stays typed: false
+for the same structural reason: do_parse/token_to_str exist only inside the
+generated (and Sorbet-ignored) parser.rb, so Sorbet cannot see the host.
+Verdict recorded: typed glue, one 3-call racc boundary, and the epic's
+coverage story closes at 99.97% typed calls (9007/9010) with every remaining
+untyped call named and justified. The wider lexer→parser token seam (the
+[untyped, untyped] tuple next_token forwards) stays parked as its own
+backlog bead — a Token value object would tame on_error's value too, but it
+is a lexer redesign, not a typing chore.
