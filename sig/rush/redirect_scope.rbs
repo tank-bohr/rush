@@ -8,7 +8,15 @@ module Rush
 
     def initialize: (Executor executor) -> void
 
-    def with_redirects: [T] (Array[AST::Redirect] redirects, IoTable base) { (IoTable io) -> T } -> T
+    # Apply the redirects on top of a base IoTable (the executor's current one
+    # by default), yield the result, then flush+close the files those redirects
+    # opened (POSIX: a later command in the same shell sees the data). Only the
+    # streams this command opened are closed — the diff against the base leaves
+    # inherited streams and pipe ends untouched. Exception: redirect-only `exec`
+    # commits the table as the shell's base (replace_io), so it now equals that
+    # base — leave those files open so they persist for the rest of the shell
+    # rather than closing them out from under it.
+    def with_redirects: [T] (Array[AST::Redirect] redirects, ?IoTable base) { (IoTable io) -> T } -> T
 
     private
 

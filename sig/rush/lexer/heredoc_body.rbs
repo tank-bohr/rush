@@ -12,9 +12,7 @@ module Rush
 
       @scanner: StringScanner
 
-      @segments: Array[AST::WordSegment[untyped]]
-
-      @literal: String
+      @buffer: SegmentBuffer
 
       ESCAPES: Hash[String, String]
 
@@ -25,8 +23,6 @@ module Rush
       def scan: () -> AST::Word
 
       private
-
-      def build: () -> AST::Word
 
       def step: (String char) -> void
 
@@ -43,10 +39,6 @@ module Rush
       def param: () -> void
 
       def escape: () -> void
-
-      def push: (AST::WordSegment[untyped] segment) -> void
-
-      def flush: () -> void
     end
   end
 end

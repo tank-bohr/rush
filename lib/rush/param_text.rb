@@ -13,15 +13,13 @@ module Rush
     sig { params(text: String).void }
     def initialize(text)
       @scanner = StringScanner.new(text)
-      @segments = T.let([], T::Array[AST::WordSegment[T.untyped]])
-      @literal = +''
+      @buffer = SegmentBuffer.new
     end
 
     sig { returns(AST::Word) }
     def word
       step until @scanner.eos?
-      flush
-      AST::Word.new(@segments)
+      @buffer.word
     end
 
     private
@@ -29,27 +27,13 @@ module Rush
     sig { void }
     def step
       char = T.must(@scanner.getch)
-      char == '$' ? dollar : @literal << char
+      char == '$' ? dollar : @buffer << char
     end
 
     sig { void }
     def dollar
       ref = Lexer::ParamScanner.new(@scanner).read
-      ref ? push(AST::ParamSegment.new(ref, false)) : @literal << '$'
-    end
-
-    sig { params(segment: AST::WordSegment[T.untyped]).void }
-    def push(segment)
-      flush
-      @segments << segment
-    end
-
-    sig { void }
-    def flush
-      return if @literal.empty?
-
-      @segments << AST::LiteralSegment.new(@literal, false)
-      @literal = +''
+      ref ? @buffer.push(AST::ParamSegment.new(ref, false)) : @buffer << '$'
     end
   end
 end

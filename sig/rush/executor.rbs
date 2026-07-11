@@ -27,6 +27,7 @@ module Rush
     attr_reader cmd_sub_status: Status
     attr_reader trap_runner: TrapRunner
     attr_reader jobs: JobTable
+    attr_reader redirect_scope: RedirectScope
 
     def initialize: (system: SystemCalls, state: ShellState, ?builtins: Builtins::Registry) -> void
 
@@ -52,15 +53,6 @@ module Rush
     def replace_io: (IoTable table) -> void
 
     def run_simple: (AST::SimpleCommand command) -> Status
-
-    # Apply the redirects on top of a base IoTable, yield the result, then
-    # flush+close the files those redirects opened (POSIX: a later command in the
-    # same shell sees the data). Only the streams this command opened are closed —
-    # the diff against the base leaves inherited streams and pipe ends untouched.
-    # Exception: redirect-only `exec` commits the table as the shell's base
-    # (replace_io), so it now equals @io — leave those files open so they persist
-    # for the rest of the shell rather than closing them out from under it.
-    def with_redirects: [T] (Array[AST::Redirect] redirects, ?IoTable base) { (IoTable io) -> T } -> T
 
     # Run a compound command with its redirects bound for the whole body.
     def run_redirected: (AST::Node command, Array[AST::Redirect] redirects) -> Status

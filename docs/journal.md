@@ -1482,3 +1482,32 @@ executor ×2, loop_nesting, shell_state ×2, mass 833) plus two small clusters; 
 rush-apz rather than fixed inline, since extracting the seam is its own design decision.
 Wiring note: a second top-level module in the Rakefile trips Style/OneClassPerFile — the
 gates live in tasks/complexity.rake, loaded like compile.rake and docker.rake.
+
+### The flay debt paid: delegation double-sigs and real duplication, separated (rush-apz)
+The "seven-node save/yield/restore cluster" turned out to be a misreading worth
+recording: flay's IDENTICAL :iter nodes were not the method bodies but the Sorbet
+`sig do ... end` blocks above them — seven textually identical generic block sigs
+(`type_parameters(:U)`, block in, block's value out). Sorbet demands a literal sig
+block per `def` — a generic sig cannot be aliased (`T.type_alias` takes no type
+parameters) and a metaprogrammed sig is invisible to srb — so two methods with the
+same block-wrapping shape ALWAYS flay identically. The cluster split cleanly into
+the forced and the earned. Earned: Executor#tested/#untested re-exported
+ErrexitContext's wrappers with the full sig copied (two layers of delegation for
+one flag swap — ErrexitContext#scoped went public with the tested/untested pair
+folded into the facade), and Executor#with_redirects duplicated RedirectScope's
+whole four-line sig to re-export it (the reader seam executor.redirect_scope
+replaced it, matching the existing executor.state.loops style; the default base
+moved into RedirectScope). Forced: the five survivors — tested, untested,
+LoopNesting#without, with_loop, preserve_status — are five genuinely distinct
+scoped-state operations, one literal sig each, journaled here as idiomatic and
+noted in tasks/complexity.rake.
+
+The riding-along clusters were honest duplication and produced real seams: the
+@literal/@segments accumulator copied across WordScanner, HeredocBody and
+ParamText became SegmentBuffer (push closes the pending literal run as an
+unquoted segment, #word closes it once more and builds the AST::Word — the three
+scanners lost their build/push/flush triplets), and break/continue collapsed into
+a LoopJump template (validate level >= 1 even loopless, $?=0 before unwinding,
+raise the subclass's LoopControl signal clamped to the nesting depth).
+FLAY_THRESHOLD ratcheted 2016 -> 1170; flog untouched. Verified: full rake green,
+differential corpus intact.

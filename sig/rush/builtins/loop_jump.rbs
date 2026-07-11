@@ -1,0 +1,25 @@
+module Rush
+  module Builtins
+    # Shared engine of `break` and `continue` (POSIX 2.9.5). Both are successful
+    # builtins, so they set $? to 0 before unwinding: the status is seen after
+    # the loop, and by the next iteration's body. With no enclosing loop the
+    # builtin is a no-op; a level past the actual nesting is clamped, so
+    # `break 5` in two loops exits both. The level (>= 1) is validated even
+    # with no loop, so `break abc` still aborts. Subclasses name the signal
+    # that carries the level up to the enclosing loop runner.
+    class LoopJump < Base
+      extend T::Sig
+
+      def call: () -> Status
+
+      private
+
+      # The LoopControl subclass this builtin unwinds with.
+      def signal: () -> singleton(LoopControl)
+
+      def validated: () -> Integer
+
+      def clamped: (Integer level) -> Integer
+    end
+  end
+end

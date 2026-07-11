@@ -41,7 +41,7 @@ module Rush
     # flushes+closes them after the assignments so a later command sees the data.
     sig { returns(Status) }
     def run_bare
-      @executor.with_redirects(@command.redirects, @base_io) { |io| persist_assignments(io) }
+      @executor.redirect_scope.with_redirects(@command.redirects, @base_io) { |io| persist_assignments(io) }
     end
 
     sig { params(io: IoTable).returns(Status) }
@@ -59,7 +59,7 @@ module Rush
     # so it is re-raised as a fatal BuiltinError.
     sig { params(argv: T::Array[String]).returns(Status) }
     def run_command(argv)
-      @executor.with_redirects(@command.redirects, @base_io) { |io| dispatch(argv, io) }
+      @executor.redirect_scope.with_redirects(@command.redirects, @base_io) { |io| dispatch(argv, io) }
     rescue RedirectError => e
       raise BuiltinError, e.message if special?(argv.first)
 

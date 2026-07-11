@@ -13,13 +13,21 @@ module Rush
       @executor = executor
     end
 
+    # Apply the redirects on top of a base IoTable (the executor's current one
+    # by default), yield the result, then flush+close the files those redirects
+    # opened (POSIX: a later command in the same shell sees the data). Only the
+    # streams this command opened are closed — the diff against the base leaves
+    # inherited streams and pipe ends untouched. Exception: redirect-only `exec`
+    # commits the table as the shell's base (replace_io), so it now equals that
+    # base — leave those files open so they persist for the rest of the shell
+    # rather than closing them out from under it.
     sig do
       type_parameters(:U)
         .params(redirects: T::Array[AST::Redirect], base: IoTable,
                 blk: T.proc.params(io: IoTable).returns(T.type_parameter(:U)))
         .returns(T.type_parameter(:U))
     end
-    def with_redirects(redirects, base, &blk)
+    def with_redirects(redirects, base = @executor.io, &blk)
       opened = T.let([], T::Array[FdEntry])
       io = apply_redirects(redirects, base, opened)
       yield io

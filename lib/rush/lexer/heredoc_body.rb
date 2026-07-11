@@ -19,15 +19,14 @@ module Rush
       sig { params(text: String).void }
       def initialize(text)
         @scanner = StringScanner.new(text)
-        @segments = T.let([], T::Array[AST::WordSegment[T.untyped]])
-        @literal = +''
+        @buffer = SegmentBuffer.new
       end
 
       sig { returns(AST::Word) }
       def scan
         loop do
           char = @scanner.getch
-          return build unless char
+          return @buffer.word unless char
 
           step(char)
         end
@@ -35,19 +34,13 @@ module Rush
 
       private
 
-      sig { returns(AST::Word) }
-      def build
-        flush
-        AST::Word.new(@segments)
-      end
-
       sig { params(char: String).void }
       def step(char)
         return dollar if char == '$'
         return backtick if char == '`'
         return escape if char == '\\'
 
-        @literal << char
+        @buffer << char
       end
 
       sig { void }
@@ -64,24 +57,24 @@ module Rush
 
       sig { params(reader: SubstitutionReader).void }
       def command_sub(reader)
-        push(AST::CommandSegment.new(reader.parens, false))
+        @buffer.push(AST::CommandSegment.new(reader.parens, false))
       end
 
       sig { params(reader: SubstitutionReader).void }
       def arithmetic(reader)
         @scanner.getch
-        push(AST::ArithSegment.new(reader.arithmetic, false))
+        @buffer.push(AST::ArithSegment.new(reader.arithmetic, false))
       end
 
       sig { void }
       def backtick
-        push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, false))
+        @buffer.push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, false))
       end
 
       sig { void }
       def param
         ref = ParamScanner.new(@scanner).read
-        ref ? push(AST::ParamSegment.new(ref, false)) : (@literal << '$')
+        ref ? @buffer.push(AST::ParamSegment.new(ref, false)) : (@buffer << '$')
       end
 
       sig { void }
@@ -89,21 +82,7 @@ module Rush
         char = @scanner.getch
         return if char == "\n" # line continuation, as inside double quotes
 
-        @literal << ESCAPE_TABLE.escape(char)
-      end
-
-      sig { params(segment: AST::WordSegment[T.untyped]).void }
-      def push(segment)
-        flush
-        @segments << segment
-      end
-
-      sig { void }
-      def flush
-        return if @literal.empty?
-
-        @segments << AST::LiteralSegment.new(@literal, false)
-        @literal = +''
+        @buffer << ESCAPE_TABLE.escape(char)
       end
     end
   end

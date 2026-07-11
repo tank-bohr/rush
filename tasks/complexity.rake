@@ -3,9 +3,10 @@
 # Structural-duplication (flay) and complexity (flog) ratchets over
 # production code minus the racc-generated parser. Thresholds sit at the
 # measured baseline and only go down: new duplication mass or a method past
-# the complexity cap fails the build. The known flay debt — the seven-node
-# save/yield/restore cluster — is filed in beads; paying it lowers the
-# threshold with it.
+# the complexity cap fails the build. The dominant residual flay mass is the
+# identical Sorbet generic block sig repeated on the five scoped-state
+# helpers — judged idiomatic, not debt: a sig must be a literal block per
+# method, so it cannot be extracted (docs/journal.md, slice 14g).
 module ComplexityRake
   module_function
 
@@ -26,7 +27,7 @@ module ComplexityRake
   end
 end
 
-FLAY_THRESHOLD = 2016
+FLAY_THRESHOLD = 1170
 FLOG_METHOD_MAX = 26.0
 
 desc "Structural-duplication ratchet (flay; total mass <= #{FLAY_THRESHOLD})"

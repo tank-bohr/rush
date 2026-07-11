@@ -1,0 +1,26 @@
+module Rush
+  # Accumulates a word's segments during scanning: literal characters gather
+  # into a pending run, #push closes that run as an unquoted LiteralSegment
+  # before appending a structured segment, and #word closes it once more to
+  # build the finished AST::Word. Shared by the scanners that assemble words
+  # character by character (WordScanner, HeredocBody, ParamText).
+  class SegmentBuffer
+    extend T::Sig
+
+    @segments: Array[AST::WordSegment[untyped]]
+
+    @literal: String
+
+    def initialize: () -> void
+
+    def <<: (String text) -> self
+
+    def push: (AST::WordSegment[untyped] segment) -> void
+
+    def word: () -> AST::Word
+
+    private
+
+    def flush: () -> void
+  end
+end

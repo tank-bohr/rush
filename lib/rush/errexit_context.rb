@@ -13,33 +13,9 @@ module Rush
       @tested = false
     end
 
-    sig do
-      type_parameters(:U)
-        .params(blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def tested(&blk)
-      scoped(true, &blk)
-    end
-
-    sig do
-      type_parameters(:U)
-        .params(blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def untested(&blk)
-      scoped(false, &blk)
-    end
-
-    sig { params(status: Status).returns(Status) }
-    def exit_on_error(status)
-      raise ExitSignal, status.exitstatus if abort_on?(status)
-
-      status
-    end
-
-    private
-
+    # Run the block with the tested flag swapped to `value` — true suppresses
+    # errexit, false starts a fresh untested context — restoring the caller's
+    # flag on exit.
     sig do
       type_parameters(:U)
         .params(value: T::Boolean, blk: T.proc.returns(T.type_parameter(:U)))
@@ -52,6 +28,15 @@ module Rush
     ensure
       @tested = previous
     end
+
+    sig { params(status: Status).returns(Status) }
+    def exit_on_error(status)
+      raise ExitSignal, status.exitstatus if abort_on?(status)
+
+      status
+    end
+
+    private
 
     sig { params(status: Status).returns(T::Boolean) }
     def abort_on?(status)

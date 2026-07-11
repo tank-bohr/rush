@@ -36,6 +36,9 @@ module Rush
     sig { returns(JobTable) }
     attr_reader :jobs
 
+    sig { returns(RedirectScope) }
+    attr_reader :redirect_scope
+
     sig { params(system: SystemCalls, state: ShellState, builtins: Builtins::Registry).void }
     def initialize(system:, state:, builtins: Builtins.default_registry)
       @system = system
@@ -109,27 +112,10 @@ module Rush
       CommandRunner.new(self, command).call
     end
 
-    # Apply the redirects on top of a base IoTable, yield the result, then
-    # flush+close the files those redirects opened (POSIX: a later command in the
-    # same shell sees the data). Only the streams this command opened are closed —
-    # the diff against the base leaves inherited streams and pipe ends untouched.
-    # Exception: redirect-only `exec` commits the table as the shell's base
-    # (replace_io), so it now equals @io — leave those files open so they persist
-    # for the rest of the shell rather than closing them out from under it.
-    sig do
-      type_parameters(:U)
-        .params(redirects: T::Array[AST::Redirect], base: IoTable,
-                blk: T.proc.params(io: IoTable).returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def with_redirects(redirects, base = @io, &blk)
-      @redirect_scope.with_redirects(redirects, base, &blk)
-    end
-
     # Run a compound command with its redirects bound for the whole body.
     sig { params(command: AST::Node, redirects: T::Array[AST::Redirect]).returns(Status) }
     def run_redirected(command, redirects)
-      with_redirects(redirects) { |io| with_io(io) { run(command) } }
+      @redirect_scope.with_redirects(redirects) { |io| with_io(io) { run(command) } }
     end
 
     # The exit status of the last command substitution performed while a simple
@@ -174,7 +160,7 @@ module Rush
         .returns(T.type_parameter(:U))
     end
     def tested(&blk)
-      @errexit.tested(&blk)
+      @errexit.scoped(true, &blk)
     end
 
     sig do
@@ -183,7 +169,7 @@ module Rush
         .returns(T.type_parameter(:U))
     end
     def untested(&blk)
-      @errexit.untested(&blk)
+      @errexit.scoped(false, &blk)
     end
 
     # Evaluate an if/while/until condition: run the command in a tested context

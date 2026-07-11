@@ -135,7 +135,7 @@ RSpec.describe Rush::Executor do
   it 'applies redirects, yields the redirected table, and closes opened streams' do
     executor = build(state)
     allow(system).to receive(:close_redirect).and_call_original
-    status = executor.with_redirects([redirect(:out, '/file')]) do |io|
+    status = executor.redirect_scope.with_redirects([redirect(:out, '/file')]) do |io|
       expect(io.get(1)).to be(system.files.fetch('/file'))
       Rush::Status.success
     end
@@ -147,19 +147,19 @@ RSpec.describe Rush::Executor do
     executor = build(state)
     allow(system).to receive(:close_redirect).and_call_original
     redirects = [redirect(:out, '/lost'), redirect(:dup_out, '2', io_number: 1)]
-    executor.with_redirects(redirects) { Rush::Status.success }
+    executor.redirect_scope.with_redirects(redirects) { Rush::Status.success }
     expect(system).to have_received(:close_redirect).with(system.files.fetch('/lost'))
   end
 
   it 'uses the current io as the default redirect base' do
     executor = build(state)
-    expect(executor.with_redirects([]) { |io| io }).to be(executor.io)
+    expect(executor.redirect_scope.with_redirects([]) { |io| io }).to be(executor.io)
   end
 
   it 'does not close redirected streams that have become the executor base io' do
     executor = build(state)
     allow(system).to receive(:close_redirect).and_call_original
-    executor.with_redirects([redirect(:out, '/persist')]) { |io| executor.replace_io(io) }
+    executor.redirect_scope.with_redirects([redirect(:out, '/persist')]) { |io| executor.replace_io(io) }
     expect(executor.io.get(1)).to be(system.files.fetch('/persist'))
     expect(system).not_to have_received(:close_redirect)
   end
@@ -168,7 +168,7 @@ RSpec.describe Rush::Executor do
     executor = build(state)
     allow(system).to receive(:close_redirect).and_call_original
     redirects = [redirect(:out, '/lost'), redirect(:dup_out, '2', io_number: 1)]
-    executor.with_redirects(redirects) { |io| executor.replace_io(io) }
+    executor.redirect_scope.with_redirects(redirects) { |io| executor.replace_io(io) }
     expect(executor.io.get(1)).to be(system.stderr)
     expect(system).to have_received(:close_redirect).with(system.files.fetch('/lost'))
   end
@@ -188,7 +188,7 @@ RSpec.describe Rush::Executor do
                                  Rush::AST::LiteralSegment.new('/', false),
                                  Rush::AST::ParamSegment.new(Rush::AST::ParamRef.simple('name'), false)
                                ])
-    executor.with_redirects([Rush::AST::Redirect.new(kind: :out, target: word, io_number: nil)]) do
+    executor.redirect_scope.with_redirects([Rush::AST::Redirect.new(kind: :out, target: word, io_number: nil)]) do
       Rush::Status.success
     end
     expect(system.files).to have_key('/expanded')

@@ -3,34 +3,16 @@
 
 module Rush
   module Builtins
-    # `continue [n]` — resume the n-th enclosing loop's next iteration (default
-    # 1). continue is a successful builtin, so it sets $? to 0 before unwinding
-    # (POSIX): the next iteration's body and any code after the loop see 0. With
-    # no enclosing loop it is a no-op; a level past the actual nesting is clamped.
-    # The level (>= 1) is validated even with no loop, so `continue abc` aborts.
-    class Continue < Base
+    # `continue [n]` — resume the n-th enclosing loop's next iteration
+    # (default 1); the shared POSIX 2.9.5 semantics live in LoopJump.
+    class Continue < LoopJump
       extend T::Sig
-
-      sig { returns(Status) }
-      def call
-        level = validated
-        executor.state.record_status(success)
-        raise ContinueSignal, clamped(level) if executor.state.loops.any?
-
-        success
-      end
 
       private
 
-      sig { returns(Integer) }
-      def validated
-        first = operands.first
-        first ? numeric_operand(first, min: 1) : 1
-      end
-
-      sig { params(level: Integer).returns(Integer) }
-      def clamped(level)
-        [level, executor.state.loops.depth].min
+      sig { returns(T.class_of(LoopControl)) }
+      def signal
+        ContinueSignal
       end
     end
   end

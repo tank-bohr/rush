@@ -43,14 +43,13 @@ module Rush
         @scanner = scanner
         @terminator = terminator
         @interactive = interactive
-        @segments = []
-        @literal = +''
+        @buffer = SegmentBuffer.new
       end
 
       sig { returns(AST::Word) }
       def scan
         loop do
-          char = @scanner.getch or return build
+          char = @scanner.getch or return @buffer.word
           return rewind_then_build if terminates?(char)
 
           step(char)
@@ -58,12 +57,6 @@ module Rush
       end
 
       private
-
-      sig { returns(AST::Word) }
-      def build
-        flush
-        AST::Word.new(@segments)
-      end
 
       sig { params(char: String).returns(T::Boolean) }
       def terminates?(char)
@@ -74,13 +67,13 @@ module Rush
       sig { returns(AST::Word) }
       def rewind_then_build
         @scanner.unscan
-        build
+        @buffer.word
       end
 
       sig { params(char: String).void }
       def step(char)
         handler = DISPATCH.fetch(char, nil)
-        handler ? send(handler) : (@literal << char)
+        handler ? send(handler) : (@buffer << char)
       end
 
       sig { void }
@@ -108,7 +101,7 @@ module Rush
       sig { void }
       def double_step
         return double_dollar if peek?('$')
-        return add(DollarScanner.new(@scanner).read_backtick(quoted: true)) if peek?('`')
+        return @buffer.push(DollarScanner.new(@scanner).read_backtick(quoted: true)) if peek?('`')
         return double_escape if peek?('\\')
 
         push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
@@ -139,19 +132,19 @@ module Rush
       def dollar
         @scanner.unscan
         segment = DollarScanner.new(@scanner).read(quoted: false)
-        segment ? add(segment) : (@literal << '$')
+        segment ? @buffer.push(segment) : (@buffer << '$')
       end
 
       sig { void }
       def double_dollar
         segment = DollarScanner.new(@scanner).read(quoted: true)
-        segment ? add(segment) : push('$', quoted: true)
+        segment ? @buffer.push(segment) : push('$', quoted: true)
       end
 
       sig { void }
       def backtick
         @scanner.unscan
-        add(DollarScanner.new(@scanner).read_backtick(quoted: false))
+        @buffer.push(DollarScanner.new(@scanner).read_backtick(quoted: false))
       end
 
       sig { void }
@@ -163,26 +156,12 @@ module Rush
       # A backslash that ends the input stays literal, like dash.
       sig { void }
       def trailing_backslash
-        @literal << '\\'
+        @buffer << '\\'
       end
 
       sig { params(value: T.untyped, quoted: T::Boolean).void }
       def push(value, quoted:)
-        add(AST::LiteralSegment.new(value, quoted))
-      end
-
-      sig { params(segment: T.untyped).void }
-      def add(segment)
-        flush
-        @segments << segment
-      end
-
-      sig { void }
-      def flush
-        return if @literal.empty?
-
-        @segments << AST::LiteralSegment.new(@literal, false)
-        @literal = +''
+        @buffer.push(AST::LiteralSegment.new(value, quoted))
       end
     end
   end

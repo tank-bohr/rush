@@ -12,9 +12,7 @@ module Rush
 
       @terminator: Regexp?
 
-      @segments: Array[untyped]
-
-      @literal: String
+      @buffer: SegmentBuffer
 
       TERMINATOR: Regexp
 
@@ -35,8 +33,6 @@ module Rush
       def scan: () -> AST::Word
 
       private
-
-      def build: () -> AST::Word
 
       def terminates?: (String char) -> bool
 
@@ -69,10 +65,6 @@ module Rush
       def continuation: () -> void
 
       def push: (untyped value, quoted: bool) -> void
-
-      def add: (untyped segment) -> void
-
-      def flush: () -> void
     end
   end
 end

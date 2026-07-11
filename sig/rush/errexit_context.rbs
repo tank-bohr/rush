@@ -9,15 +9,14 @@ module Rush
 
     def initialize: (ShellState state) -> void
 
-    def tested: [T] () { () -> T } -> T
-
-    def untested: [T] () { () -> T } -> T
+    # Run the block with the tested flag swapped to `value` — true suppresses
+    # errexit, false starts a fresh untested context — restoring the caller's
+    # flag on exit.
+    def scoped: [T] (bool value) { () -> T } -> T
 
     def exit_on_error: (Status status) -> Status
 
     private
-
-    def scoped: [T] (bool value) { () -> T } -> T
 
     def abort_on?: (Status status) -> bool
   end
