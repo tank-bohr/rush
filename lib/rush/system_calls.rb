@@ -114,13 +114,13 @@ module Rush
 
     # Sync so a builtin's write reaches the file immediately — like a pipe write
     # end (sync by default), this lets a forked subshell's output survive its
-    # exit! and be visible to a later command; close_redirect releases the fd.
-    # rubocop:disable Style/FileOpen -- a redirection keeps the file open past
-    # this call, so the auto-closing block form is wrong here.
+    # exit! and be visible to a later command. File.new, not File.open: the
+    # redirection keeps the file open past this call — the caller owns the
+    # handle until close_redirect releases it, so the auto-closing block form
+    # would be wrong here.
     def open_file(path, mode)
-      File.open(path, mode).tap { |io| io.sync = true }
+      File.new(path, mode).tap { |io| io.sync = true }
     end
-    # rubocop:enable Style/FileOpen
 
     # Flush and release a file a redirection opened, so a later command in the
     # same shell sees the data and the fd does not leak.

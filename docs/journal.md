@@ -1511,3 +1511,15 @@ a LoopJump template (validate level >= 1 even loopless, $?=0 before unwinding,
 raise the subclass's LoopControl signal clamped to the nesting depth).
 FLAY_THRESHOLD ratcheted 2016 -> 1170; flog untouched. Verified: full rake green,
 differential corpus intact.
+
+### File.new is the honest spelling for a caller-owned handle (rush-oks)
+The gate's only Style/FileOpen disable guarded open_file, where the auto-closing
+block form really would be wrong: a redirection's file must outlive the call,
+and close_redirect owns the close. The resolution was already in the language:
+File.new constructs a handle whose lifetime the caller manages — behaviourally
+identical to blockless File.open — and satisfies both Style/FileOpen and
+Style/AutoResourceCleanup, so the disable/enable pair dissolved into a one-word
+change plus the spec stub following suit. (open_tty's bare open-and-return never
+triggered the cop, which flags the chained File.open(...).tap shape; its
+ownership story was already documented inline.) First of the six disable-paydown
+beads filed after the 14g review of every rubocop suppression in the tree.

@@ -128,7 +128,7 @@ RSpec.describe Rush::SystemCalls do
   it 'expands paths and opens files in sync mode' do
     expect(system.expand_path('a', '/base')).to eq('/base/a')
     io = instance_double(File, :sync= => true)
-    allow(File).to receive(:open).with('/f', 'w').and_return(io)
+    allow(File).to receive(:new).with('/f', 'w').and_return(io)
     expect(system.open_file('/f', 'w')).to be(io)
     expect(io).to have_received(:sync=).with(true)
   end
