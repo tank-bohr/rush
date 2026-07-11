@@ -23,6 +23,13 @@ RSpec.describe Rush::Builtins::Fg do
     expect(executor.jobs.current).to be_nil
   end
 
+  it 'reports a signal death of the resumed job on stderr, like any foreground wait (rush-hkp)' do
+    system.provide_signalled(50, 9)
+    system.provide_signalled(51, 9)
+    expect(fg('%1').exitstatus).to eq(137)
+    expect(system.stderr.string).to eq("Killed\n")
+  end
+
   it 'prints the command line to stdout, as dash echoes what it resumes' do
     system.provide_child(50, 0)
     system.provide_child(51, 0)

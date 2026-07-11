@@ -77,9 +77,13 @@ module Rush
         value if value <= INT_MAX
       end
 
+      # A pid/%id operand whose job died by a signal reports strsignal on
+      # stderr, like dash's wait-by-pid (probed; the bare `wait` in #all
+      # never reports, also probed).
       sig { params(pid: Integer).returns(Status) }
       def awaited(pid)
-        executor.jobs.wait_for(pid) || failure(127)
+        status = executor.jobs.wait_for(pid)
+        status ? SignalReport.report(status, stderr) : failure(127)
       end
 
       sig { params(operand: String).returns(Status) }

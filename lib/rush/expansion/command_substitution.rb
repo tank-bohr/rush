@@ -48,11 +48,14 @@ module Rush
         @executor.state.record_status(Status.new(e.code))
       end
 
+      # A substitution child killed by a signal reports on the shell's
+      # stderr, like dash (probed: x=$(sh -c 'kill -KILL $$') prints Killed).
       sig { params(read: T.untyped, pid: T.untyped).returns(String) }
       def read_output(read, pid)
         output = read.read
         read.close
-        @executor.record_cmd_sub_status(@executor.jobs.await(pid))
+        status = SignalReport.report(@executor.jobs.await(pid), @executor.io.get(2))
+        @executor.record_cmd_sub_status(status)
         output
       end
 

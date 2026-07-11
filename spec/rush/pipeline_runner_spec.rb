@@ -25,6 +25,14 @@ RSpec.describe Rush::PipelineRunner do
       expect(status.exitstatus).to eq(0)
     end
 
+    it 'reports each directly-killed stage on the shell stderr, in stage order (rush-hkp)' do
+      system.provide_signalled(1, 9)
+      system.provide_signalled(2, 15)
+      status = described_class.new(executor, [echo('a'), echo('b')]).send(:wait, [1, 2])
+      expect(status.exitstatus).to eq(143)
+      expect(system.stderr.string).to eq("Killed\nTerminated\n")
+    end
+
     it 'uses the rightmost non-zero stage status when pipefail is set' do
       state.options.set(:pipefail, true)
       stub_wait_statuses(1 => 5, 2 => 7, 3 => 0)
@@ -71,7 +79,7 @@ RSpec.describe Rush::PipelineRunner do
     end
 
     def status_double(code)
-      instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false)
+      instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false, coredump?: false)
     end
 
     def stub_wait_statuses(codes)

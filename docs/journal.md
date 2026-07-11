@@ -1322,3 +1322,39 @@ pushed the -/+ branch into apply_long, where sign is dual-used like the toggle p
 and RepeatedConditional (first on?(option) ×3, then the renamed block param — reek counts
 same-named locals across methods) dissolved once the render helper takes on_form/off_form
 format strings and picks between them exactly once.
+
+### printsignal lands: the reap funnels report signal deaths like dash (rush-hkp)
+The probe matrix refined the epic-close notes in three ways. (1) dash's real rule is
+per-process: ANY dash process's foreground wait prints strsignal(sig) for a reaped child
+killed by a signal other than INT/PIPE ("Killed", "Terminated", "User defined signal 1",
+" (core dumped)" suffixed on WCOREDUMP) — fg simple commands, pipeline stages, cmdsub
+children, subshells, functions. (2) The wait builtin prints only for pid/%id operands; a
+bare `wait` NEVER prints (probed: `kill -KILL $!; wait` is silent, `wait $!` says Killed) —
+the epic note's "wait-builtin reaps print" had conflated the pre-prompt notification line
+with printsignal. (3) Where the message lands follows dash's redirect mechanics: a simple
+command's own 2>/dev/null suppresses it (dash applies simple-command redirects in the
+parent, so the parent's printsignal writes into them), while a pipeline stage's or a
+cmdsub body's own 2>/dev/null does NOT (EV_EXIT execs those away, so the main shell — fd2
+unredirected — is the reaper); group redirects suppress everywhere.
+
+Landed as SignalReport (Status gains the WCOREDUMP bit, nil-defaulted after reek's
+BooleanParameter pushed it to stopsig/termsig-style absence semantics) called at six reap
+sites: External (onto the command's IoTable stderr — the simple-command suppression falls
+out for free), PipelineRunner per stage, SubshellRunner, CommandSubstitution and Fg#settle
+(shell stderr), and Wait#awaited for operands only. rush's extra fork layer makes the
+supervisor's own External the printer for in-stage deaths — its inherited fd2 IS the shell
+stderr, so the observable matches dash — and since a supervisor exit!s 128+n, the outer
+await sees no termsig and never double-prints. Divergences, all EV_EXIT-family
+(journal-only, stderr-invisible to the corpus): a bg SIMPLE command whose process kills
+itself prints from rush's bg child where dash is silent (dash's compound bg `{ ...; } &`
+prints identically to rush — probed); a stage/cmdsub body's own 2>/dev/null suppresses in
+rush where dash prints (rush honors the command's redirect — arguably kinder). Corpus
+trick worth keeping: `cmd 2>file; echo rc=$?; cat file` routes the report into the
+stdout comparison, so eight printsignal lines pin TERM/USR1/SEGV/INT-silence/stage/
+cmdsub/wait-by-pid/bare-wait differentially despite the stderr-ignoring harness. The
+glibc strsignal vocabulary grew USR1/USR2/BUS/TRAP spellings; instance_doubles of
+Process::Status all needed coredump? stubbed once Status.of started reading it.
+
+Verified: full rake green (2235 specs, 99.98%/99.6%), 8 new differential corpus lines,
+the pty smoke passes natively byte-for-byte (its kill+wait act now exercises the
+printsignal line in both shells alike).

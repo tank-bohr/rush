@@ -41,9 +41,10 @@ module Rush
     # spelled out; the rest fall back to the signal name.
     DESCRIPTIONS = {
       1 => 'Hangup', 2 => 'Interrupt', 3 => 'Quit', 4 => 'Illegal instruction',
-      6 => 'Aborted', 8 => 'Floating point exception', 9 => 'Killed',
-      11 => 'Segmentation fault', 13 => 'Broken pipe', 14 => 'Alarm clock',
-      15 => 'Terminated'
+      5 => 'Trace/breakpoint trap', 6 => 'Aborted', 7 => 'Bus error',
+      8 => 'Floating point exception', 9 => 'Killed', 10 => 'User defined signal 1',
+      11 => 'Segmentation fault', 12 => 'User defined signal 2', 13 => 'Broken pipe',
+      14 => 'Alarm clock', 15 => 'Terminated'
     }.freeze
 
     sig { params(number: Integer).returns(String) }

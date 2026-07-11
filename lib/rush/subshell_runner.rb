@@ -20,7 +20,8 @@ module Rush
       control = @executor.job_control
       pid = control.launch { run_child }
       text = control.job_text(AST::Subshell.new(@body))
-      control.foreground([pid], text: text) { @executor.jobs.await(pid) }
+      status = control.foreground([pid], text: text) { @executor.jobs.await(pid) }
+      SignalReport.report(status, @executor.io.get(2))
     end
 
     # The subshell is a fresh top level: exit (or an uncaught return) ends it

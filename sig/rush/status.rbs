@@ -12,7 +12,14 @@ module Rush
 
     attr_reader termsig: Integer?
 
-    def initialize: (Integer exitstatus, ?stopsig: Integer?, ?termsig: Integer?) -> void
+    @coredump: bool?
+
+    def initialize: (Integer exitstatus, ?stopsig: Integer?, ?termsig: Integer?, ?coredump: bool?) -> void
+
+    # The OS recorded a core dump alongside the killing signal (WCOREDUMP,
+    # nil when no dump information accompanied the status): SignalReport
+    # suffixes its message with " (core dumped)" like dash.
+    def coredump?: () -> bool
 
     def success?: () -> bool
 

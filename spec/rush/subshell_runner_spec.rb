@@ -10,7 +10,7 @@ RSpec.describe Rush::SubshellRunner do
   end
 
   def status_double(code)
-    instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false)
+    instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false, coredump?: false)
   end
 
   describe '#call (parent side)' do
@@ -18,6 +18,13 @@ RSpec.describe Rush::SubshellRunner do
       allow(system).to receive(:fork).and_return(42)
       allow(system).to receive(:waitpid2).with(42).and_return([42, status_double(3)])
       expect(described_class.new(executor, body('false')).call.exitstatus).to eq(3)
+    end
+
+    it 'reports a signal-killed subshell on the shell stderr, like dash printsignal (rush-hkp)' do
+      allow(system).to receive(:fork).and_return(42)
+      system.provide_signalled(42, 15)
+      expect(described_class.new(executor, body('false')).call.exitstatus).to eq(143)
+      expect(system.stderr.string).to eq("Terminated\n")
     end
 
     it 'places the subshell in its own process group under job control (dash-probed)' do

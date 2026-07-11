@@ -151,9 +151,14 @@ module Rush
       pipefail? ? statuses.pipefail_verdict : statuses.verdict
     end
 
+    # A directly-killed stage reports on the shell's stderr, like dash's
+    # per-stage printsignal (probed: two killed stages print two lines, in
+    # stage order, unmoved by the stages' own redirects). The common case —
+    # an external dying inside the stage — reports from the stage
+    # supervisor's own External instead.
     sig { params(pid: Integer).returns(Status) }
     def wait_status(pid)
-      @executor.jobs.await(pid)
+      SignalReport.report(@executor.jobs.await(pid), @executor.io.get(2))
     end
 
     sig { returns(T::Boolean) }

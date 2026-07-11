@@ -34,8 +34,13 @@ RSpec.describe Rush::Signals do
       .to eq(%w[Killed Terminated])
   end
 
+  it 'spells the glibc strsignal descriptions printsignal reports (rush-hkp)' do
+    expect([10, 12, 7, 5].map { |number| described_class.description(number) })
+      .to eq(['User defined signal 1', 'User defined signal 2', 'Bus error', 'Trace/breakpoint trap'])
+  end
+
   it 'falls back to the signal name, then to Signal N' do
-    expect([described_class.description(5), described_class.description(99)])
-      .to eq(['TRAP', 'Signal 99'])
+    expect([described_class.description(17), described_class.description(99)])
+      .to eq(['CHLD', 'Signal 99'])
   end
 end

@@ -17,18 +17,18 @@ RSpec.describe Rush::Status do
 
   describe '.of' do
     it 'uses the process exit status when the child exited normally' do
-      process_status = instance_double(Process::Status, exitstatus: 5, termsig: nil, stopped?: false)
+      process_status = instance_double(Process::Status, exitstatus: 5, termsig: nil, stopped?: false, coredump?: false)
       expect(described_class.of(process_status).exitstatus).to eq(5)
     end
 
     it 'maps a terminating signal to 128 + signal, keeping the signal for the jobs listing' do
-      process_status = instance_double(Process::Status, exitstatus: nil, termsig: 9, stopped?: false)
+      process_status = instance_double(Process::Status, exitstatus: nil, termsig: 9, stopped?: false, coredump?: false)
       status = described_class.of(process_status)
       expect([status.exitstatus, status.termsig, status.stopsig]).to eq([137, 9, nil])
     end
 
     it 'keeps no termsig on a plain exit' do
-      process_status = instance_double(Process::Status, exitstatus: 5, termsig: nil, stopped?: false)
+      process_status = instance_double(Process::Status, exitstatus: 5, termsig: nil, stopped?: false, coredump?: false)
       status = described_class.of(process_status)
       expect([status.termsig, status.stopped?]).to eq([nil, false])
     end
@@ -38,6 +38,17 @@ RSpec.describe Rush::Status do
       status = described_class.of(process_status)
       expect([status.exitstatus, status.stopsig, status.stopped?]).to eq([148, 20, true])
     end
+
+    it 'carries the WCOREDUMP bit for SignalReport (rush-hkp)' do
+      process_status = instance_double(Process::Status, exitstatus: nil, termsig: 11, stopped?: false,
+                                                        coredump?: true)
+      status = described_class.of(process_status)
+      expect([status.termsig, status.coredump?]).to eq([11, true])
+    end
+  end
+
+  it 'defaults the coredump bit off' do
+    expect(described_class.new(0).coredump?).to be(false)
   end
 
   describe '#with_stop' do

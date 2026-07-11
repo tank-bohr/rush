@@ -6,7 +6,7 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
   def status_double(code)
-    instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false)
+    instance_double(Process::Status, exitstatus: code, termsig: nil, stopped?: false, coredump?: false)
   end
 
   describe '#call (parent side)' do
@@ -24,6 +24,13 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
       allow(system).to receive(:waitpid2).with(7).and_return([7, status_double(3)])
       described_class.new(executor, 'exit 3').expand
       expect([executor.cmd_sub_status.class, executor.cmd_sub_status.exitstatus]).to eq([Rush::Status, 3])
+    end
+
+    it 'reports a signal-killed substitution child on the shell stderr, like dash (rush-hkp)' do
+      allow(system).to receive_messages(pipe: [StringIO.new, StringIO.new], fork: 7)
+      system.provide_signalled(7, 9)
+      described_class.new(executor, 'sh -c "kill -KILL $$"').expand
+      expect([executor.cmd_sub_status.exitstatus, system.stderr.string]).to eq([137, "Killed\n"])
     end
 
     it 'passes the pipe writer to the spawned child' do

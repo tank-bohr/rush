@@ -22,11 +22,23 @@ module Rush
     sig { returns(T.nilable(Integer)) }
     attr_reader :termsig
 
-    sig { params(exitstatus: Integer, stopsig: T.nilable(Integer), termsig: T.nilable(Integer)).void }
-    def initialize(exitstatus, stopsig: nil, termsig: nil)
+    sig do
+      params(exitstatus: Integer, stopsig: T.nilable(Integer), termsig: T.nilable(Integer),
+             coredump: T.nilable(T::Boolean)).void
+    end
+    def initialize(exitstatus, stopsig: nil, termsig: nil, coredump: nil)
       @exitstatus = exitstatus
       @stopsig = stopsig
       @termsig = termsig
+      @coredump = coredump
+    end
+
+    # The OS recorded a core dump alongside the killing signal (WCOREDUMP,
+    # nil when no dump information accompanied the status): SignalReport
+    # suffixes its message with " (core dumped)" like dash.
+    sig { returns(T::Boolean) }
+    def coredump?
+      !!@coredump
     end
 
     sig { returns(T::Boolean) }
@@ -70,7 +82,7 @@ module Rush
       return stopped(process_status.stopsig.to_i) if process_status.stopped?
 
       signal = process_status.termsig
-      new(process_status.exitstatus || (signal.to_i + 128), termsig: signal)
+      new(process_status.exitstatus || (signal.to_i + 128), termsig: signal, coredump: process_status.coredump?)
     end
 
     sig { params(stopsig: Integer).returns(Status) }

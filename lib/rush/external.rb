@@ -20,11 +20,14 @@ module Rush
     # foreground wrapper's parent-side give is what hands it the terminal —
     # right after the spawn, before the wait. `text` is the job line a
     # parked entry keeps, rendered pre-expansion by the caller (which holds
-    # the AST this class never sees).
+    # the AST this class never sees). A signal death reports on the
+    # command's own stderr (dash applies simple-command redirects in the
+    # parent, so 2>/dev/null suppresses its printsignal there too — probed).
     sig { params(text: T.nilable(String)).returns(Status) }
     def call(text = nil)
       pid = system.spawn(@env, @argv, spawn_options)
-      @executor.job_control.foreground([pid], text: text) { @executor.jobs.await(pid) }
+      status = @executor.job_control.foreground([pid], text: text) { @executor.jobs.await(pid) }
+      SignalReport.report(status, @io.get(2))
     rescue Errno::ENOENT, Errno::EACCES => e
       error_status(e)
     end

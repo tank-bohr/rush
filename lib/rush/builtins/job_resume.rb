@@ -78,10 +78,11 @@ module Rush
 
       # A finished job answers from memory (dash's fg on a dead-but-
       # remembered entry: getstatus, probed 137); a live one waits every
-      # member (JobTable#settle_members).
+      # member (JobTable#settle_members). Either way a signal death reports
+      # like any foreground wait's (dash: fg + kill prints Killed).
       sig { params(job: JobTable::Job).returns(Status) }
       def settle(job)
-        verdict = job.finished? ? job.status : executor.jobs.settle_members(job)
+        verdict = SignalReport.report(job.finished? ? job.status : executor.jobs.settle_members(job), stderr)
         executor.jobs.forget(job) unless verdict.stopped?
         verdict
       end

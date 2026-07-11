@@ -29,6 +29,22 @@ RSpec.describe Rush::External do
     expect(run(%w[prog a]).exitstatus).to eq(3)
   end
 
+  it 'reports a signal death on the command stderr, like dash printsignal (rush-hkp)' do
+    fake = FakeSystemCalls.new
+    allow(system).to receive(:spawn).and_return(11)
+    allow(jobs).to receive(:await).with(11).and_return(Rush::Status.new(137, termsig: 9))
+    expect(run(%w[prog], Rush::IoTable.standard(fake)).exitstatus).to eq(137)
+    expect(fake.stderr.string).to eq("Killed\n")
+  end
+
+  it 'keeps a SIGINT death quiet (dash printsignal exclusion)' do
+    fake = FakeSystemCalls.new
+    allow(system).to receive(:spawn).and_return(11)
+    allow(jobs).to receive(:await).with(11).and_return(Rush::Status.new(130, termsig: 2))
+    run(%w[prog], Rush::IoTable.standard(fake))
+    expect(fake.stderr.string).to be_empty
+  end
+
   it 'waits inside the job-control foreground wrapper, keyed on the spawned pid (terminal handover)' do
     allow(system).to receive(:spawn).and_return(11)
     allow(jobs).to receive(:await).with(11).and_return(Rush::Status.success)

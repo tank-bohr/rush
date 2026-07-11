@@ -16,10 +16,15 @@ class FakeSystemCalls
   # A Process::Status stand-in: fork is a no-op so no child truly runs, and a
   # spec sets `wait_status` to control the status a command substitution sees.
   # termsig is nil for a plain exit, the signal number for a signalled child;
-  # stopsig marks a WUNTRACED-visible stop (rush-mv8.4).
-  ChildStatus = Struct.new(:exitstatus, :termsig, :stopsig) do
+  # stopsig marks a WUNTRACED-visible stop (rush-mv8.4); coredump mirrors
+  # WCOREDUMP for SignalReport's " (core dumped)" suffix (rush-hkp).
+  ChildStatus = Struct.new(:exitstatus, :termsig, :stopsig, :coredump) do
     def stopped?
       !stopsig.nil?
+    end
+
+    def coredump?
+      !!coredump
     end
   end
 

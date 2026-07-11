@@ -47,6 +47,20 @@ RSpec.describe Rush::Builtins::Wait do
     expect(system.stderr.string).to be_empty
   end
 
+  it 'reports a signal-killed job on stderr for a pid operand, like dash wait-by-pid (rush-hkp)' do
+    executor.jobs.record(9)
+    system.provide_signalled(9, 9)
+    expect(run('9').exitstatus).to eq(137)
+    expect(system.stderr.string).to eq("Killed\n")
+  end
+
+  it 'never reports from a bare wait, even for a signal-killed job (dash-probed)' do
+    executor.jobs.record(9)
+    system.provide_signalled(9, 9)
+    expect(run).to be_success
+    expect(system.stderr.string).to be_empty
+  end
+
   it 'gives an unknown last operand its 127 even after a known one (POSIX; dash keeps 3)' do
     launch(9, 3)
     expect(run('9', '99999').exitstatus).to eq(127)

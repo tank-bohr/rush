@@ -69,4 +69,31 @@ RSpec.describe 'rush vs dash (differential traps/signals corpus)' do
       expect(rush(snippet)).to eq(dash(snippet))
     end
   end
+
+  # printsignal (rush-hkp): a signal-killed foreground job reports strsignal
+  # on the stderr in effect at the wait, INT/PIPE excluded, wait-by-pid
+  # reporting and bare wait silent. Redirecting that stderr into a file and
+  # cat-ing it back makes the report corpus-visible despite the
+  # stdout-only comparison; both %s in each template take the temp path.
+  printsignal = [
+    "sh -c 'kill -TERM $$' 2>%s; echo rc=$?; cat %s",
+    "sh -c 'kill -USR1 $$' 2>%s; echo rc=$?; cat %s",
+    "sh -c 'kill -SEGV $$' 2>%s; echo rc=$?; cat %s",
+    "sh -c 'kill -INT $$' 2>%s; echo rc=$?; cat %s",
+    "{ sh -c 'kill -KILL $$' | cat; } 2>%s; echo rc=$?; cat %s",
+    "{ x=$(sh -c 'kill -KILL $$'); } 2>%s; echo rc=$?; cat %s",
+    '{ sleep 2 & kill -KILL $!; wait $!; } 2>%s; echo rc=$?; cat %s',
+    '{ sleep 2 & kill -KILL $!; wait; } 2>%s; echo rc=$?; cat %s'
+  ].freeze
+
+  printsignal.each.with_index(1) do |template, index|
+    id = format('printsignal-%03d', index)
+
+    it "#{id}: matches dash for: #{template}" do
+      Tempfile.create('rush_printsignal') do |file|
+        snippet = format(template, file.path, file.path)
+        expect(rush(snippet)).to eq(dash(snippet))
+      end
+    end
+  end
 end
