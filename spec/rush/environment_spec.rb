@@ -108,4 +108,44 @@ RSpec.describe Rush::Environment do
     env.update_lineno(2)
     expect(env.get('LINENO')).to eq('99')
   end
+
+  it 'scopes temporary exported values while preserving unrelated builtin writes' do
+    env = described_class.new('A' => 'old')
+    env.with_temporary('A' => 'temp', 'C' => 'new') do
+      expect([env.get('A'), env.get('C'), env.exported]).to eq(['temp', 'new', { 'A' => 'temp', 'C' => 'new' }])
+      env.unset('A')
+      env.assign('A', 'changed')
+      env.readonly('C')
+      env.assign('D', 'live')
+    end
+
+    expect(env.get('C')).to be_nil
+    env.assign('C', 'after')
+    expect([env.get('A'), env.get('C'), env.get('D'), env.exported]).to eq(['old', 'after', 'live', { 'A' => 'old' }])
+  end
+
+  it 'restores temporary values and LINENO policy when the builtin raises' do
+    env = described_class.new({})
+    action = -> { env.with_temporary('LINENO' => 'fixed') { raise StandardError, 'boom' } }
+    expect(&action).to raise_error(StandardError, 'boom')
+    env.update_lineno(9)
+    expect(env.get('LINENO')).to eq('9')
+  end
+
+  it 'keeps an unrelated builtin change to LINENO policy' do
+    env = described_class.new({})
+    env.update_lineno(2)
+    env.with_temporary('A' => 'temp') { env.unset('LINENO') }
+    env.update_lineno(3)
+    expect(env.get('LINENO')).to be_nil
+  end
+
+  it 'restores readonly state when applying the temporary value fails' do
+    env = described_class.new('A' => 'old')
+    env.readonly('A')
+
+    expect { env.with_temporary('A' => 'new') { flunk 'unreachable' } }.to raise_error(Rush::ReadonlyError)
+    expect([env.get('A'), env.exported]).to eq(['old', { 'A' => 'old' }])
+    expect { env.assign('A', 'again') }.to raise_error(Rush::ReadonlyError)
+  end
 end

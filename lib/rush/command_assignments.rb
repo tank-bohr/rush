@@ -14,6 +14,11 @@ module Rush
       @expander = expander
     end
 
+    sig { returns(T::Array[String]) }
+    def names
+      @assignments.map(&:name)
+    end
+
     sig { params(variables: ShellVariables).void }
     def persist_to(variables)
       @assignments.each { |assignment| variables.assign(assignment.name, expand(assignment)) }

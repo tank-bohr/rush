@@ -2,7 +2,7 @@ module Rush
   module Builtins
     # O(1) name -> builtin class lookup, populated by Builtins.default_registry.
     interface _BuiltinClass
-      def new: (Executor executor, Array[String] argv, IoTable io) -> Base
+      def new: (Executor executor, Array[String] argv, IoTable io, ?::Hash[String, String]? environment) -> Base
     end
 
     class Registry

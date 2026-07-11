@@ -34,6 +34,8 @@ module Rush
 
     def exported: () -> Hash[String, String]
 
+    def with_temporary: [U] (Hash[String, String] values) { () -> U } -> U
+
     def move_to: (String pwd) -> void
 
     def seed_pwd: (String path) -> void

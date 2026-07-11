@@ -92,6 +92,20 @@ RSpec.describe Rush::Builtins::Command do
     expect(system.stdout.string).to eq("hi\n")
   end
 
+  it 'demotes special-builtin errors to ordinary status 2 failures' do
+    state.variables.assign('X', 'fixed')
+    state.variables.readonly('X')
+
+    statuses = [run('shift', '5'), run('.', '/missing'), run('eval', 'echo ${MISSING?bad}'),
+                run('export', 'X=changed')]
+    expect(statuses.map(&:exitstatus)).to eq([2, 2, 2, 2])
+    expect(system.stderr.string.lines.size).to eq(4)
+  end
+
+  it 'still propagates the target builtin control flow' do
+    expect { run('return', '7') }.to raise_error(Rush::ReturnSignal) { |error| expect(error.code).to eq(7) }
+  end
+
   it 'constructs a builtin with the current executor' do
     registry = Rush::Builtins::Registry.new
     checker = Class.new(Rush::Builtins::Base) do

@@ -11,6 +11,8 @@ module Rush
 
     def initialize: (Array[AST::Assignment] assignments, Expansion::Pipeline expander) -> void
 
+    def names: () -> Array[String]
+
     def persist_to: (ShellVariables variables) -> void
 
     def environment_for: (ShellVariables variables) -> Hash[String, String]

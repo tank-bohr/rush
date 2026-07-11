@@ -38,6 +38,8 @@ module Rush
 
       def run_builtin: (_BuiltinClass builtin, CommandOptions opts) -> Status
 
+      def demoted_error: (StandardError error) -> Status
+
       def run_external: (String name, CommandOptions opts) -> Status
 
       # The default-PATH resolution happens here in the shell (dash does the
@@ -46,8 +48,6 @@ module Rush
       def run_on_default_path: (String name, External external) -> Status
 
       def not_found: (String name) -> Status
-
-      def exported_env: () -> ::Hash[String, String]
 
       def illegal_option: (String letter) -> Status
     end

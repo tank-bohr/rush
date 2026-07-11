@@ -4,6 +4,14 @@ module Rush
   class Environment
     extend T::Sig
 
+    VariableState: untyped
+    DynamicState: untyped
+    Snapshot: untyped
+
+    type variable_state = [bool, String?, bool, bool]
+    type dynamic_state = bool | :keep
+    type snapshot = [Hash[String, variable_state], dynamic_state]
+
     @vars: Hash[String, String]
 
     @exported: Set[String]
@@ -27,5 +35,18 @@ module Rush
     def update_lineno: (Integer line) -> String?
 
     def exported: () -> Hash[String, String]
+
+    # Prefix assignments on a regular builtin are scoped to its invocation.
+    def with_temporary: [U] (Hash[String, String] values) { () -> U } -> U
+
+    private
+
+    def restore_after: [U] (snapshot saved) { () -> U } -> U
+    def snapshot: (Hash[String, String] values) -> snapshot
+    def variable_state: (String name) -> variable_state
+    def apply_temporary: (Hash[String, String] values) -> void
+    def restore_snapshot: (snapshot saved) -> void
+    def restore_lineno: (dynamic_state dynamic_lineno) -> void
+    def restore_variable: (String name, variable_state state) -> void
   end
 end

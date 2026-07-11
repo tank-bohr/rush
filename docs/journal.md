@@ -2070,3 +2070,36 @@ to `] - ! ^`), so case and removal patterns keep quoted metacharacters literal w
 ordinary expand_value remains flat. That closes the just-filed rush-no1.14; the broader
 operator-default field-split/glob loss remains rush-no1.10. Subject mutation gates finish
 above 95%: BracketScanner 96.01%, BracketExpression 97.43%, ShellPattern 96.76%.
+
+### `command` demotes the target by carrying an invocation environment (rush-no1.13)
+`command` is a regular builtin, but its second dispatch used to reconstruct the target
+from bare shell state: a nested external lost the outer assignment prefix, while a
+nested special builtin's BuiltinError escaped to Source and aborted the shell. The
+fix makes the simple-command invocation environment explicit at the builtin boundary.
+Base accepts an optional fourth environment argument (three-argument direct callers
+keep the exported-state default); CommandRunner expands the prefix once, passes the
+full child environment into the builtin, and scopes just the prefix names through
+Environment#with_temporary. Command forwards that same environment through repeated
+`command command ...` layers and into External, including the `-p` resolved-file path.
+
+The temporary scope is name-selective, not a whole-environment rollback: it snapshots
+value presence, export and readonly marks for prefix names, restores them in ensure,
+and leaves writes to every other variable alive. Thus `HOME=/tmp command cd` changes
+to /tmp without changing $HOME, `IFS=: command read` splits on the temporary IFS, and
+`X=temp command eval 'X=changed; Y=yes'` restores X but keeps Y. LINENO's dynamic bit is
+restored only when LINENO itself was a prefix name — the first version restored it for
+an empty prefix too and the existing `unset LINENO` corpus caught the regression. The
+independent review caught the opposite ensure edge: applying a prefix to an already
+readonly name raises before the body, but restoration still runs; omitting readonly
+from the snapshot silently made that name writable. A failed-setup spec now pins it.
+
+Target errors are demoted at the nested dispatch boundary: Command catches the four
+fatal session error classes (ParseError, ExpansionError, ReadonlyError, BuiltinError),
+reports them and returns 2; control-flow signals (`return`, `exit`, break/continue)
+still propagate as the builtin's actual behavior. A 22-probe adversarial matrix and
+the corpus pin dot/shift/eval/exit/readonly failures, set -e participation, nested
+command, ordinary/default-PATH externals, and assignment-substitution effects.
+Two adjacent assignment gaps stay separate: direct special-builtin prefixes are now
+visible but still restore instead of persisting (rush-no1.16), and functions plus
+readonly external prefixes need the remaining policy work (rush-no1.17). Subject
+mutation gates: Environment 97.52%, Command 95.79%, CommandRunner 96.06%.

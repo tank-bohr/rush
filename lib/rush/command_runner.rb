@@ -91,9 +91,20 @@ module Rush
     # dash, that fails the command (status 1) without killing the shell.
     sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def builtin(argv, io)
-      @executor.builtins.fetch(argv.fetch(0)).new(@executor, argv, io).call
+      environment = command_env(io)
+      @executor.state.variables.with_temporary(temporary_env(environment)) { invoke_builtin(argv, io, environment) }
     rescue Errno::EBADF
       Status.new(1)
+    end
+
+    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
+    def invoke_builtin(argv, io, environment)
+      @executor.builtins.fetch(argv.fetch(0)).new(@executor, argv, io, environment).call
+    end
+
+    sig { params(environment: T::Hash[String, String]).returns(T::Hash[String, String]) }
+    def temporary_env(environment)
+      environment.slice(*@assignments.names)
     end
 
     sig { params(name: T.nilable(String)).returns(T::Boolean) }

@@ -55,6 +55,17 @@ RSpec.describe Rush::CommandRunner do
     expect(captured).to match([executor, ['ls'], executor.io, hash_including('X' => '1')])
   end
 
+  it 'forwards prefix assignments through command to its nested external' do
+    captured = nil
+    external = instance_double(Rush::External, call: Rush::Status.success)
+    allow(Rush::External).to receive(:new) { |*args| captured = args }.and_return(external)
+    command = simple(assignments: [assignment('X', 'inner')], words: [word('command'), word('show-env')])
+
+    expect(run(command)).to be_success
+    expect(captured).to match([executor, %w[show-env], executor.io, hash_including('X' => 'inner')])
+    expect(env.get('X')).to be_nil
+  end
+
   it 'applies redirections into the command io table' do
     redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f'), io_number: nil)
     run(simple(words: [word('true')], redirects: [redirect]))

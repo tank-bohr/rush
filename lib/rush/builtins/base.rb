@@ -15,11 +15,15 @@ module Rush
       NUMERIC_OPERAND = /\A\s*[+-]?\d+\s*\z/
       INT_MAX = 2_147_483_647
 
-      sig { params(executor: Executor, argv: T::Array[String], io: IoTable).void }
-      def initialize(executor, argv, io)
+      sig do
+        params(executor: Executor, argv: T::Array[String], io: IoTable,
+               environment: T.nilable(T::Hash[String, String])).void
+      end
+      def initialize(executor, argv, io, environment = nil)
         @executor = executor
         @argv = argv
         @io = io
+        @environment = environment
       end
 
       sig { returns(Status) }
@@ -37,6 +41,14 @@ module Rush
 
       sig { returns(IoTable) }
       attr_reader :io
+
+      # The exported environment assembled for this simple-command invocation,
+      # including temporary prefix assignments. Most builtins do not consume it;
+      # `command` forwards it when its nested target is external.
+      sig { returns(T::Hash[String, String]) }
+      def command_environment
+        @environment || executor.state.variables.exported
+      end
 
       sig { returns(T::Array[String]) }
       def operands

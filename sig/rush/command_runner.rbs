@@ -48,6 +48,10 @@ module Rush
     # dash, that fails the command (status 1) without killing the shell.
     def builtin: (Array[String] argv, IoTable io) -> Status
 
+    def invoke_builtin: (Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
+
+    def temporary_env: (Hash[String, String] environment) -> Hash[String, String]
+
     def special?: (String? name) -> bool
 
     # A function runs in the current shell, not a subshell. The call's redirects

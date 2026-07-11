@@ -91,12 +91,20 @@ module Rush
 
       sig { params(builtin: T.class_of(Base), opts: CommandOptions).returns(Status) }
       def run_builtin(builtin, opts)
-        builtin.new(executor, opts.operands, io).call
+        builtin.new(executor, opts.operands, io, command_environment).call
+      rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
+        demoted_error(e)
+      end
+
+      sig { params(error: StandardError).returns(Status) }
+      def demoted_error(error)
+        stderr.puts("rush: #{error.message}")
+        failure(2)
       end
 
       sig { params(name: String, opts: CommandOptions).returns(Status) }
       def run_external(name, opts)
-        external = External.new(executor, opts.operands, io, exported_env)
+        external = External.new(executor, opts.operands, io, command_environment)
         return external.call unless opts.default_path?
 
         run_on_default_path(name, external)
@@ -115,11 +123,6 @@ module Rush
       def not_found(name)
         stderr.puts("rush: #{name}: not found")
         failure(127)
-      end
-
-      sig { returns(T::Hash[String, String]) }
-      def exported_env
-        executor.state.variables.exported
       end
 
       sig { params(letter: String).returns(Status) }
