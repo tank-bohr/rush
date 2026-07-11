@@ -22,7 +22,7 @@ replaces every type switch.
 
 - **Ruby 4.0.5** (pinned in `.tool-versions`).
 - `dash` for the differential test oracle (optional; the differential group
-  skips when no oracle is present, falling back to `bash --posix`).
+  skips when no oracle is present).
 
 ```sh
 mise install            # installs Ruby 4.0.5 from .tool-versions
@@ -34,7 +34,7 @@ bundle install          # dev/runtime gems into vendor/bundle
 `rake` runs the whole pipeline in order:
 
 ```
-compile (racc) → rubocop → reek → steep → sorbet → rspec (+ coverage gate)
+compile (racc) → rubocop → reek → flay → flog → steep → sorbet → rspec (+ coverage gate)
 ```
 
 ```sh

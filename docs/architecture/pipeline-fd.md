@@ -1,6 +1,9 @@
 # rush — compound-in-pipeline & fd-management: architecture options
 
-Working note (uncommitted). Grounds the "(A)" decision before any slice.
+Decision record from June 2026 (pre-7ag), kept as written for the historical analysis.
+**Status: the "Option 2 (real fds)" decision at the bottom was superseded in practice** —
+the shipped model is the incremental Ruby-IO one (Option 1). See the postscript at the
+end for what actually happened and what would reopen the real-fd migration.
 
 ## The three coupled gaps
 
@@ -113,7 +116,11 @@ over 2 right now.
 
 ---
 
-# DECISION: Option 2 (real fds). Migration plan.
+# DECISION (June 2026, historical): Option 2 (real fds). Migration plan.
+
+> **History.** This section is preserved as recorded (commit `2ce1d42`, 2026-06-28).
+> The M1–M5 plan below was never executed as written; the postscript after it is the
+> current record.
 
 ## Test-fake strategy (the key choice)
 
@@ -155,3 +162,63 @@ output assertions move from `system.stdout.string` → `fake.captured(:stdout)`.
 - **M5 (later) — `exec` fd surgery** (`exec 3>file`, `exec 3>&-`) once the fd model is solid.
 
 Each Mx is one differential-testable commit, suite green throughout.
+
+---
+
+# POSTSCRIPT (July 2026): what actually shipped — the incremental Ruby-IO path
+
+The Option-2 decision above was superseded the same day it was recorded — in fact
+Option 1's first slice (7ag) had already landed before the decision commit (`2ce1d42`,
+07:14) was made; 7ah and 7ai followed it the same morning. All three implemented
+**Option 1's slice sequence in the Ruby-IO model**, two of them (7ag, 7ai) still
+carrying a "path 2" label in their commit messages (7ai's "Path-2 slice M3" even
+mislabels the plan — fd-duplication is M4):
+
+- **7ag** (`b88d8bc`) — compound command as a pipeline stage:
+  `PipelineRunner#run_stage` → `executor.with_io(stage_io) { executor.run(node) }`.
+  Exactly Option 1's slice 1; explicitly deferred the fd-number foundation.
+- **7ah** (`91dc736`) — redirect targets flushed and closed after the command
+  (`IoTable#close_opened_over`, object-identity diff; sync-mode redirect writes).
+  Option 1's slice 2 — no M1 fd port underneath.
+- **7ai** (`9c4b06e`) — fd-duplication (`2>&1`, `>&`, `<&`, `n>&m`, `n>&-`) via
+  **IO-aliasing**: `DupRedirect` binds fd *n* to fd *m*'s Ruby IO object; externals get
+  the right kernel fds because `Process.spawn` maps both logical fds to one real fd.
+  Option 1's slice 3 — no `dup2` anywhere.
+
+M1 — the "IoTable holds fd numbers + tmpfile-backed fake" foundation — **was never
+built**. The journal ("Test-harness gotchas") records the call explicitly: the literal
+rewrite was judged low-payoff because the fake `SystemCalls` stubs all fork/pipe/fd ops
+and real-fd correctness is verified differentially against dash regardless. Everything
+M2–M5 promised was then delivered *behaviorally* inside the Ruby-IO model: 7aj
+(redirect-open failure → status 2), 7ak (`exec >file` / `exec 3>file` permanence — M5's
+headline), 9e (`FdEntry` with borrowed/owned/closed states replacing the ClosedStream
+sentinel), 9f (inherited-fd probing: absent fds fall back to a borrowed
+`IO.for_fd(..., autoclose: false)` wrapper), 9i/9l/9n (dup-target validation, noclobber,
+closing overwritten redirect streams). All differential-verified vs dash.
+
+**Why it went this way**: the "Testing-methodology impact" section above was the real
+constraint, and it won. Option 2 fights the in-process StringIO coverage discipline;
+every gap turned out to be fixable one differential-testable slice at a time without the
+big-bang IoTable migration, so the migration never earned its risk.
+
+**Known symptoms of the compromise** (the residue Option 2 would dissolve):
+
+- **The `T.untyped` concentration in `lib/rush/io_table.rb` / `lib/rush/fd_entry.rb`.**
+  The stream slot has no precise type — entries hold whatever Ruby IO-ish object arrives
+  (File, pipe end, StringIO in tests, `IO.for_fd` wrappers), so the Sorbet sigs say
+  `T.untyped` (11 occurrences: 6 in io_table.rb, 5 in fd_entry.rb across the two files) and the RBS side papers over it
+  with a structural `_IoStream` interface. A real-fd table would be `Integer`-keyed and
+  fully typed.
+- **The in-process `2>&1` aliasing leak** (Option 1's documented con): builtins alias
+  Ruby IO objects instead of `dup2`-ing kernel fds, so shared-offset/append semantics
+  are not bit-exact for in-process writers in fd edge cases (seek, shared offset).
+
+**Reopening conditions.** Reopen the M1–M5 migration (the tmpfile-backed-fake strategy
+above remains the key design) if any of these materialize: (a) a dash divergence pinned
+by the differential corpus that traces to IO-aliasing rather than a local bug — i.e. the
+aliasing leak becomes an observable `[stdout, exitstatus]` bug, not a theoretical one;
+(b) a feature that requires kernel-fd semantics Ruby IO objects cannot express (e.g.
+full `exec n>&m` surgery interacting with inherited-fd offsets); or (c) the typed-ledger
+pressure makes the `io_table.rb`/`fd_entry.rb` untyped seam the last blocker to a gate
+ratchet. Until then, the Ruby-IO model is the shipped, verified architecture — not a
+temporary state.

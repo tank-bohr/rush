@@ -53,7 +53,7 @@ Work proceeds in numbered **slices**. Each slice is **exactly one commit on `mai
 - End every AI-authored commit message with a `Co-Authored-By:` trailer naming the
   actual model/agent that produced the slice; do not reuse another model's signature.
 - A slice lands only when `bundle exec rake` is green **and** the behaviour is verified
-  against the **dash** oracle — the differential corpus in `spec/integration/differential_spec.rb`
+  against the **dash** oracle — the differential corpus in `spec/integration/differential/`
   plus ad-hoc fuzzing — comparing **`[stdout, exitstatus]`** (stderr ignored). Where dash is
   known to diverge from POSIX, the standard wins and the divergence is noted in `docs/journal.md`.
 - Stage files **explicitly** (`git add <paths>`) — never `git add -A` (avoids bundling
