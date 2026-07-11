@@ -47,7 +47,7 @@ module Rush
     sig { void }
     def announce_jobs
       jobs = executor.jobs
-      jobs.announce_changed(system.stderr) if jobs.control.monitor
+      jobs.announce_changed(system.stderr) if jobs.control.monitor?
     end
 
     # A terminal gets Reline: line editing and in-memory history, prompt drawn

@@ -33,6 +33,19 @@ RSpec.describe Rush::PipelineRunner do
       expect(system.stderr.string).to eq("Killed\nTerminated\n")
     end
 
+    it 'arms the stage stop relay child-side under monitor mode (rush-l4o)' do
+      executor.job_control.enable(system.stderr)
+      runner = described_class.new(executor, [echo('a')])
+      runner.send(:run_stage, described_class::Stage.new(0, [], 1))
+      expect(executor.jobs.control.relay?).to be(true)
+    end
+
+    it 'leaves the relay unarmed without monitor mode (plain shells keep bare child waits)' do
+      runner = described_class.new(executor, [echo('a')])
+      runner.send(:run_stage, described_class::Stage.new(0, [], 1))
+      expect(executor.jobs.control.relay?).to be(false)
+    end
+
     it 'uses the rightmost non-zero stage status when pipefail is set' do
       state.options.set(:pipefail, true)
       stub_wait_statuses(1 => 5, 2 => 7, 3 => 0)

@@ -1,14 +1,16 @@
 module Rush
   class JobTable
-    # The job-control environment of this shell: the root-shell bit and,
-    # while the root shell holds one, the acquired controlling terminal —
-    # dash's rootshell guard and ttyfd/initialpgrp globals.
+    # The job-control environment of this shell: the root-shell bit, how
+    # stopped children are treated (bare waits, engaged monitor, or a
+    # stage's stop relay — rush-l4o), and, while the root shell holds one,
+    # the acquired controlling terminal — dash's rootshell guard and
+    # ttyfd/initialpgrp globals.
     class Control
       extend T::Sig
 
       @root: bool
 
-      @monitor: bool
+      @stops: Symbol
 
       @terminal: Terminal?
 
@@ -16,17 +18,27 @@ module Rush
 
       attr_reader root: bool
 
-      attr_reader monitor: bool
-
       attr_reader terminal: Terminal?
 
       def initialize: () -> void
+
+      # Monitor machinery engaged (grouping, WUNTRACED waits, adoption).
+      def monitor?: () -> bool
+
+      # Arm the stage stop relay, child-side, before the subshell reset.
+      def arm_stage_relay: () -> void
+
+      def relay?: () -> bool
+
+      # Stops are visible to this shell's waits (monitor or relay).
+      def stoppable_waits?: () -> bool
 
       # `set -m` accepted in the root shell (terminal nil off-tty).
       def engage: (Terminal? terminal) -> void
 
       def release: () -> void
 
+      # Drops root/terminal/monitor; an armed relay survives the fork.
       def fork_child: () -> void
 
       # dash's job_warning window for the stopped-jobs exit refusal.

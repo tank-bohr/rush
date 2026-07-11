@@ -180,9 +180,50 @@ RSpec.describe Rush::JobTable do
     it 'holds the acquired terminal until released (set +m)' do
       terminal = Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242)
       table.control.engage(terminal)
-      expect([table.control.terminal, table.control.monitor]).to eq([terminal, true])
+      expect([table.control.terminal, table.control.monitor?]).to eq([terminal, true])
       table.control.release
-      expect([table.control.terminal, table.control.monitor]).to eq([nil, false])
+      expect([table.control.terminal, table.control.monitor?]).to eq([nil, false])
+    end
+
+    it 'arms the stage relay only under monitor, and the relay survives the fork (rush-l4o)' do
+      table.control.arm_stage_relay
+      expect(table.control.relay?).to be(false)
+      table.control.engage(nil)
+      table.control.arm_stage_relay
+      table.control.fork_child
+      expect([table.control.relay?, table.control.monitor?, table.control.stoppable_waits?])
+        .to eq([true, false, true])
+    end
+
+    it 'drops an armed relay when job control is explicitly released (set +m in the stage)' do
+      table.control.engage(nil)
+      table.control.arm_stage_relay
+      table.control.release
+      expect([table.control.relay?, table.control.stoppable_waits?]).to eq([false, false])
+    end
+  end
+
+  describe 'the stage stop relay (rush-l4o)' do
+    before do
+      table.control.engage(nil)
+      table.control.arm_stage_relay
+      table.control.fork_child
+    end
+
+    it 're-raises a reaped stop onto itself (default disposition first) and re-waits the target' do
+      system.provide_stopped(9, 20)
+      system.provide_child(9, 5)
+      expect(table.await(9).exitstatus).to eq(5)
+      expect(system.kills).to eq([['TSTP', 4242]])
+      expect(system.traps_installed).to include(%w[TSTP SYSTEM_DEFAULT])
+    end
+
+    it 'skips the untrappable STOP disposition but still re-raises the stop' do
+      system.provide_stopped(9, 19)
+      system.provide_child(9, 0)
+      expect(table.await(9)).to be_success
+      expect(system.kills).to eq([['STOP', 4242]])
+      expect(system.traps_installed).to be_empty
     end
   end
 
@@ -317,7 +358,7 @@ RSpec.describe Rush::JobTable do
   describe 'Control#warn_exit? / #tick_warning (dash job_warning)' do
     it 'starts as the root shell, machinery off, no terminal, warning disarmed' do
       control = table.control
-      expect([control.root, control.monitor, control.terminal]).to eq([true, false, nil])
+      expect([control.root, control.monitor?, control.terminal]).to eq([true, false, nil])
       control.tick_warning
       expect(control.warn_exit?).to be(true)
     end

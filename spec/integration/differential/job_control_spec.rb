@@ -117,17 +117,23 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
   # entry — the script continues past it, wait answers immediately and
   # repeatably, jobs keeps listing it (projected through sed: the command
   # text column arrives with rush-mv8.6), and exit is refused exactly once.
-  # Pipeline stops stay out: off-tty only the $$-signalled grandchild stops,
-  # and rush's stage supervisor (which dash EV_EXIT-execs away — the mv8.7
-  # divergence) blocks either shell's parent when the group is not signalled
-  # as a whole; the real whole-group ^Z is the pty smoke's job. Everything
-  # under Timeout: the failure mode of a missing WUNTRACED is a hung shell.
-  # The stray stopped children die on their own (kernel orphaned-pgroup
-  # HUP+CONT) only when the dead shell's children re-parent outside their
-  # session — hence the _in_session runners; a container's same-session
-  # pid 1 otherwise keeps the stray alive holding the capture pipes
-  # (rush-erq).
+  # Pipeline stops are IN since the stage stop relay (rush-l4o): a stage
+  # of a monitor-mode job re-raises a member's stop onto itself, so the
+  # parent's WUNTRACED wait parks the whole job exactly where dash — whose
+  # exec'd simple stages stop directly — parks it. Compound stages stay
+  # out: dash (and bash) genuinely hang there, the relay answers — the
+  # journal records the divergence. Everything under Timeout: the failure
+  # mode of a missing WUNTRACED is a hung shell. The stray stopped
+  # children die on their own (kernel orphaned-pgroup HUP+CONT) only when
+  # the dead shell's children re-parent outside their session — hence the
+  # _in_session runners; a container's same-session pid 1 otherwise keeps
+  # the stray alive holding the capture pipes (rush-erq).
   stopped = [
+    "set -m; sh -c 'exit 5' | sh -c 'kill -TSTP $$'; echo st:$?; kill -9 %1; echo done",
+    "set -m; sh -c 'kill -TSTP $$' | sh -c 'exit 5'; echo st:$?; kill -9 %1; echo done",
+    "set -m; sh -c 'kill -TSTP $$' | sh -c 'kill -TSTP $$'; echo st:$?; kill -9 %1; echo done",
+    "set -m; sh -c 'exit 5' | sh -c 'kill -TSTP $$'; echo st:$?; bg %1; wait %1; echo w:$?",
+    "set -m; sh -c 'exit 5' | sh -c 'kill -TSTP $$'; echo st:$?; fg %1; echo f:$?",
     "set -m; sh -c 'kill -TSTP $$'; echo st:$?; kill -9 %1; kill -CONT %1",
     "set -m; sh -c 'kill -TSTP $$'; wait %1; echo w:$?; wait %1; echo w2:$?; kill -9 %1",
     "set -m; sh -c 'kill -TSTP $$'; wait; echo wall:$?; kill -9 %1",

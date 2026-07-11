@@ -1,0 +1,16 @@
+module Rush
+  # The armed stage relay (rush-l4o): a pipeline stage of a monitor-mode job
+  # is a transparent member of it — a stop its own foreground wait reaps is
+  # re-raised onto the stage process itself, so the job's owner sees the
+  # member stop; after fg/bg's SIGCONT the reap loop re-waits the target.
+  module StopRelay
+    extend T::Sig
+
+    # The reaped target's stop should be re-raised (relay armed + stopped).
+    def self.relay?: (JobTable::Control control, Process::Status status) -> bool
+
+    # Default disposition first (SIGSTOP takes none), then the stop signal
+    # onto this very process.
+    def self.raise_onto_self: (SystemCalls system, Process::Status status) -> void
+  end
+end

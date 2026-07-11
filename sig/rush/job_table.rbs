@@ -173,6 +173,8 @@ module Rush
 
     def free_number: () -> Integer
 
+    # A relayed stop (StopRelay) re-raises onto this process and, after
+    # SIGCONT, re-waits the same target.
     def reap_raw: (Integer target) -> Process::Status
 
     # waitpid(-1) only when a background job could exit meanwhile; the direct

@@ -71,7 +71,7 @@ module Rush
     # rootshell guard, probed via nested groups and subshell `set -m`).
     sig { returns(T::Boolean) }
     def monitored?
-      control.monitor
+      control.monitor?
     end
 
     # Fork one member of a foreground job, into `leader`'s process group
@@ -115,7 +115,7 @@ module Rush
     # is fg/bg's refusal bit.
     sig { params(node: AST::Node).returns(T.nilable(String)) }
     def job_text(node)
-      CommandText.render(node) if control.monitor
+      CommandText.render(node) if control.monitor?
     end
 
     private

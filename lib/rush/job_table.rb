@@ -117,7 +117,7 @@ module Rush
     # synchronous wait.
     sig { void }
     def poll
-      while (reaped = @control.monitor ? @system.poll_stopped : @system.poll_child)
+      while (reaped = @control.monitor? ? @system.poll_stopped : @system.poll_child)
         store(reaped.fetch(0), reaped.fetch(1))
       end
     rescue Errno::ECHILD
@@ -154,13 +154,15 @@ module Rush
       ((1..(@jobs.size + 1)).to_a - @jobs.each_value.map(&:number)).fetch(0)
     end
 
+    # A relayed stop (StopRelay: armed stage, stopped target) re-raises
+    # onto this process and, after SIGCONT, re-waits the same target.
     sig { params(target: Integer).returns(Process::Status) }
     def reap_raw(target)
       loop do
         pid, status = reap_one(target)
-        return status if pid == target
+        return status if pid == target && !StopRelay.relay?(@control, status)
 
-        store(pid, status)
+        pid == target ? StopRelay.raise_onto_self(@system, status) : store(pid, status)
       end
     end
 
@@ -169,12 +171,12 @@ module Rush
     # inherited display copy never does (not this environment's child) —
     # since the direct form cannot reap a foreign child; the plain
     # foreground path stays byte-identical to the pre-table behaviour.
-    # Monitor mode waits WUNTRACED (dash: mflag), so ^Z answers instead of
-    # hanging the shell.
+    # Monitor mode and an armed stage relay wait WUNTRACED (dash: mflag),
+    # so a stop answers instead of hanging the shell.
     sig { params(target: Integer).returns([Integer, Process::Status]) }
     def reap_one(target)
       pid = @jobs.each_value.any? { |job| !job.finished? && !job.inherited? } ? -1 : target
-      @control.monitor ? @system.wait_stoppable(pid) : @system.waitpid2(pid)
+      @control.stoppable_waits? ? @system.wait_stoppable(pid) : @system.waitpid2(pid)
     end
 
     # Job#finish answers non-nil, so a known pid never falls to the stash.

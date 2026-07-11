@@ -128,9 +128,13 @@ module Rush
       @executor.job_control.launch(leader: leader) { @executor.system.exit!(run_stage(stage).exitstatus) }
     end
 
+    # Child-side. The relay is armed before the body (and its subshell
+    # reset) runs: a stage of a monitor-mode job propagates a member's
+    # stop upward instead of blocking on it (rush-l4o).
     sig { params(stage: Stage).returns(Status) }
     def run_stage(stage)
       close_unused(stage)
+      @executor.jobs.control.arm_stage_relay
       body = @commands.fetch(stage.index)
       @executor.with_io(stage.io(@executor.io)) { SubshellRunner.new(@executor, body).run_body }
     end

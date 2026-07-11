@@ -1419,3 +1419,41 @@ is empty); unreachable differentially since dash lists nothing there.
 
 Verified: full rake green (2256 specs, 99.98%/99.6%), 7 new differential corpus lines,
 the seven-shape probe matrix byte-for-byte vs dash, pty smoke green.
+
+### The stage stop relay: a stopped pipeline member no longer wedges the shell (rush-l4o)
+The bug that left 7-hour orphans on the box: off-tty `set -m; sh -c 'exit 5' | sh -c
+'kill -TSTP $$'` hung rush forever — the stage supervisor (the fork layer dash EV_EXIT-
+execs away) waited non-WUNTRACED on its stopped grandchild while the main shell waited on
+the supervisor. Probing redrew the oracle map first: dash answers st:148 ONLY on shapes it
+never really forks (simple-command stages, single-command subshells — EV_EXIT reaching
+even through `{ ... }` braces); on honestly-forked compound stages dash hangs exactly like
+rush did, and bash hangs on its wrapped form too. Even the journal's own mv8.4 claim
+("dash's brace-wrapped stage would block the same way") proved half-wrong — the braces
+alone don't defeat EV_EXIT; a second command inside does. And the l4o acceptance idea
+"external kill -STOP of one member must not wedge" fell to the oracle as well: a job is
+stopped only when EVERY member stops, so a single externally-stopped member leaves both
+dash and rush legitimately waiting (probed: both hang; parity, not defect).
+
+The fix makes the supervisor a transparent job member. Control's monitor bit grew into a
+three-valued stops mode (:default/:monitor/:relay — same ivar count, the reek budget
+holds): PipelineRunner#run_stage arms the relay child-side BEFORE the body's subshell
+reset, while the parent's monitor bit is still readable, and fork_child preserves an
+armed relay so stops bubble out of nested forks. The reap loop (JobTable#reap_raw) then
+waits WUNTRACED whenever stops are visible (monitor OR relay) and, on reaping the
+target's stop, hands it to StopRelay: default disposition first (the -m parent left
+TSTP/TTOU ignored; SIGSTOP takes none and cannot be trapped — the fake's EINVAL caught
+that), then the same signal onto the supervisor itself. The main shell's WUNTRACED wait
+sees the member stop, parks the job with the true stopsig ($?=148, dash-exact), and
+fg/bg's SIGCONT to the group resumes supervisor and grandchild together — the relay loop
+re-waits the same target and the resumed job settles normally. Five jc-stop corpus lines
+now pin what "stayed out of the corpus" since mv8.4: both stop orders (st:148 / st:5 via
+with_stop), both-stages-stopped, and the full bg- and fg-resume dances, byte-for-byte
+against dash under the setsid runners. Compound-stage stops stay out and are the recorded
+divergence: dash and bash hang there, rush's relay answers 148 — the hang serves nobody,
+and the whole-job model (2.12) sides with answering. Two rubocop ClassLength caps pushed
+the relay into its own StopRelay module (constant-keyed spec from birth) and dissolved a
+one-line JobControl facade in favour of the existing executor.jobs.control seam.
+
+Verified: full rake green (2270 specs, 99.98%/99.6%), the 77-line jc corpus including the
+five new stop lines, pty smoke byte-for-byte, container gate green end-to-end, and the
+original hung-probe shape returns promptly with the job parked and killable.
