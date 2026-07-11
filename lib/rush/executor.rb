@@ -119,7 +119,7 @@ module Rush
     # command still sees the previous command's status, as dash does.
     sig { void }
     def reset_cmd_sub_status
-      @cmd_sub_status = Status.success
+      record_cmd_sub_status(Status.success)
     end
 
     sig { params(status: Status).void }
