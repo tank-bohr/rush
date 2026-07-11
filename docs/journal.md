@@ -1774,3 +1774,28 @@ untyped call named and justified. The wider lexer→parser token seam (the
 [untyped, untyped] tuple next_token forwards) stays parked as its own
 backlog bead — a Token value object would tame on_error's value too, but it
 is a lexer redesign, not a typing chore.
+
+### The token seam gets its vocabulary, and the ledger hits zero (rush-kpj)
+The lexer→parser seam carried [untyped, untyped] tuples end to end; it now
+speaks three RBS aliases — token_kind (a Symbol tag or the literal
+single-char operators the grammar spells as-is), token_value (Word |
+Assignment | HereDoc | String | Integer), token ([kind, value], with racc's
+[false, false] end marker spelled separately where it can occur) — threaded
+through Lexer, TokenClassifier, TokenPredicates and ParserSupport#next_token.
+No Token value object: racc requires the 2-array shape at the boundary, so a
+wrapper would only add convert/unwrap ceremony — aliases type the tuples as
+they are. The typing promptly paid twice. First, on_error's lookahead — the
+3-call racc boundary slice 14v documented as permanent — types as
+token_value | false, and the respond_to?(:literal_text) duck check became an
+is_a?(AST::Word) narrowing both checkers see through: project untyped calls
+9008/9008 — zero, the epic's aspirational 100% reached literally. Second,
+Steep rejected delimiter(token.last): the here-doc delimiter was being
+CLASSIFIED, and a delimiter shaped like an assignment (<<X=1 in command
+position) would hand delimiter() an AST::Assignment, which has no #segments
+— a latent NoMethodError. Probing shows the shape is grammar-unreachable
+(expects_command survives DLESS only via @expect_filename, i.e. after a
+redirect op, where racc rejects DLESS before the delimiter is ever lexed) —
+but the fix is structure, not a cast: an awaited delimiter is now taken raw,
+before classification or aliasing, which is also what dash's readtoken does.
+Probes: 7 heredoc shapes (<<-, quoted, reserved-word and X=1 delimiters,
+heredoc-first, double heredoc) byte-identical with dash; full rake green.

@@ -7,7 +7,7 @@ module Rush
 
       private
 
-      def word_token?: ([ untyped, untyped ] token) -> bool
+      def word_token?: (Lexer::token token) -> bool
     end
   end
 end

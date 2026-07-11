@@ -15,22 +15,22 @@ module Rush
 
     def initialize: (Lexer lexer) -> void
 
-    # --- the racc surface: parse/do_parse/next_token/on_error speak the
-    # generated parser's untyped semantic stack (no rbs for racc); on_error's
-    # lookahead value is genuinely anything — a token value or racc's literal
-    # `false` at end of input. This is the module's one deliberate untyped
-    # boundary; the factories below it are fully typed glue.
+    # --- the racc surface (no rbs for racc): parse/do_parse return the
+    # semantic stack's untyped result, and on_error's _stack stays untyped.
+    # The token seam itself is typed — next_token yields Lexer::token pairs,
+    # and on_error's lookahead value is a Lexer::token_value (racc hands back
+    # the pair's value slot, `false` at end of input).
     def parse: () -> untyped
 
-    def next_token: () -> [ untyped, untyped ]
+    def next_token: () -> (Lexer::token | [ false, false ])
 
-    def on_error: (untyped token_id, untyped value, untyped _stack) -> bot
+    def on_error: (Integer token_id, Lexer::token_value | false value, untyped _stack) -> bot
 
     private
 
     def do_parse: () -> untyped
 
-    def token_to_str: (untyped token_id) -> untyped
+    def token_to_str: (Integer token_id) -> String
 
     def make_list: (Array[list_entry] entries) -> AST::List
 

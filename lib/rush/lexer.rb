@@ -115,22 +115,23 @@ module Rush
       [symbol, operator]
     end
 
-    # Classify the word, then (only a plain WORD, never a reserved word or a
-    # here-document delimiter) splice its alias replacement in its place; a splice
-    # returns nil so next_token re-reads from the new frame.
+    # A word awaited as a here-document delimiter is taken raw — never
+    # classified, aliased or reserved. Otherwise classify it, then (only a
+    # plain WORD) splice its alias replacement in its place; a splice returns
+    # nil so next_token re-reads from the new frame.
     sig { returns(T.nilable([T.untyped, T.untyped])) }
     def word
       scanned = @lines.word { WordScanner.next_word(@scanner, interactive: @interactive) }
+      return delimiter(scanned) if @awaiting
+
       token = TokenClassifier.new(scanned, @state).call
       replacement = alias_for(token, scanned)
-      return splice(replacement) if replacement
-
-      @awaiting ? delimiter(token.last) : token
+      replacement ? splice(replacement) : token
     end
 
     sig { params(token: [T.untyped, T.untyped], word: AST::Word).returns(T.nilable(AliasExpander::Replacement)) }
     def alias_for(token, word)
-      return if @awaiting || !word_token?(token) || !@state.command_mode?
+      return if !word_token?(token) || !@state.command_mode?
 
       @aliases.expand(word, @state.expects_command?)
     end
@@ -142,7 +143,7 @@ module Rush
       nil
     end
 
-    sig { params(word: T.untyped).returns([T.untyped, T.untyped]) }
+    sig { params(word: AST::Word).returns([T.untyped, T.untyped]) }
     def delimiter(word)
       holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
                            quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip,

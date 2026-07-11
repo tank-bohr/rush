@@ -7,6 +7,19 @@ module Rush
     extend T::Sig
     include TokenPredicates
 
+    # A terminal as the grammar names it: a Symbol tag, or the literal
+    # single-character operators ('<', ';', '(' …) the grammar spells as-is.
+    type token_kind = Symbol | String
+
+    # What a rule action receives as val[i]: an AST Word/Assignment, the
+    # HereDoc holder standing in for a WORD, an operator/newline string, or
+    # an IO_NUMBER's integer.
+    type token_value = AST::Word | AST::Assignment | HereDoc | String | Integer
+
+    # One [kind, value] pair handed to racc ([false, false] marks the end of
+    # input and is spelled separately where it can occur).
+    type token = [token_kind, token_value]
+
     @scanner: StringScanner
 
     @aliases: AliasExpander
@@ -37,11 +50,11 @@ module Rush
 
     def location: () -> Integer
 
-    def next_token: () -> [ untyped, untyped ]
+    def next_token: () -> (token | [ false, false ])
 
     private
 
-    def emit: ([ untyped, untyped ] token) -> [ untyped, untyped ]
+    def emit: (token token) -> token
 
     # Skip blanks and comments; when the current frame is an exhausted alias
     # replacement, restore the input beneath it and keep skipping.
@@ -49,27 +62,27 @@ module Rush
 
     def skip_insignificant: () -> void
 
-    def scan_token: () -> [ untyped, untyped ]?
+    def scan_token: () -> token?
 
-    def io_number: () -> [ untyped, untyped ]?
+    def io_number: () -> token?
 
-    def operator: () -> [ untyped, untyped ]?
+    def operator: () -> token?
 
-    def operator_token: (String matched) -> [ untyped, untyped ]
+    def operator_token: (String matched) -> token
 
     # Classify the word, then (only a plain WORD, never a reserved word or a
     # here-document delimiter) splice its alias replacement in its place; a splice
     # returns nil so next_token re-reads from the new frame.
-    def word: () -> [ untyped, untyped ]?
+    def word: () -> token?
 
-    def alias_for: ([ untyped, untyped ] token, AST::Word word) -> AliasExpander::Replacement?
+    def alias_for: (token token, AST::Word word) -> AliasExpander::Replacement?
 
     def splice: (AliasExpander::Replacement replacement) -> nil
 
-    def delimiter: (AST::Word word) -> [ untyped, untyped ]
+    def delimiter: (AST::Word word) -> token
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
-    def heredoc_newline: () -> [ untyped, untyped ]
+    def heredoc_newline: () -> token
   end
 end

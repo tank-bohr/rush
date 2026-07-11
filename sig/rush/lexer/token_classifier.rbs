@@ -36,19 +36,19 @@ module Rush
 
       def initialize: (AST::Word word, LexState state) -> void
 
-      def call: () -> [ Symbol, untyped ]
+      def call: () -> [ Symbol, AST::Word | AST::Assignment ]
 
       private
 
-      def state_token: () -> [ Symbol, untyped ]?
+      def state_token: () -> [ Symbol, AST::Word ]?
 
-      def forced: () -> [ Symbol, untyped ]?
+      def forced: () -> [ Symbol, AST::Word ]?
 
-      def header_token: () -> [ Symbol, untyped ]?
+      def header_token: () -> [ Symbol, AST::Word ]?
 
       def arm_token: () -> Symbol
 
-      def classify: () -> [ Symbol, untyped ]
+      def classify: () -> [ Symbol, AST::Word | AST::Assignment ]
 
       def for_header: () -> Symbol?
 
@@ -62,7 +62,7 @@ module Rush
 
       def capture: (String value) -> String?
 
-      def assignment_token: (AssignmentHead head) -> [ Symbol, untyped ]
+      def assignment_token: (AssignmentHead head) -> [ Symbol, AST::Assignment ]
     end
   end
 end
