@@ -20,7 +20,7 @@ module Rush
     def call
       pid = @executor.job_control.launch_background { run_child }
       @executor.state.record_background_pid(pid)
-      @executor.jobs.record(pid)
+      @executor.jobs.record(pid, text: @executor.job_control.job_text(@body))
       Status.success
     end
 

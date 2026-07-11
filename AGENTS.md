@@ -10,12 +10,11 @@ diverges from POSIX, follow the standard, not dash. Keep this file small and sta
 knowledge lives in `docs/` and the backlog lives in beads (see "Where things live").
 
 **Phases:** 0 scaffold ✓ · 1 MVP ✓ · 2 intermediate ✓ · 3 full POSIX scripting ✓ ·
-4 interactive shell ✓ · 5 job control, terminal-free half ✓ (wait, JobTable, jobs, %ids;
-"rush = dash without terminal control") · 6 job control, terminal half (epic `rush-mv8`,
-in progress): set -m + process groups + SIGTSTP ignore ✓; tcsetpgrp terminal handover +
-interactive default -m ✓; WUNTRACED waits + Stopped jobs + ^Z ✓; working fg/bg ✓;
-pre-prompt notifications + the jobs command-text column remain (`rush-mv8.6`).
-Ruby 4.0.5 (asdf); dash at `/usr/bin/dash`.
+4 interactive shell ✓ · 5 job control, terminal-free half ✓ · 6 job control, terminal
+half ✓ (epic `rush-mv8`: set -m, process groups, tcsetpgrp handover, interactive default
+-m, WUNTRACED/Stopped/^Z, fg/bg, pre-prompt notifications, jobs command text; the no-fork
+EV_EXIT optimization stays parked as `rush-mv8.7`). Ruby 4.0.5 (asdf); dash at
+`/usr/bin/dash`.
 
 ## Build & Test
 

@@ -34,6 +34,15 @@ module Rush
         body.start_with?('#') && body.length > 1
       end
 
+      # dash's job text always braces a parameter — ${T}, "${@}", ${T:-9}
+      # with the op's raw source argument (CommandText).
+      sig { returns(String) }
+      def canon
+        return "${##{name}}" if op == '#len'
+
+        "${#{name}#{op}#{arg}}"
+      end
+
       sig { params(body: String).returns(MatchData) }
       def self.braced_match(body)
         PARAM_BRACED.match(body) || raise(ExpansionError, 'bad substitution')

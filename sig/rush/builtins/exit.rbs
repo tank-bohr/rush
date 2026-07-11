@@ -11,6 +11,8 @@ module Rush
 
       private
 
+      def stopped_jobs?: () -> bool
+
       def refuse_stopped: () -> Status
 
       def code: () -> untyped

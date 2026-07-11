@@ -21,6 +21,8 @@
 #   - bg resumes a stopped job in the background (its wait settles 0), and
 #     fg reattaches one — SIGCONT, terminal handover, a real foreground
 #     wait — with the session carrying on after both (rush-mv8.5)
+#   - the ^Z and the kill are announced before the next prompt with dash's
+#     showjob line, command text included (rush-mv8.6)
 #   - set +m drops m from $-, rejoins the original group and hands the
 #     terminal back; the session keeps working after every handover
 #   - the exit status survives the whole dance
@@ -52,6 +54,8 @@ class JobControlSmoke
     def stop_picture
       { stop_signals_ignored: @buffer.include?('SIGS:adone'), ctrl_z_status: number(/ZST:(\d+)/),
         ctrl_z_job_listed: @buffer.include?('ZJOBS:stopped'),
+        stop_notified: @buffer.match?(/\[\d\] \+ Stopped\s+sleep 100/),
+        kill_notified: @buffer.match?(/\[\d\] \+ Killed\s+sleep 100/),
         exit_refused: @buffer.include?('You have stopped jobs.'),
         refused_exit_status: number(/ZALIVE:(\d+)/), killed_job_waits: number(/ZW:(\d+)/),
         bg_resumes: number(/BGW:(\d+)/), fg_stop_status: number(/FST:(\d+)/),
@@ -146,7 +150,8 @@ class JobControlSmoke
     monitor_flags: 'smi', self_leader: true,
     spawn_owns_tty: true, pipeline_owns_tty: true, subshell_owns_tty: true,
     cmdsub_tty_stays: true, background_tty_stays: true, stop_signals_ignored: true,
-    ctrl_z_status: 148, ctrl_z_job_listed: true, exit_refused: true, refused_exit_status: 0,
+    ctrl_z_status: 148, ctrl_z_job_listed: true, stop_notified: true, kill_notified: true,
+    exit_refused: true, refused_exit_status: 0,
     killed_job_waits: 137, bg_resumes: 0, fg_stop_status: 148, fg_resumes_and_waits: 0,
     plus_m_flags: 'si', plus_m_rejoins: true, alive_after: true, exit_status: 7
   }.freeze
@@ -158,7 +163,8 @@ class JobControlSmoke
     puts 'rush job-control pty smoke ok: monitor by default, terminal follows every foreground job ' \
          '(spawn/pipeline/subshell), stays home for cmdsub/background, TSTP+TTOU ignored, ' \
          '^Z parks a Stopped job ($?=148, exit refused once, waitable after kill), ' \
-         'bg and fg resume it, set +m restores — byte-for-byte the dash picture'
+         'bg and fg resume it, changes are announced pre-prompt with command text, ' \
+         'set +m restores — byte-for-byte the dash picture'
   end
 
   private

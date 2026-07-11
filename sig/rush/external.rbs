@@ -15,7 +15,7 @@ module Rush
 
     def initialize: (Executor executor, Array[String] argv, IoTable io, Hash[String, String] env) -> void
 
-    def call: () -> Status
+    def call: (?String? text) -> Status
 
     private
 

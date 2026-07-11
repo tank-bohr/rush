@@ -24,6 +24,9 @@ module Rush
 
     def self.abandon: (untyped tty) -> nil
 
+    # The parent-side handover around a foreground wait (bare without one).
+    def self.while_held: [U] (Terminal? terminal, Integer leader) { () -> U } -> U
+
     attr_reader tty: untyped
 
     def initialize: (system: SystemCalls, tty: untyped, home: Integer, initial: Integer) -> void

@@ -181,4 +181,64 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
       end
     end
   end
+
+  # The jobs command-text column (rush-mv8.6): dash keeps text for jobctl
+  # jobs on and off a tty, rendered canonically from the AST — each line
+  # below pins rush's CommandText against the live oracle, byte for byte.
+  # (Origin-of-quoting nuances dash preserves through its lexer — e.g.
+  # dquote-escaped \$ printing unescaped — stay out; the journal records
+  # them.)
+  describe 'the jobs command-text column' do
+    rendered = [
+      'sleep 5',
+      "sh -c 'kill -TSTP $$' ss",
+      'sleep $T',
+      'sleep "$T" x',
+      'sleep ${T:-9}',
+      'sleep "$@" "$?"',
+      'sleep $(echo 9)',
+      'sleep $((1+2))',
+      "sleep 'a b'",
+      'sleep 9 >/dev/null 2>&1',
+      'X=1 sleep 9',
+      'if true; then sleep 9; fi',
+      'while true; do sleep 1; done',
+      'for i in 1 2; do sleep 3; done',
+      'for i; do sleep 3; done',
+      'case a in a|b) sleep 9;; esac',
+      'sleep 9 && echo never',
+      '! sleep 9',
+      '(sleep 9)',
+      '{ sleep 9; echo x; }'
+    ].freeze
+
+    rendered.each.with_index(1) do |command, index|
+      id = format('jc-text-%03d', index)
+
+      it "#{id}: matches dash under Timeout for: #{command}" do
+        snippet = "set -m; #{command} & jobs; kill -9 %1 2>/dev/null; kill -CONT %1 2>/dev/null; wait"
+        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      end
+    end
+  end
+
+  # fg/bg echo their job's text now, and the jobs listing carries it — the
+  # /dev/null projections above predate the column and stay as regression
+  # cover for the bare choreography.
+  describe 'fg, bg and jobs with the text column' do
+    text_resume = [
+      "set -m; sh -c 'kill -TSTP $$' zz; fg %1; echo st:$?",
+      "set -m; sh -c 'kill -TSTP $$' zz; bg %1; wait %1; echo w:$?",
+      "set -m; sh -c 'kill -TSTP $$' zz; j=$(mktemp); jobs > \"$j\"; cat \"$j\"; rm -f \"$j\"; " \
+      'kill -9 %1; kill -CONT %1'
+    ].freeze
+
+    text_resume.each.with_index(1) do |snippet, index|
+      id = format('jc-text-fgbg-%03d', index)
+
+      it "#{id}: matches dash under Timeout for: #{snippet}" do
+        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      end
+    end
+  end
 end

@@ -45,6 +45,9 @@ module Rush
 
     private
 
+    # The adopted-job text of a parked pipeline (nil without job control).
+    def text: () -> String?
+
     def build_pipes: () -> Array[[ IO, IO ]]
 
     def start_stages: (Array[[ IO, IO ]] pipes) -> Array[Integer]

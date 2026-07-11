@@ -227,24 +227,18 @@ RSpec.describe Rush::JobTable do
     end
   end
 
-  describe '#refuse_exit? / #tick_warning (dash job_warning)' do
-    it 'never refuses without a stopped job' do
-      table.record(9)
-      expect(table.refuse_exit?).to be(false)
-    end
-
+  describe 'Control#warn_exit? / #tick_warning (dash job_warning)' do
     it 'refuses once, lets an immediate retry through, and re-arms two ticks later' do
-      table.adopt_stopped([50], 20)
-      expect(table.refuse_exit?).to be(true)
+      expect(table.control.warn_exit?).to be(true)
       table.control.tick_warning
-      expect(table.refuse_exit?).to be(false)
+      expect(table.control.warn_exit?).to be(false)
       table.control.tick_warning
-      expect(table.refuse_exit?).to be(true)
+      expect(table.control.warn_exit?).to be(true)
     end
 
     it 'never re-arms without ticks (a batch shell exits on the second try)' do
-      table.adopt_stopped([50], 20)
-      expect([table.refuse_exit?, table.refuse_exit?, table.refuse_exit?]).to eq([true, false, false])
+      results = [table.control.warn_exit?, table.control.warn_exit?, table.control.warn_exit?]
+      expect(results).to eq([true, false, false])
     end
   end
 end

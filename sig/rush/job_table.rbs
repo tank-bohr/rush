@@ -17,22 +17,45 @@ module Rush
     # builtin renders Done(n) or a signal description.
     class Job
       extend T::Sig
+      extend Forwardable
 
-      @number: Integer
+      # The creation-time facts: number, member pids, rendered text.
+      class Identity
+        extend T::Sig
 
-      @members: Array[Integer]
+        @number: Integer
 
-      @origin: Symbol
+        @members: Array[Integer]
+
+        @text: String?
+
+        attr_reader number: Integer
+
+        attr_reader members: Array[Integer]
+
+        attr_reader text: String?
+
+        def initialize: (Integer number, Array[Integer] members, String? text) -> void
+      end
+
+      @identity: Identity
 
       @result: Status?
 
-      attr_reader number: Integer
+      @changed: bool
 
-      attr_reader members: Array[Integer]
+      attr_reader changed: bool
 
-      def initialize: (Integer number, Integer pid, ?members: Array[Integer], ?origin: Symbol) -> void
+      def initialize: (Integer number, Integer pid, ?members: Array[Integer], ?text: String?) -> void
 
-      # Created under monitor mode, so fg/bg may resume it (rush-mv8.5).
+      def number: () -> Integer
+
+      def members: () -> Array[Integer]
+
+      # The rendered command line ('' outside job control).
+      def text: () -> String
+
+      # Created under monitor mode — the kept text is the stamp (mv8.5/6).
       def controlled?: () -> bool
 
       def stopsig: () -> Integer?
@@ -47,6 +70,12 @@ module Rush
 
       # Resume + SIGCONT to the group; ESRCH (already gone) settles.
       def continue: (SystemCalls system) -> void
+
+      # A state change was displayed; nothing further to announce.
+      def reported: () -> void
+
+      # Print this job's change and settle the report (dash showjob + free).
+      def report: (JobTable table, untyped out) -> void
 
       # Reap once: the first harvest fills raw from the supplied wait;
       # repeats answer from memory (dash never frees an entry on wait).
@@ -87,10 +116,10 @@ module Rush
     # A background launch: the pid becomes job [n] — the lowest free number,
     # as dash numbers slots. Fake fork ports return no child pid (mapped to
     # 0); a real parent always records a positive one.
-    def record: (Integer pid) -> void
+    def record: (Integer pid, ?text: String?) -> void
 
     # A ^Z-stopped foreground job becomes a Stopped table entry.
-    def adopt_stopped: (Array[Integer] pids, Integer stopsig) -> void
+    def adopt_stopped: (Array[Integer] pids, Integer stopsig, ?String? text) -> void
 
     # Newest first: the jobs builtin's display order, and what makes the
     # first entry the current job (+) and the second the previous one (-).
@@ -130,7 +159,8 @@ module Rush
     # fg's wait over every member of a resumed job (rush-mv8.5).
     def settle_members: (Job job) -> Status
 
-    def refuse_exit?: () -> bool
+    # dash's cmdloop showjobs(SHOW_CHANGED), before each PS1 (the Repl).
+    def announce_changed: (untyped out) -> void
 
     private
 

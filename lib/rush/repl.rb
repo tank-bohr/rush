@@ -35,8 +35,19 @@ module Rush
 
     sig { params(continuation: T::Boolean).returns(T.nilable(String)) }
     def prompt_line(continuation)
+      announce_jobs unless continuation
       text = continuation ? prompt.continuation : prompt.primary
       system.tty? ? edited_line(text) : plain_line(text)
+    end
+
+    # dash's cmdloop showjobs(SHOW_CHANGED): before each PS1 under monitor
+    # mode, report every job whose state changed since it was last shown,
+    # freeing the finished ones (probed: set +m silences the reports, and
+    # the lines go to stderr with the prompts).
+    sig { void }
+    def announce_jobs
+      jobs = executor.jobs
+      jobs.announce_changed(system.stderr) if jobs.control.monitor
     end
 
     # A terminal gets Reline: line editing and in-memory history, prompt drawn

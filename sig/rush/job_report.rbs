@@ -1,0 +1,11 @@
+module Rush
+  # One line of the jobs listing / a pre-prompt notification: dash's
+  # showjob format, shared by the jobs builtin and the Repl's notifier.
+  module JobReport
+    extend T::Sig
+
+    def self.line: (JobTable table, JobTable::Job job, ?String pid_field) -> String
+
+    def self.mark: (JobTable table, JobTable::Job job) -> String
+  end
+end

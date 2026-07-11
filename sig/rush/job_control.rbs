@@ -38,8 +38,11 @@ module Rush
 
     # Wait for a foreground job with the terminal handed to its process
     # group, reclaiming it afterwards (dash waitforjob); a stopped wait
-    # parks the whole job in the table.
-    def foreground: (Array[Integer] pids) { () -> Status } -> Status
+    # parks the whole job in the table, text and all.
+    def foreground: (Array[Integer] pids, ?text: String?) { () -> Status } -> Status
+
+    # The command text a table entry keeps: rendered under job control only.
+    def job_text: (AST::Node node) -> String?
 
     private
 

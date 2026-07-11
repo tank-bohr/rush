@@ -69,8 +69,8 @@ module Rush
 
       sig { params(job: JobTable::Job).returns(Status) }
       def resume(job)
-        stdout.puts('')
-        executor.job_control.foreground(job.members) do
+        stdout.puts(job.text)
+        executor.job_control.foreground(job.members, text: job.text) do
           job.continue(executor.system)
           settle(job)
         end
@@ -98,7 +98,7 @@ module Rush
       sig { params(job: JobTable::Job).returns(Status) }
       def resume(job)
         job.continue(executor.system)
-        stdout.puts("[#{job.number}]")
+        stdout.puts("[#{job.number}] #{job.text}")
         success
       end
     end

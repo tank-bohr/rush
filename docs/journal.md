@@ -1228,3 +1228,51 @@ on — dash and rush byte-for-byte on the extracted picture.
 
 Verified: full rake green (2069 specs, 99.95%/99.58%), differential job-control corpus now
 49 lines, pty smoke green natively and in the container.
+
+### The jobs column speaks: cmdtxt lands, and the prompt announces the changes
+rush-mv8.6, the epic's last open slice. The mv8.2 note "dash keeps text only under a tty"
+dissolved under better probes: the command-text column is keyed on the per-job jobctl bit —
+controlled jobs print their text on and off a tty — which made the whole renderer
+differentially testable off-tty (`set -m; CMD & jobs`): twenty jc-text corpus lines pin
+CommandText byte-for-byte against the oracle, and the fg/bg echo lines lost their /dev/null
+projections. dash's cmdtxt canon, probed shape by shape: parameters always braced (${T},
+"${@}", ${T:-9} with the raw default source), command substitutions and here-documents
+elided to $(...) and <<..., every redirect fd explicit (1>/dev/null, 0<f), assignments
+dropped from commands with words — an assignment-only job renders as `set`, a genuine dash
+quirk — group braces dropped, elif re-spelled as nested else-if, `!` prefixed without a
+space, case alternation truncated to the first pattern, and the implicit for-list spelled
+out as in "${@}". Words rebuild from rush's segments: consecutive quoted segments share one
+pair of double quotes with \\ " $ ` escaped — each segment kind canonicalises itself
+(WordSegment#canon, ParamRef#canon), which is also where reek pushed the dispatch. Known
+un-replicated nuances, journal-only: dash distinguishes quoting origins rush's lexer
+normalises (a dquoted \$ prints unescaped where a squoted $ prints \$ — rush always
+escapes), renders parse-time tilde expansion results, and prints backquote substitutions
+with their body; none is reachable from the corpus shapes chosen.
+
+The text is the jobctl stamp itself: Job::Identity keeps nil outside monitor mode — exactly
+dash, where cmdtext exists only for jobctl jobs — so Job#controlled? reads the text's
+presence and the mv8.5 origin symbol dissolved. JobControl#job_text gates the rendering;
+runners pass it at launch (BackgroundRunner), adoption (pipeline/subshell/external — the
+external can't see the AST, so CommandRunner renders and External#call carries it), and fg
+re-parks with the job's own text.
+
+Notifications: dash's cmdloop runs showjobs(SHOW_CHANGED) before each PS1 — probed: the
+lines go to stderr with the prompts, only under monitor mode (set +m silences them, and
+nothing prints off-tty), no launch announcement (unlike bash), Done/Stopped/Killed flavours
+in the same showjob format as the jobs listing, a change collected by the wait builtin
+still announces later, and CONT is never noticed (no WCONTINUED — the display stays
+Stopped until a real state change). Landed as a changed bit on Job (set by finish/stop,
+cleared by display, by the notifier, and by bg's resume — bg's own "[n] text" line is its
+announcement), JobTable#announce_changed draining it pre-prompt from the Repl, and
+JobReport sharing the line renderer with the jobs builtin. The exit-refusal predicate
+moved into the Exit builtin on the way (reek's line budgets kept every class at its cap —
+the fifth ivar Job needed became the Identity bundle).
+
+Probed and deliberately deferred: dash's printsignal — the bare "Killed"/"Terminated"
+stderr line when a job dies by signal (any reap path, INT/PIPE excluded, "(core dumped)"
+suffixed, suppressed by the command's own 2>/dev/null) — is independent of job control
+entirely and invisible to the corpus; filed as rush-hkp rather than smuggled in here.
+
+Verified: full rake green (2140 specs, 99.93%/99.39%), differential job-control corpus 72
+lines, the pty smoke now also asserts the pre-prompt Stopped/Killed announcements with
+their command text — dash and rush byte-for-byte, natively and in the container.

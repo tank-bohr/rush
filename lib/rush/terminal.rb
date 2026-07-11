@@ -58,6 +58,20 @@ module Rush
       nil
     end
 
+    # The parent-side handover around a foreground wait: give for the
+    # block, reclaim after — bare when no terminal is held (or for a fake
+    # fork's pid-0 launch).
+    sig do
+      type_parameters(:U)
+        .params(terminal: T.nilable(Terminal), leader: Integer, blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def self.while_held(terminal, leader, &blk)
+      return yield unless terminal && leader.positive?
+
+      terminal.while_given(leader, &blk)
+    end
+
     private_class_method :wait_foreground, :take, :abandon
 
     sig { returns(T.untyped) }

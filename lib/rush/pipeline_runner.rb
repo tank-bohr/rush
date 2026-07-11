@@ -95,10 +95,16 @@ module Rush
       pipes = build_pipes
       pids = start_stages(pipes)
       close_all(pipes)
-      @executor.job_control.foreground(pids) { wait(pids) }
+      @executor.job_control.foreground(pids, text: text) { wait(pids) }
     end
 
     private
+
+    # The adopted-job text of a ^Z-parked pipeline (nil without job control).
+    sig { returns(T.nilable(String)) }
+    def text
+      CommandText.stages(@commands) if @executor.job_control.monitored?
+    end
 
     sig { returns(T::Array[[IO, IO]]) }
     def build_pipes

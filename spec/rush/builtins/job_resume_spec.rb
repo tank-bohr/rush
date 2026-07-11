@@ -48,14 +48,14 @@ RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite
   describe 'with a stopped job under job control' do
     before do
       executor.jobs.control.engage(nil)
-      executor.jobs.adopt_stopped([50, 51], 20)
+      executor.jobs.adopt_stopped([50, 51], 20, 'sleep 100 | cat')
     end
 
-    it 'bg resumes the group: SIGCONT to -pgid, entry Running, "[n]" printed, status 0' do
+    it 'bg resumes the group: SIGCONT to -pgid, entry Running, "[n] text" printed, status 0' do
       expect(bg('%1')).to be_success
       expect(system.kills).to eq([['CONT', -50]])
       expect(executor.jobs.current.running?).to be(true)
-      expect(system.stdout.string).to eq("[1]\n")
+      expect(system.stdout.string).to eq("[1] sleep 100 | cat\n")
     end
 
     it 'fg resumes, waits for every member and frees the finished entry, its status as $?' do
@@ -66,11 +66,11 @@ RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite
       expect(executor.jobs.current).to be_nil
     end
 
-    it 'fg prints the command-line placeholder to stdout (text arrives with mv8.6)' do
+    it 'fg prints the command line to stdout, as dash echoes what it resumes' do
       system.provide_child(50, 0)
       system.provide_child(51, 0)
       fg('%1')
-      expect(system.stdout.string).to eq("\n")
+      expect(system.stdout.string).to eq("sleep 100 | cat\n")
     end
 
     it 'fg parks the job Stopped again, same number, when the resumed job takes another ^Z' do
@@ -85,7 +85,7 @@ RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite
       tty_system = FakeSystemCalls.new(tty: true)
       tty_executor = Rush::Executor.new(system: tty_system, state: state)
       tty_executor.job_control.enable(tty_system.stderr)
-      tty_executor.jobs.adopt_stopped([50], 20)
+      tty_executor.jobs.adopt_stopped([50], 20, 'sleep 9')
       tty_system.provide_child(50, 0)
       Rush::Builtins::Fg.new(tty_executor, %w[fg %1], Rush::IoTable.standard(tty_system)).call
       expect(tty_system.handovers).to eq([4242, 50, 4242])
@@ -98,7 +98,7 @@ RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite
     end
 
     it 'loops multiple operands, the last status winning (dash fg %1 %2)' do
-      executor.jobs.adopt_stopped([60], 20)
+      executor.jobs.adopt_stopped([60], 20, 'sleep 60')
       system.provide_child(50, 3)
       system.provide_child(51, 3)
       system.provide_child(60, 5)
@@ -110,7 +110,7 @@ RSpec.describe 'fg and bg' do # rubocop:disable RSpec/DescribeClass -- one suite
       dead = FakeSystemCalls.new(dead_pids: [-50])
       dead_executor = Rush::Executor.new(system: dead, state: state)
       dead_executor.jobs.control.engage(nil)
-      dead_executor.jobs.adopt_stopped([50], 20)
+      dead_executor.jobs.adopt_stopped([50], 20, 'sleep 9')
       dead_executor.jobs.current.finish(FakeSystemCalls::ChildStatus.new(nil, 9))
       status = Rush::Builtins::Fg.new(dead_executor, %w[fg %1], Rush::IoTable.standard(dead)).call
       expect(status.exitstatus).to eq(137)

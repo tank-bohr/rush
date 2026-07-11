@@ -17,8 +17,10 @@ module Rush
 
     sig { returns(Status) }
     def call
-      pid = @executor.job_control.launch { run_child }
-      @executor.job_control.foreground([pid]) { @executor.jobs.await(pid) }
+      control = @executor.job_control
+      pid = control.launch { run_child }
+      text = control.job_text(AST::Subshell.new(@body))
+      control.foreground([pid], text: text) { @executor.jobs.await(pid) }
     end
 
     # The subshell is a fresh top level: exit (or an uncaught return) ends it

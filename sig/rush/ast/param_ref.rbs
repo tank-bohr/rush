@@ -19,6 +19,9 @@ module Rush
 
       def self.length?: (String body) -> bool
 
+      # dash's job text always braces a parameter.
+      def canon: () -> String
+
       def self.braced_match: (String body) -> MatchData
 
       def self.braced_name: (MatchData match) -> String

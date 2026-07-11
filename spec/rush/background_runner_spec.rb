@@ -50,13 +50,23 @@ RSpec.describe Rush::BackgroundRunner do
     expect(system.traps_installed.reverse.find { |name, _command| name == 'INT' }).to eq(%w[INT IGNORE])
   end
 
+  def parsed(source)
+    Rush::Parser.new(Rush::Lexer.new(source)).parse
+  end
+
   context 'when job control (set -m) is on' do
     before { executor.job_control.enable(system.stderr) }
 
     it 'places the job in its own process group (parent side of the double setpgid)' do
       allow(system).to receive(:fork).and_return(1234)
-      described_class.new(executor, node).call
+      described_class.new(executor, parsed('sleep 99')).call
       expect(system.pgids_set).to eq([[1234, 0]])
+    end
+
+    it 'stamps the recorded entry with the rendered command text (dash keeps text under -m)' do
+      allow(system).to receive(:fork).and_return(1234)
+      described_class.new(executor, parsed('sleep $T | cat')).call
+      expect(executor.jobs.current.text).to eq('sleep ${T} | cat')
     end
 
     it 'leaves the child stdin alone — the job sits in its own group (dash-probed)' do
@@ -81,7 +91,7 @@ RSpec.describe Rush::BackgroundRunner do
       tty_executor = Rush::Executor.new(system: tty_system, state: Rush::ShellState.new)
       tty_executor.job_control.enable(tty_system.stderr)
       allow(tty_system).to receive(:fork).and_return(1234)
-      described_class.new(tty_executor, node).call
+      described_class.new(tty_executor, parsed('sleep 99')).call
       expect(tty_system.tty_leaders).to be_empty
       expect(tty_system.handovers).to eq([4242])
     end

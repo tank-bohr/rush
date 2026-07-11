@@ -16,12 +16,19 @@ module Rush
 
       sig { returns(Status) }
       def call
-        return refuse_stopped if executor.jobs.refuse_exit?
+        return refuse_stopped if stopped_jobs?
 
         raise ExitSignal, code
       end
 
       private
+
+      # Stopped jobs block the exit once (the Control's dash-job_warning
+      # window arms on the first refusal).
+      sig { returns(T::Boolean) }
+      def stopped_jobs?
+        executor.jobs.ordered.any?(&:stopped?) && executor.jobs.control.warn_exit?
+      end
 
       sig { returns(Status) }
       def refuse_stopped

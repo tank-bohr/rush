@@ -73,7 +73,12 @@ module Rush
       return run_function(argv, io) if @executor.state.functions.key?(name)
       return builtin(argv, io) if @executor.builtins.key?(name)
 
-      External.new(@executor, argv, io, command_env(io)).call
+      external(argv, io)
+    end
+
+    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
+    def external(argv, io)
+      External.new(@executor, argv, io, command_env(io)).call(@executor.job_control.job_text(@command))
     end
 
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like

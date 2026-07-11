@@ -31,6 +31,9 @@ module Rush
 
       def literal_value: () -> String?
 
+      # This segment as dash's canonical job text prints it.
+      def canon: () -> String
+
       def splittable?: () -> bool
 
       def splat?: () -> bool
@@ -54,6 +57,9 @@ module Rush
       extend T::Generic
 
       Value: untyped
+
+      # dash escapes special characters inside a quoted run's quotes.
+      CANON_ESCAPES: Regexp
 
       attr_reader value: String
 

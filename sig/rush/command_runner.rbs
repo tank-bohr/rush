@@ -42,6 +42,8 @@ module Rush
     # the heterogeneous streams IoTable holds (kept untyped, see io_table.rbs).
     def dispatch: (Array[String] argv, IoTable io) -> Status
 
+    def external: (Array[String] argv, IoTable io) -> Status
+
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
     # dash, that fails the command (status 1) without killing the shell.
     def builtin: (Array[String] argv, IoTable io) -> Status

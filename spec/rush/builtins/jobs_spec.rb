@@ -67,6 +67,21 @@ RSpec.describe Rush::Builtins::Jobs do
     expect(system.stderr.string).to eq("jobs: No such job: %9\n")
   end
 
+  it 'appends the rendered command text at column 34 for a controlled job (dash keeps text under -m)' do
+    executor.jobs.control.engage(nil)
+    executor.jobs.record(11, text: 'sleep 5 | cat')
+    run
+    expect(system.stdout.string).to eq("#{'[1] + Running'.ljust(33)}sleep 5 | cat\n")
+  end
+
+  it 'clears the changed flag when displaying, so no notification follows (dash frees/reports once)' do
+    executor.jobs.control.engage(nil)
+    executor.jobs.record(11, text: 'sleep 5')
+    system.provide_stopped(11, 20)
+    run
+    expect(executor.jobs.current.changed).to be(false)
+  end
+
   it 'renders every Stopped flavour by stop signal, exactly as dash prints strsignal' do
     record(11, 12, 13, 14)
     executor.jobs.control.engage(nil)

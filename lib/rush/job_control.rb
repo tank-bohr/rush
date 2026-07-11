@@ -103,24 +103,22 @@ module Rush
     # held terminal the wait runs bare. A wait that answers "stopped" (^Z
     # under the WUNTRACED waits) parks the whole job in the table on the
     # way out, where jobs/wait/kill find it.
-    sig { params(pids: T::Array[Integer], blk: T.proc.returns(Status)).returns(Status) }
-    def foreground(pids, &blk)
-      status = holding_terminal(pids.fetch(0), &blk)
-      @executor.jobs.adopt_stopped(pids, T.must(status.stopsig)) if status.stopped?
+    sig { params(pids: T::Array[Integer], text: T.nilable(String), blk: T.proc.returns(Status)).returns(Status) }
+    def foreground(pids, text: nil, &blk)
+      status = Terminal.while_held(control.terminal, pids.fetch(0), &blk)
+      @executor.jobs.adopt_stopped(pids, T.must(status.stopsig), text) if status.stopped?
       status
     end
 
-    private
-
-    # The parent-side terminal handover around a foreground wait; bare
-    # without a held terminal (or for a fake fork's pid-0 launch).
-    sig { params(leader: Integer, blk: T.proc.returns(Status)).returns(Status) }
-    def holding_terminal(leader, &blk)
-      terminal = control.terminal
-      return yield unless terminal && leader.positive?
-
-      terminal.while_given(leader, &blk)
+    # The command text a job-table entry keeps: rendered only under job
+    # control — dash stores cmdtext for jobctl jobs alone, and that absence
+    # is fg/bg's refusal bit.
+    sig { params(node: AST::Node).returns(T.nilable(String)) }
+    def job_text(node)
+      CommandText.render(node) if control.monitor
     end
+
+    private
 
     # The root-shell side of `set -m`: with a reachable tty, the full dash
     # setjobctl dance; without one, grouping only — an error only for an

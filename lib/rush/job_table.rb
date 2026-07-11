@@ -32,21 +32,19 @@ module Rush
     # A background launch: the pid becomes job [n] — the lowest free number,
     # as dash numbers slots. Fake fork ports return no child pid (mapped to
     # 0); a real parent always records a positive one.
-    sig { params(pid: Integer).void }
-    def record(pid)
-      @jobs[pid] = Job.new(free_number, pid, origin: @control.origin) if pid.positive?
+    sig { params(pid: Integer, text: T.nilable(String)).void }
+    def record(pid, text: nil)
+      @jobs[pid] = Job.new(free_number, pid, text: text) if pid.positive?
     end
 
     # A foreground job a WUNTRACED wait handed back as stopped (^Z): it
     # becomes a job-table entry — number, the group leader as its pid, every
     # pipeline member listed — parked Stopped, where jobs/wait/kill/%ids
     # find it (dash keeps its jobtab entry; rush creates one on the spot).
-    sig { params(pids: T::Array[Integer], stopsig: Integer).void }
-    def adopt_stopped(pids, stopsig)
+    sig { params(pids: T::Array[Integer], stopsig: Integer, text: T.nilable(String)).void }
+    def adopt_stopped(pids, stopsig, text = nil)
       leader = pids.fetch(0)
-      return unless leader.positive?
-
-      (@jobs[leader] ||= Job.new(free_number, leader, members: pids, origin: @control.origin)).stop(stopsig)
+      (@jobs[leader] ||= Job.new(free_number, leader, members: pids, text: text)).stop(stopsig) if leader.positive?
     end
 
     # Newest first: the jobs builtin's display order, and what makes the
@@ -129,11 +127,12 @@ module Rush
       PipelineStatuses.new(job.members.map { |pid| wait_for(pid) || await(pid) }).verdict
     end
 
-    # The exit builtin with a stopped job: refused with "You have stopped
-    # jobs." exactly once (the Control's dash-job_warning window).
-    sig { returns(T::Boolean) }
-    def refuse_exit?
-      @jobs.each_value.any?(&:stopped?) && @control.warn_exit?
+    # dash's cmdloop showjobs(SHOW_CHANGED): the Repl calls this before
+    # each PS1 under monitor mode.
+    sig { params(out: T.untyped).void }
+    def announce_changed(out)
+      poll
+      ordered.select(&:changed).each { |job| job.report(self, out) }
     end
 
     private

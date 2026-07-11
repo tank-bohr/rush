@@ -1,0 +1,58 @@
+module Rush
+  # Renders an AST back into dash's canonical job text (cmdtxt), probed
+  # shape by shape: the jobs command column, fg's echo, bg's "[n] ...".
+  module CommandText
+    extend T::Sig
+
+    TABLE: Hash[untyped, Symbol]
+
+    QUOTED_ESCAPES: Regexp
+
+    OPERATORS: Hash[Symbol, [String, Integer]]
+
+    def self.render: (AST::Node node) -> String
+
+    def self.list: (AST::List node) -> String
+
+    def self.entry_text: (AST::ListEntry entry) -> String
+
+    def self.and_or: (AST::AndOr node) -> String
+
+    def self.pipeline: (AST::Pipeline node) -> String
+
+    # Also reachable for PipelineRunner's already-split command list.
+    def self.stages: (Array[AST::Node] commands) -> String
+
+    def self.simple: (AST::SimpleCommand node) -> String
+
+    def self.subshell: (AST::Subshell node) -> String
+
+    def self.group: (AST::BraceGroup node) -> String
+
+    def self.if_node: (AST::If node) -> String
+
+    def self.while_node: (AST::While node) -> String
+
+    def self.until_node: (AST::Until node) -> String
+
+    def self.for_node: (AST::For node) -> String
+
+    def self.case_node: (AST::Case node) -> String
+
+    def self.function_def: (AST::FunctionDef node) -> String
+
+    def self.redirected: (AST::Redirected node) -> String
+
+    def self.redirect: (AST::Redirect redirect) -> String
+
+    def self.word: (AST::Word word) -> String
+
+    def self.run_text: (Array[AST::WordSegment[untyped]] run) -> String
+
+    def self.segment: (AST::WordSegment[untyped] segment) -> String
+
+    def self.literal: (String text, bool quoted) -> String
+
+    def self.param: (AST::ParamRef ref) -> String
+  end
+end

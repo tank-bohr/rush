@@ -29,9 +29,6 @@ module Rush
 
       def fork_child: () -> void
 
-      # The per-job job-control stamp for entries created now.
-      def origin: () -> Symbol
-
       # dash's job_warning window for the stopped-jobs exit refusal.
       def warn_exit?: () -> bool
 

@@ -42,6 +42,13 @@ module Rush
         nil
       end
 
+      # This segment as dash's canonical job text prints it (CommandText):
+      # each kind re-spells itself; the base is abstract.
+      sig { returns(String) }
+      def canon
+        raise NotImplementedError
+      end
+
       sig { returns(T::Boolean) }
       def splittable?
         false
@@ -88,6 +95,9 @@ module Rush
 
       Value = type_member { { fixed: String } }
 
+      # dash escapes \ " $ ` inside the double quotes a quoted run gets.
+      CANON_ESCAPES = T.let(/[\\"$`]/, Regexp)
+
       sig { params(_executor: Executor).returns(String) }
       def expand(_executor)
         value
@@ -96,6 +106,11 @@ module Rush
       sig { returns(T.nilable(String)) }
       def literal_value
         (value unless quoted)
+      end
+
+      sig { returns(String) }
+      def canon
+        quoted ? value.gsub(CANON_ESCAPES) { |char| "\\#{char}" } : value
       end
     end
 
@@ -130,6 +145,11 @@ module Rush
       def splat?
         !value.op && (value.name == '@' || (value.name == '*' && !quoted))
       end
+
+      sig { returns(String) }
+      def canon
+        value.canon
+      end
     end
 
     # $(...) / `...`: value is the command-substitution source.
@@ -143,6 +163,12 @@ module Rush
       def expand(executor)
         Expansion::CommandSubstitution.new(executor, value).expand
       end
+
+      # dash elides a command substitution's body from the job text.
+      sig { returns(String) }
+      def canon
+        '$(...)'
+      end
     end
 
     # $((...)): value is the arithmetic source.
@@ -155,6 +181,12 @@ module Rush
       sig { params(executor: Executor).returns(String) }
       def expand(executor)
         Expansion::ArithmeticExpander.new(executor, value).expand
+      end
+
+      # An arithmetic expansion keeps its raw source in the job text.
+      sig { returns(String) }
+      def canon
+        "$((#{value}))"
       end
     end
   end

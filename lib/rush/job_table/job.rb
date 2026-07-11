@@ -3,42 +3,72 @@
 
 module Rush
   class JobTable
-    # One job: its [n] number, the pid the shell tracks (a pipeline's group
-    # leader, pids.first; members lists every process, for fg/bg and group
-    # kills), its origin (only a job created under monitor mode may be
-    # resumed — dash's per-job jobctl bit, probed across set -m/+m flips),
-    # and its state, held as the Status of the last decisive wait: nothing
-    # while running, a stop-carrying Status while parked (^Z — re-waitable,
-    # answering 128+stopsig until fg/bg's SIGCONT resumes it), a final one
-    # once done. The wait builtin reads #status; jobs prints #display_state.
+    # One job. Identity holds what never changes: the [n] number, the member
+    # pids (a pipeline's group leader first — fg/bg and group kills need them
+    # all), and the rendered command text — nil outside job control, exactly
+    # dash's model, where cmdtext is kept only for jobctl jobs and that
+    # absence IS the fg/bg "not created under job control" refusal.
+    # State is the Status of the last decisive wait: nothing while running, a
+    # stop-carrying Status while parked (^Z — re-waitable, answering
+    # 128+stopsig until fg/bg's SIGCONT), a final one once done; `changed`
+    # tracks whether the latest transition has been reported (the pre-prompt
+    # notification, or the jobs listing itself).
     class Job
       extend T::Sig
 
-      sig { returns(Integer) }
-      attr_reader :number
+      # The creation-time facts, bundled so the mutable state stays apart.
+      class Identity
+        extend T::Sig
 
-      sig { returns(T::Array[Integer]) }
-      attr_reader :members
+        sig { returns(Integer) }
+        attr_reader :number
 
-      sig { params(number: Integer, pid: Integer, members: T::Array[Integer], origin: Symbol).void }
-      def initialize(number, pid, members: [pid], origin: :plain)
-        @number = number
-        @members = members
-        @origin = origin
-        @result = T.let(nil, T.nilable(Status))
+        sig { returns(T::Array[Integer]) }
+        attr_reader :members
+
+        sig { returns(T.nilable(String)) }
+        attr_reader :text
+
+        sig { params(number: Integer, members: T::Array[Integer], text: T.nilable(String)).void }
+        def initialize(number, members, text)
+          @number = number
+          @members = members
+          @text = text
+        end
       end
+
+      sig { returns(T::Boolean) }
+      attr_reader :changed
+
+      sig { params(number: Integer, pid: Integer, members: T::Array[Integer], text: T.nilable(String)).void }
+      extend Forwardable
+
+      def initialize(number, pid, members: [pid], text: nil)
+        @identity = T.let(Identity.new(number, members, text), Identity)
+        @result = T.let(nil, T.nilable(Status))
+        @changed = T.let(false, T::Boolean)
+      end
+
+      def_delegators :@identity, :number, :members
 
       sig { returns(Integer) }
       def pid
-        @members.fetch(0)
+        members.fetch(0)
+      end
+
+      # The rendered command line ('' outside job control, where dash keeps
+      # no text either).
+      sig { returns(String) }
+      def text
+        @identity.text.to_s
       end
 
       # Created under monitor mode, so fg/bg may resume it (dash refuses
       # "not created under job control" for the rest, whatever mflag says
-      # now — probed).
+      # now — probed): the kept command text is the stamp.
       sig { returns(T::Boolean) }
       def controlled?
-        @origin == :monitored
+        !!@identity.text
       end
 
       # File a reaped wait result: a stop parks the job (still alive, still
@@ -46,18 +76,24 @@ module Rush
       # Status (never nil — JobTable#store leans on that).
       sig { params(raw: Process::Status).returns(Status) }
       def finish(raw)
+        @changed = true
         @result = Status.of(raw)
       end
 
       sig { params(stopsig: Integer).void }
       def stop(stopsig)
+        @changed = true
         @result = Status.stopped(stopsig)
       end
 
-      # fg/bg's SIGCONT: a stopped job runs again; settled ones stay put.
+      # fg/bg's SIGCONT: a stopped job runs again — its own announcement, no
+      # notification owed.
       sig { void }
       def resume
-        @result = nil if stopped?
+        return unless stopped?
+
+        @result = nil
+        @changed = false
       end
 
       # The whole fg/bg resume move: mark the job running again and SIGCONT
@@ -69,6 +105,22 @@ module Rush
         system.kill('CONT', -pid)
       rescue Errno::ESRCH
         nil
+      end
+
+      # A state change was displayed (jobs listing or pre-prompt
+      # notification): nothing further to announce.
+      sig { void }
+      def reported
+        @changed = false
+      end
+
+      # One pre-prompt notification: print this job's change and settle the
+      # report — a finished entry leaves the table (dash's showjob + free).
+      sig { params(table: JobTable, out: T.untyped).void }
+      def report(table, out)
+        out.puts(JobReport.line(table, self))
+        reported
+        table.forget(self) if finished?
       end
 
       # Reap once: a settled job answers from memory (dash never frees an
