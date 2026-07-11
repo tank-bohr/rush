@@ -58,4 +58,25 @@ RSpec.describe Rush::JobSpec do
     table.record(11)
     expect { resolve('') }.to raise_error(Rush::JobError, 'No such job: ')
   end
+
+  it 'refuses fork-inherited display copies by number, like dash in a forked child (rush-r6i)' do
+    table.record(11)
+    table.enter_subshell
+    expect { resolve('%1') }.to raise_error(Rush::JobError, 'No such job: %1')
+  end
+
+  it 'refuses fork-inherited copies for the current and previous forms' do
+    table.record(11)
+    table.record(12)
+    table.enter_subshell
+    expect { resolve('%%') }.to raise_error(Rush::JobError, 'No current job')
+    expect { resolve('%-') }.to raise_error(Rush::JobError, 'No previous job')
+  end
+
+  it 'still resolves a job launched inside the forked child itself' do
+    table.record(11)
+    table.enter_subshell
+    table.record(21)
+    expect([resolve('%%').pid, resolve('%2').pid]).to eq([21, 21])
+  end
 end

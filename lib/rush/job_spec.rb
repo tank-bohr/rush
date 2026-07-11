@@ -13,11 +13,15 @@ module Rush
 
     NUMBER = /\A%\d+\z/
 
+    # Fork-inherited display copies resolve for nobody: the jobs listing
+    # shows them (POSIX 2.12 duplicate), but wait/kill/fg/bg in a forked
+    # child answer No such job, exactly like dash (probed: a pipeline
+    # stage lists [1] while `wait %1` in the same stage reports rc=2).
     sig { params(jobs: JobTable, spec: String).returns(JobTable::Job) }
     def self.resolve(jobs, spec)
       case spec
-      when '%', '%%', '%+' then jobs.current || missing('current')
-      when '%-' then jobs.previous || missing('previous')
+      when '%', '%%', '%+' then live(jobs.current) || missing('current')
+      when '%-' then live(jobs.previous) || missing('previous')
       else by_number(jobs, spec)
       end
     end
@@ -26,7 +30,12 @@ module Rush
     def self.by_number(jobs, spec)
       unknown(spec) unless spec.match?(NUMBER)
 
-      jobs.numbered(Integer(spec.delete_prefix('%'), 10)) || unknown(spec)
+      live(jobs.numbered(Integer(spec.delete_prefix('%'), 10))) || unknown(spec)
+    end
+
+    sig { params(job: T.nilable(JobTable::Job)).returns(T.nilable(JobTable::Job)) }
+    def self.live(job)
+      job if job && !job.inherited?
     end
 
     sig { params(which: String).returns(T.noreturn) }

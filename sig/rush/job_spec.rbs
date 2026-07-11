@@ -10,9 +10,12 @@ module Rush
 
     NUMBER: Regexp
 
+    # Fork-inherited display copies resolve for nobody (rush-r6i).
     def self.resolve: (JobTable jobs, String spec) -> JobTable::Job
 
     def self.by_number: (JobTable jobs, String spec) -> JobTable::Job
+
+    def self.live: (JobTable::Job? job) -> JobTable::Job?
 
     def self.missing: (String which) -> bot
 

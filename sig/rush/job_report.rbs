@@ -7,5 +7,10 @@ module Rush
     def self.line: (JobTable table, JobTable::Job job, ?String pid_field) -> String
 
     def self.mark: (JobTable table, JobTable::Job job) -> String
+
+    # The state column (dash's statusfmt vocabulary).
+    def self.state: (JobTable::Job job) -> String
+
+    def self.settled: (Status status) -> String
   end
 end

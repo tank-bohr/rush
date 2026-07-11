@@ -136,28 +136,42 @@ RSpec.describe Rush::JobTable do
     end
   end
 
-  describe '#clear_for_subshell' do
-    it 'forgets recorded jobs and stashed statuses (a forked child has none)' do
+  describe '#enter_subshell' do
+    it 'demotes entries to unwaitable display copies (POSIX 2.12: wait answers 127 through nil)' do
       table.record(9)
       system.provide_child(7, 2)
       system.provide_child(5, 3)
       table.await(5)
-      table.clear_for_subshell
+      table.enter_subshell
       expect([table.wait_for(9), table.wait_for(7)]).to eq([nil, nil])
     end
 
-    it 'drops a stashed foreign status too, not just the job entries' do
+    it 'keeps the entries listable — the duplicate environment still shows them to jobs' do
+      table.record(9)
+      table.enter_subshell
+      job = table.ordered.fetch(0)
+      expect([job.pid, job.inherited?, table.current]).to eq([9, true, job])
+    end
+
+    it 'drops a stashed foreign status too, not just the waitability' do
       table.record(9)
       system.provide_child(7, 2)
       system.provide_child(5, 3)
       table.await(5)
-      table.clear_for_subshell
+      table.enter_subshell
       expect(table.await(7)).to be_success
+    end
+
+    it 'never lets an inherited running entry force waitpid(-1): a direct await still answers' do
+      table.record(9)
+      table.enter_subshell
+      system.wait_status = FakeSystemCalls::ChildStatus.new(5, nil)
+      expect(table.await(11).exitstatus).to eq(5)
     end
 
     it 'drops the job-control environment — a forked child is no root and never reclaims the tty' do
       table.control.engage(Rush::Terminal.new(system: system, tty: StringIO.new, home: 4242, initial: 4242))
-      table.clear_for_subshell
+      table.enter_subshell
       expect([table.control.root, table.control.terminal]).to eq([false, nil])
     end
   end

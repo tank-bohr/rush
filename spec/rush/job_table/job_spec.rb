@@ -11,6 +11,12 @@ RSpec.describe Rush::JobTable::Job do
     expect(described_class.new(1, 50).members).to eq([50])
   end
 
+  it 'is born waitable and demotes to a fork-inherited display copy (rush-r6i)' do
+    expect(job.inherited?).to be(false)
+    job.inherit
+    expect(job.inherited?).to be(true)
+  end
+
   it 'routes a stop to the parked state: alive, re-waitable, not finished' do
     job.finish(FakeSystemCalls::ChildStatus.new(nil, nil, 20))
     expect([job.running?, job.stopped?, job.finished?]).to eq([false, true, false])
@@ -51,32 +57,9 @@ RSpec.describe Rush::JobTable::Job do
     expect([job.text, job.controlled?]).to eq(['', false])
   end
 
-  describe '#display_state (dash statusfmt vocabulary)' do
-    it 'says Running while nothing was reaped' do
-      expect(job.display_state).to eq('Running')
-    end
-
-    it 'spells every Stopped flavour by signal' do
-      states = [20, 19, 21, 22].map do |sig|
-        job.stop(sig)
-        job.display_state
-      end
-      expect(states).to eq(['Stopped', 'Stopped (signal)', 'Stopped (tty input)', 'Stopped (tty output)'])
-    end
-
-    it 'says Done for a clean exit and Done(n) for a code' do
-      job.finish(FakeSystemCalls::ChildStatus.new(0, nil))
-      expect(job.display_state).to eq('Done')
-      job.finish(FakeSystemCalls::ChildStatus.new(5, nil))
-      expect(job.display_state).to eq('Done(5)')
-    end
-
-    it 'describes the killing signal' do
-      job.finish(FakeSystemCalls::ChildStatus.new(nil, 9))
-      expect(job.display_state).to eq('Killed')
-      job.finish(FakeSystemCalls::ChildStatus.new(nil, 15))
-      expect(job.display_state).to eq('Terminated')
-    end
+  it 'refuses to harvest once demoted to a display copy (never reapable here)' do
+    job.inherit
+    expect(job.harvest { raise ArgumentError, 'never waited' }).to be_nil
   end
 
   describe '#changed / #reported (the notification bit)' do

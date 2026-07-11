@@ -47,6 +47,7 @@ module Rush
         @identity = T.let(Identity.new(number, members, text), Identity)
         @result = T.let(nil, T.nilable(Status))
         @changed = T.let(false, T::Boolean)
+        @inherited = T.let(false, T::Boolean)
       end
 
       def_delegators :@identity, :number, :members
@@ -69,6 +70,20 @@ module Rush
       sig { returns(T::Boolean) }
       def controlled?
         !!@identity.text
+      end
+
+      # A fork demotes the entry to a POSIX 2.12 display copy: the subshell
+      # environment duplicates the async-pid knowledge (jobs listing,
+      # jobs -p), but the process is no child of this environment — wait
+      # and %id resolution refuse it (dash-probed in real forked children).
+      sig { void }
+      def inherit
+        @inherited = true
+      end
+
+      sig { returns(T::Boolean) }
+      def inherited?
+        @inherited
       end
 
       # File a reaped wait result: a stop parks the job (still alive, still
@@ -126,9 +141,12 @@ module Rush
       # Reap once: a settled job answers from memory (dash never frees an
       # entry on wait), a stopped one answers 128+stopsig immediately and
       # repeatably (dash-probed), and a running one blocks in the supplied
-      # wait — which may itself park the job.
-      sig { params(blk: T.proc.returns(Process::Status)).returns(Status) }
+      # wait — which may itself park the job. A fork-inherited display copy
+      # is never reapable: it answers nil, the callers' unknown-job path.
+      sig { params(blk: T.proc.returns(Process::Status)).returns(T.nilable(Status)) }
       def harvest(&blk)
+        return if inherited?
+
         finish(yield) if running?
         status
       end
@@ -156,29 +174,6 @@ module Rush
       sig { returns(Status) }
       def status
         T.must(@result)
-      end
-
-      # The state column of the jobs listing (dash's statusfmt vocabulary):
-      # Running, a strsignal Stopped flavour, Done/Done(n), or the killing
-      # signal's description.
-      sig { returns(String) }
-      def display_state
-        result = @result
-        return 'Running' unless result
-        return Signals.stop_description(T.must(result.stopsig)) if result.stopped?
-
-        settled_state(result)
-      end
-
-      private
-
-      sig { params(result: Status).returns(String) }
-      def settled_state(result)
-        signal = result.termsig
-        return Signals.description(signal) if signal
-
-        code = result.exitstatus
-        code.zero? ? 'Done' : "Done(#{code})"
       end
     end
   end

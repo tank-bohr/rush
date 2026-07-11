@@ -85,15 +85,16 @@ module Rush
 
     # Entering a forked child environment (subshell, pipeline stage, async
     # list, command substitution): caught traps reset (POSIX 2.11), and the
-    # job table empties — the parent's jobs are not this environment's
-    # children (POSIX 2.12: wait on them reports 127, a %id reports No such
-    # job; the value of $! itself survives) — which also switches job-control
-    # machinery off (dash: root shell only). dash-verified on every forked
-    # shape.
+    # job table becomes a display copy — the duplicate environment keeps the
+    # async-pid knowledge for jobs/jobs -p (POSIX 2.12, the seam that makes
+    # `wait $(jobs -p)` work in the parent), while the parent's jobs are not
+    # this environment's children: wait on them reports 127, a %id reports
+    # No such job, and $! itself survives — which also switches job-control
+    # machinery off (dash: root shell only).
     sig { void }
     def enter_subshell
       @trap_runner.reset_caught_for_subshell
-      @jobs.clear_for_subshell
+      @jobs.enter_subshell
     end
 
     # Permanently rebind the base IoTable (the `exec` redirection-only form),

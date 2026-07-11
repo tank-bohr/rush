@@ -61,6 +61,13 @@ RSpec.describe Rush::Builtins::Wait do
     expect(system.stderr.string).to be_empty
   end
 
+  it 'answers 127 for a fork-inherited display copy, silently (POSIX: not a child here; rush-r6i)' do
+    executor.jobs.record(9)
+    executor.jobs.enter_subshell
+    expect(run('9').exitstatus).to eq(127)
+    expect(system.stderr.string).to be_empty
+  end
+
   it 'gives an unknown last operand its 127 even after a known one (POSIX; dash keeps 3)' do
     launch(9, 3)
     expect(run('9', '99999').exitstatus).to eq(127)

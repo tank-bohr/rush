@@ -1386,3 +1386,36 @@ Verified: native rake fully green (2237), and bin/test-in-docker exits 0 end-to-
 in-container rake 2237/0 plus all three smokes (syscall, Reline pty, job-control pty).
 The two prior real_shell failures and the three jc-stop timeouts reproduce deterministically
 at c86ffea (pre-slice worktree, same image), confirming both families pre-existed.
+
+### The subshell job table becomes a display copy — and the oracles disagree with themselves (rush-r6i)
+Re-probing dissolved the bead's original premise twice over. dash's forked children do
+NOT list the parent's jobs: `(jobs; echo x); echo tail` prints nothing, and a brace-group
+pipeline stage `{ jobs; ...; } | cat` prints nothing while numbering its own new jobs from
+[1] — the shapes that DO list (`jobs | cat`, `jobs > f` in `( )` single-command subshells,
+`$(jobs -p)`) are the ones dash never really forks (the EV_EXIT/no-fork family, again
+lying to probes). Meanwhile %id resolution refuses everywhere: the same dash stage that
+lists [1] answers "No such job: %1" to wait/kill (rc=2). bash is inconsistent the other
+way around (cmdsub copies, explicit subshells do not, `jobs -p` in a stage prints nothing
+where plain `jobs` lists). The standard, unlike either oracle, is uniform: 2.12's shell
+execution environment includes "process IDs of the last commands in asynchronous lists",
+a subshell environment is "a duplicate of the shell environment", and the jobs page
+blesses $(jobs -p) as THE portable idiom — while the wait page normatively scopes known
+pids to "the current shell execution environment". So rush now implements the uniform
+reading: enter_subshell demotes entries to inherited display copies (Job#inherit) —
+listable by jobs/jobs -p with their numbers and marks intact — while Job#harvest answers
+nil for them (wait: 127), JobSpec#live refuses them (%id: No such job), and reap_one's
+liveness test skips them so a child's foreground waits still target directly. The payoff
+is the acceptance line: `wait $(jobs -p)` now returns the job's real status (rc=7) like
+both oracles, because the substitution child can still render the parent's pids. Corpus
+pins the shapes where dash agrees (jobs|cat with and without -m, jobs -p|wc, stage wait %1
+rc=2, three wait $(jobs -p) flavours); the dash-empty forked shapes stay out — the letter
+of 2.12 beats the fork-topology accidents (project rule). Two rubocop ClassLength caps
+forced honest moves: the statusfmt vocabulary (display_state) migrated from Job to
+JobReport.state — the renderer was its real home, and JobReport finally got its own
+constant-keyed spec (the 13f lesson applied preemptively) — and the inherited refusal
+went INTO Job#harvest rather than a second nil-check at the table. Divergence noted: rush
+children number new jobs above the inherited copies where dash restarts at [1] (its table
+is empty); unreachable differentially since dash lists nothing there.
+
+Verified: full rake green (2256 specs, 99.98%/99.6%), 7 new differential corpus lines,
+the seven-shape probe matrix byte-for-byte vs dash, pty smoke green.

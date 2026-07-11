@@ -21,6 +21,20 @@ RSpec.describe Rush::Builtins::Jobs do
       .to eq("#{'[3] + Running'.ljust(33)}\n#{'[2] - Running'.ljust(33)}\n#{'[1]   Running'.ljust(33)}\n")
   end
 
+  it 'still lists fork-inherited display copies, marks intact (POSIX 2.12 duplicate; rush-r6i)' do
+    record(11)
+    executor.jobs.enter_subshell
+    expect(run).to be_success
+    expect(system.stdout.string).to eq("#{'[1] + Running'.ljust(33)}\n")
+  end
+
+  it 'prints inherited pids for -p — the seam that keeps wait $(jobs -p) alive in the parent' do
+    record(11)
+    executor.jobs.enter_subshell
+    run('-p')
+    expect(system.stdout.string).to eq("11\n")
+  end
+
   it 'renders Done, Done(n) and signal descriptions after polling finished children' do
     record(11, 12, 13)
     system.provide_child(11, 0)

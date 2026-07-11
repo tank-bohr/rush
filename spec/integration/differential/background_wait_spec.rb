@@ -59,6 +59,18 @@ RSpec.describe 'rush vs dash (differential background/wait corpus)' do
     'sleep 0.2 & true | { wait $!; echo st=$?; }',
     'sleep 0.3 & { wait $!; echo inner=$?; } & wait; echo tail',
     'false & sleep 0.1; echo "x$(wait $!; echo =$?)"; echo tail',
+    # ...but the duplicate environment keeps the async pids for DISPLAY
+    # (POSIX 2.12 lists them among what an environment consists of), which
+    # is exactly what makes the standard-blessed wait-for-all-jobs idiom
+    # work: $(jobs -p) renders the parent's pids, the parent's wait takes
+    # them (rush-r6i; dash reaches the same answer via its no-fork
+    # single-builtin substitution)
+    "sh -c 'sleep 0.3; exit 7' & wait $(jobs -p); echo rc=$?",
+    'exit 5 & sleep 0.2; wait $(jobs -p); echo rc=$?',
+    'sleep 0.2 & sleep 0.3 & wait $(jobs -p); echo rc=$?',
+    # %id resolution refuses the inherited copies in a forked child (probed:
+    # dash lists [1] in a pipeline stage while wait %1 there reports rc=2)
+    'sleep 0.3 & { wait %1; echo rc=$?; } | cat; kill -9 %1 2>/dev/null; echo done',
     # wait is a known regular builtin
     'command -v wait',
     'type wait'

@@ -25,6 +25,13 @@ RSpec.describe 'rush vs dash (differential jobs corpus)' do
     'exit 0 & exit 5 & sleep 5 & kill -9 $!; sleep 0.1; jobs',
     'sleep 0.3 & exit 5 & sleep 0.1; jobs',
     'exit 5 & sleep 0.3 & sleep 0.1; jobs',
+    # a forked child still LISTS the inherited table — the subshell
+    # environment duplicates the async-pid knowledge (POSIX 2.12; rush-r6i)
+    # — while the entries stay unwaitable there; dash reaches the same
+    # listing through its unforked single-builtin pipeline stage
+    'sleep 0.3 & jobs | cat; echo done',
+    'set -m; sleep 0.3 & jobs | cat; kill -9 %1; echo done',
+    'sleep 0.3 & jobs -p | wc -l; echo done',
     # numbering reuses the lowest freed slot; an emptied table starts at [1]
     'sleep 0.3 & exit 0 & sleep 0.1; jobs >/dev/null; sleep 0.4 & jobs',
     'exit 0 & sleep 0.1; jobs >/dev/null; sleep 0.2 & jobs',

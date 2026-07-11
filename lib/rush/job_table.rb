@@ -11,7 +11,8 @@ module Rush
   # builtin finds it), a sibling foreground child's in a stash its own await
   # consults first. A reaped job's status stays remembered until the jobs
   # builtin displays it (dash frees reported entries); forked child
-  # environments start with no jobs at all.
+  # environments keep the entries only as unwaitable display copies
+  # (POSIX 2.12 — see #enter_subshell).
   class JobTable
     extend T::Sig
 
@@ -81,7 +82,8 @@ module Rush
     end
 
     # The wait builtin, one pid: a remembered status, a blocking wait on a
-    # live job, or nil when the pid is not a known job (POSIX: 127).
+    # live job, or nil when the pid is not a waitable job here — unknown,
+    # or a fork-inherited display copy (POSIX: 127).
     sig { params(pid: Integer).returns(T.nilable(Status)) }
     def wait_for(pid)
       @jobs[pid]&.harvest { settle(pid) }
@@ -89,13 +91,16 @@ module Rush
       Status.success
     end
 
-    # A forked child environment starts with no jobs of its own (POSIX 2.12):
-    # the parent's children are not waitable here — wait by pid reports 127
-    # and a %id reports No such job, as dash does in a real (non-tail-
-    # optimized) subshell. It is no root shell either (see #root?).
+    # A forked child environment is a duplicate of the shell environment
+    # (POSIX 2.12), async pids included: the entries stay for display —
+    # jobs, jobs -p, and through them the standard-blessed `wait $(jobs -p)`
+    # in the parent — but demoted to inherited copies, since the parent's
+    # children are not waitable here: wait by pid reports 127 and a %id
+    # reports No such job, as dash does in a real (non-tail-optimized)
+    # forked child. It is no root shell either (see #root?).
     sig { void }
-    def clear_for_subshell
-      @jobs.clear
+    def enter_subshell
+      @jobs.each_value(&:inherit)
       @stash.clear
       @control.fork_child
     end
@@ -160,13 +165,15 @@ module Rush
     end
 
     # waitpid(-1) only when a background job could change state meanwhile —
-    # a stopped job still counts, its death arrives asynchronously — since
-    # the direct form cannot reap a foreign child; the plain foreground path
-    # stays byte-identical to the pre-table behaviour. Monitor mode waits
-    # WUNTRACED (dash: mflag), so ^Z answers instead of hanging the shell.
+    # a stopped job still counts, its death arrives asynchronously, but an
+    # inherited display copy never does (not this environment's child) —
+    # since the direct form cannot reap a foreign child; the plain
+    # foreground path stays byte-identical to the pre-table behaviour.
+    # Monitor mode waits WUNTRACED (dash: mflag), so ^Z answers instead of
+    # hanging the shell.
     sig { params(target: Integer).returns([Integer, Process::Status]) }
     def reap_one(target)
-      pid = @jobs.each_value.any? { |job| !job.finished? } ? -1 : target
+      pid = @jobs.each_value.any? { |job| !job.finished? && !job.inherited? } ? -1 : target
       @control.monitor ? @system.wait_stoppable(pid) : @system.waitpid2(pid)
     end
 
