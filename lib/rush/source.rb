@@ -19,7 +19,7 @@ module Rush
     def run
       super
     rescue Interrupted
-      executor.run_exit_trap(130)
+      executor.trap_runner.run_exit_trap(130)
     rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
       abort_with(e)
     end
@@ -66,7 +66,7 @@ module Rush
     sig { params(error: StandardError).returns(Integer) }
     def abort_with(error)
       report(error)
-      executor.run_exit_trap(2)
+      executor.trap_runner.run_exit_trap(2)
     end
 
     sig { returns(String) }

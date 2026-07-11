@@ -32,7 +32,7 @@ module Rush
     def run_body
       @executor.enter_subshell
       status = run_body_status
-      Status.new(@executor.run_exit_trap(status.exitstatus))
+      Status.new(@executor.trap_runner.run_exit_trap(status.exitstatus))
     end
 
     private

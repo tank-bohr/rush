@@ -21,7 +21,7 @@ module Rush
       # suppressed); only the final command's status reaches the errexit check.
       sig { params(executor: Executor).returns(Status) }
       def execute(executor)
-        status = executor.tested { executor.run(left) }
+        status = executor.errexit.tested { executor.run(left) }
         run_right?(status) ? executor.run(right) : status
       end
 

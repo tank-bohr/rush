@@ -28,6 +28,7 @@ module Rush
     attr_reader trap_runner: TrapRunner
     attr_reader jobs: JobTable
     attr_reader redirect_scope: RedirectScope
+    attr_reader errexit: ErrexitContext
 
     def initialize: (system: SystemCalls, state: ShellState, ?builtins: Builtins::Registry) -> void
 
@@ -36,10 +37,6 @@ module Rush
     def run: (AST::Node node) -> Status
 
     def run_async: (AST::Node node) -> Status
-
-    def exitstatus: () -> Integer
-
-    def run_exit_trap: (Integer code) -> Integer
 
     # Entering a forked child environment (subshell, pipeline stage, async
     # list, command substitution): caught traps reset (POSIX 2.11) and the job
@@ -71,24 +68,11 @@ module Rush
     # `exec`), restoring the previous one afterwards.
     def with_io: [T] (IoTable io) { () -> T } -> T
 
-    # Run a block in a "tested" context (errexit suppressed): the condition of
-    # if/while/until, the non-final part of an && / || list, a negated pipeline,
-    # and an async (&) command. `untested` is the inverse — command substitution
-    # starts a fresh errexit context regardless of the caller's. Both restore on
-    # exit, so the flag follows the call tree.
-    def tested: [T] () { () -> T } -> T
-
-    def untested: [T] () { () -> T } -> T
-
     # Evaluate an if/while/until condition: run the command in a tested context
     # (so a failing condition never trips errexit) and report whether it succeeded.
     def succeeds?: (AST::Node command) -> bool
 
-    # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
-    # outside a tested context aborts the shell with that status.
+    # The job-control policy over this executor: a stateless view, built on demand.
     def job_control: () -> JobControl
-
-    def exit_on_error: (Status status) -> Status
-
   end
 end

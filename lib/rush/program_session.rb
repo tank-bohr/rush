@@ -20,9 +20,9 @@ module Rush
 
     sig { returns(Integer) }
     def run
-      executor.run_exit_trap(session)
+      executor.trap_runner.run_exit_trap(session)
     rescue ExitSignal => e
-      executor.run_exit_trap(e.code)
+      executor.trap_runner.run_exit_trap(e.code)
     end
 
     private
@@ -40,7 +40,7 @@ module Rush
     def session
       run_startup
       run_loop
-      executor.exitstatus
+      executor.state.last_status.exitstatus
     end
 
     # Login/ENV startup files run before the main input, inside the session's

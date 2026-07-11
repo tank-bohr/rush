@@ -39,11 +39,11 @@ RSpec.describe Rush::Executor do
     expect(build(state('PWD' => '/x')).state.variables.pwd).to eq('/x')
   end
 
-  it 'records the last status when running a node and exposes the exit status' do
+  it 'records the last status when running a node' do
     target = state
     executor = build(target)
     executor.run(Rush::AST::SimpleCommand.new([], [word('false')], []))
-    expect([target.last_status.exitstatus, executor.exitstatus]).to eq([1, 1])
+    expect(target.last_status.exitstatus).to eq(1)
   end
 
   it 'records launch success and $! when running a node asynchronously' do
@@ -95,13 +95,13 @@ RSpec.describe Rush::Executor do
   it 'runs an EXIT trap through the trap runner' do
     executor = build(state)
     executor.trap_runner.set(Rush::Signals::EXIT, 'exit 7')
-    expect(executor.run_exit_trap(3)).to eq(7)
+    expect(executor.trap_runner.run_exit_trap(3)).to eq(7)
   end
 
   it 'passes the terminating status into a bare exit in the EXIT trap' do
     executor = build(state)
     executor.trap_runner.set(Rush::Signals::EXIT, 'exit')
-    expect(executor.run_exit_trap(3)).to eq(3)
+    expect(executor.trap_runner.run_exit_trap(3)).to eq(3)
   end
 
   it 'resets caught traps and signal dispositions on entering a subshell' do
@@ -203,49 +203,49 @@ RSpec.describe Rush::Executor do
 
     it 'returns the status unchanged when errexit is off' do
       executor = build(state)
-      expect(executor.exit_on_error(fail_status)).to be(fail_status)
+      expect(executor.errexit.exit_on_error(fail_status)).to be(fail_status)
     end
 
     it 'reports condition success in a tested context' do
       executor = build(errexit(state))
       expect([executor.succeeds?(command('true')), executor.succeeds?(command('false'))]).to eq([true, false])
-      expect { executor.exit_on_error(fail_status) }.to raise_error(Rush::ExitSignal)
+      expect { executor.errexit.exit_on_error(fail_status) }.to raise_error(Rush::ExitSignal)
     end
 
     it 'returns block values and restores tested state after exceptions' do
       executor = build(errexit(state))
-      expect(executor.tested { :tested }).to eq(:tested)
-      expect(executor.untested { :untested }).to eq(:untested)
-      expect { executor.tested { raise Rush::Error, 'boom' } }.to raise_error(Rush::Error, 'boom')
-      expect { executor.exit_on_error(fail_status) }.to raise_error(Rush::ExitSignal)
+      expect(executor.errexit.tested { :tested }).to eq(:tested)
+      expect(executor.errexit.untested { :untested }).to eq(:untested)
+      expect { executor.errexit.tested { raise Rush::Error, 'boom' } }.to raise_error(Rush::Error, 'boom')
+      expect { executor.errexit.exit_on_error(fail_status) }.to raise_error(Rush::ExitSignal)
     end
 
     it 'restores a surrounding tested context after an untested block' do
       executor = build(errexit(state))
-      executor.tested do
-        expect { executor.untested { executor.exit_on_error(fail_status) } }.to raise_error(Rush::ExitSignal)
-        expect(executor.exit_on_error(fail_status)).to be(fail_status)
+      executor.errexit.tested do
+        expect { executor.errexit.untested { executor.errexit.exit_on_error(fail_status) } }.to raise_error(Rush::ExitSignal)
+        expect(executor.errexit.exit_on_error(fail_status)).to be(fail_status)
       end
     end
 
     it 'aborts with the failed status when errexit is on outside a tested context' do
-      expect { build(errexit(state)).exit_on_error(Rush::Status.new(4)) }
+      expect { build(errexit(state)).errexit.exit_on_error(Rush::Status.new(4)) }
         .to raise_error(Rush::ExitSignal) { |e| expect(e.code).to eq(4) }
     end
 
     it 'does not abort on a successful command under errexit' do
-      expect(build(errexit(state)).exit_on_error(Rush::Status.success)).to be_success
+      expect(build(errexit(state)).errexit.exit_on_error(Rush::Status.success)).to be_success
     end
 
     it 'suppresses the abort inside a tested context' do
       executor = build(errexit(state))
-      expect(executor.tested { executor.exit_on_error(fail_status) }).to be(fail_status)
+      expect(executor.errexit.tested { executor.errexit.exit_on_error(fail_status) }).to be(fail_status)
     end
 
     it 'restores errexit checking after an untested (fresh) context' do
       executor = build(errexit(state))
-      executor.tested { executor.untested { nil } }
-      expect { executor.exit_on_error(fail_status) }.to raise_error(Rush::ExitSignal)
+      executor.errexit.tested { executor.errexit.untested { nil } }
+      expect { executor.errexit.exit_on_error(fail_status) }.to raise_error(Rush::ExitSignal)
     end
   end
 end

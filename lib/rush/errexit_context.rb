@@ -13,9 +13,40 @@ module Rush
       @tested = false
     end
 
-    # Run the block with the tested flag swapped to `value` — true suppresses
-    # errexit, false starts a fresh untested context — restoring the caller's
-    # flag on exit.
+    # Run the block in a "tested" context (errexit suppressed): the condition of
+    # if/while/until, the non-final part of an && / || list, a negated pipeline,
+    # and an async (&) command. Restores on exit, so the flag follows the call tree.
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def tested(&blk)
+      scoped(true, &blk)
+    end
+
+    # The inverse: a fresh untested context regardless of the caller's, the way
+    # command substitution starts one.
+    sig do
+      type_parameters(:U)
+        .params(blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
+    def untested(&blk)
+      scoped(false, &blk)
+    end
+
+    # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
+    # outside a tested context aborts the shell with that status.
+    sig { params(status: Status).returns(Status) }
+    def exit_on_error(status)
+      raise ExitSignal, status.exitstatus if abort_on?(status)
+
+      status
+    end
+
+    private
+
     sig do
       type_parameters(:U)
         .params(value: T::Boolean, blk: T.proc.returns(T.type_parameter(:U)))
@@ -28,15 +59,6 @@ module Rush
     ensure
       @tested = previous
     end
-
-    sig { params(status: Status).returns(Status) }
-    def exit_on_error(status)
-      raise ExitSignal, status.exitstatus if abort_on?(status)
-
-      status
-    end
-
-    private
 
     sig { params(status: Status).returns(T::Boolean) }
     def abort_on?(status)

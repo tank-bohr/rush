@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::AST::Pipeline do
-  # A real executor (errexit off) so the real #tested / #exit_on_error run; only
+  # A real executor (errexit off) so the real errexit context runs; only
   # #run is stubbed to feed canned stage statuses.
   let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new) }
 
   it 'runs a single command in-process' do
     allow(executor).to receive(:run).with(:cmd).and_return(Rush::Status.new(5))
-    allow(executor).to receive(:exit_on_error).and_call_original
+    allow(executor.errexit).to receive(:exit_on_error).and_call_original
     expect(described_class.new([:cmd], false).execute(executor).exitstatus).to eq(5)
-    expect(executor).to have_received(:exit_on_error)
+    expect(executor.errexit).to have_received(:exit_on_error)
   end
 
   it 'delegates a multi-stage pipeline to PipelineRunner' do
@@ -20,9 +20,9 @@ RSpec.describe Rush::AST::Pipeline do
 
   it 'inverts a success to failure when negated' do
     allow(executor).to receive(:run).with(:cmd).and_return(Rush::Status.success)
-    allow(executor).to receive(:tested).and_call_original
+    allow(executor.errexit).to receive(:tested).and_call_original
     expect(described_class.new([:cmd], true).execute(executor)).not_to be_success
-    expect(executor).to have_received(:tested)
+    expect(executor.errexit).to have_received(:tested)
   end
 
   it 'inverts a failure to success when negated' do

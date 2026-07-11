@@ -38,12 +38,12 @@ module Rush
       def run_isolated
         @executor.enter_subshell
         status = run_isolated_status
-        Status.new(@executor.run_exit_trap(status.exitstatus))
+        Status.new(@executor.trap_runner.run_exit_trap(status.exitstatus))
       end
 
       sig { returns(Status) }
       def run_isolated_status
-        @executor.untested { @executor.run(parse) }
+        @executor.errexit.untested { @executor.run(parse) }
       rescue ExitSignal, ReturnSignal => e
         @executor.state.record_status(Status.new(e.code))
       end

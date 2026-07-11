@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::AST::AndOr do
-  # A real executor (errexit off) runs the real #tested wrapper; #run is stubbed.
+  # A real executor (errexit off) runs the real errexit context; #run is stubbed.
   let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new) }
   let(:ok) { Rush::Status.success }
   let(:bad) { Rush::Status.failure }
@@ -13,9 +13,9 @@ RSpec.describe Rush::AST::AndOr do
   it 'runs the right side of && only when the left succeeds' do
     allow(executor).to receive(:run).with(:left).and_return(ok)
     allow(executor).to receive(:run).with(:right).and_return(bad)
-    allow(executor).to receive(:tested).and_call_original
+    allow(executor.errexit).to receive(:tested).and_call_original
     expect(and_or(:and).execute(executor)).to eq(bad)
-    expect(executor).to have_received(:tested)
+    expect(executor.errexit).to have_received(:tested)
   end
 
   it 'skips the right side of && when the left fails' do

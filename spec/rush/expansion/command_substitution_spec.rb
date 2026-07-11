@@ -69,7 +69,7 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
     it 'runs in a fresh errexit context even when the caller is tested' do
       state.options.set(:errexit, true)
       write = StringIO.new
-      executor.tested { described_class.new(executor, 'false; echo nope').capture(write) }
+      executor.errexit.tested { described_class.new(executor, 'false; echo nope').capture(write) }
       expect([write.string, state.last_status.exitstatus]).to eq(['', 1])
     end
 

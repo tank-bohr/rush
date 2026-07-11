@@ -21,9 +21,9 @@ module Rush
       # a tested context; otherwise the leaf status is the errexit check point.
       sig { params(executor: Executor).returns(Status) }
       def execute(executor)
-        return invert(executor.tested { run_stages(executor) }) if negate
+        return invert(executor.errexit.tested { run_stages(executor) }) if negate
 
-        executor.exit_on_error(run_stages(executor))
+        executor.errexit.exit_on_error(run_stages(executor))
       end
 
       private

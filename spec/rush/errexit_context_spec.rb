@@ -22,16 +22,16 @@ RSpec.describe Rush::ErrexitContext do
   it 'suppresses errexit only while inside a tested scope' do
     state.options.set(:errexit, true)
 
-    expect(context.scoped(true) { context.exit_on_error(Rush::Status.new(7)) }.exitstatus).to eq(7)
+    expect(context.tested { context.exit_on_error(Rush::Status.new(7)) }.exitstatus).to eq(7)
     expect { context.exit_on_error(Rush::Status.new(7)) }.to raise_error(Rush::ExitSignal)
   end
 
   it 'lets an untested nested scope override and then restore a tested scope' do
     state.options.set(:errexit, true)
 
-    expect { context.scoped(true) { context.scoped(false) { context.exit_on_error(Rush::Status.new(7)) } } }
+    expect { context.tested { context.untested { context.exit_on_error(Rush::Status.new(7)) } } }
       .to raise_error(Rush::ExitSignal)
 
-    expect(context.scoped(true) { context.exit_on_error(Rush::Status.new(7)) }.exitstatus).to eq(7)
+    expect(context.tested { context.exit_on_error(Rush::Status.new(7)) }.exitstatus).to eq(7)
   end
 end

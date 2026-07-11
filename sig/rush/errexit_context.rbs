@@ -9,14 +9,22 @@ module Rush
 
     def initialize: (ShellState state) -> void
 
-    # Run the block with the tested flag swapped to `value` — true suppresses
-    # errexit, false starts a fresh untested context — restoring the caller's
-    # flag on exit.
-    def scoped: [T] (bool value) { () -> T } -> T
+    # Run the block in a "tested" context (errexit suppressed): the condition of
+    # if/while/until, the non-final part of an && / || list, a negated pipeline,
+    # and an async (&) command. Restores on exit, so the flag follows the call tree.
+    def tested: [T] () { () -> T } -> T
 
+    # The inverse: a fresh untested context regardless of the caller's, the way
+    # command substitution starts one.
+    def untested: [T] () { () -> T } -> T
+
+    # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
+    # outside a tested context aborts the shell with that status.
     def exit_on_error: (Status status) -> Status
 
     private
+
+    def scoped: [T] (bool value) { () -> T } -> T
 
     def abort_on?: (Status status) -> bool
   end

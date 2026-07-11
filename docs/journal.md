@@ -1523,3 +1523,21 @@ change plus the spec stub following suit. (open_tty's bare open-and-return never
 triggered the cop, which flags the chained File.open(...).tap shape; its
 ownership story was already documented inline.) First of the six disable-paydown
 beads filed after the 14g review of every rubocop suppression in the tree.
+
+### The Executor sheds its facades and the ClassLength disable (rush-6tx)
+Executor sat at 112/100 behind the gate's oldest ClassLength disable, and the
+overweight was pure re-export: run_exit_trap copied a delegator over the
+ALREADY-public trap_runner reader, exitstatus relayed what trap_runner.rb and
+shell_parameters.rb were reaching directly as state.last_status.exitstatus all
+along, and the errexit trio (tested/untested/exit_on_error) wrapped
+ErrexitContext behind a second copy of each generic block sig. All four
+dissolved the 14e/14g way — collaborator readers over facade methods: callers
+now say executor.trap_runner.run_exit_trap and executor.errexit.tested. The
+POSIX vocabulary moved with the dissolution, not against it: tested/untested
+live on ErrexitContext again (scoped back to private), so and_or still reads
+`executor.errexit.tested { run(left) }`. Flay stayed put at 1170 — the two
+generic sigs moved house rather than vanished, and the ×5 identical-sig cluster
+just changed one address. Executor is under the cap with room to grow
+(succeeds? and the cmd-sub channel stay: composites and owned state, not
+facades). AST node specs that spied on the facade to prove "ran tested" now spy
+on executor.errexit directly.

@@ -38,7 +38,7 @@ module Rush
       # An async (&) command is exempt from errexit, so it runs in a tested context.
       sig { params(executor: Executor, entry: ListEntry).returns(Status) }
       def run_entry(executor, entry)
-        return executor.tested { executor.run_async(entry.and_or) } if entry.async
+        return executor.errexit.tested { executor.run_async(entry.and_or) } if entry.async
 
         executor.run(entry.and_or)
       end

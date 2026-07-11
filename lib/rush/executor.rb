@@ -6,7 +6,7 @@ module Rush
   # state, with all OS access funneled through the injected SystemCalls port. The
   # base IoTable, builtin registry, redirection registry and expander hang off it;
   # redirect cleanup, errexit state, signal and trap handling live in collaborators.
-  class Executor # rubocop:disable Metrics/ClassLength
+  class Executor
     extend T::Sig
 
     sig { returns(SystemCalls) }
@@ -38,6 +38,9 @@ module Rush
 
     sig { returns(RedirectScope) }
     attr_reader :redirect_scope
+
+    sig { returns(ErrexitContext) }
+    attr_reader :errexit
 
     sig { params(system: SystemCalls, state: ShellState, builtins: Builtins::Registry).void }
     def initialize(system:, state:, builtins: Builtins.default_registry)
@@ -74,16 +77,6 @@ module Rush
     sig { params(node: AST::Node).returns(Status) }
     def run_async(node)
       @state.record_status(BackgroundRunner.new(self, node).call)
-    end
-
-    sig { returns(Integer) }
-    def exitstatus
-      @state.last_status.exitstatus
-    end
-
-    sig { params(code: Integer).returns(Integer) }
-    def run_exit_trap(code)
-      @trap_runner.run_exit_trap(code)
     end
 
     # Entering a forked child environment (subshell, pipeline stage, async
@@ -149,41 +142,11 @@ module Rush
       @io = previous
     end
 
-    # Run a block in a "tested" context (errexit suppressed): the condition of
-    # if/while/until, the non-final part of an && / || list, a negated pipeline,
-    # and an async (&) command. `untested` is the inverse — command substitution
-    # starts a fresh errexit context regardless of the caller's. Both restore on
-    # exit, so the flag follows the call tree.
-    sig do
-      type_parameters(:U)
-        .params(blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def tested(&blk)
-      @errexit.scoped(true, &blk)
-    end
-
-    sig do
-      type_parameters(:U)
-        .params(blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def untested(&blk)
-      @errexit.scoped(false, &blk)
-    end
-
     # Evaluate an if/while/until condition: run the command in a tested context
     # (so a failing condition never trips errexit) and report whether it succeeded.
     sig { params(command: AST::Node).returns(T::Boolean) }
     def succeeds?(command)
-      tested { run(command) }.success?
-    end
-
-    # The errexit leaf check (POSIX 2.8.1): under `set -e`, a command failing
-    # outside a tested context aborts the shell with that status.
-    sig { params(status: Status).returns(Status) }
-    def exit_on_error(status)
-      @errexit.exit_on_error(status)
+      @errexit.tested { run(command) }.success?
     end
   end
 end
