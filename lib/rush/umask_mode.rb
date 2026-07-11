@@ -66,11 +66,13 @@ module Rush
       apply(operator, target_mask(who), permission_bits(rest, who))
     end
 
+    # Duplicate who letters (uua+w) need no dedup: every consumer ORs the
+    # per-class bit fields, so repeats are absorbed (mutant-verified).
     sig { params(clause: String).returns([T::Array[String], String]) }
     def split_who(clause)
       who = [] #: Array[String]
       who.concat(expand_who(T.must(clause.slice!(0)))) while clause.start_with?(*WHO)
-      [who.empty? ? CLASSES.keys : who.uniq, clause]
+      [who.empty? ? CLASSES.keys : who, clause]
     end
 
     sig { params(name: String).returns(T::Array[String]) }

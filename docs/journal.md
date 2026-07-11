@@ -1799,3 +1799,39 @@ but the fix is structure, not a cast: an awaited delimiter is now taken raw,
 before classification or aliasing, which is also what dash's readtoken does.
 Probes: 7 heredoc shapes (<<-, quoted, reserved-word and X=1 delimiters,
 heredoc-first, double heredoc) byte-identical with dash; full rake green.
+
+### The umask alive cluster: 28 triaged, 18 killed, 10 named equivalents (rush-9sr)
+The full mutant run's tail showed split_who and target_mask; the whole
+UmaskMode ledger was 28 alive (95.42% subject-scoped). Triage sorted them
+into three piles. **Dead code**: split_who's `.uniq` — every consumer of who
+(target_mask, permission_value, copy_value) ORs per-class bit fields, so
+duplicates are absorbed; the dedup came out rather than being spec'd around,
+and a comment records why repeats are safe. Removing it also turned the
+reduce `|`→`^` mutants from equivalent to killable: an even-count duplicate
+(`ua` — a expands to ugo, so u appears twice) cancels under xor, and four
+new dash-verified lines (`ua+w`, `ua=w`, `ua=g`, `u+rr`) pin every
+accumulator as a true or. **Spec gaps (18 killed)**: `+w`/`=r` — an omitted
+who defaults to all classes, previously untested, which alone accounted for
+seven split_who survivors; `u=r` at 0o066 pins `=` clearing exactly the
+named class (killing the reduce-seed and 7<<→1<< target mutants); `g=o` at
+0o427 pins copy_value's 3-bit source window — an unmasked source drags its
+neighbour classes into the target (`a=u` pins the multi-who accumulator);
+`22` pins octal parsing off the 1777-only fixture (parse_octal→ALL survived
+because 1777 clamps TO ALL); `u~w` pins the invalid-OPERATOR path, where the
+guard family would leak KeyError through the ArgumentError rescue; and the
+trailing comma became an adjudication: dash accepts exactly one (`u+w,`
+applies, `,u+w` and `u+w,,` error — a parser artifact), bash rejects, POSIX's
+symbolic-mode grammar admits none — standard wins, rush stays strict, the
+divergence is pinned in the unit spec and stays out of the corpus. Three
+corpus lines (`+w`, `u=r`, `uua+w`) pin the dash-agreeing shapes end-to-end.
+**Equivalents (10, documented here)**: split_who's T.must removal (runtime
+assert, the 211.8 ceremony bucket); assign_allowed `|`→`^` (bits are always
+inside target, so the or never overlaps the cleared region); initialize and
+format_symbolic dropping `& ALL` (two's-complement: every reader windows
+with >> and &7, which never see the sign bits); format_symbolic `&167` and
+letters filter_map→map (letters tests only r/w/x bits; join stringifies nil
+to ""); apply_clause `unless OPERATORS.key?(operator)` (key?(nil) is false);
+parse_symbolic's split block-form (yields the same fields), limit -2 (any
+negative keeps trailing empties) and limit 167 (killable only by a
+167-clause mode string). UmaskMode lands at 98.36% with every survivor
+named; the full-project score rises accordingly.
