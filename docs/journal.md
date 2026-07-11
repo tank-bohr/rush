@@ -1541,3 +1541,20 @@ just changed one address. Executor is under the cap with room to grow
 (succeeds? and the cmd-sub channel stay: composites and owned state, not
 facades). AST node specs that spied on the facade to prove "ran tested" now spy
 on executor.errexit directly.
+
+### The double-quote sub-language moves out of WordScanner (rush-lfw)
+WordScanner carried its ClassLength disable because two scanners lived in one
+class: the bare-word walk and the "..." interior, each with its own dispatch
+rules (DOUBLE_LITERAL runs, the four escapable specials, the quoted-dollar
+fallback). The 14g SegmentBuffer made the cut almost mechanical — the new
+DoubleQuoteScanner shares the host's StringScanner and buffer and pushes quoted
+segments into the same word under construction. The one genuinely shared rule,
+line continuation (whose IncompleteInput behaviour depends on the host's
+interactive/terminator mode), stays owned by WordScanner and is injected as a
+callback rather than duplicated — the sub-scanner knows THAT a backslash-newline
+defers, the host knows WHAT deferring means. Both classes sit under the cap;
+the disable is gone; flay unmoved at 1170.
+Wiring note: this was the codebase's first `T.proc.void` in a sig, and steep
+type-checks sig blocks as plain Ruby against the hand-written sorbet_dsl.rbs
+stub — which knew params/returns on ProcBuilder but not void. The stub grows
+with first uses; extend it there, not with a Steepfile ignore.

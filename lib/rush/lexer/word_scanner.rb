@@ -9,13 +9,11 @@ module Rush
     # segments: literal runs (quote-removed, with a `quoted` flag) and :param
     # segments for $name / ${...}. Handles the three quoting forms; command
     # substitution and arithmetic arrive in later slices.
-    class WordScanner # rubocop:disable Metrics/ClassLength
+    class WordScanner
       extend T::Sig
       include ScannerPredicates
 
       TERMINATOR = /[ \t\n;&|<>()]/
-      DOUBLE_LITERAL = /[^"$\\`]+/
-      DOUBLE_SPECIAL = ['"', '\\', '$', '`'].freeze
       DISPATCH = {
         "'" => :single_quote, '"' => :double_quote, '\\' => :escape,
         '$' => :dollar, '`' => :backtick
@@ -86,33 +84,7 @@ module Rush
 
       sig { void }
       def double_quote
-        push('', quoted: true) if peek?('"') # "" yields one empty field
-        double_step until end_double?
-        raise IncompleteInput, 'unterminated double quote' if @scanner.eos?
-
-        @scanner.getch
-      end
-
-      sig { returns(T::Boolean) }
-      def end_double?
-        @scanner.eos? || peek?('"')
-      end
-
-      sig { void }
-      def double_step
-        return double_dollar if peek?('$')
-        return @buffer.push(DollarScanner.new(@scanner).read_backtick(quoted: true)) if peek?('`')
-        return double_escape if peek?('\\')
-
-        push(@scanner.scan(DOUBLE_LITERAL), quoted: true)
-      end
-
-      sig { void }
-      def double_escape
-        @scanner.getch
-        return continuation if peek?("\n")
-
-        DOUBLE_SPECIAL.include?(@scanner.peek(1)) ? push(@scanner.getch, quoted: true) : push('\\', quoted: true)
+        DoubleQuoteScanner.new(@scanner, @buffer, -> { continuation }).scan
       end
 
       # Line continuation (POSIX 2.2.1): the backslash-newline pair vanishes.
@@ -133,12 +105,6 @@ module Rush
         @scanner.unscan
         segment = DollarScanner.new(@scanner).read(quoted: false)
         segment ? @buffer.push(segment) : (@buffer << '$')
-      end
-
-      sig { void }
-      def double_dollar
-        segment = DollarScanner.new(@scanner).read(quoted: true)
-        segment ? @buffer.push(segment) : push('$', quoted: true)
       end
 
       sig { void }

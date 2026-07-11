@@ -16,10 +16,6 @@ module Rush
 
       TERMINATOR: Regexp
 
-      DOUBLE_LITERAL: Regexp
-
-      DOUBLE_SPECIAL: Array[String]
-
       DISPATCH: Hash[String, Symbol]
 
       def self.next_word: (StringScanner scanner, interactive: bool) -> AST::Word
@@ -44,15 +40,7 @@ module Rush
 
       def double_quote: () -> void
 
-      def end_double?: () -> bool
-
-      def double_step: () -> void
-
-      def double_escape: () -> void
-
       def dollar: () -> void
-
-      def double_dollar: () -> void
 
       def backtick: () -> void
 

@@ -1,0 +1,40 @@
+module Rush
+  class Lexer
+    # Scans the interior of a "..." region into the host word's SegmentBuffer:
+    # literal runs keep their quoted flag, $ and ` stay live, and a backslash
+    # escapes only " \ $ ` — plus the line continuation, whose interactive
+    # rules the host owns and injects as a callback. The opening quote is
+    # already consumed when this scanner starts; it consumes the closing one.
+    class DoubleQuoteScanner
+      extend T::Sig
+      include ScannerPredicates
+
+      @scanner: StringScanner
+
+      @buffer: SegmentBuffer
+
+      @continuation: ^() -> void
+
+      LITERAL: Regexp
+
+      SPECIAL: Array[String]
+
+      def initialize: (StringScanner scanner, SegmentBuffer buffer, ^() -> void continuation) -> void
+
+      def scan: () -> void
+
+      private
+
+      def done?: () -> bool
+
+      def step: () -> void
+
+      def escape: () -> void
+
+      # A lone `$` that begins no valid reference stays a quoted literal dollar.
+      def dollar: () -> void
+
+      def push: (untyped value) -> void
+    end
+  end
+end
