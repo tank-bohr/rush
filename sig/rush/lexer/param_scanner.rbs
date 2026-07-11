@@ -1,11 +1,13 @@
 module Rush
   class Lexer
     # Reads the parameter reference after a consumed `$` at the scanner head:
-    # $name / $digit / $special, or the braced ${...} forms. Returns nil when no
-    # reference begins, so the caller keeps the `$` literal. An unterminated ${
-    # raises the given error class: IncompleteInput lets an interactive word ask
-    # for another line, while heredoc bodies and prompt values are already
-    # complete and fail as plain parse errors.
+    # $name / $digit / $special, or the braced ${...} forms (whose body the
+    # BracedReader matches to the closing brace). Returns nil when no reference
+    # begins, so the caller keeps the `$` literal. An unterminated ${ raises
+    # the given error class: IncompleteInput lets an interactive word ask for
+    # another line, while heredoc bodies and prompt values are already complete
+    # and fail as plain parse errors. `quoted` names the surrounding context —
+    # inside double quotes and here-doc bodies a single quote is ordinary.
     class ParamScanner
       extend T::Sig
 
@@ -15,7 +17,9 @@ module Rush
 
       @error: singleton(ParseError)
 
-      def initialize: (StringScanner scanner, ?error: singleton(ParseError)) -> void
+      @quoted: bool
+
+      def initialize: (StringScanner scanner, quoted: bool, ?error: singleton(ParseError)) -> void
 
       def read: () -> AST::ParamRef?
 

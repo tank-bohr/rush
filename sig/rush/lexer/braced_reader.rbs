@@ -1,0 +1,55 @@
+module Rush
+  class Lexer
+    # Reads the body of a ${...} after the consumed `${`, up to the matching
+    # `}` (POSIX 2.6.2): a nested `${` opens a level (read recursively), a
+    # backslash escapes the next character, and quoted strings / command and
+    # arithmetic substitutions are skipped whole. `quoted` follows dash: inside
+    # double quotes and here-doc bodies a single quote is an ordinary
+    # character; outside them it quotes a region. The body keeps its raw
+    # spelling — the operator word is re-scanned at expansion time.
+    class BracedReader
+      extend T::Sig
+      include ScannerPredicates
+
+      # The literal run per context: a quoted ${...} keeps ' ordinary.
+      PLAIN: Hash[bool, Regexp]
+
+      @scanner: StringScanner
+
+      @error: singleton(ParseError)
+
+      @quoted: bool
+
+      def initialize: (StringScanner scanner, error: singleton(ParseError), quoted: bool) -> void
+
+      def read: () -> String
+
+      private
+
+      def step: () -> String
+
+      def special: () -> String
+
+      def must_char: () -> String
+
+      def single: () -> String
+
+      def double: () -> String
+
+      def double_chunk: () -> String
+
+      def double_escape: () -> String
+
+      # The only characters that reach here are `$` and end of input. After a
+      # live `$`: `${` opens a nested reference, `$(` a substitution; a `$`
+      # that begins neither stays literal (its name is a plain run).
+      def dollar: () -> String
+
+      def nested: () -> String
+
+      # `$((` is arithmetic, a lone `$(` is command substitution (as
+      # DollarScanner disambiguates).
+      def substitution: () -> String
+    end
+  end
+end

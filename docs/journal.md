@@ -1835,3 +1835,34 @@ parse_symbolic's split block-form (yields the same fields), limit -2 (any
 negative keeps trailing empties) and limit 167 (killable only by a
 167-clause mode string). UmaskMode lands at 98.36% with every survivor
 named; the full-project score rises accordingly.
+
+### The braced scan learns POSIX brace matching, and quoting context reaches the operator word (rush-no1.1)
+ParamScanner took the body of ${...} with `[^}]*`, so any nested expansion
+was a syntax error — the project-review probe `${a:-${b}}` exited 2 where
+dash prints inner. The fix is two seams. **Scan side**: BracedReader matches
+the closing brace per POSIX 2.6.2 — a nested `${` recurses (which scopes
+quote handling per level for free), a backslash escapes the next character,
+and quoted strings / `$(...)` / `$((...))` / backticks are skipped whole via
+the existing SubstitutionReader. The dash-pinned subtleties: a bare `{`
+opens nothing (`${a:-{}` prints `{`), and *context* decides what a single
+quote is — inside double quotes and here-doc bodies `'` is an ordinary
+character (`"${a:-'}'}"` closes at the first `}` and prints `''}`), outside
+them it quotes a region. So `quoted:` threads from the call sites:
+DollarScanner passes its own flag, HeredocBody is a quoted context (dash
+re-scans heredoc ${} words as if double-quoted — `${a:-'x'}` in a heredoc
+keeps the quotes), ParamText stays bare. **Expansion side**: the operator
+word's re-scan must honour the same context, so ParamSegment hands its
+quoted flag to ParameterExpander, which re-scans quoted words with the new
+QuotedWord lexer — single quotes ordinary, embedded double quotes removed,
+backslash escapes the double-quote set plus `}` (`"${a:-\x}"` keeps the
+backslash, `"${a:-\}}"` drops it), and `tilde: :none` (`"${a:-~}"` is a
+literal ~) — instead of WordScanner.entire. reek shaped the result twice:
+BooleanParameter made `quoted:` a required kwarg at both constructors (call
+sites must declare their context), and ControlParameter on the char-switch
+turned dispatch back onto the scanner itself (each handler consumes its own
+opening character). Two adjacent pre-existing bugs surfaced and are filed,
+not fixed here: SubstitutionReader's paren count is not quote-aware —
+`$(echo ")")` breaks (rush-no1.9) — and quoting inside an unquoted
+`${a:-"x y"}` word is flat by the time the outer pipeline splits and globs
+(rush-no1.10). Verified: a 30-probe dash matrix matches on
+[stdout, exitstatus], 24 new corpus lines, full rake green.

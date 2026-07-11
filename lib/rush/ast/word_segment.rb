@@ -137,7 +137,7 @@ module Rush
 
       sig { params(executor: Executor).returns(String) }
       def expand(executor)
-        Expansion::ParameterExpander.new(executor, value).expand
+        Expansion::ParameterExpander.new(executor, value, quoted: quoted).expand
       end
 
       # $@ (always) and unquoted $* expand to one field per positional parameter.

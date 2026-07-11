@@ -1,0 +1,38 @@
+module Rush
+  class Lexer
+    # Scans the operator word of a ${...} that appeared in a quoted context
+    # (double quotes or a here-doc body) into an AST::Word, following dash:
+    # $ and ` stay live, a backslash escapes " \ $ ` and the } it protected
+    # from closing the reference, embedded double quotes are removed (their
+    # content was already quoted), and single quotes are ordinary characters.
+    class QuotedWord
+      extend T::Sig
+      include ScannerPredicates
+
+      ESCAPES: Hash[String, String]
+
+      ESCAPE_TABLE: EscapeTable
+
+      DISPATCH: Hash[String, Symbol]
+
+      @scanner: StringScanner
+
+      @buffer: SegmentBuffer
+
+      def initialize: (String text) -> void
+
+      def word: () -> AST::Word
+
+      private
+
+      def step: () -> void
+
+      # A lone `$` that begins no valid reference stays a literal dollar.
+      def dollar: () -> void
+
+      def backtick: () -> void
+
+      def escape: () -> void
+    end
+  end
+end

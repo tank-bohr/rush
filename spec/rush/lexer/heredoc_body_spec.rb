@@ -55,9 +55,9 @@ RSpec.describe Rush::Lexer::HeredocBody do
     expect(segments.map(&:value)).to eq(['echo hi', 'date', '1 + 2'])
   end
 
-  it 'marks every heredoc segment unquoted' do
+  it 'marks parameter segments quoted (dash re-scans their words as if in double quotes)' do
     segments = scan('a $x $(c) `d` $((1))').segments
-    expect(segments.map(&:quoted)).to all(be(false))
+    expect(segments.map(&:quoted)).to eq([false, true, false, false, false, false, false, false])
   end
 
   it 'carries the parameter reference on a param segment' do

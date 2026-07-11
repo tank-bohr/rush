@@ -25,7 +25,7 @@ module Rush
         @scanner.getch
         return dollar_paren(quoted) if peek?('(')
 
-        ref = ParamScanner.new(@scanner, error: IncompleteInput).read
+        ref = ParamScanner.new(@scanner, error: IncompleteInput, quoted: quoted).read
         ref && AST::ParamSegment.new(ref, quoted)
       end
 

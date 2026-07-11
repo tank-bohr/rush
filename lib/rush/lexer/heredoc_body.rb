@@ -71,10 +71,12 @@ module Rush
         @buffer.push(AST::CommandSegment.new(SubstitutionReader.new(@scanner).backticks, false))
       end
 
+      # A here-doc body is a quoted context for its ${...} references: dash
+      # treats their operator words as if inside double quotes.
       sig { void }
       def param
-        ref = ParamScanner.new(@scanner).read
-        ref ? @buffer.push(AST::ParamSegment.new(ref, false)) : (@buffer << '$')
+        ref = ParamScanner.new(@scanner, quoted: true).read
+        ref ? @buffer.push(AST::ParamSegment.new(ref, true)) : (@buffer << '$')
       end
 
       sig { void }

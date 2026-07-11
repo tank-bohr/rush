@@ -5,8 +5,9 @@ RSpec.describe Rush::Expansion::ParameterExpander do
   let(:state) { Rush::ShellState.new(environment: env) }
   let(:executor) { Rush::Executor.new(system: FakeSystemCalls.new, state: state) }
 
-  def expand(name, op: nil, arg: nil)
-    described_class.new(executor, Rush::AST::ParamRef.new(name: name, op: op, arg: arg)).expand
+  def expand(name, op: nil, arg: nil, quoted: false)
+    ref = Rush::AST::ParamRef.new(name: name, op: op, arg: arg)
+    described_class.new(executor, ref, quoted: quoted).expand
   end
 
   it 'expands a set variable, and an unset one to empty' do
@@ -25,6 +26,12 @@ RSpec.describe Rush::Expansion::ParameterExpander do
     it 'returns the alternative only when set' do
       env.assign('B', 'x')
       expect([expand('B', op: ':+', arg: 'alt'), expand('Z', op: ':+', arg: 'alt')]).to eq(['alt', ''])
+    end
+
+    it 're-scans the word by its quoting context: single quotes and ~ stay ordinary when quoted' do
+      expect(expand('Z', op: ':-', arg: "'d'")).to eq('d')
+      expect(expand('Z', op: ':-', arg: "'d'", quoted: true)).to eq("'d'")
+      expect(expand('Z', op: ':-', arg: '~', quoted: true)).to eq('~')
     end
   end
 

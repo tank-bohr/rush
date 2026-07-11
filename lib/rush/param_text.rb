@@ -32,7 +32,7 @@ module Rush
 
     sig { void }
     def dollar
-      ref = Lexer::ParamScanner.new(@scanner).read
+      ref = Lexer::ParamScanner.new(@scanner, quoted: false).read
       ref ? @buffer.push(AST::ParamSegment.new(ref, false)) : @buffer << '$'
     end
   end

@@ -8,7 +8,9 @@ module Rush
     # Expands one ParamRef to a string: resolves the base value, then applies the
     # operator form (if any). The operator word is itself expanded (so
     # ${x:-$y} works) by re-scanning it into a Word and running it back through
-    # the expansion pipeline.
+    # the expansion pipeline. `quoted` picks the word's re-scan rules: a ${...}
+    # inside double quotes or a here-doc keeps single quotes ordinary and
+    # skips tilde expansion, as dash does.
     class ParameterExpander
       extend T::Sig
 
@@ -16,10 +18,11 @@ module Rush
       # and the # ## % %% pattern-removal forms.
       PATTERN_REMOVAL = ['#', '##', '%', '%%'].freeze
 
-      sig { params(executor: Executor, ref: AST::ParamRef).void }
-      def initialize(executor, ref)
+      sig { params(executor: Executor, ref: AST::ParamRef, quoted: T::Boolean).void }
+      def initialize(executor, ref, quoted:)
         @executor = executor
         @ref = ref
+        @quoted = quoted
       end
 
       sig { returns(String) }
@@ -63,7 +66,7 @@ module Rush
 
       sig { returns(String) }
       def arg
-        @executor.expander.expand_value(sub_word(argument))
+        @executor.expander.expand_value(sub_word(argument), tilde: @quoted ? :none : :leading)
       end
 
       sig { params(text: String).returns(String) }
@@ -112,7 +115,7 @@ module Rush
 
       sig { params(text: String).returns(AST::Word) }
       def sub_word(text)
-        Lexer::WordScanner.entire(text)
+        @quoted ? Lexer::QuotedWord.new(text).word : Lexer::WordScanner.entire(text)
       end
     end
   end

@@ -50,14 +50,14 @@ RSpec.describe Rush::AST::WordSegment do
     expect(Rush::AST::ParamSegment.new(param('@', op: ':-'), false)).not_to be_splat
   end
 
-  it 'expands parameter segments through the parameter expander' do
+  it 'expands parameter segments through the parameter expander, passing its quoted context' do
     executor = instance_double(Rush::Executor)
     ref = param('x')
     expander = instance_double(Rush::Expansion::ParameterExpander, expand: 'value')
-    allow(Rush::Expansion::ParameterExpander).to receive(:new).with(executor, ref).and_return(expander)
+    allow(Rush::Expansion::ParameterExpander).to receive(:new).with(executor, ref, quoted: true).and_return(expander)
 
-    expect(Rush::AST::ParamSegment.new(ref, false).expand(executor)).to eq('value')
-    expect(Rush::Expansion::ParameterExpander).to have_received(:new).with(executor, ref)
+    expect(Rush::AST::ParamSegment.new(ref, true).expand(executor)).to eq('value')
+    expect(Rush::Expansion::ParameterExpander).to have_received(:new).with(executor, ref, quoted: true)
   end
 
   it 'expands command segments through command substitution' do
