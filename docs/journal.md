@@ -1358,3 +1358,31 @@ Process::Status all needed coredump? stubbed once Status.of started reading it.
 Verified: full rake green (2235 specs, 99.98%/99.6%), 8 new differential corpus lines,
 the pty smoke passes natively byte-for-byte (its kill+wait act now exercises the
 printsignal line in both shells alike).
+
+### The container gate turns green: buffered fd wrappers and same-session strays (rush-erq)
+Two container-only failure families, two environment truths. **The reordered
+inherited-fd writes** were never about the container's fs: every `n>&9` evaluation wraps
+fd 9 in a fresh IO.for_fd, and each wrapper carries its own userspace buffer, flushed at
+process exit in GC order — Debian's Ruby happened to flush them reversed, native Ruby in
+order, both by luck. The native proof needed no container at all: `echo one >&9; cat file`
+showed cat an EMPTY file (the bytes sat in the wrapper) where dash, which writes straight
+to the fd, showed the line. inherited_fd now sets sync=true on the wrapper — writes land
+immediately, in command order, everywhere; a real_shell example pins the mid-script
+visibility.
+
+**The jc-stop timeouts** (three corpus lines exiting with a live stopped job) exposed a
+false comfort in the corpus comment: "the orphaned stopped children die on their own
+(kernel HUP+CONT)". True natively — the dying shell's stopped child re-parents to init in
+ANOTHER session, the process group orphans, POSIX's HUP+CONT reaps it. In a container the
+child lands on a same-session pid 1, the group never orphans, and the stray stopped sh
+holds the Open3 capture pipes open forever — BOTH shells hang the harness identically
+(dash -c by hand leaves the same T-state stray; probed). Fix at the harness, not the
+corpus: the stopped-jobs block runs both shells under setsid, restoring the native
+re-parent-outside-the-session topology, so the corpus semantics (exit refusal, wait
+answers, jobs listings) stay pinned unchanged. Meta-lesson: any corpus shape that exits
+leaving a stopped child is a session-topology bet — make the session explicit.
+
+Verified: native rake fully green (2237), and bin/test-in-docker exits 0 end-to-end —
+in-container rake 2237/0 plus all three smokes (syscall, Reline pty, job-control pty).
+The two prior real_shell failures and the three jc-stop timeouts reproduce deterministically
+at c86ffea (pre-slice worktree, same image), confirming both families pre-existed.

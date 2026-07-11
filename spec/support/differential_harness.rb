@@ -40,6 +40,23 @@ module DifferentialHarness
     out, _err, status = Open3.capture3(env, 'dash', *args, stdin_data: input.to_s, close_others: true)
     [out, status.exitstatus]
   end
+
+  # Session-isolated forms for snippets that exit leaving a stopped child
+  # behind. The kernel reaps such a stray (orphaned-pgroup SIGHUP+SIGCONT)
+  # only if the dying shell's children re-parent OUTSIDE their session;
+  # inside a container they land on a same-session pid 1, the group never
+  # orphans, and the stopped child holds the capture pipes open past any
+  # Timeout (rush-erq). setsid restores the native topology for both shells.
+  def rush_in_session(source)
+    out, _err, status = Open3.capture3('setsid', RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,
+                                       chdir: project_root, stdin_data: '', close_others: true)
+    [out, status.exitstatus]
+  end
+
+  def dash_in_session(source)
+    out, _err, status = Open3.capture3('setsid', 'dash', '-c', source, stdin_data: '', close_others: true)
+    [out, status.exitstatus]
+  end
 end
 
 RSpec.configure { |config| config.include DifferentialHarness }

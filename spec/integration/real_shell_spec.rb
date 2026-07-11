@@ -47,6 +47,12 @@ RSpec.describe 'rush real subprocess' do
     end
   end
 
+  it 'makes an inherited-fd write visible to the next command, as dash writes straight to the fd (rush-erq)' do
+    Tempfile.create('rush-inherited-fd') do |file|
+      expect(run_with_options("echo one >&9; cat #{file.path}", 9 => file)).to eq(["one\n", 0])
+    end
+  end
+
   it 'persists an inherited fd duplicated by exec' do
     Tempfile.create('rush-inherited-fd') do |file|
       expect(run_with_options('exec 8>&9; echo via8 >&8; echo via9 >&9', 9 => file)).to eq(['', 0])

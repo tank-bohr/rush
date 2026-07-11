@@ -60,10 +60,14 @@ module Rush
     # Return a non-owning IO wrapper for an fd that is already open in the rush
     # process (typically inherited from the parent) but not tracked by IoTable.
     # A closed fd returns nil so redirection code can report "fd not open".
+    # Unbuffered: every `n>&9` evaluation wraps the fd anew, and buffered
+    # wrappers would flush at exit in GC order — reordering or hiding writes
+    # (rush-erq: container-reversed lines; a `cat` mid-script saw nothing
+    # where dash, which writes straight to the fd, showed the line).
     def inherited_fd(fd)
       return if fd.negative?
 
-      IO.for_fd(fd, autoclose: false)
+      IO.for_fd(fd, autoclose: false).tap { |stream| stream.sync = true }
     rescue Errno::EBADF
       nil
     end

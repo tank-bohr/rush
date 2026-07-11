@@ -122,8 +122,11 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
   # divergence) blocks either shell's parent when the group is not signalled
   # as a whole; the real whole-group ^Z is the pty smoke's job. Everything
   # under Timeout: the failure mode of a missing WUNTRACED is a hung shell.
-  # The orphaned stopped children die on their own (kernel HUP+CONT) once
-  # the shells exit.
+  # The stray stopped children die on their own (kernel orphaned-pgroup
+  # HUP+CONT) only when the dead shell's children re-parent outside their
+  # session — hence the _in_session runners; a container's same-session
+  # pid 1 otherwise keeps the stray alive holding the capture pipes
+  # (rush-erq).
   stopped = [
     "set -m; sh -c 'kill -TSTP $$'; echo st:$?; kill -9 %1; kill -CONT %1",
     "set -m; sh -c 'kill -TSTP $$'; wait %1; echo w:$?; wait %1; echo w2:$?; kill -9 %1",
@@ -143,7 +146,7 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
       id = format('jc-stop-%03d', index)
 
       it "#{id}: matches dash under Timeout for: #{snippet}" do
-        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+        Timeout.timeout(10) { expect(rush_in_session(snippet)).to eq(dash_in_session(snippet)) }
       end
     end
   end

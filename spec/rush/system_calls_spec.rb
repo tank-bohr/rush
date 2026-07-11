@@ -102,6 +102,14 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
+  it 'wraps inherited fds unbuffered, so wrappers never reorder or delay writes (rush-erq)' do
+    Tempfile.create('rush-fd') do |file|
+      system.inherited_fd(file.fileno).write("one\n")
+      system.inherited_fd(file.fileno).write("two\n")
+      expect([system.inherited_fd(file.fileno).sync, File.read(file.path)]).to eq([true, "one\ntwo\n"])
+    end
+  end
+
   it 'returns nil for a closed or negative inherited fd probe' do
     file = Tempfile.new('rush-fd')
     fd = file.fileno
