@@ -15,6 +15,35 @@ RSpec.describe Rush::Expansion::ParameterExpander do
     expect([expand('X'), expand('Z')]).to eq(['val', ''])
   end
 
+  describe Rush::Expansion::ParameterParts do
+    it 'uses the outer quoting context for operator-word tilde expansion' do
+      env.assign('HOME', '/home/test')
+
+      bare = described_class.new(executor, false)
+      quoted = described_class.new(executor, true)
+      expected = [[['/home/test', true, false, false]], [['~', false, false, true]]]
+      expect([bare.operator('~'), quoted.operator('~')]).to eq(expected)
+      expect([bare.pattern('~'), quoted.pattern('~')]).to eq(['/home/test', '~'])
+    end
+
+    it 'collapses break-flagged parts with the current IFS separator' do
+      env.assign('IFS', ':')
+      parts = [['a', true, false, false], ['b', false, true, true]]
+
+      expect(described_class.new(executor, false).collapse(parts)).to eq('a:b')
+    end
+
+    it 'anchors an empty quoted $@ only inside the operator word' do
+      parts = described_class.new(executor, false)
+
+      expect(parts.operator('"$@"')).to eq([['', false, false, true]])
+      expect(parts.operator('"$@"$@')).to eq([['', false, false, true]])
+      expect(parts.operator('$@')).to eq([])
+      expect(parts.operator('x"$@"')).to eq([['x', true, false, false]])
+      expect(executor.expander.expand([Rush::Lexer::WordScanner.entire('"$@"')])).to eq([])
+    end
+  end
+
   describe 'default and alternative forms' do
     it 'uses the default only when unset (- keeps null, :- replaces it)' do
       env.assign('E', '')
@@ -33,6 +62,17 @@ RSpec.describe Rush::Expansion::ParameterExpander do
       expect(expand('Z', op: ':-', arg: "'d'", quoted: true)).to eq("'d'")
       expect(expand('Z', op: ':-', arg: '~', quoted: true)).to eq('~')
     end
+
+    it 'preserves quoted and unquoted regions in a selected operator word' do
+      ref = Rush::AST::ParamRef.new(name: 'Z', op: ':-', arg: 'left" x y "right')
+      parts = described_class.new(executor, ref, quoted: false).expand_parts
+
+      expect(parts).to eq([
+                            ['left', true, false, false],
+                            [' x y ', false, false, true],
+                            ['right', true, false, false]
+                          ])
+    end
   end
 
   describe 'assign form' do
@@ -41,6 +81,14 @@ RSpec.describe Rush::Expansion::ParameterExpander do
       expect(env.get('A')).to eq('set')
       env.assign('C', 'keep')
       expect(expand('C', op: ':=', arg: 'x')).to eq('keep')
+    end
+
+    it 'returns the assigned text with the outer parameter quoting policy' do
+      ref = Rush::AST::ParamRef.new(name: 'A', op: ':=', arg: '"x y"')
+      expander = described_class.new(executor, ref, quoted: false)
+
+      expect(expander.expand_parts).to eq([['x y', true, false, false]])
+      expect(env.get('A')).to eq('x y')
     end
   end
 

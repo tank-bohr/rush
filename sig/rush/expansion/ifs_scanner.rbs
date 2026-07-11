@@ -43,11 +43,11 @@ module Rush
 
       def initialize: (Array[String] whitespace, Array[String] others) -> void
 
-      def run: (Array[[ String, bool, bool ]] parts) -> Array[String]
+      def run: (Array[[String, bool, bool, bool]] parts) -> Array[String]
 
       private
 
-      def consume: ([ String, bool, bool ] part) -> void
+      def consume: ([String, bool, bool, bool] part) -> void
 
       def step: (String char) -> void
 

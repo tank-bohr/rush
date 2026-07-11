@@ -5,8 +5,68 @@ require 'strscan'
 
 module Rush
   module Expansion
-    # Expands one ParamRef to a string: resolves the base value, then applies the
-    # operator form (if any). The operator word is itself expanded (so
+    # Builds scalar and operator-word parts without discarding quote provenance.
+    class ParameterParts
+      extend T::Sig
+
+      sig { params(executor: Executor, quoted: T::Boolean).void }
+      def initialize(executor, quoted)
+        @executor = executor
+        @quoted = quoted
+      end
+
+      sig { params(text: String).returns(T::Array[FieldPart]) }
+      def scalar(text)
+        [[text, !@quoted, false, @quoted]]
+      end
+
+      sig { params(text: String).returns(T::Array[FieldPart]) }
+      def operator(text)
+        operator_word = word(text)
+        expanded = @executor.expander.expand_parts(operator_word, tilde: tilde_mode)
+        normalized(preserve_empty_at(expanded, operator_word))
+      end
+
+      sig { params(parts: T::Array[FieldPart]).returns(String) }
+      def collapse(parts)
+        @executor.expander.collapse(parts)
+      end
+
+      sig { params(text: String).returns(String) }
+      def pattern(text)
+        @executor.expander.expand_pattern(word(text), tilde: tilde_mode)
+      end
+
+      private
+
+      sig { params(expanded: T::Array[FieldPart], operator_word: AST::Word).returns(T::Array[FieldPart]) }
+      def preserve_empty_at(expanded, operator_word)
+        return expanded unless expanded.empty? && operator_word.segments.any?(&:quoted)
+
+        [['', false, false, true]]
+      end
+
+      sig { params(expanded: T::Array[FieldPart]).returns(T::Array[FieldPart]) }
+      def normalized(expanded)
+        expanded.map do |value, _splittable, brk, quoted|
+          protected = @quoted || quoted
+          [value, !protected, brk, protected]
+        end
+      end
+
+      sig { params(text: String).returns(AST::Word) }
+      def word(text)
+        @quoted ? Lexer::QuotedWord.new(text).word : Lexer::WordScanner.entire(text)
+      end
+
+      sig { returns(Symbol) }
+      def tilde_mode
+        @quoted ? :none : :leading
+      end
+    end
+
+    # Expands one ParamRef to quote-aware field parts: resolves the base value,
+    # then applies the operator form (if any). The operator word is itself expanded (so
     # ${x:-$y} works) by re-scanning it into a Word and running it back through
     # the expansion pipeline. `quoted` picks the word's re-scan rules: a ${...}
     # inside double quotes or a here-doc keeps single quotes ordinary and
@@ -23,14 +83,20 @@ module Rush
         @executor = executor
         @ref = ref
         @quoted = quoted
+        @parts = ParameterParts.new(executor, quoted)
       end
 
       sig { returns(String) }
       def expand
+        @parts.collapse(expand_parts)
+      end
+
+      sig { returns(T::Array[FieldPart]) }
+      def expand_parts
         op = @ref.op
-        return plain unless op
-        return length if op == '#len'
-        return strip(op) if PATTERN_REMOVAL.include?(op)
+        return @parts.scalar(plain) unless op
+        return @parts.scalar(length) if op == '#len'
+        return @parts.scalar(strip(op)) if PATTERN_REMOVAL.include?(op)
 
         Parameter::FORMS.fetch(op.delete_prefix(':')).call(self)
       end
@@ -66,13 +132,29 @@ module Rush
 
       sig { returns(String) }
       def arg
-        @executor.expander.expand_value(sub_word(argument), tilde: tilde_mode)
+        @parts.collapse(arg_parts)
       end
 
-      sig { params(text: String).returns(String) }
-      def assign(text)
+      sig { returns(T::Array[FieldPart]) }
+      def arg_parts
+        @parts.operator(argument)
+      end
+
+      sig { returns(T::Array[FieldPart]) }
+      def value_parts
+        @parts.scalar(value_text)
+      end
+
+      sig { returns(T::Array[FieldPart]) }
+      def empty_parts
+        @parts.scalar('')
+      end
+
+      sig { returns(T::Array[FieldPart]) }
+      def assign_parts
+        text = @parts.collapse(arg_parts)
         @executor.state.variables.assign(@ref.name, text)
-        text
+        @parts.scalar(text)
       end
 
       sig { returns(T.noreturn) }
@@ -94,12 +176,7 @@ module Rush
 
       sig { returns(String) }
       def pattern_arg
-        @executor.expander.expand_pattern(sub_word(argument), tilde: tilde_mode)
-      end
-
-      sig { returns(Symbol) }
-      def tilde_mode
-        @quoted ? :none : :leading
+        @parts.pattern(argument)
       end
 
       sig { returns(T::Boolean) }
@@ -121,11 +198,6 @@ module Rush
       sig { returns(String) }
       def argument
         @ref.arg || ''
-      end
-
-      sig { params(text: String).returns(AST::Word) }
-      def sub_word(text)
-        @quoted ? Lexer::QuotedWord.new(text).word : Lexer::WordScanner.entire(text)
       end
     end
   end

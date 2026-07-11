@@ -29,6 +29,11 @@ RSpec.describe Rush::AST::WordSegment do
     expect(seg('x', false).expand(:executor)).to eq('x')
   end
 
+  it 'describes a segment result with splitting and quote provenance' do
+    expect(seg('x y', true).field_parts(:executor)).to eq([['x y', false, false, true]])
+    expect(seg('x y', false).field_parts(:executor)).to eq([['x y', false, false, false]])
+  end
+
   it 'uses only unquoted literal text as a literal value' do
     expect(seg('x', false).literal_value).to eq('x')
     expect(seg('x', true).literal_value).to be_nil
@@ -53,11 +58,13 @@ RSpec.describe Rush::AST::WordSegment do
   it 'expands parameter segments through the parameter expander, passing its quoted context' do
     executor = instance_double(Rush::Executor)
     ref = param('x')
-    expander = instance_double(Rush::Expansion::ParameterExpander, expand: 'value')
+    parts = [['value', false, false, true]]
+    expander = instance_double(Rush::Expansion::ParameterExpander, expand: 'value', expand_parts: parts)
     allow(Rush::Expansion::ParameterExpander).to receive(:new).with(executor, ref, quoted: true).and_return(expander)
+    segment = Rush::AST::ParamSegment.new(ref, true)
 
-    expect(Rush::AST::ParamSegment.new(ref, true).expand(executor)).to eq('value')
-    expect(Rush::Expansion::ParameterExpander).to have_received(:new).with(executor, ref, quoted: true)
+    expect([segment.expand(executor), segment.field_parts(executor)]).to eq(['value', parts])
+    expect(Rush::Expansion::ParameterExpander).to have_received(:new).with(executor, ref, quoted: true).twice
   end
 
   it 'expands command segments through command substitution' do
@@ -65,8 +72,10 @@ RSpec.describe Rush::AST::WordSegment do
     expander = instance_double(Rush::Expansion::CommandSubstitution, expand: 'out')
     allow(Rush::Expansion::CommandSubstitution).to receive(:new).with(executor, 'echo hi').and_return(expander)
 
-    expect(Rush::AST::CommandSegment.new('echo hi', false).expand(executor)).to eq('out')
-    expect(Rush::Expansion::CommandSubstitution).to have_received(:new).with(executor, 'echo hi')
+    segment = Rush::AST::CommandSegment.new('echo hi', false)
+    expect([segment.expand(executor), segment.field_parts(executor)])
+      .to eq(['out', [['out', true, false, false]]])
+    expect(Rush::Expansion::CommandSubstitution).to have_received(:new).with(executor, 'echo hi').twice
   end
 
   it 'expands arithmetic segments through the arithmetic expander' do

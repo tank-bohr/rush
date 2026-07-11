@@ -1,11 +1,11 @@
 module Rush
   module Expansion
     # Registry of ${} operator forms keyed by the operator character. Each form
-    # is given a ParameterExpander and returns the expanded string. The ':'
+    # is given a ParameterExpander and returns quote-aware field parts. The ':'
     # variants treat a null value like an unset one (ParameterExpander#unset_or_null?).
     module Parameter
       # '-' use default · '=' assign default · '?' error if unset · '+' use alternative
-      FORMS: Hash[String, ^(ParameterExpander param) -> String]
+      FORMS: Hash[String, ^(ParameterExpander param) -> Array[[String, bool, bool, bool]]]
     end
   end
 end

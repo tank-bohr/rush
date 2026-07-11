@@ -1,7 +1,7 @@
 module Rush
   module Expansion
     # Orchestrates the ordered POSIX word expansion. Each segment expands itself
-    # to one or more parts ([text, splittable, break_before]); unquoted results
+    # to one or more parts ([text, splittable, break_before, quoted]); unquoted results
     # undergo IFS field splitting and then pathname expansion. The one multi-field
     # case is "$@"/$@, which yields one part per positional parameter with a
     # forced field break between them ($* always joins to a scalar). Quoted
@@ -34,18 +34,22 @@ module Rush
       # expands after colons, and arithmetic opts out (~ is bitwise not there).
       def expand_value: (AST::Word | HereDoc word, ?tilde: Symbol) -> String
 
+      def expand_parts: (AST::Word | HereDoc word, ?tilde: Symbol) -> Array[[String, bool, bool, bool]]
+
+      def collapse: (Array[[String, bool, bool, bool]] expanded) -> String
+
       # A case/removal pattern keeps quoted metacharacters backslash-shielded.
       def expand_pattern: (AST::Word word, ?tilde: Symbol) -> String
 
       private
 
-      def parts: (AST::Word word) -> Array[[ String, bool, bool ]]
+      def parts: (AST::Word word) -> Array[[String, bool, bool, bool]]
 
       def tilde_expand: (Array[AST::WordSegment[untyped]] segments, Symbol mode) -> Array[AST::WordSegment[untyped]]
 
       def glob: (Array[String] fields) -> Array[String]
 
-      def field_parts: (AST::WordSegment[untyped] segment) -> Array[[ String, bool, bool ]]
+      def field_parts: (AST::WordSegment[untyped] segment) -> Array[[String, bool, bool, bool]]
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
@@ -53,7 +57,11 @@ module Rush
 
       def escape: (String text) -> String
 
-      def splat_parts: (AST::WordSegment[untyped] segment) -> Array[[ String, bool, bool ]]
+      def shield: ([String, bool, bool, bool] part) -> [String, bool, bool, bool]
+
+      def splat_parts: (AST::WordSegment[untyped] segment) -> Array[[String, bool, bool, bool]]
+
+      def field_separator: () -> String
 
       def ifs: () -> String?
     end

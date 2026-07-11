@@ -1,6 +1,27 @@
 module Rush
   module Expansion
-    # Expands one ParamRef to a string: resolves the base value, then applies the
+    # Builds scalar and operator-word parts without discarding quote provenance.
+    class ParameterParts
+      extend T::Sig
+
+      @executor: Executor
+      @quoted: bool
+
+      def initialize: (Executor executor, bool quoted) -> void
+      def scalar: (String text) -> Array[[String, bool, bool, bool]]
+      def operator: (String text) -> Array[[String, bool, bool, bool]]
+      def collapse: (Array[[String, bool, bool, bool]] parts) -> String
+      def pattern: (String text) -> String
+
+      private
+
+      def preserve_empty_at: (Array[[String, bool, bool, bool]] expanded, AST::Word operator_word) -> Array[[String, bool, bool, bool]]
+      def normalized: (Array[[String, bool, bool, bool]] expanded) -> Array[[String, bool, bool, bool]]
+      def word: (String text) -> AST::Word
+      def tilde_mode: () -> Symbol
+    end
+
+    # Expands one ParamRef to quote-aware field parts, then applies the
     # operator form (if any). The operator word is itself expanded (so
     # ${x:-$y} works) by re-scanning it into a Word and running it back through
     # the expansion pipeline. `quoted` picks the word's re-scan rules: a ${...}
@@ -15,6 +36,8 @@ module Rush
 
       @quoted: bool
 
+      @parts: ParameterParts
+
       # Operators handled here rather than by the FORMS lambdas: the ${#p} length
       # and the # ## % %% pattern-removal forms.
       PATTERN_REMOVAL: Array[String]
@@ -22,6 +45,8 @@ module Rush
       def initialize: (Executor executor, AST::ParamRef ref, quoted: bool) -> void
 
       def expand: () -> String
+
+      def expand_parts: () -> Array[[String, bool, bool, bool]]
 
       # A bare $x / ${x}: under `set -u` an unset ordinary name or positional is
       # an error (special parameters like $@ are exempt).
@@ -35,7 +60,13 @@ module Rush
 
       def arg: () -> String
 
-      def assign: (String text) -> String
+      def arg_parts: () -> Array[[String, bool, bool, bool]]
+
+      def value_parts: () -> Array[[String, bool, bool, bool]]
+
+      def empty_parts: () -> Array[[String, bool, bool, bool]]
+
+      def assign_parts: () -> Array[[String, bool, bool, bool]]
 
       def raise_unset: () -> bot
 
@@ -47,8 +78,6 @@ module Rush
 
       def pattern_arg: () -> String
 
-      def tilde_mode: () -> Symbol
-
       def unbound?: () -> bool
 
       def colon?: () -> bool
@@ -56,8 +85,6 @@ module Rush
       def message: () -> String
 
       def argument: () -> String
-
-      def sub_word: (String text) -> AST::Word
     end
   end
 end

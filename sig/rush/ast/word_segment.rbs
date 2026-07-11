@@ -38,6 +38,8 @@ module Rush
 
       def splat?: () -> bool
 
+      def field_parts: (Executor executor) -> Array[[String, bool, bool, bool]]
+
       # A copy with a rewritten value (e.g. after tilde expansion).
       def with_value: (V new_value) -> WordSegment[V]
 
@@ -92,6 +94,8 @@ module Rush
 
       # $@ (always) and unquoted $* expand to one field per positional parameter.
       def splat?: () -> bool
+
+      def field_parts: (Executor executor) -> Array[[String, bool, bool, bool]]
     end
 
     # $(...) / `...`: value is the command-substitution source.

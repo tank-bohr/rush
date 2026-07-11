@@ -4,7 +4,7 @@
 module Rush
   module Expansion
     # Orchestrates the ordered POSIX word expansion. Each segment expands itself
-    # to one or more parts ([text, splittable, break_before]); unquoted results
+    # to one or more parts ([text, splittable, break_before, quoted]); unquoted results
     # undergo IFS field splitting and then pathname expansion. The one multi-field
     # case is "$@"/$@, which yields one part per positional parameter with a
     # forced field break between them ($* always joins to a scalar). Quoted
@@ -32,21 +32,35 @@ module Rush
       # expands after colons, and arithmetic opts out (~ is bitwise not there).
       sig { params(word: T.any(AST::Word, HereDoc), tilde: Symbol).returns(String) }
       def expand_value(word, tilde: :leading)
-        tilde_expand(word.segments, tilde).map { |segment| segment.expand(@executor) }.join
+        collapse(expand_parts(word, tilde: tilde))
+      end
+
+      # Expand without splitting or globbing while retaining each segment's
+      # quote provenance for a surrounding ${...} operator word.
+      sig { params(word: T.any(AST::Word, HereDoc), tilde: Symbol).returns(T::Array[FieldPart]) }
+      def expand_parts(word, tilde: :leading)
+        tilde_expand(word.segments, tilde).flat_map { |segment| field_parts(segment) }
+      end
+
+      sig { params(expanded: T::Array[FieldPart]).returns(String) }
+      def collapse(expanded)
+        separator = field_separator
+        expanded.map { |text, _splittable, brk, _quoted| (brk ? separator : '') + text }.join
       end
 
       # A case/removal pattern keeps quoting as backslash shielding so quoted
       # metacharacters remain literal when ShellPattern compiles the result.
-      sig { params(word: AST::Word, tilde: Symbol).returns(String) }
-      def expand_pattern(word, tilde: :leading)
-        tilde_expand(word.segments, tilde).map { |segment| escape_if_quoted(segment, segment.expand(@executor)) }.join
+      sig { params(pattern: AST::Word, tilde: Symbol).returns(String) }
+      def expand_pattern(pattern, tilde: :leading)
+        segments = tilde_expand(pattern.segments, tilde)
+        segments.map { |segment| escape_if_quoted(segment, segment.expand(@executor)) }.join
       end
 
       private
 
-      sig { params(word: AST::Word).returns(T::Array[[String, T::Boolean, T::Boolean]]) }
+      sig { params(word: AST::Word).returns(T::Array[FieldPart]) }
       def parts(word)
-        tilde_expand(word.segments, :leading).flat_map { |segment| field_parts(segment) }
+        expand_parts(word).map { |part| shield(part) }
       end
 
       sig { params(segments: T::Array[AST::WordSegment[T.untyped]], mode: Symbol).returns(T::Array[AST::WordSegment[T.untyped]]) }
@@ -63,7 +77,7 @@ module Rush
       def field_parts(segment)
         return splat_parts(segment) if segment.splat?
 
-        [[escape_if_quoted(segment, segment.expand(@executor)), segment.splittable?, false]]
+        segment.field_parts(@executor)
       end
 
       # Glob metacharacters in quoted text are escaped so they match literally;
@@ -73,6 +87,12 @@ module Rush
         segment.quoted ? escape(text) : text
       end
 
+      sig { params(part: FieldPart).returns(FieldPart) }
+      def shield(part)
+        text, splittable, brk, quoted = part
+        [quoted ? escape(text) : text, splittable, brk, quoted]
+      end
+
       sig { params(text: String).returns(String) }
       def escape(text)
         text.gsub(/[\\*?\[\]\-!^]/) { |meta| "\\#{meta}" }
@@ -80,10 +100,16 @@ module Rush
 
       sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[FieldPart]) }
       def splat_parts(segment)
-        split = !segment.quoted
+        quoted = segment.quoted
         @executor.state.positional.map.with_index do |element, index|
-          [escape_if_quoted(segment, element), split, index.positive?]
+          [element, !quoted, index.positive?, quoted]
         end
+      end
+
+      sig { returns(String) }
+      def field_separator
+        value = ifs
+        value ? (value.each_char.first || '') : ' '
       end
 
       sig { returns(T.nilable(String)) }

@@ -4,7 +4,7 @@
 module Rush
   module Expansion
     # The POSIX §2.6.5 field-splitting state machine. It runs once, left to right,
-    # over the expanded parts ([text, splittable, break]) so a delimiter that
+    # over the expanded parts ([text, splittable, break, quoted]) so a delimiter that
     # spans two adjacent unquoted expansions still yields the right (possibly
     # empty) fields. IFS whitespace coalesces and is stripped at the ends; each
     # non-whitespace IFS character delimits a field (so adjacent ones generate
@@ -68,7 +68,7 @@ module Rush
 
       sig { params(part: FieldPart).void }
       def consume(part)
-        text, splittable, brk = part
+        text, splittable, brk, = part
         open_field if brk
         splittable ? text.each_char { |char| step(char) } : literal(text)
       end

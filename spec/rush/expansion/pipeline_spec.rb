@@ -30,10 +30,39 @@ RSpec.describe Rush::Expansion::Pipeline do
       expect(pipeline.expand_value(Rush::AST::Word.literal('v'))).to eq('v')
     end
 
-    it 'backslash-shields quoted metacharacters in a shell pattern' do
-      word = Rush::AST::Word.new([lit('a'), lit(']*?-!^[', quoted: true)])
+    it 'forwards the requested tilde mode while expanding a scalar value' do
+      state = Rush::ShellState.new(environment: Rush::Environment.new('HOME' => '/home/test'))
+      pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state))
+      word = Rush::AST::Word.literal('prefix:~')
 
-      expect(pipeline.expand_pattern(word)).to eq('a\\]\\*\\?\\-\\!\\^\\[')
+      expect([pipeline.expand_value(word), pipeline.expand_value(word, tilde: :assignment)])
+        .to eq(['prefix:~', 'prefix:/home/test'])
+    end
+
+    it 'collapses break boundaries with the current first IFS character' do
+      state = Rush::ShellState.new(environment: Rush::Environment.new({}))
+      pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state))
+      parts = [['a', true, false, false], ['b', false, true, true]]
+
+      expect(pipeline.collapse(parts)).to eq('a b')
+      state.variables.assign('IFS', ':')
+      expect(pipeline.collapse(parts)).to eq('a:b')
+      state.variables.assign('IFS', '')
+      expect(pipeline.collapse(parts)).to eq('ab')
+    end
+
+    it 'backslash-shields only quoted metacharacters in a shell pattern' do
+      word = Rush::AST::Word.new([lit('*'), lit('a'), lit(']*?-!^[', quoted: true)])
+
+      expect(pipeline.expand_pattern(word)).to eq('*a\\]\\*\\?\\-\\!\\^\\[')
+    end
+
+    it 'expands dynamic segments in a shell pattern with the executor' do
+      state = Rush::ShellState.new(environment: Rush::Environment.new('X' => '*'))
+      pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state))
+      word = Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('X'))])
+
+      expect(pipeline.expand_pattern(word)).to eq('*')
     end
   end
 
@@ -61,6 +90,21 @@ RSpec.describe Rush::Expansion::Pipeline do
     expect([pipeline.expand([unquoted]), pipeline.expand([quoted])]).to eq([%w[a b], ['a b']])
   end
 
+  it 'keeps quoted regions of an unquoted parameter operator word together' do
+    pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new))
+    ref = Rush::AST::ParamRef.new(name: 'X', op: ':-', arg: 'left" x y "right')
+
+    expect(pipeline.expand([Rush::AST::Word.new([par(ref)])])).to eq(['left x y right'])
+  end
+
+  it 'shields a quoted glob inside an unquoted parameter operator word' do
+    system = FakeSystemCalls.new(globs: { '*' => %w[file1 file2] })
+    pipeline = described_class.new(Rush::Executor.new(system: system, state: Rush::ShellState.new))
+    ref = Rush::AST::ParamRef.new(name: 'X', op: ':-', arg: '"*"')
+
+    expect(pipeline.expand([Rush::AST::Word.new([par(ref)])])).to eq(['*'])
+  end
+
   describe '"$@" splat expansion' do
     subject(:pipeline) { described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state)) }
 
@@ -73,6 +117,10 @@ RSpec.describe Rush::Expansion::Pipeline do
     it 'yields one field per positional parameter when quoted, preserving spaces' do
       state.positional.replace(['a b', 'c'])
       expect(pipeline.expand(at(true))).to eq(['a b', 'c'])
+      expect(pipeline.expand_parts(at(true).first)).to eq([
+                                                            ['a b', false, false, true],
+                                                            ['c', false, true, true]
+                                                          ])
     end
 
     it 'field-splits each parameter when unquoted' do

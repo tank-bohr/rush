@@ -15,7 +15,7 @@ RSpec.describe Rush::Expansion::FieldSplitter do
     end
 
     it 'does not split quoted or literal parts' do
-      expect(split([['a b', false]])).to eq(['a b'])
+      expect(split([['a b', false, false, true]])).to eq(['a b'])
     end
 
     it 'joins adjacent parts across a split boundary' do

@@ -59,6 +59,11 @@ module Rush
         false
       end
 
+      sig { params(executor: Executor).returns(T::Array[Expansion::FieldPart]) }
+      def field_parts(executor)
+        [[expand(executor), splittable?, false, quoted]]
+      end
+
       # A copy with a rewritten value (e.g. after tilde expansion).
       sig { params(new_value: Value).returns(WordSegment[Value]) }
       def with_value(new_value)
@@ -144,6 +149,11 @@ module Rush
       sig { returns(T::Boolean) }
       def splat?
         !value.op && (value.name == '@' || (value.name == '*' && !quoted))
+      end
+
+      sig { params(executor: Executor).returns(T::Array[Expansion::FieldPart]) }
+      def field_parts(executor)
+        Expansion::ParameterExpander.new(executor, value, quoted: quoted).expand_parts
       end
 
       sig { returns(String) }

@@ -2150,3 +2150,35 @@ Verified by a 14-probe dash matrix covering function export/local/readonly/unset
 unrelated exported writes, direct and command-wrapped externals, and expansion before
 readonly failure. Independent review found no issues. Subject mutation gates:
 Environment 97.49%, CommandAssignments 100%, CommandRunner 96.72%.
+
+### Parameter operator words retain quote provenance through split and glob (rush-no1.10)
+`${a:-word}` used to return word through Pipeline#expand_value as a flat String. An
+unquoted outer parameter segment then marked the entire result splittable and active
+for pathname expansion, so `${a:-"x y"}` became two fields and `${a:-"*"}` globbed.
+The expansion stream now carries a fourth FieldPart property — quoted provenance —
+alongside text/splittable/break. WordSegment emits ordinary parts polymorphically and
+ParamSegment asks ParameterExpander for its structured result; Pipeline shields quoted
+glob characters only at the final argv boundary. Scalar consumers still call collapse,
+which joins `$@` break boundaries with the first IFS character, so assignments,
+redirections, here-docs and arithmetic retain their prior single-string contract.
+
+ParameterParts isolates the operator-word policy. It re-scans with the existing bare or
+quoted lexer, expands to parts, and promotes every unquoted region to splittable because
+literal text inside word is itself part of the enclosing parameter expansion. Quoted
+regions remain anchored and glob-shielded; an outer quoted `${...}` protects every
+region. `:-` and selected `:+` return those parts directly. `:=` deliberately assigns
+the collapsed raw text and returns one scalar under the OUTER quote policy: dash and
+bash --posix both split unquoted `${a:="x y"}` after assigning `a='x y'`. Error messages
+and pattern-removal words continue through their scalar/pattern ports.
+
+The independent review found the empty quoted-$@ exception: direct `"$@"` with no
+positionals yields zero fields, but selected `${x:-"$@"}` and `${x:+"$@"}` yield one
+anchored empty field. Pipeline must keep its direct behaviour, so ParameterParts adds
+the anchor only when an otherwise-empty operator word contains a quoted splat; mixed
+quoted/unquoted empty `$@` occurrences still produce exactly one anchor.
+
+Verification covered a 72-shape generated matrix (four contexts across quote/IFS/glob/
+nested variants), a separate 21-probe operator matrix, zero/nonzero `$@` probes, and 16
+new differential corpus cases; all matched dash on [stdout, exitstatus]. Subject
+mutation gates: ParameterParts 99.52%, ParameterExpander 95.65%, Pipeline 99.46%,
+WordSegment 100%, ParamSegment 97.53%.
