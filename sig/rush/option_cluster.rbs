@@ -1,0 +1,25 @@
+module Rush
+  # A `-abc` / `+abc` cluster of single-letter options, the shape POSIX shares
+  # between the set builtin and the sh invocation line (XCU set / sh): the
+  # leading sign and the letters after it. parse answers nil for anything
+  # else — `--`, a lone dash or plus, or a plain operand.
+  class OptionCluster
+    extend T::Sig
+
+    @sign: String
+
+    @letters: Array[String]
+
+    attr_reader sign: String
+
+    attr_reader letters: Array[String]
+
+    def self.parse: (String? arg) -> OptionCluster?
+
+    def initialize: (String flag) -> void
+
+    # Yield each option letter with the cluster's sign, the shape both
+    # consumers toggle by.
+    def each_letter: () { (String letter, String sign) -> void } -> void
+  end
+end

@@ -22,13 +22,11 @@ module Rush
 
       def consume_options: (Array[String] args) -> Integer
 
-      def advance: (Array[String] args, Integer index) -> Integer
+      def advance: (OptionCluster cluster, Array[String] args, Integer index) -> Integer
 
       def positionals: (Array[String] args, Integer index) -> Array[String]?
 
-      def option?: (String? flag) -> bool
-
-      def apply: (String flag) -> void
+      def apply: (OptionCluster cluster) -> void
 
       # With a name, toggle that option; bare `set -o` prints the option
       # table (format follows dash), bare `set +o` the lines that re-create

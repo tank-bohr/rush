@@ -35,17 +35,17 @@ module Rush
       sig { params(args: T::Array[String]).returns(Integer) }
       def consume_options(args)
         index = 0
-        index += advance(args, index) while index < args.size && option?(args[index])
+        while (cluster = OptionCluster.parse(args[index]))
+          index += advance(cluster, args, index)
+        end
         index
       end
 
-      sig { params(args: T::Array[String], index: Integer).returns(Integer) }
-      def advance(args, index)
-        arg = args.fetch(index)
-        sign, *letters = arg.chars
-        return apply_long(sign, args[index + 1]) if letters.join == 'o'
+      sig { params(cluster: OptionCluster, args: T::Array[String], index: Integer).returns(Integer) }
+      def advance(cluster, args, index)
+        return apply_long(cluster.sign, args[index + 1]) if cluster.letters.join == 'o'
 
-        apply(arg)
+        apply(cluster)
         1
       end
 
@@ -56,15 +56,9 @@ module Rush
         args[index] == '--' ? args.drop(index + 1) : args.drop(index)
       end
 
-      sig { params(flag: T.nilable(String)).returns(T::Boolean) }
-      def option?(flag)
-        flag.is_a?(String) && flag.length > 1 && flag != '--' && flag.start_with?('-', '+')
-      end
-
-      sig { params(flag: String).void }
-      def apply(flag)
-        sign, *letters = flag.chars
-        letters.each { |char| toggle(OPTIONS.fetch(char, nil), sign) }
+      sig { params(cluster: OptionCluster).void }
+      def apply(cluster)
+        cluster.each_letter { |char, sign| toggle(OPTIONS.fetch(char, nil), sign) }
       end
 
       # With a name, toggle that option; bare `set -o` prints the option

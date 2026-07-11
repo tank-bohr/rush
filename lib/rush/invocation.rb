@@ -19,33 +19,36 @@ module Rush
 
     sig { params(argv: T::Array[String]).void }
     def initialize(argv)
+      @argv = argv
       @settings = T.let({}, T::Hash[Symbol, T::Boolean])
       @command = T.let(false, T::Boolean)
-      apply_cluster(T.must(argv.shift), argv) while cluster?(argv.first)
+      consume_clusters
       # `--` or the obsolescent lone `-` ends the options and is consumed
       # (POSIX sh synopsis; dash-verified: `sh -` reads stdin, `sh - file`
       # runs the file, while a `-` after the -c string stays $0).
-      argv.shift if ['--', '-'].include?(argv.first)
+      @argv.shift if ['--', '-'].include?(@argv.first)
     end
 
     private
 
-    sig { params(arg: T.nilable(String)).returns(T::Boolean) }
-    def cluster?(arg)
-      arg.is_a?(String) && arg.length > 1 && arg != '--' && arg.start_with?('-', '+')
+    sig { void }
+    def consume_clusters
+      while (cluster = OptionCluster.parse(@argv.first))
+        @argv.shift
+        apply_cluster(cluster)
+      end
     end
 
-    sig { params(cluster: String, rest: T::Array[String]).void }
-    def apply_cluster(cluster, rest)
-      sign, *letters = cluster.chars
-      letters.each { |letter| apply_letter(letter, T.must(sign), rest) }
+    sig { params(cluster: OptionCluster).void }
+    def apply_cluster(cluster)
+      cluster.each_letter { |letter, sign| apply_letter(letter, sign) }
     end
 
-    sig { params(letter: String, sign: String, rest: T::Array[String]).void }
-    def apply_letter(letter, sign, rest)
+    sig { params(letter: String, sign: String).void }
+    def apply_letter(letter, sign)
       case letter
       when 'c' then enable_command(sign)
-      when 'o' then apply_long(sign, rest.shift)
+      when 'o' then apply_long(sign, @argv.shift)
       else apply_flag(letter, sign)
       end
     end

@@ -1660,3 +1660,24 @@ symbol-literal types let the base declare (:while | :until) and each subclass
 narrow to its own literal, something the Sorbet side has no way to spell
 (its sigs stay Symbol). Steep caught the widening; the union is the fix,
 not a cast.
+
+### Flay stops counting type ceremony: 906 -> 156, and the noise hid a real drift risk (rush-h2u)
+The 14n move gets its flay twin: Sorbet sig blocks are declarations, not code —
+identical generic sigs are forced (a sig must be a literal block per method) —
+so their 712 of 906 mass only padded a budget real duplication could hide
+under. flay's own :filters hook takes a Sexp matcher; (iter (call nil sig) ___)
+drops every sig from the hashed tree, no subclassing needed. The proof the
+noise mattered: under it sat a cluster the top-10 never showed — the option
+-cluster predicate (-abc/+abc, not --, sign+letters split) spelled twice, in
+Set#option? and InvocationFlags#cluster?, one POSIX concept (XCU set shares
+its letters with sh invocation) drifting on two definitions. It is now
+Rush::OptionCluster (parse -> nil | cluster; each_letter yields letter+sign).
+Reek steered the shape twice: FeatureEnvy moved iteration onto the cluster
+itself, then flagged the argv-munching loop — reek 6.5 does check initialize —
+which pushed @argv into InvocationFlags as owned state and dissolved the
+`rest` parameter threading entirely. Judged idiomatic and left in the 156:
+SimpleCommand's select-by-type triple (66, the T.let+each dance is the only
+shape both checkers narrow without casts), Registry/FunctionTable (58, two
+flat domain vocabularies; a generic base costs more than it saves), and
+PatternRemoval's strip_prefix/strip_suffix (32, the POSIX ${x#}/${x%} pair
+reads better symmetric). FLAY_THRESHOLD 906 -> 156.

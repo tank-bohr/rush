@@ -8,6 +8,8 @@ module Rush
 
     FLAGS: Hash[String, Symbol]
 
+    @argv: Array[String]
+
     attr_reader settings: Hash[Symbol, bool]
 
     attr_reader command: bool
@@ -16,11 +18,11 @@ module Rush
 
     private
 
-    def cluster?: (String? arg) -> bool
+    def consume_clusters: () -> void
 
-    def apply_cluster: (String cluster, Array[String] rest) -> void
+    def apply_cluster: (OptionCluster cluster) -> void
 
-    def apply_letter: (String letter, String sign, Array[String] rest) -> void
+    def apply_letter: (String letter, String sign) -> void
 
     def enable_command: (String sign) -> void
 
