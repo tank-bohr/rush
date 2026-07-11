@@ -2,13 +2,17 @@ module Rush
   # The shell options toggled by `set -[+]o name` / `set -[+]x` and friends
   # (:errexit, :nounset, :xtrace, :noglob, :verbose, :pipefail), plus the
   # invocation-only :interactive (-i) and :stdin (-s) flags: the set of those
-  # currently on, with #set to flip one, #on? to query it, and #letters to
-  # render $-. The letter/name tables live here so the set builtin and
-  # Invocation share one vocabulary.
+  # currently on, with #set to flip one, #on? to query it, #letters to
+  # render $-, and the bare `set -o`/`set +o` listings. The letter/name
+  # tables live here so the set builtin and Invocation share one vocabulary.
   class Options
     extend T::Sig
 
     LETTERS: Hash[String, Symbol]
+
+    # Every long name in dash's listing order — the bare `set -o`/`set +o`
+    # output shows the invocation-only flags too, like dash does.
+    NAMES: Hash[String, Symbol]
 
     LONG: Hash[String, Symbol]
 
@@ -26,5 +30,19 @@ module Rush
 
     # The current option flags as the $- special parameter renders them.
     def letters: () -> String
+
+    # The bare `set -o` table rows in dash's format: the name padded to 16
+    # columns, then on/off.
+    def settings_rows: () -> Array[String]
+
+    # The bare `set +o` output: `set -o name` / `set +o name` lines that
+    # reproduce the current settings when re-input (POSIX XCU set).
+    def reinput_lines: () -> Array[String]
+
+    private
+
+    # One rendered line per long option name: the on form when the option is
+    # enabled, the off form otherwise.
+    def render_settings: (String on_form, String off_form) -> Array[String]
   end
 end

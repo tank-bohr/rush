@@ -6,8 +6,10 @@ module Rush
     # `set [-/+ options] [--] [arg ...]` — toggle shell options (-x/+x and the
     # `-o name`/`+o name` long form) and, when operands follow (or after `--`),
     # replace the positional parameters. With no operands the parameters are left
-    # unchanged; an unknown option is ignored. Options: -a/allexport, -C/noclobber,
-    # -e/errexit, -u/nounset, -x/xtrace, -f/noglob, -v/verbose, pipefail.
+    # unchanged; an unknown option is ignored. A bare trailing `-o` writes the
+    # current settings table, a bare `+o` the re-input form (POSIX XCU set).
+    # Options: -a/allexport, -C/noclobber, -e/errexit, -u/nounset, -x/xtrace,
+    # -f/noglob, -v/verbose, pipefail.
     class Set < Base
       extend T::Sig
 
@@ -65,10 +67,28 @@ module Rush
         letters.each { |char| toggle(OPTIONS.fetch(char, nil), sign) }
       end
 
+      # With a name, toggle that option; bare `set -o` prints the option
+      # table (format follows dash), bare `set +o` the lines that re-create
+      # the settings when re-input (POSIX XCU set).
       sig { params(sign: T.nilable(String), name: T.nilable(String)).returns(Integer) }
       def apply_long(sign, name)
-        toggle(name && LONG.fetch(name, nil), sign)
+        return toggle_long(sign, name) if name
+
+        options = executor.state.options
+        print_lines(sign == '-' ? ['Current option settings', *options.settings_rows] : options.reinput_lines)
+      end
+
+      sig { params(sign: T.nilable(String), name: String).returns(Integer) }
+      def toggle_long(sign, name)
+        toggle(LONG.fetch(name, nil), sign)
         2
+      end
+
+      # Prints a listing and consumes just the bare -o/+o flag itself.
+      sig { params(lines: T::Array[String]).returns(Integer) }
+      def print_lines(lines)
+        lines.each { |line| stdout.puts(line) }
+        1
       end
 
       sig { params(option: T.nilable(Symbol), sign: T.nilable(String)).void }

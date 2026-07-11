@@ -50,6 +50,16 @@ RSpec.describe 'rush vs dash (differential execution/control corpus)' do
     'set -e; if x=$(false); then echo t; else echo e; fi',
     'set -e; x=$(true) y=$(false); echo unreached',
     'set -e; v=$(false) || echo recovered; echo after',
+    # bare `set -o` prints the settings table and bare `set +o` the re-input
+    # form (POSIX XCU set); rows for options both shells share compare
+    # byte-exact, and the +o round-trip restores flags through eval
+    'set -o | grep errexit',
+    'set -e; set -o | grep errexit',
+    'set -m; set -o | grep monitor',
+    'set +o | grep pipefail',
+    'set -o pipefail; set +o | grep pipefail',
+    'set -u; s=$(set +o); set +u; eval "$s"; echo "u:$-"',
+    'set -o >/dev/null; set +o >/dev/null; echo rc=$?',
     # pipefail changes a pipeline's status from the last stage to the rightmost
     # non-zero stage; all-zero pipelines stay successful, +o disables it, and !
     # negates the pipefail-adjusted status.

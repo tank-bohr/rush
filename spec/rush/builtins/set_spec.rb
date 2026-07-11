@@ -168,10 +168,30 @@ RSpec.describe Rush::Builtins::Set do
     expect([state.options.on?(:verbose), state.options.on?(:errexit), state.positional]).to eq([true, true, %w[arg]])
   end
 
-  it 'handles -o without a following name as a consumed no-op' do
+  it 'prints the settings table for a bare -o and leaves the parameters alone' do
     state.positional.replace(%w[old])
     expect(run('-o')).to be_success
-    expect(state.positional).to be_empty
+    expect(state.positional).to eq(%w[old])
+    expect(system.stdout.string).to start_with("Current option settings\nerrexit         off\n")
+  end
+
+  it 'renders the toggled state in the bare -o table' do
+    run('-e')
+    run('-o')
+    expect(system.stdout.string).to include("errexit         on\n", "nounset         off\n")
+  end
+
+  it 'prints the re-input form for a bare +o' do
+    run('-e')
+    expect(run('+o')).to be_success
+    expect(system.stdout.string).to include("set -o errexit\n", "set +o pipefail\n")
+  end
+
+  it 'shows the monitor state the job-control policy set in the listings' do
+    run('-m')
+    run('-o')
+    run('+o')
+    expect(system.stdout.string).to include("monitor         on\n", "set -o monitor\n")
   end
 
   it 'ignores an unknown long option name and keeps parsing operands' do

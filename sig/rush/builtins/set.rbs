@@ -3,8 +3,10 @@ module Rush
     # `set [-/+ options] [--] [arg ...]` — toggle shell options (-x/+x and the
     # `-o name`/`+o name` long form) and, when operands follow (or after `--`),
     # replace the positional parameters. With no operands the parameters are left
-    # unchanged; an unknown option is ignored. Options: -a/allexport, -C/noclobber,
-    # -e/errexit, -u/nounset, -x/xtrace, -f/noglob, -v/verbose, pipefail.
+    # unchanged; an unknown option is ignored. A bare trailing `-o` writes the
+    # current settings table, a bare `+o` the re-input form (POSIX XCU set).
+    # Options: -a/allexport, -C/noclobber, -e/errexit, -u/nounset, -x/xtrace,
+    # -f/noglob, -v/verbose, pipefail.
     class Set < Base
       extend T::Sig
 
@@ -28,7 +30,15 @@ module Rush
 
       def apply: (String flag) -> void
 
+      # With a name, toggle that option; bare `set -o` prints the option
+      # table (format follows dash), bare `set +o` the lines that re-create
+      # the settings when re-input (POSIX XCU set).
       def apply_long: (String? sign, String? name) -> Integer
+
+      def toggle_long: (String? sign, String name) -> Integer
+
+      # Prints a listing and consumes just the bare -o/+o flag itself.
+      def print_lines: (Array[String] lines) -> Integer
 
       def toggle: (Symbol? option, String? sign) -> void
     end

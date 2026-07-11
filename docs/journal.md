@@ -1303,3 +1303,22 @@ re-parking idempotence — brought the full project to 96.49% (1031 alive), gate
 meta-lesson consolidated: with mutant in the toolchain, WHERE a behaviour is asserted
 matters as much as THAT it is asserted — every new class wants its own constant-keyed
 spec file from birth, and mixin ignores must name the module, not the includer.
+
+### Bare set -o / set +o: the settings listings land (rush-53j)
+Bare `set -o` now prints dash's "Current option settings" table (name ljust-16, then
+on/off) and bare `set +o` the `set -o name`/`set +o name` re-input form (POSIX XCU set:
+-o unspecified format — so dash's; +o must reproduce the settings on re-input). Both render
+from one NAMES vocabulary on Options in dash's listing order, including the invocation-only
+interactive/stdin flags dash also lists; their re-input lines are silently-ignored unknowns
+to set, so the round-trip stays lossless. Probed: dash accepts `set +o interactive` (rc 0),
+the +o round-trip restores flags through eval (`set -u; s=$(set +o); set +u; eval "$s"` puts
+u back in $-), both bare forms exit 0, and the name column is exactly 16 wide (cat -A). The
+corpus pins shared rows byte-exact via grep projections — full listings differ by design
+(dash lists 18 options, rush its 11) — plus the eval round-trip and rc lines. One quirk died
+on the way: bare trailing `-o` used to report "2 args consumed", walking the parse index past
+the end, where positionals() then emptied the parameters via args.drop — it now consumes
+itself and leaves them alone (dash agrees). Reek shaped the seam twice: ControlParameter
+pushed the -/+ branch into apply_long, where sign is dual-used like the toggle precedent,
+and RepeatedConditional (first on?(option) ×3, then the renamed block param — reek counts
+same-named locals across methods) dissolved once the render helper takes on_form/off_form
+format strings and picks between them exactly once.
