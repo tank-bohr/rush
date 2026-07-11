@@ -15,7 +15,10 @@ module Rush
       @executor = executor
       @state = executor.state
       @exiting = nil
-      @base = T.let({}, T::Hash[String, Proc])
+      @base = T.let(
+        {}, #: Hash[String, Proc]
+        T::Hash[String, Proc]
+      )
     end
 
     # The session's base dispositions (the interactive INT/QUIT/TERM handlers):

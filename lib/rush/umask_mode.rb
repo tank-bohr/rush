@@ -68,7 +68,7 @@ module Rush
 
     sig { params(clause: String).returns([T::Array[String], String]) }
     def split_who(clause)
-      who = []
+      who = [] #: Array[String]
       who.concat(expand_who(T.must(clause.slice!(0)))) while clause.start_with?(*WHO)
       [who.empty? ? CLASSES.keys : who.uniq, clause]
     end

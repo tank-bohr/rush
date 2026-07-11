@@ -1681,3 +1681,21 @@ shape both checkers narrow without casts), Registry/FunctionTable (58, two
 flat domain vocabularies; a generic base costs more than it saves), and
 PatternRemoval's strip_prefix/strip_suffix (32, the POSIX ${x#}/${x%} pair
 reads better symmetric). FLAY_THRESHOLD 906 -> 156.
+
+### The last silenced Steep diagnostic comes back on (rush-211.5.11)
+UnannotatedEmptyCollection was the one remaining Steepfile silence from the
+prototype bootstrap; enabling it costs exactly 7 annotations in 6 files. The
+finding worth keeping: an RBS ivar declaration hints a *bare* empty literal
+fine (`@jobs = {}` with `@jobs: Hash[Integer, Job]` in sig/ passes), but the
+`T.let` generic — shimmed as `[X] (X value, untyped) -> X` — severs that hint
+flow for empty hashes specifically, while empty arrays inside `T.let` sail
+through unflagged. Asymmetric, likely a Steep 2.0.0 quirk; if a later Steep
+starts flagging the `T.let([], ...)` sites too, the same idiom applies. The
+fix keeps both checkers at full precision rather than dropping `T.let` (which
+would leave Sorbet with an untyped hash): the four ivar sites take the
+number.rb dual-annotation idiom — `#:` on the literal for Steep, `T.let`
+around it for Sorbet — spread multiline so the assertion lands on the literal
+itself (a trailing `#:` after the whole `T.let(...)` call does *not* reach
+inside; measured). The three bare locals take a plain trailing `#:`. Steepfile
+now configures no diagnostics at all: one ignore (racc parser) is the whole
+remaining ledger.

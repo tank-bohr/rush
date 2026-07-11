@@ -20,7 +20,10 @@ module Rush
     sig { params(argv: T::Array[String]).void }
     def initialize(argv)
       @argv = argv
-      @settings = T.let({}, T::Hash[Symbol, T::Boolean])
+      @settings = T.let(
+        {}, #: Hash[Symbol, bool]
+        T::Hash[Symbol, T::Boolean]
+      )
       @command = T.let(false, T::Boolean)
       consume_clusters
       # `--` or the obsolescent lone `-` ends the options and is consumed

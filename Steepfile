@@ -17,11 +17,4 @@ target :lib do
   ignore 'lib/rush/parser.rb'                      # racc-generated; not hand-typed
 
   library 'etc', 'forwardable', 'strscan', 'tempfile'
-
-  # Empty `{}` / `[]` / kwargs literals can't be inferred while sig/ is still
-  # mostly untyped (prototype bootstrap); this is exactly the noise that the
-  # gradual tightening removes. Silenced for now, re-enabled as types land.
-  configure_code_diagnostics(Steep::Diagnostic::Ruby.default) do |config|
-    config[Steep::Diagnostic::Ruby::UnannotatedEmptyCollection] = nil
-  end
 end

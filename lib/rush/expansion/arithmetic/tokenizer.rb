@@ -29,7 +29,7 @@ module Rush
 
         sig { returns(T::Array[[Symbol, String]]) }
         def tokens
-          result = []
+          result = [] #: Array[[Symbol, String]]
           result << next_token while at_token?
           result
         end

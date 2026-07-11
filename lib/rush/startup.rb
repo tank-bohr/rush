@@ -30,7 +30,7 @@ module Rush
 
     sig { params(executor: Executor).returns(T::Array[String]) }
     def paths(executor)
-      paths = @login ? [PROFILE, home_profile(executor)] : []
+      paths = @login ? [PROFILE, home_profile(executor)] : [] #: Array[String?]
       paths << env_file(executor) if @interactive
       paths.compact
     end

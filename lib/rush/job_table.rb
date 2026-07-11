@@ -19,8 +19,14 @@ module Rush
     sig { params(system: SystemCalls).void }
     def initialize(system)
       @system = system
-      @jobs = T.let({}, T::Hash[Integer, Job])
-      @stash = T.let({}, T::Hash[Integer, Process::Status])
+      @jobs = T.let(
+        {}, #: Hash[Integer, Job]
+        T::Hash[Integer, Job]
+      )
+      @stash = T.let(
+        {}, #: Hash[Integer, Process::Status]
+        T::Hash[Integer, Process::Status]
+      )
       @control = T.let(Control.new, Control)
     end
 
