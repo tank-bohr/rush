@@ -35,11 +35,9 @@ module Rush
     sig { returns(String) }
     attr_reader :name
 
-    sig { returns(Integer) }
-    attr_reader :shell_pid
-
-    sig { returns(Integer) }
-    attr_reader :parent_pid
+    # $$ and PPID stay the original ids in forked children, like POSIX shells.
+    sig { returns(ShellProcessIds) }
+    attr_reader :pids
 
     sig { returns(ShellVariables) }
     attr_reader :variables
@@ -62,18 +60,17 @@ module Rush
     sig { returns(GetoptsState) }
     attr_reader :getopts
 
-    sig { returns(ShellParameters) }
-    attr_reader :parameters
-
-    # ShellState wires every shell sub-table; helper extraction would hide state.
+    # The one wiring point for every shell sub-table. Thirteen tables put the
+    # ABC size at ~18 from breadth alone — 13 assignments and 13 constructor
+    # sends, zero branches — and going lower would mean bundling namespaces
+    # POSIX keeps distinct (aliases are pre-parse substitution, not command
+    # search), so the disable stays as the measured wiring floor.
     # rubocop:disable Metrics/AbcSize
     sig { params(environment: Environment, name: String, positional: T::Array[String], pids: ShellProcessIds).void }
     def initialize(environment: Environment.new, name: 'rush', positional: [], pids: ShellProcessIds.new(0, 0))
       @name = name
-      @shell_pid = pids.shell
-      @parent_pid = pids.parent
+      @pids = pids
       @variables = ShellVariables.new(environment)
-      @variables.assign('PPID', @parent_pid.to_s)
       @traps = TrapTable.new
       @last_status = Status.success
       @last_background_pid = T.let(nil, T.nilable(Integer))
@@ -81,14 +78,18 @@ module Rush
       @options = Options.new
       @positional = Positional.new(positional)
       @getopts = GetoptsState.new
-      @variables.assign('OPTIND', '1')
-      @parameters = ShellParameters.new(self)
-      @function_frame = FunctionFrame.new(variables: @variables, loops: @loops, positional: @positional)
       @functions = FunctionTable.new
       @aliases = AliasTable.new
       @command_hash = {}
+      seed_variables
     end
     # rubocop:enable Metrics/AbcSize
+
+    # A stateless view over this state, built on demand like Executor#job_control.
+    sig { returns(ShellParameters) }
+    def parameters
+      ShellParameters.new(self)
+    end
 
     sig do
       type_parameters(:U)
@@ -96,7 +97,7 @@ module Rush
         .returns(T.type_parameter(:U))
     end
     def with_function_frame(args, &blk)
-      @function_frame.call(args, &blk)
+      FunctionFrame.new(variables: @variables, loops: @loops, positional: @positional).call(args, &blk)
     end
 
     sig do
@@ -146,6 +147,16 @@ module Rush
     sig { params(line: Integer).void }
     def record_lineno(line)
       @variables.update_lineno(line)
+    end
+
+    private
+
+    # The variables a POSIX shell is born with: PPID (2.5.3) and getopts'
+    # OPTIND, initialized to 1 at shell startup.
+    sig { void }
+    def seed_variables
+      @variables.assign('PPID', @pids.parent.to_s)
+      @variables.assign('OPTIND', '1')
     end
   end
 end

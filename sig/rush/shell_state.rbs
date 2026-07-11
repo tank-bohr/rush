@@ -20,8 +20,7 @@ module Rush
     extend T::Sig
 
     @name: String
-    @shell_pid: Integer
-    @parent_pid: Integer
+    @pids: ShellProcessIds
     @variables: ShellVariables
     @traps: TrapTable
     @last_status: Status
@@ -30,8 +29,6 @@ module Rush
     @options: Options
     @positional: Positional
     @getopts: GetoptsState
-    @parameters: ShellParameters
-    @function_frame: FunctionFrame
     @functions: FunctionTable
     @aliases: AliasTable
     @command_hash: Hash[String, String]
@@ -41,8 +38,8 @@ module Rush
     attr_reader aliases: AliasTable
     attr_reader command_hash: Hash[String, String]
     attr_reader name: String
-    attr_reader shell_pid: Integer
-    attr_reader parent_pid: Integer
+    # $$ and PPID stay the original ids in forked children, like POSIX shells.
+    attr_reader pids: ShellProcessIds
     attr_reader variables: ShellVariables
     attr_reader loops: LoopNesting
     attr_reader options: Options
@@ -50,9 +47,11 @@ module Rush
     attr_reader last_background_pid: Integer?
     attr_reader positional: Positional
     attr_reader getopts: GetoptsState
-    attr_reader parameters: ShellParameters
 
     def initialize: (?environment: Environment, ?name: String, ?positional: Array[String], ?pids: ShellProcessIds) -> void
+
+    # A stateless view over this state, built on demand like Executor#job_control.
+    def parameters: () -> ShellParameters
 
     def with_function_frame: [T] (Array[String] args) { () -> T } -> T
 
@@ -72,5 +71,11 @@ module Rush
     def record_background_pid: (Integer pid) -> Integer
 
     def record_lineno: (Integer line) -> void
+
+    private
+
+    # The variables a POSIX shell is born with: PPID (2.5.3) and getopts'
+    # OPTIND, initialized to 1 at shell startup.
+    def seed_variables: () -> void
   end
 end

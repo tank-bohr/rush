@@ -16,7 +16,7 @@ module Rush
 
     sig { params(parameter: String).returns(T.nilable(String)) }
     def resolve(parameter)
-      return @state.shell_pid.to_s if parameter == '$'
+      return @state.pids.shell.to_s if parameter == '$'
 
       special = special_parameters.fetch(parameter, nil)
       special ? special.call : ordinary_or_positional(parameter)

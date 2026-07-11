@@ -1569,3 +1569,21 @@ requires_argument?; the parser walks argv against it. Same file, third class:
 getopts_parser.rb is the getopts-parsing unit the way GetoptsErrorMode already
 established. The parser is well under the cap and the third ClassLength
 disable of four is gone.
+
+### The ShellState coordinator slims down; the AbcSize floor is measured, not assumed (rush-ujp)
+The double-guarded hotspot — the gate's only AbcSize disable AND the flog
+maximum at 25.9 against a 26.0 cap — came down by honest moves only: PPID and
+OPTIND seeding folded into one seed_variables step (the variables a POSIX shell
+is born with), ShellProcessIds stays whole behind a pids reader instead of
+being unpacked into two ivars ($$ readers follow the value object), and the two
+stateless views — ShellParameters and FunctionFrame — are built on demand the
+way Executor#job_control established, vanishing from the wiring entirely.
+AbcSize fell 24.08 -> 17.69 and flog 25.9 -> 19.3, which dethroned the method:
+the flog ratchet drops 26.0 -> 19.5 over the new maximum (TestExpr#evaluate,
+19.4). The last three AbcSize points were left on the table deliberately: 13
+tables wired with zero branches is ~18 from breadth alone, and going lower
+means bundling namespaces POSIX keeps distinct (aliases are pre-parse
+substitution, not command search — a "Definitions" composite would be
+metric-driven, not domain-driven). The disable stays with that arithmetic
+written next to it; the bead closes on the measured floor, not the wished-for
+zero.
