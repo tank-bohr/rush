@@ -1,0 +1,29 @@
+module Rush
+  # Translates one shell pattern into a POSIX extended regular expression. The
+  # libc regex engine supplies collation semantics Ruby does not expose.
+  class PosixPattern < PatternScanner
+    extend T::Sig
+
+    ERE_SPECIAL: Regexp
+    RUBY_GLOB_SPECIAL: Array[String]
+
+    @scanner: StringScanner
+    @source: String
+    @glob_source: String
+
+    attr_reader source: String
+    attr_reader glob_source: String
+
+    def initialize: (String pattern) -> void
+
+    private
+
+    def append_escape: () -> void
+    def append_wildcard: () -> void
+    def append_bracket: () -> void
+    def bracket_source: (BracketExpression bracket) -> String
+    def append_literal: () -> void
+    def append_discovery: (String char) -> void
+    def append_ere_literal: (String char) -> void
+  end
+end

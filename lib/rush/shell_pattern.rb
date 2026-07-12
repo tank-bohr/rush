@@ -1,13 +1,12 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'strscan'
-
 module Rush
   # A shell `case`/parameter/pathname pattern. Ruby handles ordinary patterns;
   # patterns containing POSIX bracket subforms are compiled to a Ruby regexp,
   # while #glob_source broadens those brackets for Dir.glob candidate discovery.
-  class ShellPattern
+  # :reek:InstanceVariableAssumption -- @scanner is initialized by PatternScanner#initialize
+  class ShellPattern < PatternScanner
     extend T::Sig
 
     sig { returns(String) }
@@ -15,11 +14,10 @@ module Rush
 
     sig { params(source: String).void }
     def initialize(source)
-      @scanner = StringScanner.new(source)
       @regexp = +''
       @glob_source = +''
       @extended = false
-      compile
+      super
     end
 
     sig { returns(T::Boolean) }
@@ -42,25 +40,6 @@ module Rush
     end
 
     private
-
-    sig { void }
-    def compile
-      step until @scanner.eos?
-    end
-
-    sig { void }
-    def step
-      return append_escape if current == '\\'
-      return append_wildcard if %w[* ?].include?(current)
-      return append_bracket if current == '['
-
-      append_literal
-    end
-
-    sig { returns(String) }
-    def current
-      @scanner.peek(1)
-    end
 
     sig { void }
     def append_escape

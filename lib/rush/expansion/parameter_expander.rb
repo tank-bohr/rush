@@ -171,7 +171,7 @@ module Rush
 
       sig { params(op: String).returns(String) }
       def strip(op)
-        PatternRemoval.new(@executor.system, op, value_text, pattern_arg).call
+        PatternRemoval.new(@executor, op, value_text, pattern_arg).call
       end
 
       sig { returns(String) }

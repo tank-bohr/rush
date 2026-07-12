@@ -31,7 +31,10 @@ module Rush
 
       sig { params(executor: Executor, item: CaseItem, subject: String).returns(T::Boolean) }
       def matches?(executor, item, subject)
-        item.patterns.any? { |pattern| executor.system.fnmatch?(executor.expander.expand_pattern(pattern), subject) }
+        item.patterns.any? do |pattern|
+          expanded = executor.expander.expand_pattern(pattern)
+          executor.system.fnmatch?(expanded, subject, locale: executor.state.variables.locale_settings)
+        end
       end
     end
   end

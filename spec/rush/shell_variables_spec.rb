@@ -13,6 +13,17 @@ RSpec.describe Rush::ShellVariables do
     expect(variables.assign('name', 'value')).to eq('value')
   end
 
+  it 'resolves locale categories through LC_ALL, the category, LANG and C' do
+    expect(variables.locale_settings).to eq(%w[C C])
+    variables.assign('LANG', 'lang')
+    variables.assign('LC_COLLATE', 'collate')
+    expect(variables.locale_settings).to eq(%w[collate lang])
+    variables.assign('LC_ALL', 'all')
+    expect(variables.locale_settings).to eq(%w[all all])
+    variables.assign('LC_ALL', '')
+    expect(variables.locale_settings).to eq(%w[collate lang])
+  end
+
   it 'starts with allexport off: a plain assign stays unexported' do
     variables.assign('N', '1')
     expect(variables.exported).not_to include('N' => '1')

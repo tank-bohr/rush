@@ -1,0 +1,16 @@
+module Rush
+  # Shared token dispatch/cursor for shell-pattern compilers.
+  class PatternScanner
+    extend T::Sig
+
+    HANDLERS: Hash[String, Symbol]
+    @scanner: StringScanner
+
+    def initialize: (String pattern) -> void
+
+    private
+
+    def scan: () -> void
+    def step: () -> void
+  end
+end

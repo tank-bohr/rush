@@ -9,9 +9,9 @@ module Rush
     class PatternRemoval
       extend T::Sig
 
-      sig { params(system: SystemCalls, op: String, value: String, pattern: String).void }
-      def initialize(system, op, value, pattern)
-        @system = system
+      sig { params(executor: Executor, op: String, value: String, pattern: String).void }
+      def initialize(executor, op, value, pattern)
+        @executor = executor
         @op = op
         @value = value
         @pattern = pattern
@@ -55,7 +55,8 @@ module Rush
 
       sig { params(part: String).returns(T::Boolean) }
       def match?(part)
-        @system.fnmatch?(@pattern, part)
+        locale = @executor.state.variables.locale_settings
+        @executor.system.fnmatch?(@pattern, part, locale: locale)
       end
     end
   end

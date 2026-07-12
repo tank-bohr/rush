@@ -2,9 +2,10 @@
 
 RSpec.describe Rush::Expansion::PatternRemoval do
   let(:system) { FakeSystemCalls.new }
+  let(:executor) { Rush::Executor.new(system: system, state: Rush::ShellState.new) }
 
   def strip(op, value, pattern)
-    described_class.new(system, op, value, pattern).call
+    described_class.new(executor, op, value, pattern).call
   end
 
   it 'removes the smallest and largest matching prefix' do

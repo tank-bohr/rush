@@ -6,7 +6,7 @@ module Rush
     class PatternRemoval
       extend T::Sig
 
-      @system: SystemCalls
+      @executor: Executor
 
       @op: String
 
@@ -14,7 +14,7 @@ module Rush
 
       @pattern: String
 
-      def initialize: (SystemCalls system, String op, String value, String pattern) -> void
+      def initialize: (Executor executor, String op, String value, String pattern) -> void
 
       def call: () -> String
 

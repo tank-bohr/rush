@@ -240,12 +240,12 @@ RSpec.describe Rush::SystemCalls do
   end
 
   it 'expands an ordinary glob pattern through Dir.glob' do
-    allow(Dir).to receive(:glob).with('*.rb').and_return(['a.rb'])
+    allow(Dir).to receive(:glob).with('*.rb', sort: false).and_return(['a.rb'])
     expect(system.glob('*.rb')).to eq(['a.rb'])
   end
 
   it 'widens POSIX brackets for glob discovery and filters the candidates' do
-    allow(Dir).to receive(:glob).with('file?').and_return(%w[file1 filea filex])
+    allow(Dir).to receive(:glob).with('file*', sort: false).and_return(%w[file1 filea filex])
 
     expect([system.glob('file[[:digit:]]'), system.glob('file[[=a=]]'), system.glob('file[[.x.]]')])
       .to eq([['file1'], ['filea'], ['filex']])

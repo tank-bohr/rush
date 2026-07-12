@@ -11,9 +11,10 @@ ENV BUNDLE_PATH=/bundle \
     GEM_HOME=/bundle \
     DEBIAN_FRONTEND=noninteractive
 
-# procps supplies ps for the job-control pty smoke's pgid/tpgid probes.
+# procps supplies ps for the job-control pty smoke's pgid/tpgid probes; locales
+# supplies localedef + cs_CZ source for the tailored LC_COLLATE gate.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential ca-certificates curl git procps \
+    && apt-get install -y --no-install-recommends build-essential ca-certificates curl git locales procps \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /bundle /work /tmp/rush-home \
     && chmod 0777 /bundle /work /tmp/rush-home

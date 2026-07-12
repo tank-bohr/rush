@@ -1,0 +1,20 @@
+module Rush
+  # Normalizes shell-escaped bracket members for POSIX ERE syntax.
+  class EscapedBracket
+    extend T::Sig
+
+    SPECIAL: Array[String]
+    @negated: bool
+    @body: String
+    @literals: Hash[String, String]
+
+    def initialize: (String source) -> void
+    def source: () -> String
+
+    private
+
+    def prefix: () -> String
+    def literal: (String char) -> String
+    def extract: (String char) -> void
+  end
+end

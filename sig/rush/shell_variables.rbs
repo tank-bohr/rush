@@ -22,6 +22,11 @@ module Rush
 
     def allexport=: (bool enabled) -> void
 
+    def locale_settings: () -> Array[String]
+
+    # Effective locale name for a category (LC_ALL > category > LANG > C).
+    def locale: (String category) -> String
+
     def assign: (String name, String value) -> String
 
     def validate_assignment: (String name) -> void

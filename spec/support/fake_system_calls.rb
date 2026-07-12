@@ -103,7 +103,7 @@ class FakeSystemCalls
 
   # Configured matches for a pattern; unconfigured patterns match nothing, so
   # ordinary words pass through as literals (mirroring no-match behaviour).
-  def glob(pattern)
+  def glob(pattern, **_options)
     @globs.fetch(pattern, [])
   end
 
@@ -246,7 +246,7 @@ class FakeSystemCalls
     File.expand_path(path, base)
   end
 
-  def fnmatch?(pattern, str)
+  def fnmatch?(pattern, str, **_options)
     Rush::ShellPattern.new(pattern).match?(str)
   end
 

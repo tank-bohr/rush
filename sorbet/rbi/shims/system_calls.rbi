@@ -50,11 +50,11 @@ module Rush
     sig { params(path: String, base: String).returns(String) }
     def expand_path(path, base); end
 
-    sig { params(pattern: String, str: String).returns(T::Boolean) }
-    def fnmatch(pattern, str); end
+    sig { params(pattern: String, str: String, locale: T::Array[String]).returns(T::Boolean) }
+    def fnmatch?(pattern, str, locale: T.unsafe(nil)); end
 
-    sig { params(pattern: String).returns(T::Array[String]) }
-    def glob(pattern); end
+    sig { params(pattern: String, locale: T::Array[String]).returns(T::Array[String]) }
+    def glob(pattern, locale: T.unsafe(nil)); end
 
     sig { params(path: String, mode: T.any(String, Integer)).returns(File) }
     def open_file(path, mode); end

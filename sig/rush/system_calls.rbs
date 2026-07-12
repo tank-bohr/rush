@@ -7,6 +7,8 @@ module Rush
     include ProcessIdentity
     include ProcessControl
 
+    COLLATION: Collation
+
     # Run `file` as an external program with argv.first as the child's argv[0]
     # — for the ordinary $PATH search the caller passes the bare command name
     # as `file`; `command -p` passes its default-PATH resolution instead,
@@ -71,12 +73,12 @@ module Rush
 
     def expand_path: (String path, String base) -> String
 
-    def fnmatch?: (String pattern, String str) -> bool
+    def fnmatch?: (String pattern, String str, ?locale: Array[String]) -> bool
 
     # Pathname expansion: sorted matches for a glob pattern (backslash escapes
     # are honoured; a leading dot is matched only by an explicit dot). Empty
     # when nothing matches.
-    def glob: (String pattern) -> Array[String]
+    def glob: (String pattern, ?locale: Array[String]) -> Array[String]
 
     # Sync so a builtin's write reaches the file immediately — like a pipe write
     # end (sync by default), this lets a forked subshell's output survive its

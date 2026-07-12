@@ -2,7 +2,7 @@ module Rush
   # A shell `case`/parameter/pathname pattern. Ruby handles ordinary patterns;
   # patterns containing POSIX bracket subforms are compiled to a Ruby regexp,
   # while #glob_source broadens those brackets for Dir.glob candidate discovery.
-  class ShellPattern
+  class ShellPattern < PatternScanner
     extend T::Sig
 
     @scanner: StringScanner
@@ -19,9 +19,6 @@ module Rush
 
     private
 
-    def compile: () -> void
-    def step: () -> void
-    def current: () -> String
     def append_escape: () -> void
     def append_wildcard: () -> void
     def append_bracket: () -> void

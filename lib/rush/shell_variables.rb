@@ -29,6 +29,19 @@ module Rush
       @allexport = enabled == true
     end
 
+    sig { returns(T::Array[String]) }
+    def locale_settings
+      %w[LC_COLLATE LC_CTYPE].map { |category| locale(category) }
+    end
+
+    # The locale name for one category: a non-empty LC_ALL overrides the
+    # category-specific variable, then LANG, with the POSIX locale as default.
+    sig { params(category: String).returns(String) }
+    def locale(category)
+      names = ['LC_ALL', category, 'LANG']
+      names.filter_map { |name| get(name) }.reject(&:empty?).first || 'C'
+    end
+
     sig { params(name: String, value: String).returns(String) }
     def assign(name, value)
       @environment.assign(name, value)

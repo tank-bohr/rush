@@ -20,7 +20,8 @@ module Rush
       def expand(field)
         return [unescape(field)] if @executor.state.options.on?(:noglob)
 
-        matches = @executor.system.glob(field)
+        locale = @executor.state.variables.locale_settings
+        matches = @executor.system.glob(field, locale: locale)
         matches.empty? ? [unescape(field)] : matches
       end
 

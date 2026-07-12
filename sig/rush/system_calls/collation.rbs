@@ -1,0 +1,37 @@
+module Rush
+  class SystemCalls
+    # Optional Linux/glibc bridge for POSIX locale matching and ordering.
+    class Collation
+      extend T::Sig
+
+      LC_CTYPE: Integer
+      LC_COLLATE: Integer
+      REG_EXTENDED: Integer
+      REGEX_BYTES: Integer
+      MUTEX: Thread::Mutex
+      SIGNATURES: Hash[Symbol, untyped]
+
+      @functions: Hash[Symbol, untyped]
+
+      def initialize: () -> void
+      def available?: () -> bool
+      def match_shell?: (String pattern, String text, Array[String] settings) { () -> bool } -> bool
+      def glob: (String pattern, Array[String] settings) { () -> Array[String] } -> Array[String]
+      def default_settings: () -> Array[String]
+      def match?: (String regex, String text, Array[String] settings) -> bool
+      def compare: (String left, String right, Array[String] settings) -> Integer
+
+      private
+
+      def candidates: (String pattern) -> Array[String]
+      def locale_value: (String category) -> String
+      def load_functions: () -> Hash[Symbol, untyped]
+      def native_function: (untyped handle, Symbol name, untyped signature) -> untyped
+      def call: (Symbol name, *untyped args) -> untyped
+      def compiled: (String regex) { (untyped pointer) -> bool } -> bool
+      def free_after: (untyped pointer) { (untyped pointer) -> bool } -> bool
+      def activate: (Array[String] settings) -> void
+      def install: (Integer category, String requested) -> String
+    end
+  end
+end

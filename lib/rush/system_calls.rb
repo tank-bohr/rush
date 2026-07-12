@@ -5,6 +5,7 @@ require 'etc'
 require 'reline'
 require 'tempfile'
 require_relative 'system_calls/file_tests'
+require_relative 'system_calls/collation'
 require_relative 'system_calls/process_identity'
 require_relative 'system_calls/process_control'
 require_relative 'system_calls/resource_limits'
@@ -18,6 +19,8 @@ module Rush
     include ProcessIdentity
     include ProcessControl
     include ResourceLimits
+
+    COLLATION = Collation.new
 
     # Run `file` as an external program with argv.first as the child's argv[0]
     # — for the ordinary $PATH search the caller passes the bare command name
@@ -113,17 +116,16 @@ module Rush
       File.expand_path(path, base)
     end
 
-    def fnmatch?(pattern, str)
-      ShellPattern.new(pattern).match?(str)
+    def fnmatch?(pattern, str, locale: COLLATION.default_settings)
+      COLLATION.match_shell?(pattern, str, locale) { ShellPattern.new(pattern).match?(str) }
     end
 
-    # Pathname expansion: Dir.glob discovers candidates from a version whose
-    # POSIX bracket subforms are widened to `?`; ShellPattern then filters them
-    # with the full class/equivalence/collating semantics. Dir keeps ownership
-    # of traversal, dot-file rules and sorting.
-    def glob(pattern)
-      shell_pattern = ShellPattern.new(pattern)
-      Dir.glob(shell_pattern.glob_source).grep(shell_pattern)
+    # Pathname expansion: libc filters widened Dir.glob candidates and orders
+    # exact matches by LC_COLLATE; unsupported libcs retain the Ruby fallback.
+    def glob(pattern, locale: COLLATION.default_settings)
+      COLLATION.glob(pattern, locale) do
+        ShellPattern.new(pattern).then { |shell_pattern| Dir.glob(shell_pattern.glob_source).grep(shell_pattern) }
+      end
     end
 
     # Sync so a builtin's write reaches the file immediately — like a pipe write

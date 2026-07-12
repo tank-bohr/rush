@@ -30,6 +30,9 @@ Gem::Specification.new do |spec|
 
   # racc provides BOTH the `racc` compiler (dev/build) and the `racc/parser`
   # runtime that the generated parser requires, so a single dependency covers both.
+  # Ruby 4 moved Fiddle out of the default gems; the optional glibc collation
+  # bridge still needs it available at runtime even when Bundler isolates gems.
+  spec.add_dependency 'fiddle', '~> 1.1'
   spec.add_dependency 'racc', '~> 1.7', '>= 1.7.3'
   spec.add_dependency 'reline', '~> 0.6'
 

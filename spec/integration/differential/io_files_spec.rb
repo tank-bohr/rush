@@ -198,16 +198,17 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
   def glob_patterns
     ['echo *', 'echo *.txt', 'echo *.md', 'echo ?.txt', 'echo [ab].txt',
      'echo [!a].txt', 'echo [[:alpha:]].txt', 'echo [![:digit:]].txt',
-     'echo file[[:digit:]]', 'echo sub/*', 'echo */*.txt', 'echo "*"', "echo '*'",
-     'echo z*', 'set -f; echo *.txt', 'echo *.txt *.log', 'echo [a.txt',
+     'echo file[[:digit:]]', 'echo sub/*', 'echo */*.txt', 'echo **/*.txt', 'echo [a]*/*.txt',
+     'echo {a,b}*', 'echo "*"', "echo '*'", 'echo z*', 'set -f; echo *.txt',
+     'echo *.txt *.log', 'echo [a.txt',
      'echo a"*"', 'for f in *.txt; do echo "$f"; done', 'set -- *.txt; echo $#']
   end
 
   it 'expands pathname patterns the same as dash' do
     Dir.mktmpdir do |dir|
-      %w[a.txt b.txt c.log file1 file2].each { |f| FileUtils.touch(File.join(dir, f)) }
-      Dir.mkdir(File.join(dir, 'sub'))
-      FileUtils.touch(File.join(dir, 'sub', 'x.txt'))
+      %w[a.txt b.txt c.log file1 file2 {a,b}x].each { |f| FileUtils.touch(File.join(dir, f)) }
+      %w[sub/deep a/deep].each { |path| FileUtils.mkdir_p(File.join(dir, path)) }
+      %w[sub/x.txt sub/deep/y.txt a/x.txt a/deep/y.txt].each { |path| FileUtils.touch(File.join(dir, path)) }
       glob_patterns.each.with_index(1) do |pattern, index|
         id = format('glob-%03d', index)
         source = "cd #{dir}; #{pattern}"

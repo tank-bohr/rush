@@ -2240,3 +2240,43 @@ spellings/user symlinks to `/dev/fd`, another process inspecting rush's `/proc/.
 and opening fd paths as redirection *targets* still observe the interpreter process.
 Those require either equivalent resolution at their own seam or the parked real-fd
 migration; none is needed to close the standard test/[ primaries named by this bead.
+
+### glibc's regex engine supplies the locale tables Ruby cannot (rush-no1.15)
+The one-character BracketExpression compiler remains the portable fallback, but the
+production Linux/glibc path now delegates complete bracket semantics to libc. A small
+Fiddle bridge translates shell wildcards to an anchored POSIX ERE and calls regcomp /
+regexec: unlike glibc fnmatch (probed and found incomplete here), the regex engine
+actually consumes Czech `ch` as `[[.ch.]]`, expands `[[=a=]]` to the locale's primary
+weight class, and orders ranges by LC_COLLATE. `strcoll` supplies pathname ordering,
+with a bytewise tie-break when two names collate equally. Ruby 4 moved Fiddle out of
+the default gems, so it is an explicit runtime dependency rather than an accidental
+stdlib assumption.
+
+Pathname discovery stays Ruby-owned without under-approximating native matches:
+PosixPattern emits a second source that widens *every* bracket to `*` (not the old
+one-character `?`), Dir.glob owns traversal/slash/symlink/leading-dot rules, libc
+filters the candidates with the exact ERE, and strcoll sorts the survivors. This also
+handles a multi-character collating element without binding the ABI-sensitive glob_t
+structure. Case, parameter removal and pathname expansion all pass the current shell
+locale settings; non-exported runtime assignments are live. Selection is POSIX's
+non-empty `LC_ALL` > category (`LC_COLLATE`/`LC_CTYPE`) > `LANG` > `C`, and an invalid
+locale falls back to C instead of leaving a stale prior locale active.
+
+The native bridge is deliberately capability-gated by glibc's identifying symbol and
+binds only setlocale/regcomp/regexec/regfree/strcoll; unsupported libcs keep the
+existing Ruby matcher and its documented POSIX-locale subset. Because setlocale is
+process-global, every native operation re-installs its requested categories under one
+shared mutex — no per-instance cache can go stale after another adapter changes libc.
+regex_t is opaque, so the bridge allocates a conservatively oversized buffer only behind
+that glibc gate and always regfree's a successfully compiled pattern. This is the honest portability
+contract: locale-complete on tested glibc, safe fallback elsewhere, not a false claim
+that Ruby exposes portable collation tables.
+
+The tailored test builds `cs_CZ` with localedef in an isolated subprocess and pins all
+four missing dimensions: `[[.ch.]]` consumes `ch`, `[[=a=]]` includes `á`, `[a-c]`
+uses locale order, and glob results sort `h, ch, i`. It exercises case, parameter
+removal and real pathname expansion, including switching from C to the tailored
+locale through an unexported shell assignment. dash 0.5.13.4 fails these tailored
+forms; POSIX XBD/XCU is explicit, so this is a recorded standard-over-oracle case.
+On glibc the test requires localedef rather than silently skipping; the Docker gate
+installs the `locales` package so the defining proof is part of that controlled image.
