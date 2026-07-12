@@ -82,6 +82,15 @@ RSpec.describe Rush::Builtins::Test do
     expect([test('-t', '0'), test('-t', '27'), test('-t', '-1')]).to all(satisfy { |s| s.exitstatus == 1 })
   end
 
+  it 'tests the stream a shell redirection logically binds to the descriptor' do
+    system.mark_tty(1)
+    Tempfile.create('rush-test-fd') do |file|
+      redirected = io.with(1, file)
+      status = described_class.new(executor, ['test', '-t', '1'], redirected).call
+      expect(status.exitstatus).to eq(1)
+    end
+  end
+
   it 'accepts blank-padded and signed -t operands, like dash' do
     system.mark_tty(1)
     expect([test('-t', ' 1'), test('-t', '+1'), test('-t', '1 ')]).to all(be_success)

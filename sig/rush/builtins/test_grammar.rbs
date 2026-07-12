@@ -18,13 +18,13 @@ module Rush
     class TestGrammar
       @args: Array[String]
 
-      @files: SystemCalls
+      @context: TestContext
 
       @tokens: TestTokens
 
       @pos: Integer
 
-      def initialize: (Array[String] args, SystemCalls files) -> void
+      def initialize: (Array[String] args, TestContext context) -> void
 
       def truth: () -> bool
 

@@ -19,6 +19,8 @@ module Rush
     def close: () -> untyped
 
     def flush: () -> untyped
+
+    def fileno: () -> Integer?
   end
 
   # Maps file descriptors to fd entries for a single command. Redirections fold

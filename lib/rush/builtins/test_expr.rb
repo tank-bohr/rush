@@ -19,9 +19,9 @@ module Rush
     # `!` form as the negated three-argument test, so rush negates honestly.
     # Pinned in the unit specs.
     class TestExpr
-      def initialize(args, files)
+      def initialize(args, context)
         @args = args
-        @files = files
+        @context = context
       end
 
       def true?
@@ -67,7 +67,7 @@ module Rush
       end
 
       def grammar(args)
-        TestGrammar.new(args, @files).truth
+        TestGrammar.new(args, @context).truth
       end
     end
   end

@@ -52,6 +52,23 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
     end
   end
 
+  fd_test_corpus = [
+    '[ -c /dev/stdin ] </dev/null; echo $?',
+    '[ -c /dev/stdout ] >/dev/null; echo $?',
+    'echo x | { [ -p /dev/stdin ]; echo $?; }',
+    'echo x | { [ -c /dev/stdin ] </dev/null; echo $?; }',
+    'exec 3</dev/null; [ -c /dev/fd/3 ]; echo $?',
+    '[ -e /dev/stdin ] <&-; echo $?',
+    '[ ! -t 1 ] >&-; echo $?',
+    '{ [ -c /dev/fd/5 ]; echo $?; } 5</dev/null'
+  ].freeze
+
+  fd_test_corpus.each do |source|
+    it "matches dash for fd-facing test primary: #{source}" do
+      expect(rush(source)).to eq(dash(source))
+    end
+  end
+
   it 'sources a file the same as dash' do
     Tempfile.create(['rush_src', '.sh']) do |file|
       file.write("greet() { echo \"hi $1\"; }\nVALUE=42\n")

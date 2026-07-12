@@ -34,7 +34,8 @@ module Rush
 
       sig { params(ops: T::Array[String]).returns(Status) }
       def evaluate(ops)
-        TestExpr.new(ops, executor.system).true? ? success : failure
+        context = TestContext.new(executor.system, FdOperand.new(io))
+        TestExpr.new(ops, context).true? ? success : failure
       end
 
       sig { params(message: String).returns(Status) }

@@ -19,9 +19,9 @@ module Rush
     # connective parses as the missing expression, which is false, so
     # `[ x -o ]` is true and `[ x -a ]` is false, exactly as in dash.
     class TestGrammar
-      def initialize(args, files)
+      def initialize(args, context)
         @args = args
-        @files = files
+        @context = context
         @tokens = TestTokens.new(args)
         @pos = 0
       end
@@ -91,7 +91,7 @@ module Rush
       # demoted to a plain operand by TestTokens, never classified :unop.
       def unary
         op = current
-        TestOperators.unary(op).call(@files, @args.fetch(@pos += 1))
+        @context.unary(op, @args.fetch(@pos += 1))
       end
 
       # A word primary: a binary comparison when a binary primary follows,

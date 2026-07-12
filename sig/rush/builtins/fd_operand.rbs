@@ -1,0 +1,36 @@
+module Rush
+  module Builtins
+    # Resolves test/[ operands that name shell file descriptors through the
+    # command's logical IoTable. A redirected File/pipe/tty has a real fileno;
+    # rewriting to it lets the kernel answer as if the shell had applied dup2.
+    class FdOperand
+      extend T::Sig
+
+      PATH_OPERATORS: Array[String]
+      STANDARD_PATHS: ::Hash[String, Integer]
+      FD_PATH: Regexp
+      CLOSED_PATH: String
+      CLOSED_DESCRIPTOR: String
+
+      @io: IoTable
+
+      def initialize: (IoTable io) -> void
+
+      def resolve: (String operator, String operand) -> String
+
+      private
+
+      def descriptor: (String operand) -> String
+
+      def path: (String operand) -> String
+
+      def rewrite: (Integer fd, String original, String closed) { (Integer fileno) -> String } -> String
+
+      def replacement: (FdEntry entry, String original) { (Integer fileno) -> String } -> String
+
+      def path_fd: (String operand) -> Integer?
+
+      def integer: (String text) -> Integer?
+    end
+  end
+end

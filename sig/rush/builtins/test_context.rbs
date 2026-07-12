@@ -1,0 +1,16 @@
+module Rush
+  module Builtins
+    # The impure inputs to one test/[ evaluation: the filesystem port plus the
+    # resolver that projects shell-level fd bindings onto unary operands.
+    class TestContext
+      extend T::Sig
+
+      @files: SystemCalls
+      @fd_operand: FdOperand
+
+      def initialize: (SystemCalls files, FdOperand fd_operand) -> void
+
+      def unary: (String operator, String operand) -> bool
+    end
+  end
+end

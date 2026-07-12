@@ -2215,3 +2215,28 @@ A skipped entry returns the existing status without re-recording it.
 POSIX permits `-n` to be ignored by an interactive shell; rush takes that permission and
 keeps execution live whenever the interactive option is set. Non-interactive invocation,
 runtime, async and syntax-error cases are pinned against dash in the differential corpus.
+
+### fd-facing `test` operands resolve through IoTable without a real-fd rewrite (rush-no1.11)
+The concrete redirection blindness did not meet pipeline-fd.md's threshold for reopening
+the fd-number migration. Every production IoTable stream that matters here — redirect
+File, pipe end, tty — already has a real `fileno`. `FdOperand` rewrites `-t N` to that
+fileno and rewrites `/dev/std{in,out,err}`, `/dev/fd/N` and `/proc/self/fd/N` to
+`/dev/fd/<stream.fileno>` before the existing test operator calls SystemCalls. The
+kernel then answers tty, type, permission, size and mode-bit predicates exactly as it
+would after dup2, while the StringIO fake has no fileno and retains its canned unit-test
+answers. An explicitly closed logical entry becomes `-1` for `-t` and a nonexistent fd
+path for file primaries.
+
+The rewrite sits at TestGrammar's one unary-application seam and receives the builtin's
+post-redirection IoTable, so an inner redirect outranks a pipeline binding. `-h`/`-L`
+are intentionally excluded: they lstat the literal `/dev/fd` symlink itself, not its
+bound target. Signed/blank-padded `-t` numbers retain the existing dash-compatible
+number grammar before resolution. Differential coverage includes pipe stdin, an inner
+`</dev/null`, closed descriptors, arbitrary fd 5 and persistent exec fd 3; a pty probe
+confirms `[ -t 1 ]` changes from true to false under `>/dev/null` exactly like dash.
+
+This is deliberately an operand seam, not universal fd virtualization. Noncanonical
+spellings/user symlinks to `/dev/fd`, another process inspecting rush's `/proc/.../fd`,
+and opening fd paths as redirection *targets* still observe the interpreter process.
+Those require either equivalent resolution at their own seam or the parked real-fd
+migration; none is needed to close the standard test/[ primaries named by this bead.

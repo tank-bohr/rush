@@ -18,9 +18,9 @@ module Rush
     class TestExpr
       @args: Array[String]
 
-      @files: SystemCalls
+      @context: TestContext
 
-      def initialize: (Array[String] args, SystemCalls files) -> void
+      def initialize: (Array[String] args, TestContext context) -> void
 
       def true?: () -> bool
 
