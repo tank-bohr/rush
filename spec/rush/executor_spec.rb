@@ -46,6 +46,23 @@ RSpec.describe Rush::Executor do
     expect(target.last_status.exitstatus).to eq(1)
   end
 
+  it 'skips synchronous and asynchronous execution under noexec' do
+    target = state
+    target.options.set(:noexec, true)
+    executor = build(target)
+    executor.run(command('echo sync'))
+    executor.run_async(command('echo async'))
+    expect([system.stdout.string, target.last_status.exitstatus, target.last_background_pid]).to eq(['', 0, nil])
+  end
+
+  it 'ignores noexec in an interactive shell as POSIX permits' do
+    target = state
+    target.options.set(:noexec, true)
+    target.options.set(:interactive, true)
+    build(target).run(command('echo yes'))
+    expect(system.stdout.string).to eq("yes\n")
+  end
+
   it 'records launch success and $! when running a node asynchronously' do
     target = state
     executor = build(target)

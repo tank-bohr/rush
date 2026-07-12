@@ -23,6 +23,9 @@ RSpec.describe 'rush vs dash (differential invocation corpus)' do
     [['-o', 'errexit', '-c', 'echo [$-]'], nil],
     [['-e', '+e', '-c', 'echo [$-]; false; echo after'], nil],
     [['-e', '-c', 'false; echo after'], nil],
+    [['-n', '-c', 'echo hidden'], nil],
+    [['+n', '-c', 'echo visible'], nil],
+    [['-n', '-c', 'echo hidden; if'], nil],
     [['-u', '-c', 'echo $nope; echo after'], nil],
     [['-c'], nil],
     [['-q', '-c', 'echo hi'], nil]

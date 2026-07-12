@@ -5,8 +5,8 @@ module Rush
     # replace the positional parameters. With no operands the parameters are left
     # unchanged; an unknown option is ignored. A bare trailing `-o` writes the
     # current settings table, a bare `+o` the re-input form (POSIX XCU set).
-    # Options: -a/allexport, -C/noclobber, -e/errexit, -u/nounset, -x/xtrace,
-    # -f/noglob, -v/verbose, pipefail.
+    # Options: -a/allexport, -C/noclobber, -e/errexit, -n/noexec, -u/nounset,
+    # -x/xtrace, -f/noglob, -v/verbose, pipefail.
     class Set < Base
       extend T::Sig
 

@@ -60,6 +60,11 @@ RSpec.describe 'rush vs dash (differential execution/control corpus)' do
     'set -o pipefail; set +o | grep pipefail',
     'set -u; s=$(set +o); set +u; eval "$s"; echo "u:$-"',
     'set -o >/dev/null; set +o >/dev/null; echo rc=$?',
+    # noexec starts after the set builtin succeeds and suppresses every later
+    # command, including async launch and an already-installed EXIT trap.
+    'echo before; set -n; echo after; false &',
+    'set -o noexec; echo after; set +n; echo still-after',
+    "trap 'echo exit' 0; set -n; echo after",
     # set -x prefixes each trace line with the expanded PS4 (default '+ ';
     # parameter expansion happens per trace line, so $? reflects the moment
     # of tracing). Trace goes to stderr — outside the [stdout,exitstatus]

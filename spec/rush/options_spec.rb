@@ -11,7 +11,7 @@ RSpec.describe Rush::Options do
     it 'renders every option off, in dash order and column format, by default' do
       expect(options.settings_rows).to eq(
         ['errexit         off', 'noglob          off', 'interactive     off',
-         'monitor         off', 'stdin           off', 'xtrace          off',
+         'monitor         off', 'noexec          off', 'stdin           off', 'xtrace          off',
          'verbose         off', 'noclobber       off', 'allexport       off',
          'nounset         off', 'pipefail        off']
       )

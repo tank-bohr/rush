@@ -2196,3 +2196,22 @@ check, matching dash.
 The split/input machinery is deliberately untouched. Focused probes and the differential
 corpus cover repeated, clustered, terminated and unknown-option forms against dash on
 `[stdout, exitstatus]`.
+
+### Noexec is an executor policy, not a parser shortcut (rush-no1.6)
+`n`/`noexec` joins the shared option vocabulary, so invocation clusters, `set -n`,
+`set -o noexec`, listings and `$-` all use one state bit. The execution guard lives at
+both Executor entry points (`run` and `run_async`): ProgramReader still parses every
+complete command and therefore still diagnoses syntax errors, but skipped commands do
+not expand words, redirect, fork, install traps or change `$?`. Guarding `run_async`
+separately matters when `set -n` turns the option on halfway through an AST::List that
+was already entered; a later `cmd &` otherwise bypasses the synchronous choke point.
+
+This location also covers startup files, function/compound bodies, eval/dot text and
+trap bodies without duplicating policy in their readers. `set -n` itself runs while the
+bit is off; every later command, including `set +n`, is only parsed, so the script cannot
+turn execution back on. A pre-installed EXIT trap is likewise suppressed, matching dash.
+A skipped entry returns the existing status without re-recording it.
+
+POSIX permits `-n` to be ignored by an interactive shell; rush takes that permission and
+keeps execution live whenever the interactive option is set. Non-interactive invocation,
+runtime, async and syntax-error cases are pinned against dash in the differential corpus.

@@ -3,7 +3,7 @@
 
 module Rush
   # The shell options toggled by `set -[+]o name` / `set -[+]x` and friends
-  # (:errexit, :nounset, :xtrace, :noglob, :verbose, :pipefail), plus the
+  # (:errexit, :nounset, :noexec, :xtrace, :noglob, :verbose, :pipefail), plus the
   # invocation-only :interactive (-i) and :stdin (-s) flags: the set of those
   # currently on, with #set to flip one, #on? to query it, #letters to
   # render $-, and the bare `set -o`/`set +o` listings. The letter/name
@@ -12,11 +12,12 @@ module Rush
     extend T::Sig
 
     LETTERS = { 'a' => :allexport, 'C' => :noclobber, 'e' => :errexit, 'u' => :nounset,
-                'x' => :xtrace, 'f' => :noglob, 'v' => :verbose, 'm' => :monitor }.freeze
+                'x' => :xtrace, 'f' => :noglob, 'v' => :verbose, 'm' => :monitor,
+                'n' => :noexec }.freeze
     # Every long name in dash's listing order — the bare `set -o`/`set +o`
     # output shows the invocation-only flags too, like dash does.
     NAMES = { 'errexit' => :errexit, 'noglob' => :noglob, 'interactive' => :interactive,
-              'monitor' => :monitor, 'stdin' => :stdin, 'xtrace' => :xtrace,
+              'monitor' => :monitor, 'noexec' => :noexec, 'stdin' => :stdin, 'xtrace' => :xtrace,
               'verbose' => :verbose, 'noclobber' => :noclobber, 'allexport' => :allexport,
               'nounset' => :nounset, 'pipefail' => :pipefail }.freeze
     # The names `set -o name` accepts: everything listable minus the flags
@@ -25,7 +26,7 @@ module Rush
     # $- renders enabled flags in dash's order (its option list, reversed), so
     # differential corpus lines printing $- compare equal against the oracle.
     DASH_ORDER = T.let([[:nounset, 'u'], [:allexport, 'a'], [:noclobber, 'C'], [:verbose, 'v'],
-                        [:xtrace, 'x'], [:stdin, 's'], [:monitor, 'm'], [:interactive, 'i'],
+                        [:xtrace, 'x'], [:stdin, 's'], [:noexec, 'n'], [:monitor, 'm'], [:interactive, 'i'],
                         [:noglob, 'f'], [:errexit, 'e']].freeze, T::Array[[Symbol, String]])
 
     sig { void }

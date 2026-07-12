@@ -1,6 +1,6 @@
 module Rush
   # The shell options toggled by `set -[+]o name` / `set -[+]x` and friends
-  # (:errexit, :nounset, :xtrace, :noglob, :verbose, :pipefail), plus the
+  # (:errexit, :nounset, :noexec, :xtrace, :noglob, :verbose, :pipefail), plus the
   # invocation-only :interactive (-i) and :stdin (-s) flags: the set of those
   # currently on, with #set to flip one, #on? to query it, #letters to
   # render $-, and the bare `set -o`/`set +o` listings. The letter/name

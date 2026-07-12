@@ -200,6 +200,12 @@ RSpec.describe Rush::Invocation do
       expect(system.stdout.string).to eq('')
     end
 
+    it 'wires -n so a batch is parsed without execution' do
+      system = FakeSystemCalls.new
+      status = invocation(['-n', '-c', 'echo unreached'], system: system).session.run
+      expect([system.stdout.string, status]).to eq(['', 0])
+    end
+
     it 'runs the login profiles before the program' do
       system = FakeSystemCalls.new
       system.provide_file('/etc/profile', "echo prof\n")

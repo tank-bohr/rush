@@ -66,16 +66,27 @@ module Rush
     end
 
     # A redirect that fails at runtime (n>&m to a fd that is not open) leaves the
-    # command unrun with status 2; the shell carries on (RedirectError).
+    # command unrun with status 2; the shell carries on (RedirectError). Noexec
+    # still parses every program but suppresses its execution in batch shells;
+    # POSIX permits an interactive shell to ignore -n, which rush does.
     sig { params(node: AST::Node).returns(Status) }
     def run(node)
+      return @state.last_status if noexec?
+
       @state.record_status(node.execute(self))
     rescue RedirectError
       @state.record_status(Status.new(2))
     end
 
+    sig { returns(T::Boolean) }
+    def noexec?
+      @state.options.on?(:noexec) && !@state.options.on?(:interactive)
+    end
+
     sig { params(node: AST::Node).returns(Status) }
     def run_async(node)
+      return @state.last_status if noexec?
+
       @state.record_status(BackgroundRunner.new(self, node).call)
     end
 
