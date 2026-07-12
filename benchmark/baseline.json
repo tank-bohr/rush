@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "generated_at": "2026-07-12T13:12:07Z",
+  "revision": "2026846-dirty",
+  "ruby": "ruby 4.0.5 (2026-05-20 revision 64336ffd0e) +PRISM [x86_64-linux]",
+  "platform": "x86_64-linux",
+  "host": "xoma-desktop",
+  "os": "Linux 7.1.3-zen1-2-zen x86_64",
+  "cpu": "11th Gen Intel(R) Core(TM) i9-11900K @ 3.50GHz",
+  "rush_source_sha256": "2c18b656d504d8f89083f911dbc762622a02e10a32ed008451380597c6923368",
+  "samples": 5,
+  "warmups": 1,
+  "timeout": 30.0,
+  "sorbet_runtime_default_checked_level": "default",
+  "cases": {
+    "startup": {
+      "description": "parse and execute a no-op",
+      "iterations": 1,
+      "source_sha256": "e7ac0786668e0ff0f02b62bd04f45ff636fd82db63b1104601c975dc005f3a67",
+      "targets": {
+        "rush": {
+          "median_ms": 130.552587,
+          "min_ms": 126.558706,
+          "max_ms": 131.498178,
+          "samples_ms": [
+            130.552587,
+            131.498178,
+            126.558706,
+            130.726778,
+            128.33227
+          ]
+        },
+        "dash": {
+          "median_ms": 0.525792,
+          "min_ms": 0.490281,
+          "max_ms": 0.600659,
+          "samples_ms": [
+            0.600659,
+            0.525792,
+            0.549533,
+            0.51301,
+            0.490281
+          ]
+        }
+      }
+    },
+    "while_arithmetic": {
+      "description": "10,000 while/test/arithmetic increments",
+      "iterations": 10000,
+      "source_sha256": "32f259eec5cae844b051c80653105bfb0ac6ecb54359a2dca044312b72f3a4f7",
+      "targets": {
+        "rush": {
+          "median_ms": 3950.08697,
+          "min_ms": 3934.565922,
+          "max_ms": 3956.642078,
+          "samples_ms": [
+            3956.642078,
+            3945.578734,
+            3953.037994,
+            3950.08697,
+            3934.565922
+          ]
+        },
+        "dash": {
+          "median_ms": 6.570012,
+          "min_ms": 6.508757,
+          "max_ms": 6.639562,
+          "samples_ms": [
+            6.590015,
+            6.570012,
+            6.531796,
+            6.639562,
+            6.508757
+          ]
+        }
+      }
+    },
+    "expansion_heavy": {
+      "description": "2,000 command-free parameter expansion rounds",
+      "iterations": 2000,
+      "source_sha256": "084a54a04f6a83372e13cc8a85e79b5929f73e18d040cdced16a01bafdccdb90",
+      "targets": {
+        "rush": {
+          "median_ms": 2772.893618,
+          "min_ms": 2758.54172,
+          "max_ms": 2834.148962,
+          "samples_ms": [
+            2787.074228,
+            2759.170108,
+            2834.148962,
+            2758.54172,
+            2772.893618
+          ]
+        },
+        "dash": {
+          "median_ms": 3.96485,
+          "min_ms": 3.889557,
+          "max_ms": 5.715655,
+          "samples_ms": [
+            3.96485,
+            4.090762,
+            3.889557,
+            3.890617,
+            5.715655
+          ]
+        }
+      }
+    }
+  }
+}

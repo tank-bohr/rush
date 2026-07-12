@@ -29,6 +29,8 @@ to eight file shards. SimpleCov merges all shard results before enforcing covera
 bundle exec rake                  # the fast parallel full green gate
 RUSH_GATE_SERIAL=1 bundle exec rake # serial/debug fallback
 bundle exec rake check_parser_drift # explicit generated-parser audit when needed
+bundle exec rake benchmark        # opt-in startup/loop/expansion performance suite
+bundle exec rake benchmark:check  # opt-in comparison with committed host baseline
 exe/rush -c '<program>'           # run rush
 dash  -c '<program>'              # the oracle to diff against
 ```

@@ -49,6 +49,9 @@ bundle exec rake compile          # regenerate lib/rush/parser.rb from grammar/s
 bundle exec rake check_parser_drift # explicit generated-parser drift audit
 bundle exec rspec                 # serial tests + SimpleCov guardrail
 bundle exec rake docker:test      # opt-in Docker gate + syscall smoke
+bundle exec rake benchmark        # opt-in startup/loop/expansion timing suite
+bundle exec rake benchmark:check  # compare rush medians with benchmark/baseline.json
+bundle exec rake benchmark:record # explicitly replace that host-specific baseline
 bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
 bundle exec rake 'mutant:check[Rush*,95.0]'      # on-demand mutation score threshold
 echo 'echo hi; exit 2' | bundle exec ruby -Ilib exe/rush
@@ -62,6 +65,16 @@ The image checksum-pins dash 0.5.13.4 so the differential oracle matches the
 native development oracle instead of Debian slim's older dash. The gate is
 intentionally opt-in: the host shell limits are not mutated, but Docker's own
 cgroup, capability, and `--ulimit` ceilings still bound what the container can do.
+
+The benchmark task runs fixed shell workloads in fresh subprocesses with a monotonic
+clock, reporting rush and dash medians plus raw JSON samples. Rush is launched without
+Bundler injection (using the bundle's runtime gem load paths), so startup approximates
+an installed executable rather than `bundle exec` overhead. The committed baseline is
+informational until `benchmark:check` is explicitly requested; that task allows 1.5× by
+default (`RUSH_BENCH_TOLERANCE`) because wall time is host-specific; it rejects a
+different host/CPU/Ruby/Sorbet context or fewer samples instead of comparing unlike runs.
+Sample, warmup and per-process timeout values use `RUSH_BENCH_SAMPLES`,
+`RUSH_BENCH_WARMUPS`, and `RUSH_BENCH_TIMEOUT`; `DASH` overrides the reference binary.
 
 Coverage policy: rush targets 100% meaningful coverage, but SimpleCov cannot observe every
 fork/exec path a shell must exercise. The configured thresholds are intentionally relaxed so

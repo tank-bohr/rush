@@ -2315,3 +2315,39 @@ checkout, without committing machine-specific runtime logs. The finished gate me
 six seconds while increasing aggregate user CPU from ~247s to ~345s. Full-gate concurrency
 raises aggregate CPU (~293s versus ~219s serial) but keeps the per-slice latency win honest;
 `RUSH_SPEC_PROCESSES` is the resource-control knob.
+
+### Performance gets a repeatable measuring stick before optimization (rush-lh7.1)
+The earlier performance numbers were useful warnings but not experiments: the shell text,
+invocation mode, sample count and machine were not pinned. The new opt-in benchmark suite
+keeps those variables explicit. It times fresh subprocesses with CLOCK_MONOTONIC, discards
+one warmup, retains five raw samples, and reports the median/min/max for three fixed workloads:
+a no-op startup, 10,000 while/test/arithmetic increments, and 2,000 rounds of command-free
+parameter expansion. Before timing, an unmeasured smoke run checks both empty output and the
+workload's terminal assertion (`i=10000` / the final expanded value), so a loop skipped by a
+broken shell cannot become a fast result. Every child also has a configurable 30s timeout.
+dash runs beside rush as context, never as a timing gate.
+
+Startup needed an honest boundary. Running the harness under `bundle exec rake` normally
+injects `bundler/setup` into every child through RUBYOPT and measures Bundler more than rush.
+The rush target therefore removes that injection and supplies the installed runtime gems'
+load paths explicitly; it approximates an installed executable while still using the exact
+bundle under test. `SORBET_RUNTIME_DEFAULT_CHECKED_LEVEL` remains visible and is recorded,
+which makes the next profiling/runtime-policy slice directly comparable rather than requiring
+a second ad-hoc script.
+
+The first committed baseline (Ruby 4.0.5, x86_64 Linux, i9-11900K, default Sorbet runtime
+checks, five samples after one warmup) measured median rush/dash milliseconds as follows:
+startup **130.553 / 0.526**, while+arithmetic **3950.087 / 6.570**, and expansion-heavy
+**2772.894 / 3.965**. The earlier ~2.9s loop observation is not rewritten; the pinned workload
+now makes the current ~4.0s number reproducible and future changes attributable.
+
+`rake benchmark` is report-only and remains outside the full gate. JSON schema 1 records the
+workload descriptions/counts/hashes, Ruby/OS/CPU/host/revision, an exact digest of all rush
+runtime source, Sorbet setting, aggregates and raw samples in `benchmark/baseline.json`. The
+source digest makes a baseline from a dirty pre-commit tree attributable even though no commit
+hash can name that tree yet. Only an explicit `rake benchmark:check` turns the rush medians into
+regression pins, with a deliberately broad 1.5x host-local tolerance; it refuses a different
+machine/runtime/Sorbet context, a lower sample/warmup count, or changed workload before comparing.
+dash and cross-machine absolute timings are too noisy to pretend otherwise. `benchmark:record`
+is the explicit baseline replacement path; sample/warmup/timeout/tolerance knobs support longer
+investigations without changing the canonical workloads.

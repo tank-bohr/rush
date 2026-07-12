@@ -8,6 +8,7 @@ require 'rubocop/rake_task'
 load 'tasks/compile.rake'
 load 'tasks/docker.rake'
 load 'tasks/complexity.rake'
+load 'tasks/benchmark_suite.rake'
 
 RSpec::Core::RakeTask.new(:spec)
 RuboCop::RakeTask.new(:rubocop)
