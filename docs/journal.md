@@ -2381,3 +2381,27 @@ under `tmp/`; the same runtime-check switch reproduces checked mode. The committ
 baseline now names the effective policy as well as the lower-level Sorbet environment. YJIT
 could not be evaluated on this Ruby build (`ruby --yjit` reports that it was built without YJIT
 support), so no speculative YJIT claim is folded into this measured policy.
+
+### Literal argv fields bypass pathname discovery (rush-33e)
+The unchecked loop profile exposed a semantic no-op on the hottest argv boundary: every field,
+including command names, decimal operands and literal paths, entered locale setup, pathname-pattern
+compilation and Dir.glob before falling back to itself. Quote provenance is already encoded at
+that boundary as backslash shielding, so GlobExpander can decide cheaply from the final field
+without moving pathname policy upstream. Its shield-aware pre-scan skips escaped bytes, treats unescaped
+`*`/`?` as active, and treats `[` as active only when a later unescaped `]` can close it. That last
+condition matters disproportionately because the canonical loop invokes the `[` builtin 10,001
+times; conservatively treating every bare `[` as a pattern retained nearly the whole glob cost.
+A malformed bracket with no closer is necessarily literal, while any uncertain closed form still
+takes the established ShellPattern/Dir.glob path. Actual patterns therefore retain POSIX bracket,
+locale, leading-dot, slash, sorting and no-match semantics unchanged.
+
+The same-host, runtime-checks-off five-sample medians moved from **132.206 / 1869.339 /
+1447.719ms** to **126.661 / 1116.898 / 1250.244ms** for startup / while-arithmetic /
+expansion-heavy: startup improved 4.2%, while the loop improved **40.3%** and the expansion
+workload **13.6%**. The paired 1ms StackProf loop fell from 1,814 to 1,055 samples.
+Before, Dir.glob had 196 self samples (10.8%), GlobExpander was on 594 stacks (32.7%), and
+PatternScanner appeared on 199 stacks (11.0%); afterward neither Dir.glob nor PatternScanner
+appeared anywhere in the profile. Focused spy specs prove that literal, empty, slash-containing,
+quoted/escaped and unclosed-bracket fields do not call the glob seam, while wildcard, closed
+bracket, escaped-bracket and no-match cases still do. The differential filesystem corpus covers
+those boundaries plus dotfiles and nested paths against dash.

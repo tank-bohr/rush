@@ -196,9 +196,11 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
   # Lowercase-only names keep byte-order sorting (rush) and LC_COLLATE sorting
   # (dash) in agreement, so these compare without forcing a locale.
   def glob_patterns
-    ['echo *', 'echo *.txt', 'echo *.md', 'echo ?.txt', 'echo [ab].txt',
+    ['printf "<%s>\\n" literal sub/x.txt ""',
+     'printf "<%s>\\n" "*" "?" "[ab]" \\* \\? \\[ab\\]',
+     'echo *', 'echo *.txt', 'echo *.md', 'echo ?.txt', 'echo [ab].txt',
      'echo [!a].txt', 'echo [[:alpha:]].txt', 'echo [![:digit:]].txt',
-     'echo file[[:digit:]]', 'echo sub/*', 'echo */*.txt', 'echo **/*.txt', 'echo [a]*/*.txt',
+     'echo file[[:digit:]]', 'echo .h*', 'echo sub/*', 'echo */*.txt', 'echo **/*.txt', 'echo [a]*/*.txt',
      'echo {a,b}*', 'echo "*"', "echo '*'", 'echo z*', 'set -f; echo *.txt',
      'echo *.txt *.log', 'echo [a.txt',
      'echo a"*"', 'for f in *.txt; do echo "$f"; done', 'set -- *.txt; echo $#']
@@ -206,7 +208,7 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
 
   it 'expands pathname patterns the same as dash' do
     Dir.mktmpdir do |dir|
-      %w[a.txt b.txt c.log file1 file2 {a,b}x].each { |f| FileUtils.touch(File.join(dir, f)) }
+      %w[a.txt b.txt c.log file1 file2 {a,b}x .hidden].each { |f| FileUtils.touch(File.join(dir, f)) }
       %w[sub/deep a/deep].each { |path| FileUtils.mkdir_p(File.join(dir, path)) }
       %w[sub/x.txt sub/deep/y.txt a/x.txt a/deep/y.txt].each { |path| FileUtils.touch(File.join(dir, path)) }
       glob_patterns.each.with_index(1) do |pattern, index|

@@ -11,6 +11,8 @@ module Rush
     class GlobExpander
       extend T::Sig
 
+      PATHNAME_PATTERN = /(?<!\\)(?:\\\\)*(?:[*?]|\[(?:\\.|[^\\\]])*\])/
+
       sig { params(executor: Executor).void }
       def initialize(executor)
         @executor = executor
@@ -18,7 +20,7 @@ module Rush
 
       sig { params(field: String).returns(T::Array[String]) }
       def expand(field)
-        return [unescape(field)] if @executor.state.options.on?(:noglob)
+        return [unescape(field)] if @executor.state.options.on?(:noglob) || !pathname_pattern?(field)
 
         locale = @executor.state.variables.locale_settings
         matches = @executor.system.glob(field, locale: locale)
@@ -27,9 +29,14 @@ module Rush
 
       private
 
+      sig { params(field: String).returns(T::Boolean) }
+      def pathname_pattern?(field)
+        field.match?(PATHNAME_PATTERN)
+      end
+
       sig { params(field: String).returns(String) }
       def unescape(field)
-        field.gsub(/\\(.)/, '\1')
+        field.include?('\\') ? field.gsub(/\\(.)/, '\1') : field
       end
     end
   end

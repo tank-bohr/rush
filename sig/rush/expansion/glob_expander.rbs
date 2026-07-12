@@ -8,6 +8,8 @@ module Rush
     class GlobExpander
       extend T::Sig
 
+      PATHNAME_PATTERN: Regexp
+
       @executor: Executor
 
       def initialize: (Executor executor) -> void
@@ -15,6 +17,8 @@ module Rush
       def expand: (String field) -> Array[String]
 
       private
+
+      def pathname_pattern?: (String field) -> bool
 
       def unescape: (String field) -> String
     end

@@ -145,6 +145,14 @@ RSpec.describe Rush::Expansion::Pipeline do
     it 'globs an unquoted pattern but leaves a quoted one literal' do
       expect([pipeline.expand(star(false)), pipeline.expand(star(true))]).to eq([%w[x y], ['*']])
     end
+
+    it 'finds an unquoted wildcard after a quoted wildcard in the same field' do
+      system = FakeSystemCalls.new(globs: { '\\**' => ['*tail'] })
+      pipeline = described_class.new(Rush::Executor.new(system: system, state: state))
+      word = Rush::AST::Word.new([lit('*', quoted: true), lit('*')])
+
+      expect(pipeline.expand([word])).to eq(['*tail'])
+    end
   end
 
   describe '$* expansion' do
