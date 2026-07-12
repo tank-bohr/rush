@@ -2,6 +2,9 @@
 # typed: true
 # frozen_string_literal: true
 
+require_relative '../lib/rush/runtime_type_checks'
+
+Rush::RuntimeTypeChecks.configure
 require_relative '../lib/rush'
 
 exit Rush::CLI.run(ARGV)

@@ -17,6 +17,10 @@ module T
                    | () { () -> untyped } -> untyped
   end
 
+  module Configuration
+    def self.default_checked_level=: (Symbol level) -> Symbol
+  end
+
   module Private
     # Sorbet's proc type builder, used as a value inside sig {} blocks.
     class ProcBuilder

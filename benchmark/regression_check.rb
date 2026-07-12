@@ -7,7 +7,9 @@ module RushBench
   # stays report-only: it is useful context, not a stable timing denominator.
   class RegressionCheck
     SUPPORTED_SCHEMA = 1
-    CONTEXT_KEYS = %w[ruby platform host os cpu sorbet_runtime_default_checked_level].freeze
+    CONTEXT_KEYS = %w[
+      ruby platform host os cpu rush_runtime_typechecks sorbet_runtime_default_checked_level_env
+    ].freeze
     DEFINITION_KEYS = %w[description iterations source_sha256].freeze
 
     def initialize(current, baseline, tolerance: 1.5)

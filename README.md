@@ -52,6 +52,7 @@ bundle exec rake docker:test      # opt-in Docker gate + syscall smoke
 bundle exec rake benchmark        # opt-in startup/loop/expansion timing suite
 bundle exec rake benchmark:check  # compare rush medians with benchmark/baseline.json
 bundle exec rake benchmark:record # explicitly replace that host-specific baseline
+bundle exec rake benchmark:profile # StackProf the 10k loop (writes under tmp/)
 bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
 bundle exec rake 'mutant:check[Rush*,95.0]'      # on-demand mutation score threshold
 echo 'echo hi; exit 2' | bundle exec ruby -Ilib exe/rush
@@ -75,6 +76,12 @@ default (`RUSH_BENCH_TOLERANCE`) because wall time is host-specific; it rejects 
 different host/CPU/Ruby/Sorbet context or fewer samples instead of comparing unlike runs.
 Sample, warmup and per-process timeout values use `RUSH_BENCH_SAMPLES`,
 `RUSH_BENCH_WARMUPS`, and `RUSH_BENCH_TIMEOUT`; `DASH` overrides the reference binary.
+
+The executable disables Sorbet's runtime method wrappers before loading rush; Steep and
+Sorbet static checking, plus runtime validation in specs/library use, remain unchanged.
+Set `RUSH_RUNTIME_TYPECHECKS=1` to restore production call validation for diagnostics.
+The same switch selects checked mode for `benchmark` and `benchmark:profile`, making the
+runtime-policy cost directly reproducible.
 
 Coverage policy: rush targets 100% meaningful coverage, but SimpleCov cannot observe every
 fork/exec path a shell must exercise. The configured thresholds are intentionally relaxed so

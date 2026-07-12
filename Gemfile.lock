@@ -169,6 +169,7 @@ GEM
       sorbet-static (= 0.6.13320)
     sorbet-runtime (0.6.13320)
     sorbet-static (0.6.13320-x86_64-linux)
+    stackprof (0.2.28)
     steep (2.0.0)
       concurrent-ruby (>= 1.1.10)
       csv (>= 3.0.9)
@@ -217,6 +218,7 @@ DEPENDENCIES
   rush!
   simplecov (~> 0.22)
   sorbet (~> 0.5)
+  stackprof (~> 0.2)
   steep (~> 2.0)
 
 CHECKSUMS
@@ -287,6 +289,7 @@ CHECKSUMS
   sorbet (0.6.13320) sha256=f4042a8e8a2799e6d84c84870c36a08f2880e4705f8aafd3349b79b9b0e2098f
   sorbet-runtime (0.6.13320) sha256=3c62e36f3b5a903ac28ff8f1cc6b3ffb82eccf49f6179ad11476a7942982b233
   sorbet-static (0.6.13320-x86_64-linux) sha256=5d2b67bfa2061615e1495efbbd733a96107b1f43edd4c0679246b3f2f18f8837
+  stackprof (0.2.28) sha256=4ec2ace02f386012b40ca20ef80c030ad711831f59511da12e83b34efb0f9a04
   steep (2.0.0) sha256=6eb0ecc09637bbb54f0a5f2cf63daea6d3208ccace64b4f1107d976333605c30
   strscan (3.1.8) sha256=aae2db611a225559f21ffbb71765c9a4e60fd262534a9ea84f4f11c7f32f679e
   terminal-table (4.0.0) sha256=f504793203f8251b2ea7c7068333053f0beeea26093ec9962e62ea79f94301d2

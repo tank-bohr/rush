@@ -1,0 +1,5 @@
+module Rush
+  module RuntimeTypeChecks
+    def self.configure: () -> void
+  end
+end

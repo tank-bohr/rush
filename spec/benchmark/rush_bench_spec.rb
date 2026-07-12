@@ -111,6 +111,6 @@ RSpec.describe RushBench do
 
   def report_context
     { 'ruby' => 'ruby', 'platform' => 'platform', 'host' => 'host', 'os' => 'os', 'cpu' => 'cpu',
-      'sorbet_runtime_default_checked_level' => 'default' }
+      'rush_runtime_typechecks' => 'disabled', 'sorbet_runtime_default_checked_level_env' => 'unset' }
   end
 end

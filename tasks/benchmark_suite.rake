@@ -21,4 +21,12 @@ namespace :benchmark do
   task record: :compile do
     sh(*BENCHMARK_RUNNER, '--json', BENCHMARK_BASELINE)
   end
+
+  desc 'Profile the 10k loop with StackProf (set RUSH_RUNTIME_TYPECHECKS=1 for checked mode)'
+  task profile: :compile do
+    policy = ENV['RUSH_RUNTIME_TYPECHECKS'] == '1' ? 'checked' : 'unchecked'
+    dump = "tmp/stackprof-while-#{policy}.dump"
+    sh Gem.ruby, 'benchmark/profile.rb', dump
+    sh Gem.ruby, Gem.bin_path('stackprof', 'stackprof'), dump, '--text', '--limit', '20'
+  end
 end

@@ -2331,9 +2331,9 @@ Startup needed an honest boundary. Running the harness under `bundle exec rake` 
 injects `bundler/setup` into every child through RUBYOPT and measures Bundler more than rush.
 The rush target therefore removes that injection and supplies the installed runtime gems'
 load paths explicitly; it approximates an installed executable while still using the exact
-bundle under test. `SORBET_RUNTIME_DEFAULT_CHECKED_LEVEL` remains visible and is recorded,
-which makes the next profiling/runtime-policy slice directly comparable rather than requiring
-a second ad-hoc script.
+bundle under test. The effective executable policy and any lower-level
+`SORBET_RUNTIME_DEFAULT_CHECKED_LEVEL` override remain visible in the report, which makes the
+next profiling/runtime-policy slice directly comparable rather than requiring another script.
 
 The first committed baseline (Ruby 4.0.5, x86_64 Linux, i9-11900K, default Sorbet runtime
 checks, five samples after one warmup) measured median rush/dash milliseconds as follows:
@@ -2351,3 +2351,33 @@ machine/runtime/Sorbet context, a lower sample/warmup count, or changed workload
 dash and cross-machine absolute timings are too noisy to pretend otherwise. `benchmark:record`
 is the explicit baseline replacement path; sample/warmup/timeout/tolerance knobs support longer
 investigations without changing the canonical workloads.
+
+### Runtime sig wrappers belong in diagnostics, not the production hot loop (rush-lh7.2)
+StackProf turned the earlier 2x suspicion into a call-stack explanation. On the canonical
+10,000-iteration loop with call validation enabled, a 1ms wall profile collected 3,919 samples;
+3,772 (96.2% total) passed through `UnboundMethod#bind_call`, with Sorbet's generated medium/fast
+validator frames covering 82–89% of the run. The same profile with wrappers disabled collected
+1,707 samples and the validator frames disappeared; the top real costs became glob discovery,
+field/pattern expansion and scanning. The 2.30x sample-count ratio agrees with the subprocess
+benchmark rather than merely correlating with it.
+
+The like-for-like five-sample baseline moved from **130.553 / 3950.087 / 2772.894ms**
+(startup / while-arithmetic / expansion-heavy, runtime checks on) to
+**124.553 / 1771.277 / 1351.353ms** with checks off: startup improves only 5%, while the two
+interpreter workloads improve **2.23x** and **2.05x**. This is a dispatch-wide tax, not one
+badly shaped rush method, so a bespoke lean validator would duplicate Sorbet internals while
+still charging every call. The policy decision is therefore default-off in the executable.
+
+`exe/rush` now loads a tiny configurator before any rush sig block can evaluate and sets
+Sorbet's default checked level to `:never`; `RUSH_RUNTIME_TYPECHECKS=1` selects `:always` for a
+diagnostic process. Library consumers and RSpec never call the production configurator, so
+runtime validation there remains on, and both static gates still inspect the same `typed: true`
+source plus RBS. The configurator itself deliberately has no inline runtime sig: an initial
+version wrapped `configure`, causing that very sig to evaluate before its body and making
+Sorbet reject the too-late default-level change. It remains statically checked by both systems.
+
+`rake benchmark:profile` makes the StackProf experiment repeatable and writes ignored dumps
+under `tmp/`; the same runtime-check switch reproduces checked mode. The committed benchmark
+baseline now names the effective policy as well as the lower-level Sorbet environment. YJIT
+could not be evaluated on this Ruby build (`ruby --yjit` reports that it was built without YJIT
+support), so no speculative YJIT claim is folded into this measured policy.
