@@ -20,13 +20,21 @@ module Rush
       sig { returns(T::Array[AST::WordSegment[T.untyped]]) }
       def expand
         head = @segments.first
-        text = head&.literal_value
-        return @segments unless text
+        return @segments unless head
 
-        [head.with_value(rewrite(text))] + @segments.drop(1)
+        text = head.literal_value
+        text ? replace_head(head, text) : @segments
       end
 
       private
+
+      sig { params(head: AST::WordSegment[T.untyped], text: String).returns(T::Array[AST::WordSegment[T.untyped]]) }
+      def replace_head(head, text)
+        rewritten = rewrite(text)
+        return @segments if rewritten == text
+
+        @segments.dup.tap { |segments| segments[0] = head.with_value(rewritten) }
+      end
 
       sig { params(text: String).returns(String) }
       def rewrite(text)
@@ -65,7 +73,14 @@ module Rush
 
       sig { params(text: String).returns(String) }
       def rewrite(text)
+        return text unless expandable?(text)
+
         text.split(':', -1).map { |piece| prefix(piece) }.join(':')
+      end
+
+      sig { params(text: String).returns(T::Boolean) }
+      def expandable?(text)
+        text.start_with?('~') || text.include?(':~')
       end
     end
 

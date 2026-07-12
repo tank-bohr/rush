@@ -14,13 +14,16 @@ module Rush
 
       def initialize: (Executor executor) -> void
 
-      def expand: (String field) -> Array[String]
+      def append: (IfsScanner::Field field, Array[String] expanded) -> void
 
       private
 
-      def pathname_pattern?: (String field) -> bool
+      def expandable?: (String pattern) -> bool
 
-      def unescape: (String field) -> String
+      def matches: (String pattern) -> Array[String]
+
+      def append_matches: (IfsScanner::Field field, Array[String] expanded, Array[String] matches) -> void
+
     end
   end
 end

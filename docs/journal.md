@@ -2405,3 +2405,49 @@ appeared anywhere in the profile. Focused spy specs prove that literal, empty, s
 quoted/escaped and unclosed-bracket fields do not call the glob seam, while wildcard, closed
 bracket, escaped-bracket and no-match cases still do. The differential filesystem corpus covers
 those boundaries plus dotfiles and nested paths against dash.
+
+### Expansion becomes an append pipeline; the profiler catches three semantic debts (rush-9zz)
+The next unchecked profiles made the allocation target concrete rather than stylistic. Before the
+change, `Enumerable#flat_map` appeared on **55.4% / 77.5% of CPU stacks**, **58.2% / 74.6% of
+wall stacks**, and **84.3% / 88.9% of sampled allocation stacks** for while-arithmetic /
+expansion-heavy. The chain was exactly what those stacks suggested: words flat-mapped fields,
+fields flat-mapped glob results, segments flat-mapped singleton `WordSegment#field_parts` arrays,
+then quote shielding mapped every tuple again; `IfsScanner#result` built `@done + [@current]` and
+mapped it back to strings. This was not one algorithm to merge — the POSIX stages remain separate —
+but one result array can flow through them. `WordSegment#append_field_parts`, Pipeline's append
+helpers and `GlobExpander#append` now write into caller-owned sinks; scalar collapse/pattern
+rendering use string accumulators; IfsScanner returns its already-allocated Field objects; default
+IFS delimiter sets are shared and custom sets partition once; no-op tilde expansion returns the
+original segment array. `flat_map` disappears from every after profile (the residual project-wide
+`each_with_object` is 0.4% of the allocation sample, outside this path).
+
+Making the field object cross the split→glob boundary exposed why the old intermediate string was
+not merely wasteful. Pipeline encoded quoted glob characters as backslashes, then GlobExpander
+removed *every* backslash on fallback, so a real backslash produced by `$x` or `$(...)` was lost
+(`x='\q'; set -- $x` became `q`) and `\*` lost its pattern-quoting meaning. Field now retains
+literal text and lazily constructs a distinct shielded pattern only when quoted source requires it;
+no-match/noglob returns the literal text untouched. One oracle divergence is intentional: with a
+pathname `[x]` present, dash expands a dynamic `\[x]` to it while bash --posix preserves the
+backslash; rush retains its shield-aware rule from rush-33e, because an escaped `[` does not open a
+pattern bracket. A focused no-glob spy pins that standard-aligned side. Two adjacent
+ordering/empty-field debts fell out of the required matrix as well: IFS had been read before `${IFS:=:}` in the current word ran, and
+unquoted empty `$@` elements were retained under whitespace IFS. IFS is now sampled after each
+word's segment expansion, and the forced `$@` boundary follows the first IFS character: a leading
+IFS whitespace character drops an unreal empty, while a leading non-whitespace character (or null
+IFS) retains it. Ten new differential cases cover both mixed-IFS orders, IFS mutation/default/null,
+quoted and unquoted empty `$@`, `$*`'s existing matrix,
+backslashes from parameter/command substitution, arithmetic splitting and quoted/unquoted glob
+interaction; all 448 language cases match dash.
+
+The measurement surface now reproduces the evidence: `benchmark:profile` emits CPU, wall and
+object StackProf dumps for both interpreter workloads, and `benchmark:allocations` reports five raw
+`GC.stat(:total_allocated_objects)` samples plus the median after a warmup. A conservative
+reverse-order comparison (after tree first, baseline HEAD second), with both suites pinned to CPU 3,
+moved startup / while / expansion five-sample medians from **128.892 / 1167.720 / 1298.771ms** to
+**132.800 / 1104.721 / 1266.324ms**: the loops improve **5.4% / 2.5%**, while startup's **3.0%**
+movement is within the host noise this subprocess benchmark already documents. Exact median
+allocations fall from **3,931,347 / 3,063,543** to
+**2,671,084 / 2,665,289**, reductions of **32.1% / 13.0%**. The after CPU/wall/object profiles
+contain no `flat_map`; the expansion-heavy profile's new dominant cost is glibc collation through
+Fiddle for parameter-removal patterns, a different algorithmic boundary rather than hidden
+collection churn.

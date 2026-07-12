@@ -18,6 +18,8 @@ module Rush
 
       private
 
+      def replace_head: (AST::WordSegment[untyped] head, String text) -> Array[AST::WordSegment[untyped]]
+
       def rewrite: (String text) -> String
 
       def prefix: (String text) -> String
@@ -35,6 +37,8 @@ module Rush
       private
 
       def rewrite: (String text) -> String
+
+      def expandable?: (String text) -> bool
     end
 
     # Tilde expansion disabled (e.g. arithmetic operands): segments pass through.

@@ -11,11 +11,17 @@ module Rush
       extend T::Sig
 
       WHITESPACE = " \t\n"
+      DEFAULT_CHARS = WHITESPACE.chars.freeze
+      NO_CHARS = T.let(
+        [], #: Array[String]
+        T::Array[String]
+      ).freeze
 
       sig { params(ifs: T.nilable(String)).void }
       def initialize(ifs)
         @ifs = ifs
-        @chars = (ifs || WHITESPACE).chars.uniq
+        @chars = ifs ? ifs.chars.uniq.freeze : DEFAULT_CHARS
+        @whitespace, @others = delimiter_sets
       end
 
       sig { returns(T::Boolean) }
@@ -24,13 +30,11 @@ module Rush
       end
 
       sig { returns(T::Array[String]) }
-      def whitespace
-        @chars.select { |char| WHITESPACE.include?(char) }
-      end
+      attr_reader :whitespace, :others
 
-      sig { returns(T::Array[String]) }
-      def others
-        @chars.reject { |char| WHITESPACE.include?(char) }
+      sig { returns(T::Boolean) }
+      def preserve_empty_splat?
+        @chars.first == @others.first
       end
 
       sig { params(char: String).returns(T::Boolean) }
@@ -41,6 +45,17 @@ module Rush
       sig { params(char: String).returns(T::Boolean) }
       def other?(char)
         !!(@chars.include?(char) && !WHITESPACE.include?(char))
+      end
+
+      private
+
+      sig { returns([T::Array[String], T::Array[String]]) }
+      def delimiter_sets
+        return [DEFAULT_CHARS, NO_CHARS] unless @ifs
+        return [NO_CHARS, NO_CHARS] if @chars.empty?
+
+        whitespace, others = @chars.partition { |char| WHITESPACE.include?(char) }
+        [whitespace.freeze, others.freeze]
       end
     end
   end

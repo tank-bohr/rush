@@ -9,6 +9,10 @@ RSpec.describe Rush::AST::WordSegment do
     Rush::AST::ParamRef.new(name: name, op: op, arg: nil)
   end
 
+  def field_parts(segment, executor = :executor)
+    [].tap { |parts| segment.append_field_parts(executor, parts) }
+  end
+
   it 'requires subclasses to implement #expand' do
     expect { described_class.new('x', false).expand(:executor) }.to raise_error(NotImplementedError)
   end
@@ -29,9 +33,9 @@ RSpec.describe Rush::AST::WordSegment do
     expect(seg('x', false).expand(:executor)).to eq('x')
   end
 
-  it 'describes a segment result with splitting and quote provenance' do
-    expect(seg('x y', true).field_parts(:executor)).to eq([['x y', false, false, true]])
-    expect(seg('x y', false).field_parts(:executor)).to eq([['x y', false, false, false]])
+  it 'appends a segment result with splitting and quote provenance' do
+    expect(field_parts(seg('x y', true))).to eq([['x y', false, false, true]])
+    expect(field_parts(seg('x y', false))).to eq([['x y', false, false, false]])
   end
 
   it 'uses only unquoted literal text as a literal value' do
@@ -63,7 +67,7 @@ RSpec.describe Rush::AST::WordSegment do
     allow(Rush::Expansion::ParameterExpander).to receive(:new).with(executor, ref, quoted: true).and_return(expander)
     segment = Rush::AST::ParamSegment.new(ref, true)
 
-    expect([segment.expand(executor), segment.field_parts(executor)]).to eq(['value', parts])
+    expect([segment.expand(executor), field_parts(segment, executor)]).to eq(['value', parts])
     expect(Rush::Expansion::ParameterExpander).to have_received(:new).with(executor, ref, quoted: true).twice
   end
 
@@ -73,7 +77,7 @@ RSpec.describe Rush::AST::WordSegment do
     allow(Rush::Expansion::CommandSubstitution).to receive(:new).with(executor, 'echo hi').and_return(expander)
 
     segment = Rush::AST::CommandSegment.new('echo hi', false)
-    expect([segment.expand(executor), segment.field_parts(executor)])
+    expect([segment.expand(executor), field_parts(segment, executor)])
       .to eq(['out', [['out', true, false, false]]])
     expect(Rush::Expansion::CommandSubstitution).to have_received(:new).with(executor, 'echo hi').twice
   end

@@ -4,8 +4,8 @@ module Rush
     # to one or more parts ([text, splittable, break_before, quoted]); unquoted results
     # undergo IFS field splitting and then pathname expansion. The one multi-field
     # case is "$@"/$@, which yields one part per positional parameter with a
-    # forced field break between them ($* always joins to a scalar). Quoted
-    # metacharacters are backslash-escaped so they survive splitting and glob.
+    # forced field break between them ($* always joins to a scalar). Field
+    # splitting carries quote provenance into the pathname-expansion boundary.
     interface _TildeExpansion
       def expand: () -> Array[AST::WordSegment[untyped]]
     end
@@ -18,6 +18,8 @@ module Rush
       extend T::Sig
 
       @executor: Executor
+
+      @glob_expander: GlobExpander
 
       # Tilde expansion strategy per mode (its value is a word's segment list).
       TILDE_EXPANDERS: Hash[Symbol, _TildeExpanderClass]
@@ -43,13 +45,13 @@ module Rush
 
       private
 
-      def parts: (AST::Word word) -> Array[[String, bool, bool, bool]]
+      def expanded_pattern: (AST::WordSegment[untyped] segment) -> String
+
+      def append_word: (AST::Word word, Array[String] expanded) -> void
 
       def tilde_expand: (Array[AST::WordSegment[untyped]] segments, Symbol mode) -> Array[AST::WordSegment[untyped]]
 
-      def glob: (Array[String] fields) -> Array[String]
-
-      def field_parts: (AST::WordSegment[untyped] segment) -> Array[[String, bool, bool, bool]]
+      def append_field_parts: (AST::WordSegment[untyped] segment, Array[[String, bool, bool, bool]] expanded) -> void
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
@@ -57,9 +59,7 @@ module Rush
 
       def escape: (String text) -> String
 
-      def shield: ([String, bool, bool, bool] part) -> [String, bool, bool, bool]
-
-      def splat_parts: (AST::WordSegment[untyped] segment) -> Array[[String, bool, bool, bool]]
+      def append_splat_parts: (AST::WordSegment[untyped] segment, Array[[String, bool, bool, bool]] expanded) -> void
 
       def field_separator: () -> String
 

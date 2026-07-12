@@ -1,8 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Expansion::FieldSplitter do
+  def fields(parts, ifs = nil)
+    normalized = parts.map { |text, splittable, brk, quoted| [text, splittable, brk || false, quoted || false] }
+    described_class.new(ifs).split(normalized)
+  end
+
   def split(parts, ifs = nil)
-    described_class.new(ifs).split(parts)
+    fields(parts, ifs).map(&:text)
   end
 
   describe 'default whitespace IFS' do
@@ -28,6 +33,24 @@ RSpec.describe Rush::Expansion::FieldSplitter do
 
     it 'keeps an empty quoted field but drops an empty unquoted expansion' do
       expect([split([['', false]]), split([['', true]])]).to eq([[''], []])
+    end
+
+    it 'drops empty unquoted splat elements when IFS contains whitespace' do
+      parts = [['', true], ['x', true, true], ['', true, true], ['y', true, true]]
+      expect(split(parts)).to eq(%w[x y])
+      expect(split(parts, ' :')).to eq(%w[x y])
+    end
+
+    it 'keeps non-trailing empty splat elements when IFS has no whitespace' do
+      parts = [['', true], ['x', true, true], ['', true, true], ['y', true, true], ['', true, true]]
+      expect(split(parts, ':')).to eq(['', 'x', '', 'y'])
+      expect(split(parts, ': ')).to eq(['', 'x', '', 'y'])
+      expect(split(parts, '')).to eq(['', 'x', '', 'y'])
+    end
+
+    it 'keeps literal text separate from its quote-aware pathname pattern' do
+      field = fields([['\\*', true], ['*', false, false, true]]).fetch(0)
+      expect([field.text, field.pattern]).to eq(['\\**', '\\*\\*'])
     end
   end
 

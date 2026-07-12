@@ -10,11 +10,17 @@ require_relative '../lib/rush/runtime_type_checks'
 Rush::RuntimeTypeChecks.configure
 require_relative '../lib/rush'
 
-benchmark_case = RushBench::CASES.find { |entry| entry.name == 'while_arithmetic' }
-output = ARGV.fetch(0, 'tmp/stackprof-while.dump')
+case_name = ARGV.fetch(0, 'while_arithmetic')
+mode = ARGV.fetch(1, 'wall').to_sym
+benchmark_case = RushBench::CASES.find { |entry| entry.name == case_name }
+abort "unknown profile workload #{case_name}" unless benchmark_case
+abort "unknown StackProf mode #{mode}" unless %i[cpu wall object].include?(mode)
+
+output = ARGV.fetch(2, "tmp/stackprof-#{case_name}-#{mode}.dump")
+interval = mode == :object ? 100 : 1_000
 FileUtils.mkdir_p(File.dirname(output))
 
-StackProf.run(mode: :wall, interval: 1_000, out: output) do
+StackProf.run(mode: mode, interval: interval, out: output) do
   code = Rush::CLI.run(['-c', benchmark_case.source])
   abort "profile workload failed with status #{code}" if code.nonzero?
 end

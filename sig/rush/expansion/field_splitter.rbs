@@ -10,7 +10,7 @@ module Rush
 
       def initialize: (String? ifs) -> void
 
-      def split: (Array[[String, bool, bool, bool]] parts) -> Array[String]
+      def split: (Array[[String, bool, bool, bool]] parts) -> Array[IfsScanner::Field]
     end
   end
 end

@@ -7,8 +7,8 @@ module Rush
     # to one or more parts ([text, splittable, break_before, quoted]); unquoted results
     # undergo IFS field splitting and then pathname expansion. The one multi-field
     # case is "$@"/$@, which yields one part per positional parameter with a
-    # forced field break between them ($* always joins to a scalar). Quoted
-    # metacharacters are backslash-escaped so they survive splitting and glob.
+    # forced field break between them ($* always joins to a scalar). Field
+    # splitting carries quote provenance into the pathname-expansion boundary.
     class Pipeline
       extend T::Sig
 
@@ -18,13 +18,16 @@ module Rush
       sig { params(executor: Executor).void }
       def initialize(executor)
         @executor = executor
+        @glob_expander = GlobExpander.new(executor)
       end
 
-      # Argv expansion: expand each word to fields (splitting unquoted on IFS),
-      # then expand each field's pathname patterns.
+      # Argv expansion: expand each word to fields (splitting unquoted on the IFS
+      # value in force after that word's substitutions), then pathname-expand.
       sig { params(words: T::Array[AST::Word]).returns(T::Array[String]) }
       def expand(words)
-        words.flat_map { |word| glob(FieldSplitter.new(ifs).split(parts(word))) }
+        expanded = T.let([], T::Array[String])
+        words.each { |word| append_word(word, expanded) }
+        expanded
       end
 
       # Assignment RHS / redirection target / operator word: one field, no split.
@@ -39,28 +42,39 @@ module Rush
       # quote provenance for a surrounding ${...} operator word.
       sig { params(word: T.any(AST::Word, HereDoc), tilde: Symbol).returns(T::Array[FieldPart]) }
       def expand_parts(word, tilde: :leading)
-        tilde_expand(word.segments, tilde).flat_map { |segment| field_parts(segment) }
+        expanded = T.let([], T::Array[FieldPart])
+        tilde_expand(word.segments, tilde).each { |segment| append_field_parts(segment, expanded) }
+        expanded
       end
 
       sig { params(expanded: T::Array[FieldPart]).returns(String) }
       def collapse(expanded)
+        result = +''
         separator = field_separator
-        expanded.map { |text, _splittable, brk, _quoted| (brk ? separator : '') + text }.join
+        expanded.each { |text, _splittable, brk, _quoted| result << (brk ? separator : '') << text }
+        result
       end
 
       # A case/removal pattern keeps quoting as backslash shielding so quoted
       # metacharacters remain literal when ShellPattern compiles the result.
       sig { params(pattern: AST::Word, tilde: Symbol).returns(String) }
       def expand_pattern(pattern, tilde: :leading)
-        segments = tilde_expand(pattern.segments, tilde)
-        segments.map { |segment| escape_if_quoted(segment, segment.expand(@executor)) }.join
+        result = +''
+        tilde_expand(pattern.segments, tilde).each { |segment| result << expanded_pattern(segment) }
+        result
       end
 
       private
 
-      sig { params(word: AST::Word).returns(T::Array[FieldPart]) }
-      def parts(word)
-        expand_parts(word).map { |part| shield(part) }
+      sig { params(segment: AST::WordSegment[T.untyped]).returns(String) }
+      def expanded_pattern(segment)
+        escape_if_quoted(segment, segment.expand(@executor))
+      end
+
+      sig { params(word: AST::Word, expanded: T::Array[String]).void }
+      def append_word(word, expanded)
+        parts = expand_parts(word)
+        FieldSplitter.new(ifs).split(parts).each { |field| @glob_expander.append(field, expanded) }
       end
 
       sig { params(segments: T::Array[AST::WordSegment[T.untyped]], mode: Symbol).returns(T::Array[AST::WordSegment[T.untyped]]) }
@@ -68,16 +82,11 @@ module Rush
         TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
       end
 
-      sig { params(fields: T::Array[String]).returns(T::Array[String]) }
-      def glob(fields)
-        fields.flat_map { |field| GlobExpander.new(@executor).expand(field) }
-      end
+      sig { params(segment: AST::WordSegment[T.untyped], expanded: T::Array[FieldPart]).void }
+      def append_field_parts(segment, expanded)
+        return append_splat_parts(segment, expanded) if segment.splat?
 
-      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[FieldPart]) }
-      def field_parts(segment)
-        return splat_parts(segment) if segment.splat?
-
-        segment.field_parts(@executor)
+        segment.append_field_parts(@executor, expanded)
       end
 
       # Glob metacharacters in quoted text are escaped so they match literally;
@@ -87,22 +96,16 @@ module Rush
         segment.quoted ? escape(text) : text
       end
 
-      sig { params(part: FieldPart).returns(FieldPart) }
-      def shield(part)
-        text, splittable, brk, quoted = part
-        [quoted ? escape(text) : text, splittable, brk, quoted]
-      end
-
       sig { params(text: String).returns(String) }
       def escape(text)
         text.gsub(/[\\*?\[\]\-!^]/) { |meta| "\\#{meta}" }
       end
 
-      sig { params(segment: AST::WordSegment[T.untyped]).returns(T::Array[FieldPart]) }
-      def splat_parts(segment)
+      sig { params(segment: AST::WordSegment[T.untyped], expanded: T::Array[FieldPart]).void }
+      def append_splat_parts(segment, expanded)
         quoted = segment.quoted
-        @executor.state.positional.map.with_index do |element, index|
-          [element, !quoted, index.positive?, quoted]
+        @executor.state.positional.to_a.each_with_index do |element, index|
+          expanded << [element, !quoted, index.positive?, quoted]
         end
       end
 

@@ -14,7 +14,13 @@ module Rush
       class Field
         extend T::Sig
 
+        QUOTED_PATTERN: Regexp
+
+        PATTERNS: Hash[bool, Regexp?]
+
         @text: String
+
+        @pattern: String?
 
         @real: bool
 
@@ -22,16 +28,24 @@ module Rush
 
         def initialize: () -> void
 
-        def append: (String text) -> void
+        def append: (String text, bool quoted) -> void
+
+        def pattern: () -> String
 
         def mark_real: () -> void
 
         def empty_unreal?: () -> bool
+
+        private
+
+        def pattern_fragment: (String text, bool quoted) -> String
       end
 
       @ws: Array[String]
 
       @others: Array[String]
+
+      @preserve_empty_splat: bool
 
       @done: Array[Field]
 
@@ -41,9 +55,9 @@ module Rush
 
       @skip: bool
 
-      def initialize: (Array[String] whitespace, Array[String] others) -> void
+      def initialize: (Ifs ifs) -> void
 
-      def run: (Array[[String, bool, bool, bool]] parts) -> Array[String]
+      def run: (Array[[String, bool, bool, bool]] parts) -> Array[Field]
 
       private
 
@@ -55,13 +69,17 @@ module Rush
 
       def ordinary: (String char) -> void
 
-      def literal: (String text) -> void
+      def literal: (String text, bool quoted) -> void
 
       def flush: () -> void
 
+      def break_field: () -> void
+
       def open_field: () -> void
 
-      def result: () -> Array[String]
+      def reset_field: () -> void
+
+      def result: () -> Array[Field]
 
       def drop_last?: () -> bool
     end

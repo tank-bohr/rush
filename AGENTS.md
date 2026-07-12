@@ -31,7 +31,8 @@ RUSH_GATE_SERIAL=1 bundle exec rake # serial/debug fallback
 bundle exec rake check_parser_drift # explicit generated-parser audit when needed
 bundle exec rake benchmark        # opt-in startup/loop/expansion performance suite
 bundle exec rake benchmark:check  # opt-in comparison with committed host baseline
-bundle exec rake benchmark:profile # StackProf the 10k loop; output stays under tmp/
+bundle exec rake benchmark:allocations # five-sample allocation counts for interpreter workloads
+bundle exec rake benchmark:profile # StackProf CPU/wall/object profiles; output stays under tmp/
 RUSH_RUNTIME_TYPECHECKS=1 exe/rush -c '<program>' # opt into production Sorbet call checks
 exe/rush -c '<program>'           # run rush (runtime call wrappers off by default)
 dash  -c '<program>'              # the oracle to diff against

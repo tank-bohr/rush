@@ -90,6 +90,25 @@ RSpec.describe Rush::Expansion::Pipeline do
     expect([pipeline.expand([unquoted]), pipeline.expand([quoted])]).to eq([%w[a b], ['a b']])
   end
 
+  it "reads IFS after the current word's parameter-expansion side effects" do
+    state = Rush::ShellState.new(environment: Rush::Environment.new('X' => 'a:b'))
+    pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: state))
+    set_ifs = Rush::AST::ParamRef.new(name: 'IFS', op: ':=', arg: ':')
+    word = Rush::AST::Word.new([par(set_ifs), par(Rush::AST::ParamRef.simple('X'))])
+
+    expect(pipeline.expand([word])).to eq(['', 'a', 'b'])
+  end
+
+  it 'preserves data backslashes from parameter and command substitutions' do
+    state = Rush::ShellState.new(environment: Rush::Environment.new('X' => '\\q'))
+    executor = Rush::Executor.new(system: FakeSystemCalls.new, state: state)
+    substitution = instance_double(Rush::Expansion::CommandSubstitution, expand: '\\*')
+    allow(Rush::Expansion::CommandSubstitution).to receive(:new).and_return(substitution)
+    words = [Rush::AST::Word.new([par(Rush::AST::ParamRef.simple('X'))]), Rush::AST::Word.new([cmd('printf')])]
+
+    expect(described_class.new(executor).expand(words)).to eq(['\\q', '\\*'])
+  end
+
   it 'keeps quoted regions of an unquoted parameter operator word together' do
     pipeline = described_class.new(Rush::Executor.new(system: FakeSystemCalls.new, state: Rush::ShellState.new))
     ref = Rush::AST::ParamRef.new(name: 'X', op: ':-', arg: 'left" x y "right')
@@ -126,6 +145,17 @@ RSpec.describe Rush::Expansion::Pipeline do
     it 'field-splits each parameter when unquoted' do
       state.positional.replace(['a b', 'c'])
       expect(pipeline.expand(at(false))).to eq(%w[a b c])
+    end
+
+    it 'drops empty unquoted elements with whitespace IFS' do
+      state.positional.replace(['', 'a', '', 'b', ''])
+      expect(pipeline.expand(at(false))).to eq(%w[a b])
+    end
+
+    it 'keeps non-trailing empty unquoted elements when IFS has no whitespace' do
+      state.variables.assign('IFS', ':')
+      state.positional.replace(['', 'a', '', 'b', ''])
+      expect(pipeline.expand(at(false))).to eq(['', 'a', '', 'b'])
     end
 
     it 'yields no fields when there are no positional parameters' do

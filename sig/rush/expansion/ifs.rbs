@@ -11,19 +11,33 @@ module Rush
 
       @chars: Array[String]
 
+      @whitespace: Array[String]
+
+      @others: Array[String]
+
       WHITESPACE: String
+
+      DEFAULT_CHARS: Array[String]
+
+      NO_CHARS: Array[String]
 
       def initialize: (String? ifs) -> void
 
       def null?: () -> bool
 
-      def whitespace: () -> Array[String]
+      attr_reader whitespace: Array[String]
 
-      def others: () -> Array[String]
+      attr_reader others: Array[String]
+
+      def preserve_empty_splat?: () -> bool
 
       def whitespace?: (String char) -> bool
 
       def other?: (String char) -> bool
+
+      private
+
+      def delimiter_sets: () -> [Array[String], Array[String]]
     end
   end
 end

@@ -22,11 +22,18 @@ namespace :benchmark do
     sh(*BENCHMARK_RUNNER, '--json', BENCHMARK_BASELINE)
   end
 
-  desc 'Profile the 10k loop with StackProf (set RUSH_RUNTIME_TYPECHECKS=1 for checked mode)'
+  desc 'Count allocations for the canonical interpreter workloads (five samples by default)'
+  task allocations: :compile do
+    sh Gem.ruby, 'benchmark/allocations.rb'
+  end
+
+  desc 'Profile both interpreter workloads in StackProf CPU, wall, and object modes'
   task profile: :compile do
     policy = ENV['RUSH_RUNTIME_TYPECHECKS'] == '1' ? 'checked' : 'unchecked'
-    dump = "tmp/stackprof-while-#{policy}.dump"
-    sh Gem.ruby, 'benchmark/profile.rb', dump
-    sh Gem.ruby, Gem.bin_path('stackprof', 'stackprof'), dump, '--text', '--limit', '20'
+    %w[while_arithmetic expansion_heavy].product(%w[cpu wall object]).each do |case_name, mode|
+      dump = "tmp/stackprof-#{case_name}-#{mode}-#{policy}.dump"
+      sh Gem.ruby, 'benchmark/profile.rb', case_name, mode, dump
+      sh Gem.ruby, Gem.bin_path('stackprof', 'stackprof'), dump, '--text', '--limit', '20'
+    end
   end
 end

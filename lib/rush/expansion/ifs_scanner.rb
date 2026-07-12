@@ -18,10 +18,15 @@ module Rush
     class IfsScanner
       extend T::Sig
 
-      # One output field under construction: its text and whether quoted input or
-      # $@/$* anchoring made it real even when the text is empty.
+      # One output field under construction. Alongside its literal text it lazily
+      # records a distinct pathname pattern only when quoted metacharacters need
+      # shielding; a data backslash stays in both forms and is never stripped as
+      # if it were synthetic quote provenance.
       class Field
         extend T::Sig
+
+        QUOTED_PATTERN = /[\\*?\[\]\-!^]/
+        PATTERNS = { true => QUOTED_PATTERN, false => nil }.freeze
 
         sig { returns(String) }
         attr_reader :text
@@ -29,12 +34,21 @@ module Rush
         sig { void }
         def initialize
           @text = +''
+          @pattern = T.let(nil, T.nilable(String))
           @real = false
         end
 
-        sig { params(text: String).void }
-        def append(text)
+        sig { params(text: String, quoted: T::Boolean).void }
+        def append(text, quoted)
+          fragment = pattern_fragment(text, quoted)
+          @pattern = @text.dup if !@pattern && !fragment.equal?(text)
+          @pattern&.concat(fragment)
           @text << text
+        end
+
+        sig { returns(String) }
+        def pattern
+          @pattern || @text
         end
 
         sig { void }
@@ -46,19 +60,30 @@ module Rush
         def empty_unreal?
           @text.empty? && !@real
         end
+
+        private
+
+        sig { params(text: String, quoted: T::Boolean).returns(String) }
+        def pattern_fragment(text, quoted)
+          pattern = PATTERNS.fetch(quoted)
+          return text unless pattern && text.match?(pattern)
+
+          text.gsub(pattern) { |meta| "\\#{meta}" }
+        end
       end
 
-      sig { params(whitespace: T::Array[String], others: T::Array[String]).void }
-      def initialize(whitespace, others)
-        @ws = whitespace
-        @others = others
+      sig { params(ifs: Ifs).void }
+      def initialize(ifs)
+        @ws = ifs.whitespace
+        @others = ifs.others
+        @preserve_empty_splat = ifs.preserve_empty_splat?
         @done = T.let([], T::Array[Field])
         @current = Field.new
         @pending = false
         @skip = true
       end
 
-      sig { params(parts: T::Array[FieldPart]).returns(T::Array[String]) }
+      sig { params(parts: T::Array[FieldPart]).returns(T::Array[Field]) }
       def run(parts)
         parts.each { |part| consume(part) }
         result
@@ -68,9 +93,9 @@ module Rush
 
       sig { params(part: FieldPart).void }
       def consume(part)
-        text, splittable, brk, = part
-        open_field if brk
-        splittable ? text.each_char { |char| step(char) } : literal(text)
+        text, splittable, brk, quoted = part
+        break_field if brk
+        splittable ? text.each_char { |char| step(char) } : literal(text, quoted)
       end
 
       sig { params(char: String).void }
@@ -89,14 +114,14 @@ module Rush
       sig { params(char: String).void }
       def ordinary(char)
         flush
-        @current.append(char)
+        @current.append(char, false)
         @skip = false
       end
 
-      sig { params(text: String).void }
-      def literal(text)
+      sig { params(text: String, quoted: T::Boolean).void }
+      def literal(text, quoted)
         flush
-        @current.append(text)
+        @current.append(text, quoted)
         @current.mark_real
         @skip = false
       end
@@ -106,18 +131,32 @@ module Rush
         (open_field if @pending)
       end
 
+      # An unquoted null $@/$* element disappears when the first IFS character
+      # is whitespace; otherwise its forced boundary remains an empty field.
+      sig { void }
+      def break_field
+        return reset_field if !@preserve_empty_splat && @current.empty_unreal?
+
+        open_field
+      end
+
       sig { void }
       def open_field
-        @pending = false
         @done << @current
+        reset_field
+      end
+
+      sig { void }
+      def reset_field
+        @pending = false
         @current = Field.new
         @skip = true
       end
 
-      sig { returns(T::Array[String]) }
+      sig { returns(T::Array[Field]) }
       def result
-        fields = drop_last? ? @done : @done + [@current]
-        fields.map(&:text)
+        @done << @current unless drop_last?
+        @done
       end
 
       sig { returns(T::Boolean) }

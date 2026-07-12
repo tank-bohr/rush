@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
 RSpec.describe Rush::Expansion::GlobExpander do
-  def glob(field, globs: {}, noglob: false, system: nil)
+  def glob(text, noglob: false, system: nil, quoted: false)
     state = Rush::ShellState.new
     state.options.set(:noglob, true) if noglob
-    calls = system || FakeSystemCalls.new(globs: globs)
+    calls = system || FakeSystemCalls.new
     executor = Rush::Executor.new(system: calls, state: state)
-    described_class.new(executor).expand(field)
+    field = Rush::Expansion::IfsScanner::Field.new
+    field.append(text, quoted)
+    [].tap { |expanded| described_class.new(executor).append(field, expanded) }
   end
 
   it 'returns the matches for wildcard and bracket patterns' do
@@ -24,13 +26,25 @@ RSpec.describe Rush::Expansion::GlobExpander do
     expect(system).to have_received(:glob).exactly(6).times
   end
 
-  it 'bypasses globbing for literal, slash, empty, and escaped fields' do
+  it 'bypasses globbing for literal, slash, empty, quoted, and unclosed fields' do
     system = FakeSystemCalls.new
     allow(system).to receive(:glob).and_call_original
 
-    fields = ['plain', 'dir/file', '', '\\*', '\\?', '\\[x\\]', '[x\\]', '[unfinished', ']!^-', 'é']
+    fields = ['plain', 'dir/file', '', '[unfinished', ']!^-', 'é']
     expect(fields.map { |field| glob(field, system: system) })
-      .to eq([['plain'], ['dir/file'], [''], ['*'], ['?'], ['[x]'], ['[x]'], ['[unfinished'], [']!^-'], ['é']])
+      .to eq([['plain'], ['dir/file'], [''], ['[unfinished'], [']!^-'], ['é']])
+    expect(glob('*', quoted: true, system: system)).to eq(['*'])
+    expect(glob('[x]', quoted: true, system: system)).to eq(['[x]'])
+    expect(system).not_to have_received(:glob)
+  end
+
+  it 'preserves data backslashes, including one that quotes a wildcard' do
+    system = FakeSystemCalls.new
+    allow(system).to receive(:glob).and_call_original
+
+    expect(glob('\\q', system: system)).to eq(['\\q'])
+    expect(glob('\\*', system: system)).to eq(['\\*'])
+    expect(glob('\\[x]', system: system)).to eq(['\\[x]'])
     expect(system).not_to have_received(:glob)
   end
 
@@ -41,10 +55,10 @@ RSpec.describe Rush::Expansion::GlobExpander do
     expect(system).to have_received(:glob).with('missing*', locale: instance_of(Array))
   end
 
-  it 'skips globbing and only unescapes while noglob is set' do
+  it 'skips globbing and returns literal text while noglob is set' do
     system = FakeSystemCalls.new(globs: { '\\[x\\]' => ['z'] })
     allow(system).to receive(:glob).and_call_original
-    expect(glob('\\[x\\]', noglob: true, system: system)).to eq(['[x]'])
+    expect(glob('[x]', quoted: true, noglob: true, system: system)).to eq(['[x]'])
     expect(system).not_to have_received(:glob)
   end
 end

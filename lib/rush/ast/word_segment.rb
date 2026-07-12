@@ -59,9 +59,9 @@ module Rush
         false
       end
 
-      sig { params(executor: Executor).returns(T::Array[Expansion::FieldPart]) }
-      def field_parts(executor)
-        [[expand(executor), splittable?, false, quoted]]
+      sig { params(executor: Executor, parts: T::Array[Expansion::FieldPart]).void }
+      def append_field_parts(executor, parts)
+        parts << [expand(executor), splittable?, false, quoted]
       end
 
       # A copy with a rewritten value (e.g. after tilde expansion).
@@ -151,9 +151,9 @@ module Rush
         !value.op && (value.name == '@' || (value.name == '*' && !quoted))
       end
 
-      sig { params(executor: Executor).returns(T::Array[Expansion::FieldPart]) }
-      def field_parts(executor)
-        Expansion::ParameterExpander.new(executor, value, quoted: quoted).expand_parts
+      sig { params(executor: Executor, parts: T::Array[Expansion::FieldPart]).void }
+      def append_field_parts(executor, parts)
+        parts.concat(Expansion::ParameterExpander.new(executor, value, quoted: quoted).expand_parts)
       end
 
       sig { returns(String) }
