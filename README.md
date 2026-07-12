@@ -18,6 +18,11 @@ with one feedback wire (the parser nudges lexer state for POSIX Grammar Rules
 redirections, parameter-expansion forms, …); polymorphism (`node.execute(executor)`)
 replaces every type switch.
 
+## Research notes
+
+- [Steep vs Sorbet under extreme quality pressure](docs/steep-vs-sorbet.md) — what
+  two independent Ruby type systems caught, cost, and changed in the design.
+
 ## Requirements
 
 - **Ruby 4.0.5** (pinned in `.tool-versions`).

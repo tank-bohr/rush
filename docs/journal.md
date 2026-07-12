@@ -24,7 +24,9 @@ Sandi-Metz + reek + meaningful coverage pressure + mutant + two type systems), w
 ecosystem offer for non-trivial code, and what code results? Coverage aims at 100% where it is
 meaningful, but shell semantics cross process boundaries that SimpleCov cannot observe; the
 metric serves the design, not the reverse. Two type systems (RBS/Steep and inline Sorbet) are run
-independently on the same code — the task is to compare how each fares.
+independently on the same code — the task is to compare how each fares. The standalone result is
+[Two type systems, one Ruby interpreter](steep-vs-sorbet.md); the chronological raw evidence remains
+below.
 
 ---
 
