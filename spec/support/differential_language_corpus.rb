@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 # Core language, expansion, builtins, options, functions, and shell-parameter cases.
-RSpec.describe 'rush vs dash (differential language corpus)' do
-  before { skip 'dash not installed' unless system('command -v dash > /dev/null 2>&1') }
-
-  corpus = [
+module DifferentialLanguageCorpus
+  CASES = [
     '[ -n x ] && echo y',
     '[ -z "" ] && echo y',
     '[ -z nonempty ]; echo $?',
@@ -446,10 +444,15 @@ RSpec.describe 'rush vs dash (differential language corpus)' do
     'command -pV echo',
     'command -v -V echo; command -V -v echo'
   ].freeze
+end
 
-  corpus.each.with_index(1) do |snippet, index|
+RSpec.shared_examples 'a differential language corpus shard' do |shard:, total:|
+  before { skip 'dash not installed' unless system('command -v dash > /dev/null 2>&1') }
+
+  DifferentialLanguageCorpus::CASES.each.with_index(1) do |snippet, index|
+    next unless ((index - 1) % total) == shard
+
     id = format('language-%03d', index)
-
     it "#{id}: matches dash for: #{snippet}" do
       expect(rush(snippet)).to eq(dash(snippet))
     end

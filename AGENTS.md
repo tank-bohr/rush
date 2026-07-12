@@ -18,21 +18,16 @@ EV_EXIT optimization stays parked as `rush-mv8.7`). Ruby 4.0.5 (asdf); dash at
 
 ## Build & Test
 
-`bundle exec rake` must be **fully green** before any commit. It runs, in order:
-
-1. **racc compile** — regenerate the parser from `grammar/shell.y`
-2. **rubocop** (style/static checks; config in `.rubocop.yml`)
-3. **reek** (code-smell ratchet; config + rationale in `.reek.yml`)
-4. **flay / flog** (structural-duplication and per-method complexity
-   ratchets; thresholds in `tasks/complexity.rake`, baseline-pinned, only
-   lowered)
-5. **steep** (RBS type-check gate; config in `Steepfile`)
-6. **sorbet** (inline `sig {}` type-check gate; config in `sorbet/config`)
-7. **rspec** (+ SimpleCov coverage gate; 100% meaningful coverage is the target,
-   not a design-at-any-cost rule)
+`bundle exec rake` must be **fully green** before any commit. It first runs **racc
+compile** to regenerate the parser from `grammar/shell.y`, then runs the independent gates
+concurrently: **rubocop**, **reek**, **flay / flog**, **steep**, **sorbet**, and RSpec in up
+to eight file shards. SimpleCov merges all shard results before enforcing coverage. Use
+`RUSH_GATE_SERIAL=1 bundle exec rake` for the original deterministic serial/debug path, and
+`RUSH_SPEC_SEED=<seed> bundle exec rake spec:parallel` to reproduce a parallel test run.
 
 ```bash
-bundle exec rake                  # the fast full green gate
+bundle exec rake                  # the fast parallel full green gate
+RUSH_GATE_SERIAL=1 bundle exec rake # serial/debug fallback
 bundle exec rake check_parser_drift # explicit generated-parser audit when needed
 exe/rush -c '<program>'           # run rush
 dash  -c '<program>'              # the oracle to diff against

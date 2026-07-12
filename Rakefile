@@ -121,5 +121,4 @@ task :mutant, [:subject] => :compile do |_task, args|
   sh(*command)
 end
 
-desc 'Full pipeline: compile -> rubocop -> reek -> flay -> flog -> steep -> sorbet -> spec (+ coverage gate)'
-task default: %i[compile rubocop reek flay flog steep sorbet spec]
+load 'tasks/quality.rake'

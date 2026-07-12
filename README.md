@@ -31,17 +31,23 @@ bundle install          # dev/runtime gems into vendor/bundle
 
 ## Build & verify
 
-`rake` runs the whole pipeline in order:
+`rake` compiles the parser once, then runs the independent quality checks concurrently.
+RSpec uses up to eight file shards; SimpleCov merges them before applying the coverage gate.
+The large language differential corpus is split evenly by stable case ID so a clean checkout
+is balanced without a machine-specific runtime log.
 
-```
-compile (racc) → rubocop → reek → flay → flog → steep → sorbet → rspec (+ coverage gate)
+```text
+compile (racc) → { rubocop, reek, flay, flog, steep, sorbet, parallel rspec (+ merged coverage) }
 ```
 
 ```sh
-bundle exec rake                  # fast full pipeline
+bundle exec rake                  # fast parallel full pipeline
+RUSH_GATE_SERIAL=1 bundle exec rake # deterministic serial/debug fallback
+RUSH_SPEC_PROCESSES=4 bundle exec rake # override the default min(CPUs, 8)
+RUSH_SPEC_SEED=12345 bundle exec rake spec:parallel # reproduce a parallel RSpec run
 bundle exec rake compile          # regenerate lib/rush/parser.rb from grammar/shell.y
 bundle exec rake check_parser_drift # explicit generated-parser drift audit
-bundle exec rspec                 # tests + SimpleCov guardrail
+bundle exec rspec                 # serial tests + SimpleCov guardrail
 bundle exec rake docker:test      # opt-in Docker gate + syscall smoke
 bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
 bundle exec rake 'mutant:check[Rush*,95.0]'      # on-demand mutation score threshold

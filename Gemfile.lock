@@ -86,6 +86,8 @@ GEM
       mutant (= 0.16.3)
       rspec-core (>= 3.8.0, < 5.0.0)
     parallel (2.1.0)
+    parallel_tests (5.7.0)
+      parallel
     parser (3.3.11.1)
       ast (~> 2.4.1)
       racc
@@ -204,6 +206,7 @@ DEPENDENCIES
   flay (~> 2.13)
   flog (~> 4.8)
   mutant-rspec (~> 0.16.3)
+  parallel_tests (~> 5.7)
   rake (~> 13.0)
   rbs (~> 4.0)
   reek (~> 6.5)
@@ -248,6 +251,7 @@ CHECKSUMS
   mutant (0.16.3) sha256=7e10fb09b80a78d82f8e38283fc1e4d562cbb1392451e2a21611ea2bc44b5023
   mutant-rspec (0.16.3) sha256=006ee9640800f205278604bb2160ca4b1d0013464fb216a48b7c09571a1fc547
   parallel (2.1.0) sha256=b35258865c2e31134c5ecb708beaaf6772adf9d5efae28e93e99260877b09356
+  parallel_tests (5.7.0) sha256=3f1762c46ca2c223b8af8ef877217f9d76974e191bfa934f2580b58bcf1d005c
   parser (3.3.11.1) sha256=d17ace7aabe3e72c3cc94043714be27cc6f852f104d81aa284c2281aecc65d54
   path_expander (2.0.1) sha256=2de201164bff4719cc4d0b3767286e9977cc832a59c4d70abab571ec86cb41e4
   pp (0.6.4) sha256=dfcb0fce700c41456265922884f9fe195d7fbb0674a3578e6c0f69588e82b570

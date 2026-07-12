@@ -2280,3 +2280,38 @@ locale through an unexported shell assignment. dash 0.5.13.4 fails these tailore
 forms; POSIX XBD/XCU is explicit, so this is a recorded standard-over-oracle case.
 On glibc the test requires localedef rather than silently skipping; the Docker gate
 installs the `locales` package so the defining proof is part of that controlled image.
+
+### The full gate goes parallel: five minutes become one without weakening coverage (rush-yly)
+Profiling first changed the scope of the optimization. Two consecutive serial runs took
+287.356s cold and 287.660s warm, of which RSpec alone consumed about 280s; parallelizing
+only RuboCop/reek/flay/flog/Steep/Sorbet could save a few seconds, not the advertised five
+minutes. The safe boundary is therefore one serial Racc compile, then independent child
+processes for every gate, with each child's stdout/stderr captured and replayed as one
+labelled block. An accidental RuboCop failure during development proved the failure path:
+all sibling gates completed, their output stayed uninterleaved, and the final error named
+the failed gate. `RUSH_GATE_SERIAL=1` retains the original in-process order for debugging.
+
+RSpec now runs through parallel_tests in at most eight processes. SimpleCov already has
+first-class parallel_tests support: each shard gets a distinct command name and writes the
+shared resultset under a file lock; the designated final shard waits for every peer, merges
+line AND branch coverage, then alone enforces the 95/90 thresholds. The gate deletes
+`coverage/` first so an old serial result cannot mask a missing shard. Non-final shards use
+SimpleFormatter (no files or console report), preventing partial HTML/JSON reports from
+racing the final one. Repeated runs produced exactly the serial totals: 7442/7451 lines
+(99.88%) and 1279/1288 branches (99.30%). A single seed is passed to every shard and printed
+with a pasteable `RUSH_SPEC_PROCESSES=… RUSH_SPEC_SEED=… rake spec:parallel` reproducer;
+parallel_tests additionally prints the exact failed-group command. `--first-is-1` is
+load-bearing: it makes even `RUSH_SPEC_PROCESSES=1` the designated `(1/1)` final worker;
+a dedicated one-process run confirmed that the merged thresholds still execute.
+
+The first eight-process attempt exposed the real balancing unit: file-size/runtime grouping
+still took ~95s because language_spec.rb alone contained 439 generated differential
+examples and ran for ~94s. Its case data moved unchanged to support code and eight tiny spec
+entry points select cases by stable ID modulo eight. `--group-by found` then distributes those
+entry points and the neighbouring heavy differential files deterministically even on a clean
+checkout, without committing machine-specific runtime logs. The finished gate measured
+57.343s cold and 57.531s warm versus 287.356/287.660s before — essentially **5.0× faster**
+(~80% lower wall time). Eight workers were chosen over all 16 host CPUs: 16 saved only another
+six seconds while increasing aggregate user CPU from ~247s to ~345s. Full-gate concurrency
+raises aggregate CPU (~293s versus ~219s serial) but keeps the per-slice latency win honest;
+`RUSH_SPEC_PROCESSES` is the resource-control knob.
