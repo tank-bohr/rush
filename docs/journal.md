@@ -2182,3 +2182,17 @@ nested variants), a separate 21-probe operator matrix, zero/nonzero `$@` probes,
 new differential corpus cases; all matched dash on [stdout, exitstatus]. Subject
 mutation gates: ParameterParts 99.52%, ParameterExpander 95.65%, Pipeline 99.46%,
 WordSegment 100%, ParamSegment 97.53%.
+
+### `read` consumes its whole option prefix before naming variables (rush-no1.12)
+The original `raw?` test recognized only a first operand equal to `-r`, so a second
+`-r` became a variable name and clustered forms were never classified as options.
+`read` now peels the leading option prefix once: any number of `-r`/`-rr` flags select
+raw input, `--` ends option parsing, and any other letter fails with status 2 before
+input is consumed. What follows must be a non-empty list of portable shell names;
+therefore `read -- -r` correctly reports a bad variable rather than silently creating
+an unreachable environment key. A lone `-` remains an operand and fails the same name
+check, matching dash.
+
+The split/input machinery is deliberately untouched. Focused probes and the differential
+corpus cover repeated, clustered, terminated and unknown-option forms against dash on
+`[stdout, exitstatus]`.

@@ -2,11 +2,12 @@ module Rush
   module Builtins
     # `read [-r] var ...` — read a logical line from stdin, split it on IFS and
     # assign the fields to the named variables (the last variable takes the
-    # remainder). Without -r a backslash preserves the next character (shielding
-    # it from field splitting) and a trailing backslash continues onto the next
+    # remainder). Repeated or clustered `-r` flags are accepted and `--` ends
+    # option parsing; any other option or an invalid variable name is a usage
+    # error. Without -r a backslash preserves the next character (shielding it
+    # from field splitting) and a trailing backslash continues onto the next
     # physical line; with -r the line is taken verbatim. Returns non-zero when
-    # end of file arrives before a newline (assigning what was read); with no
-    # variable operand it is an error.
+    # end of file arrives before a newline (assigning what was read).
     class Read < Base
       extend T::Sig
 
@@ -14,11 +15,19 @@ module Rush
 
       private
 
-      def raw?: () -> bool
+      NAME: Regexp
 
-      def names: () -> Array[String]
+      def parse_operands: () -> [bool, Array[String]]?
 
-      def assign: (Array[[ String, bool ]] chars) -> void
+      def consume_options: (Array[String] args, ?mode: Symbol) -> Symbol
+
+      def option?: (String? arg) -> bool
+
+      def valid?: ([bool, Array[String]]? parsed) -> bool
+
+      def read_and_assign: (bool raw, Array[String] names) -> Status
+
+      def assign: (Array[[ String, bool ]] chars, Array[String] names) -> void
 
       def ifs: () -> String?
 

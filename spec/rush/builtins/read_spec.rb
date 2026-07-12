@@ -35,6 +35,20 @@ RSpec.describe Rush::Builtins::Read do
     expect([env.get('cooked'), env.get('rawvar')]).to eq(['atbnc', 'a\\tb'])
   end
 
+  it 'accepts repeated and clustered -r flags plus an option terminator' do
+    repeated, = read("a\\ b\n", '-r', '-r', 'one')
+    clustered, = read("c\\ d\n", '-rr', 'two')
+    cooked, = read("e\\ f\n", '--', 'three')
+    expect([repeated, clustered, cooked]).to all(be_success)
+    expect([env.get('one'), env.get('two'), env.get('three')]).to eq(['a\\ b', 'c\\ d', 'e f'])
+  end
+
+  it 'rejects unknown read options and invalid variable names' do
+    unknown, = read("hi\n", '-rx')
+    invalid, = read("hi\n", '--', '-r')
+    expect([unknown, invalid].map(&:exitstatus)).to eq([2, 2])
+  end
+
   it 'continues onto the next physical line after a trailing unescaped backslash' do
     status, = read("a\\\nb\n", 'joined')
     expect(status).to be_success
