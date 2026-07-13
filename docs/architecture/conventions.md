@@ -2,8 +2,8 @@
 
 The living design rules every slice follows. They exist so the Sandi Metz limits
 (class ≤100 lines, method ≤5 lines, ≤4 params — see `.rubocop.yml`) fall out naturally
-rather than being fought. Structure is also described in `pipeline-fd.md` and the code itself;
-this file is the *why* behind the shape.
+rather than being fought. Structure is also described in `pipeline-fd.md`,
+`forked-execution-modes.md`, and the code itself; this file is the *why* behind the shape.
 
 ## The pipeline
 

@@ -19,6 +19,23 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
       expect([read.closed?, write.closed?]).to eq([true, true])
     end
 
+    it 'drains the output pipe before waiting, so a pipe-filling child cannot deadlock' do
+      events = []
+      read = StringIO.new("hello\n")
+      allow(read).to receive(:read).and_wrap_original do |original|
+        events << :read
+        original.call
+      end
+      allow(system).to receive_messages(pipe: [read, StringIO.new], fork: 55)
+      allow(system).to receive(:waitpid2) do
+        events << :wait
+        [55, status_double(0)]
+      end
+
+      described_class.new(executor, 'echo hello').expand
+      expect(events).to eq(%i[read wait])
+    end
+
     it 'records the child exit status as the command-substitution status' do
       allow(system).to receive_messages(pipe: [StringIO.new, StringIO.new], fork: 7)
       allow(system).to receive(:waitpid2).with(7).and_return([7, status_double(3)])
@@ -71,6 +88,11 @@ RSpec.describe Rush::Expansion::CommandSubstitution do
       write = StringIO.new
       executor.errexit.tested { described_class.new(executor, 'false; echo nope').capture(write) }
       expect([write.string, state.last_status.exitstatus]).to eq(['', 1])
+    end
+
+    it 'leaves operational errors outside its narrow exit/return mapping boundary' do
+      substitution = described_class.new(executor, 'echo ${MISSING:?bad}')
+      expect { substitution.capture(StringIO.new) }.to raise_error(Rush::ExpansionError, 'MISSING: bad')
     end
 
     it 'ends the substitution with the code when an uncaught return runs' do

@@ -164,6 +164,23 @@ fatal; functions/regular builtins use temporary prefixes; externals receive only
 overlay. A special target reached through the regular `command` builtin inherits the outer
 command's temporary-assignment/nonfatal-redirect policy, not direct-special policy.
 
+### Forked modes share entry, not a lifecycle (17f)
+The explicit subshell, each pipeline stage, an async list and command substitution all call
+`Executor#enter_subshell`, but the order around that call is load-bearing and intentionally
+asymmetric. A stage closes unused pipes, arms its stop relay and binds stage IO before entry;
+background snapshots monitor before entry, then installs unmonitored INT/QUIT ignores and
+`/dev/null` stdin after inherited base handlers have dropped; command substitution binds stdout
+before entry and alone forces a fresh untested errexit context. Parent completion differs just as
+much: foreground job wait, no wait, or pipe-read-before-wait.
+
+The background path's second entry through `SubshellRunner` is harmless only because isolation
+creates no reset-sensitive shell state between calls: no body, child job, pending signal, caught
+trap or EXIT action. Raw dispositions and stdin are deliberately installed there, and the second
+entry does not reset them. Entry is not generally idempotent: it replaces EXIT state and clears
+pending signals. The characterization matrix and ordered tests now make that
+conditional guarantee explicit; any extraction must expose ordered phases rather than merge the
+modes behind flags. See `docs/architecture/forked-execution-modes.md`.
+
 ### Incremental execution — `ProgramReader` / `SourceRunner` (7v, 7x)
 The CLI and REPL both pump source **one line at a time** through `ProgramReader`, accumulating
 until a complete program parses (`IncompleteInput` → read another line). Consequences that match

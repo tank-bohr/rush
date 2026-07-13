@@ -40,8 +40,12 @@ module Rush
     # enter_subshell switches the machinery off for this child. The subshell
     # entry (trap reset + job-table clear) must run first — an interactive
     # session's base handlers reinstall OS defaults as they drop, which would
-    # undo the ignores (the repeat inside SubshellRunner#run_body is then a
-    # no-op). The ignores are a real SIG_IGN, kept off the trap table: they
+    # undo the ignores. The immediate repeat inside SubshellRunner#run_body is
+    # harmless because isolation creates no reset-sensitive shell state between
+    # entries: no body, child job, pending signal, caught trap or EXIT action.
+    # Raw dispositions and stdin are deliberately installed there, and the
+    # second entry does not reset them. This is not general idempotence. The
+    # ignores are a real SIG_IGN, kept off the trap table: they
     # survive exec and nested subshells, while `trap` overrides them and
     # `trap - INT` restores the OS default (dash-verified).
     sig { void }
