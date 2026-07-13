@@ -23,6 +23,12 @@ RSpec.describe 'rush real subprocess' do
     [out, status.exitstatus]
   end
 
+  it 'reports a fatal EXIT-trap error once without a Ruby backtrace' do
+    out, err, status = Open3.capture3(RbConfig.ruby, '-Ilib', 'exe/rush', '-c', "trap 'echo X; shift' EXIT",
+                                      chdir: project_root)
+    expect([out, err, status.exitstatus]).to eq(["X\n", "rush: shift: can't shift that many\n", 2])
+  end
+
   it 'runs a multi-stage pipeline' do
     expect(run('echo hi | tr a-z A-Z | rev')).to eq(["IH\n", 0])
   end

@@ -209,10 +209,17 @@ RSpec.describe Rush::CLI do
     expect(run(['-c', "trap ':; exit' EXIT; false"], FakeSystemCalls.new)).to eq(1)
   end
 
-  it 'ignores a syntax error in the EXIT trap action' do
+  it 'maps a syntax error in the EXIT trap action to status 2' do
     system = FakeSystemCalls.new
-    expect(run(['-c', "trap 'fi' EXIT; echo body"], system)).to eq(0)
-    expect(system.stdout.string).to eq("body\n")
+    expect(run(['-c', "trap 'fi' EXIT; echo body"], system)).to eq(2)
+    expect([system.stdout.string, system.stderr.string])
+      .to eq(["body\n", "rush: syntax error at 2: unexpected Fi `fi`\n"])
+  end
+
+  it 'reports an EXIT-trap builtin error once without re-entering the trap' do
+    system = FakeSystemCalls.new
+    expect(run(['-c', "trap 'echo X; shift' EXIT"], system)).to eq(2)
+    expect([system.stdout.string, system.stderr.string]).to eq(["X\n", "rush: shift: can't shift that many\n"])
   end
 
   it 'defaults to the real system calls when none is injected' do

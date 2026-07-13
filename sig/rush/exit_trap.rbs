@@ -1,0 +1,50 @@
+module Rush
+  # Owns the one-shot EXIT-trap lifecycle, terminating-status context and fatal
+  # error boundary. Ordinary delivered traps use TrapRunner's recoverable policy;
+  # EXIT runs at shell teardown and therefore converts fatal shell errors to 2.
+  class ExitTrap
+    extend T::Sig
+
+    class Execution < Data
+      attr_reader source: String
+
+      attr_reader code: Integer
+
+      def self.new: (String source, Integer code) -> Execution
+
+      def deconstruct: () -> [String, Integer]
+    end
+
+    @executor: Executor
+
+    @state: ShellState
+
+    @exiting: Integer?
+
+    @fired: bool
+
+    def initialize: (Executor executor) -> void
+
+    def run: (Integer code) -> Integer
+
+    def status: () -> Integer
+
+    private
+
+    def claim_action: () -> String?
+
+    def fire: (Execution execution) -> Integer
+
+    def exit_result: (Execution execution) -> Integer
+
+    def control_result: (Execution execution) -> Integer
+
+    def run_execution: (Execution execution) -> Integer
+
+    def abort: (Error error) -> Integer
+
+    def with_status: [T] (Integer code) { () -> T } -> T
+
+    def evaluate: (String action) -> void
+  end
+end

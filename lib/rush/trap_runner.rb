@@ -14,7 +14,7 @@ module Rush
     def initialize(executor)
       @executor = executor
       @state = executor.state
-      @exiting = nil
+      @exit_trap = ExitTrap.new(executor)
       @base = T.let(
         {}, #: Hash[String, Proc]
         T::Hash[String, Proc]
@@ -47,11 +47,7 @@ module Rush
     # inside the trap is that same code (POSIX 2.14), so it is published first.
     sig { params(code: Integer).returns(Integer) }
     def run_exit_trap(code)
-      action = @state.traps.action(Signals::EXIT)
-      return code unless action
-
-      @state.record_status(Status.new(code))
-      fire_exit(action, code)
+      @exit_trap.run(code)
     end
 
     # The status a bare `exit` reports: while the EXIT trap runs, the status the
@@ -59,7 +55,7 @@ module Rush
     # the last command's status.
     sig { returns(Integer) }
     def exiting_status
-      @exiting || @state.last_status.exitstatus
+      @exit_trap.status
     end
 
     # Record a trap and (for real signals, not EXIT) install its disposition so a
@@ -78,33 +74,12 @@ module Rush
 
     sig { void }
     def reset_caught_for_subshell
+      @exit_trap = ExitTrap.new(@executor)
       drop_base
       @state.traps.reset_caught.each { |name| install_signal(name, :default) }
     end
 
     private
-
-    sig { params(action: String, code: Integer).returns(Integer) }
-    def fire_exit(action, code)
-      with_exiting(code) { fire(action) }
-      code
-    rescue ExitSignal => e
-      e.code
-    end
-
-    # Publish `code` as the status a bare `exit` in the action reports, cleared
-    # afterwards so a bare exit elsewhere falls back to the last command status.
-    sig do
-      type_parameters(:U)
-        .params(code: Integer, blk: T.proc.returns(T.type_parameter(:U)))
-        .returns(T.type_parameter(:U))
-    end
-    def with_exiting(code, &blk)
-      @exiting = code
-      yield
-    ensure
-      @exiting = nil
-    end
 
     sig { params(action: String).void }
     def fire(action)

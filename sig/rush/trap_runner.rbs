@@ -11,7 +11,7 @@ module Rush
 
     @state: ShellState
 
-    @exiting: Integer?
+    @exit_trap: ExitTrap
 
     @base: Hash[String, Proc]
 
@@ -43,12 +43,6 @@ module Rush
     def reset_caught_for_subshell: () -> void
 
     private
-
-    def fire_exit: (String action, Integer code) -> Integer
-
-    # Publish `code` as the status a bare `exit` in the action reports, cleared
-    # afterwards so a bare exit elsewhere falls back to the last command status.
-    def with_exiting: [T] (Integer code) { () -> T } -> T
 
     def fire: (String action) -> void
 

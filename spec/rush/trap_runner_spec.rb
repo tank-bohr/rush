@@ -127,6 +127,38 @@ RSpec.describe Rush::TrapRunner do
       runner.run_exit_trap(5)
       expect(runner.exiting_status).to eq(0)
     end
+
+    it 'runs the EXIT action at most once' do
+      runner.set(Rush::Signals::EXIT, 'echo once')
+      expect([runner.run_exit_trap(3), runner.run_exit_trap(4)]).to eq([3, 4])
+      expect(system.stdout.string).to eq("once\n")
+    end
+
+    it 'starts a fresh EXIT lifecycle after entering a subshell' do
+      runner.set(Rush::Signals::EXIT, 'echo outer')
+      runner.run_exit_trap(0)
+      runner.reset_caught_for_subshell
+      runner.set(Rush::Signals::EXIT, 'echo inner')
+      expect(runner.run_exit_trap(0)).to eq(0)
+      expect(system.stdout.string).to eq("outer\ninner\n")
+    end
+
+    it 'reports a fatal builtin error once and exits with status 2' do
+      runner.set(Rush::Signals::EXIT, 'echo X; shift')
+      expect([runner.run_exit_trap(0), runner.run_exit_trap(2)]).to eq([2, 2])
+      expect([system.stdout.string, system.stderr.string]).to eq(["X\n", "rush: shift: can't shift that many\n"])
+    end
+
+    {
+      'readonly assignment' => ['readonly x=1; x=2', 'rush: x: is read only'],
+      'expansion failure' => ['set -u; echo $missing', 'rush: missing: parameter not set']
+    }.each do |description, (action, diagnostic)|
+      it "maps #{description} in the action to status 2" do
+        runner.set(Rush::Signals::EXIT, action)
+        expect(runner.run_exit_trap(0)).to eq(2)
+        expect(system.stderr.string).to include(diagnostic)
+      end
+    end
   end
 
   describe '#exiting_status' do

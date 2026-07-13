@@ -69,6 +69,9 @@ filed as a beads issue.
     (7am):** now a special-builtin `BuiltinError`. See the shift lesson below.
 15. **Missing `hash` / `times` builtins and `set -v`** — **added (7an):** the low-value trio. See
     the trio lesson below; includes one accepted `hash` auto-cache divergence.
+16. **A fatal error inside the EXIT trap re-entered it and escaped as a Ruby backtrace** — **fixed
+    (17b):** EXIT is claimed once before evaluation; syntax/expansion/readonly/special-builtin
+    failures report once and terminate with 2, while explicit `exit` retains its override semantics.
 
 **Notes:**
 - **`pwd` / `$PWD`**: a fuzz "divergence" where rush printed an inherited `$PWD` vs dash's
