@@ -14,8 +14,6 @@ module Rush
 
     KEYWORDS: Array[String]
 
-    SPECIAL: Array[String]
-
     RESOLVERS: Array[Symbol]
 
     # A resolved lookup result: it is "known", and subclasses render the line

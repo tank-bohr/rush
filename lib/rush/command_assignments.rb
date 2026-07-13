@@ -31,6 +31,16 @@ module Rush
       end
     end
 
+    sig { params(environment: T::Hash[String, String]).returns(T::Hash[String, String]) }
+    def temporary_environment(environment)
+      names.to_h { |name| [name, environment.fetch(name)] }
+    end
+
+    sig { params(environment: T::Hash[String, String], variables: ShellVariables).void }
+    def persist_environment(environment, variables)
+      temporary_environment(environment).each { |name, value| variables.assign(name, value) }
+    end
+
     sig { params(variables: ShellVariables).void }
     def validate(variables)
       @assignments.each { |assignment| variables.validate_assignment(assignment.name) }

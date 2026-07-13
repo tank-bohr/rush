@@ -19,6 +19,14 @@ RSpec.describe Rush::CommandLookup do
     expect(lookup.describe('f')).to eq('f is a shell function')
   end
 
+  it 'does not label an unavailable special builtin and continues to the PATH resolver' do
+    system.register('/usr/bin/:', executable: true)
+    empty = Rush::Builtins::Registry.new
+    custom = Rush::Executor.new(system: system, state: state, builtins: empty)
+
+    expect(described_class.new(custom).describe(':')).to eq(': is /usr/bin/:')
+  end
+
   it 'finds an executable in PATH and a slash path directly' do
     system.register('/usr/bin/ls', executable: true)
     system.register('/opt/t', executable: true)

@@ -120,7 +120,8 @@ RSpec.describe 'rush vs dash (differential IO/files corpus)' do
     ['echo x >nodir/f; echo AFTER', 'echo x >nodir/f; echo $?', 'cat <nodir/f; echo $?',
      'echo x >.; echo $?', 'echo x >>nodir/f; echo $?', '>nodir/f; echo $?',
      'read x <nodir/f; echo AFTER', 'f(){ echo in; }; f >nodir/f; echo AFTER',
-     ': >nodir/f; echo AFTER', 'export X=1 >nodir/f; echo AFTER', 'eval : >nodir/f; echo AFTER',
+     'command : >nodir/f; echo AFTER', ': >nodir/f; echo AFTER',
+     'export X=1 >nodir/f; echo AFTER', 'eval : >nodir/f; echo AFTER',
      'exec 3>nodir/f; echo AFTER', 'trap "echo T" EXIT; : >nodir/f; echo AFTER',
      '( : >nodir/f ); echo AFTER', 'true; : >nodir/f; echo unreached']
   end

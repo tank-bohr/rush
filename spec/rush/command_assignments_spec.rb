@@ -43,6 +43,16 @@ RSpec.describe Rush::CommandAssignments do
     expect(state.variables.get('BASE')).to eq('old')
   end
 
+  it 'selects and persists only the prefix-assignment environment' do
+    values = assignments(%w[A 1], %w[B 2])
+    environment = { 'BASE' => 'kept', 'A' => 'one', 'B' => 'two' }
+
+    expect(values.temporary_environment(environment)).to eq('A' => 'one', 'B' => 'two')
+    values.persist_environment(environment, state.variables)
+    expect([state.variables.get('BASE'), state.variables.get('A'), state.variables.get('B')])
+      .to eq([nil, 'one', 'two'])
+  end
+
   it 'rejects an overlay containing a readonly name' do
     state.variables.readonly('LOCKED')
     values = assignments(%w[OPEN yes], %w[LOCKED no])

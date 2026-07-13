@@ -1,0 +1,57 @@
+module Rush
+  # Ordinary-execution classification plus the assignment and redirect policies
+  # implied by that kind. Lookup/presentation and `command` keep separate search
+  # modes and share only this builtin metadata vocabulary.
+  class CommandResolution
+    extend T::Sig
+
+    class Kind < T::Enum
+      SPECIAL_BUILTIN: Kind
+      FUNCTION: Kind
+      BUILTIN: Kind
+      EXTERNAL: Kind
+    end
+
+    class AssignmentLifetime < T::Enum
+      PERSISTENT: AssignmentLifetime
+      TEMPORARY: AssignmentLifetime
+      ENVIRONMENT: AssignmentLifetime
+    end
+
+    class RedirectFailure < T::Enum
+      FATAL: RedirectFailure
+      ORDINARY: RedirectFailure
+    end
+
+    Policy: untyped
+
+    type policy = [AssignmentLifetime, RedirectFailure]
+
+    SPECIAL_BUILTINS: Array[String]
+    POLICIES: Hash[Kind, policy]
+
+    @kind: Kind
+    @assignment_lifetime: AssignmentLifetime
+    @redirect_failure: RedirectFailure
+
+    def self.for_execution: (String name, FunctionTable functions, Builtins::Registry builtins) -> CommandResolution
+
+    def self.special_builtin?: (String name, Builtins::Registry builtins) -> bool
+
+    def self.execution_kind: (String name, FunctionTable functions, Builtins::Registry builtins) -> Kind
+
+    attr_reader kind: Kind
+    attr_reader assignment_lifetime: AssignmentLifetime
+    attr_reader redirect_failure: RedirectFailure
+
+    def builtin?: () -> bool
+    def function?: () -> bool
+    def persistent_assignments?: () -> bool
+    def temporary_assignments?: () -> bool
+    def fatal_redirect?: () -> bool
+
+    private
+
+    def initialize: (Kind kind) -> void
+  end
+end

@@ -1,8 +1,7 @@
 module Rush
-  # Runs a SimpleCommand: expand argv, evaluate redirections into a per-command
-  # IoTable, then either apply bare assignments (no command word) or dispatch to
-  # a builtin / external. Temporary-vs-persistent assignment scoping for special
-  # builtins is refined in Phase 2.
+  # Runs a SimpleCommand: expand argv, classify it for ordinary execution,
+  # evaluate redirections into a per-command IoTable, then apply the resolution's
+  # assignment and redirect policies while dispatching the selected command kind.
   class CommandRunner
     extend T::Sig
 
@@ -38,33 +37,31 @@ module Rush
     # so it is re-raised as a fatal BuiltinError.
     def run_command: (Array[String] argv) -> Status
 
+    def dispatch_with_redirects: (CommandResolution resolution, Array[String] argv) -> Status
+
     # io is the per-command stream table yielded by with_redirects; its values are
     # the heterogeneous streams IoTable holds (kept untyped, see io_table.rbs).
-    def dispatch: (Array[String] argv, IoTable io) -> Status
+    def dispatch: (CommandResolution resolution, Array[String] argv, IoTable io) -> Status
 
-    def external: (Array[String] argv, IoTable io) -> Status
+    def apply_assignment_policy: (CommandResolution resolution, Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
+
+    def persistent_dispatch: (Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
+
+    def temporary_dispatch: (CommandResolution resolution, Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
+
+    def invoke_temporary: (CommandResolution resolution, Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
+
+    def external: (Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
 
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
     # dash, that fails the command (status 1) without killing the shell.
-    def builtin: (Array[String] argv, IoTable io) -> Status
-
-    def special_builtin: (Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
-
     def invoke_builtin: (Array[String] argv, IoTable io, Hash[String, String] environment) -> Status
-
-    def temporary_env: (Hash[String, String] environment) -> Hash[String, String]
-
-    def persist_environment: (Hash[String, String] environment) -> void
-
-    def special?: (String? name) -> bool
 
     # A function runs in the current shell, not a subshell. The call's redirects
     # (if any) bind the whole body and are torn down when it returns — even an
     # `exec` inside is scoped to them, as dash does. With no redirects the body
     # shares the shell's io table so an `exec` inside *persists*, so wrap in
     # with_io only when a redirect actually layered a new table over the base.
-    def run_function: (Array[String] argv, IoTable io) -> Status
-
     def invoke_function: (Array[String] argv, IoTable io) -> Status
 
     def command_env: (IoTable io) -> Hash[String, String]

@@ -146,6 +146,24 @@ subshell/EXIT status; redirect, job, test and invocation errors retain their nar
 No inheritance-only catch-all decides policy, and control-flow rows are asserted not to acquire a
 diagnostic demotion accidentally.
 
+### Command modes share metadata, not one search algorithm (17e)
+Ordinary execution, `type`/`command -v`, and execution-form `command` look related but have
+intentionally different POSIX orderings. Direct execution resolves special builtin → function →
+regular builtin → external; lookup additionally considers keywords and aliases and reports a
+function before builtin metadata; `command` bypasses functions, while `-p` changes only its
+external path. One universal resolver would silently flatten those distinctions.
+
+`CommandResolution` therefore owns only the shared special-builtin catalog and the typed direct-
+execution result: kind, assignment lifetime, and redirect-failure policy. `CommandRunner` still
+owns expansion, redirect timing, assignment application, external construction, and the
+load-bearing function-redirect lifetime check. Special classification requires both catalog
+membership and a registered implementation in execution *and* lookup; this closes the old drift
+where an unavailable catalog name was reported by `type` as an implemented special builtin even
+though execution fell through. Direct special prefixes persist and redirect setup failures are
+fatal; functions/regular builtins use temporary prefixes; externals receive only an environment
+overlay. A special target reached through the regular `command` builtin inherits the outer
+command's temporary-assignment/nonfatal-redirect policy, not direct-special policy.
+
 ### Incremental execution — `ProgramReader` / `SourceRunner` (7v, 7x)
 The CLI and REPL both pump source **one line at a time** through `ProgramReader`, accumulating
 until a complete program parses (`IncompleteInput` → read another line). Consequences that match

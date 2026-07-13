@@ -89,6 +89,16 @@ module T
 
   Boolean: untyped
 
+  # Sorbet's finite enum base. Concrete enums declare their exact values in the
+  # project RBS; this bridge only types the source-level DSL they use.
+  class Enum
+    def self.enums: () { () -> void } -> void
+
+    def self.new: (?String serialized_val) -> instance
+
+    def serialize: () -> String
+  end
+
   # Generic type references: T::Array[X], T::Hash[K,V], T::Boolean.
   # They are Sorbet type expressions at runtime; for Steep, the singleton []
   # methods simply make those value-level sig-block calls typed.

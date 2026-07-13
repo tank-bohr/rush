@@ -409,6 +409,7 @@ module DifferentialLanguageCorpus
     'command -pv nosuchcmd_zzz; echo "rc=$?"',
     'command -p -v true',
     'f() { :; }; command -p -v f',
+    'f() { echo function; }; command -pv f; command f; echo "rc=$?"',
     'command -p -- echo hi',
     'PATH=/nonexistent; command -p ls /usr/bin/dash; echo "rc=$?"',
     'PATH=/nonexistent; command ls; echo "rc=$?"',

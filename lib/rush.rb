@@ -154,6 +154,7 @@ require_relative 'rush/builtins/job_resume'
 require_relative 'rush/builtins/defaults'
 
 require_relative 'rush/external'
+require_relative 'rush/command_resolution'
 require_relative 'rush/command_lookup'
 require_relative 'rush/command_runner'
 require_relative 'rush/pipeline_statuses'

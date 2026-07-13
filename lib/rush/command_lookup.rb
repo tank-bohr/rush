@@ -12,7 +12,6 @@ module Rush
     extend T::Sig
 
     KEYWORDS = %w[! { } case do done elif else esac fi for if in then until while].freeze
-    SPECIAL = %w[: . break continue eval exec exit export readonly return set shift times trap unset].freeze
     RESOLVERS = %i[as_keyword as_alias as_function as_special as_builtin as_file].freeze
 
     # A resolved lookup result: it is "known", and subclasses render the line
@@ -178,7 +177,9 @@ module Rush
 
     sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }
     def as_special(name)
-      name && SPECIAL.include?(name) ? Labelled.new(name, 'a special shell builtin') : nil
+      return unless name && CommandResolution.special_builtin?(name, @executor.builtins)
+
+      Labelled.new(name, 'a special shell builtin')
     end
 
     sig { params(name: T.nilable(String)).returns(T.nilable(Match)) }

@@ -2,10 +2,9 @@
 # frozen_string_literal: true
 
 module Rush
-  # Runs a SimpleCommand: expand argv, evaluate redirections into a per-command
-  # IoTable, then either apply bare assignments (no command word) or dispatch to
-  # a builtin / external. Temporary-vs-persistent assignment scoping for special
-  # builtins is refined in Phase 2.
+  # Runs a SimpleCommand: expand argv, classify it for ordinary execution,
+  # evaluate redirections into a per-command IoTable, then apply the resolution's
+  # assignment and redirect policies while dispatching the selected command kind.
   class CommandRunner
     extend T::Sig
 
@@ -65,66 +64,72 @@ module Rush
     # so it is re-raised as a fatal BuiltinError.
     sig { params(argv: T::Array[String]).returns(Status) }
     def run_command(argv)
-      @executor.redirect_scope.with_redirects(@command.redirects, @base_io) { |io| dispatch(argv, io) }
+      resolution = CommandResolution.for_execution(argv.fetch(0), @executor.state.functions, @executor.builtins)
+      dispatch_with_redirects(resolution, argv)
+    end
+
+    sig { params(resolution: CommandResolution, argv: T::Array[String]).returns(Status) }
+    def dispatch_with_redirects(resolution, argv)
+      @executor.redirect_scope.with_redirects(@command.redirects, @base_io) { |io| dispatch(resolution, argv, io) }
     rescue RedirectError => e
-      raise BuiltinError, e.message if special?(argv.first)
+      raise unless resolution.fatal_redirect?
 
-      raise
+      raise BuiltinError, e.message
     end
 
-    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
-    def dispatch(argv, io)
-      name = argv.fetch(0)
-      return builtin(argv, io) if special?(name)
-      return run_function(argv, io) if @executor.state.functions.key?(name)
-      return builtin(argv, io) if @executor.builtins.key?(name)
-
-      external(argv, io)
-    end
-
-    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
-    def external(argv, io)
+    sig { params(resolution: CommandResolution, argv: T::Array[String], io: IoTable).returns(Status) }
+    def dispatch(resolution, argv, io)
       environment = command_env(io)
+      apply_assignment_policy(resolution, argv, io, environment)
+    end
+
+    sig do
+      params(resolution: CommandResolution, argv: T::Array[String], io: IoTable,
+             environment: T::Hash[String, String]).returns(Status)
+    end
+    def apply_assignment_policy(resolution, argv, io, environment)
+      return persistent_dispatch(argv, io, environment) if resolution.persistent_assignments?
+      return temporary_dispatch(resolution, argv, io, environment) if resolution.temporary_assignments?
+
+      external(argv, io, environment)
+    end
+
+    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
+    def persistent_dispatch(argv, io, environment)
+      @assignments.persist_environment(environment, @executor.state.variables)
+      invoke_builtin(argv, io, environment)
+    end
+
+    sig do
+      params(resolution: CommandResolution, argv: T::Array[String], io: IoTable,
+             environment: T::Hash[String, String]).returns(Status)
+    end
+    def temporary_dispatch(resolution, argv, io, environment)
+      values = @assignments.temporary_environment(environment)
+      @executor.state.variables.with_temporary(values) { invoke_temporary(resolution, argv, io, environment) }
+    end
+
+    sig do
+      params(resolution: CommandResolution, argv: T::Array[String], io: IoTable,
+             environment: T::Hash[String, String]).returns(Status)
+    end
+    def invoke_temporary(resolution, argv, io, environment)
+      resolution.function? ? invoke_function(argv, io) : invoke_builtin(argv, io, environment)
+    end
+
+    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
+    def external(argv, io, environment)
       @assignments.validate(@executor.state.variables)
       External.new(@executor, argv, io, environment).call(@executor.job_control.job_text(@command))
     end
 
+    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
     # A builtin reading from or writing to a fd closed by n>&- raises EBADF; like
     # dash, that fails the command (status 1) without killing the shell.
-    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
-    def builtin(argv, io)
-      environment = command_env(io)
-      return special_builtin(argv, io, environment) if special?(argv.first)
-
-      @executor.state.variables.with_temporary(temporary_env(environment)) { invoke_builtin(argv, io, environment) }
-    rescue Errno::EBADF
-      Status.new(1)
-    end
-
-    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
-    def special_builtin(argv, io, environment)
-      persist_environment(environment)
-      invoke_builtin(argv, io, environment)
-    end
-
-    sig { params(argv: T::Array[String], io: IoTable, environment: T::Hash[String, String]).returns(Status) }
     def invoke_builtin(argv, io, environment)
       @executor.builtins.fetch(argv.fetch(0)).new(@executor, argv, io, environment).call
-    end
-
-    sig { params(environment: T::Hash[String, String]).returns(T::Hash[String, String]) }
-    def temporary_env(environment)
-      environment.slice(*@assignments.names)
-    end
-
-    sig { params(environment: T::Hash[String, String]).void }
-    def persist_environment(environment)
-      temporary_env(environment).each { |name, value| @executor.state.variables.assign(name, value) }
-    end
-
-    sig { params(name: T.nilable(String)).returns(T::Boolean) }
-    def special?(name)
-      CommandLookup::SPECIAL.include?(name) && @executor.builtins.key?(name)
+    rescue Errno::EBADF
+      Status.new(1)
     end
 
     # A function runs in the current shell, not a subshell. The call's redirects
@@ -132,12 +137,6 @@ module Rush
     # `exec` inside is scoped to them, as dash does. With no redirects the body
     # shares the shell's io table so an `exec` inside *persists*, so wrap in
     # with_io only when a redirect actually layered a new table over the base.
-    sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
-    def run_function(argv, io)
-      environment = command_env(io)
-      @executor.state.variables.with_temporary(temporary_env(environment)) { invoke_function(argv, io) }
-    end
-
     sig { params(argv: T::Array[String], io: IoTable).returns(Status) }
     def invoke_function(argv, io)
       body = @executor.state.functions.fetch(argv.fetch(0))
