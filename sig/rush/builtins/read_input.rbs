@@ -9,6 +9,32 @@ module Rush
     class ReadInput
       extend T::Sig
 
+      class LineReader
+        extend T::Sig
+
+        POLL_INTERVAL: Float
+
+        @stream: _IoStream
+
+        @pending: ^() -> bool
+
+        def initialize: (_IoStream stream, ^() -> bool pending) -> void
+
+        def gets: () -> String?
+
+        private
+
+        def wait_for_line: (IO stream) -> String?
+
+        def read_step: (IO stream, String line) -> void
+
+        def append_char: (String line, String char) -> void
+
+        def next_char: (IO stream) -> untyped
+
+        def read_char: (IO stream) -> untyped
+      end
+
       # A line whose backslash-pairs all match, leaving one lone trailing
       # backslash: a line-continuation request.
       CONTINUED: Regexp
@@ -16,7 +42,7 @@ module Rush
       # One output character: an optional escaping backslash and the character.
       PAIR: Regexp
 
-      @stdin: _IoStream
+      @reader: LineReader
 
       @raw: bool
 
@@ -24,11 +50,13 @@ module Rush
 
       @complete: bool
 
-      def initialize: (_IoStream stdin, bool raw) -> void
+      def initialize: (_IoStream stdin, bool raw, ?pending: ^() -> bool) -> void
 
-      def call: () -> [ Array[[ String, bool ]], bool ]
+      def call: () -> [ Array[[ String, bool ]], bool ]?
 
       private
+
+      def partial_result: (String partial) -> [ Array[[ String, bool ]], bool ]?
 
       def gather: () -> void
 

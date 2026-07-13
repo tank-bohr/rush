@@ -1,0 +1,27 @@
+module Rush
+  class JobTable
+    class InterruptibleWait
+      extend T::Sig
+
+      POLL_INTERVAL: Float
+
+      @system: SystemCalls
+
+      @control: Control
+
+      @target: Integer
+
+      @pending: ^() -> Integer?
+
+      def initialize: (SystemCalls system, Control control, Integer target, ^() -> Integer? pending) -> void
+
+      def call: () -> (Process::Status | Status)
+
+      private
+
+      def interrupted: () -> Status?
+
+      def poll: () -> Process::Status?
+    end
+  end
+end

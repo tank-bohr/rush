@@ -38,13 +38,18 @@ RSpec.describe Rush::SystemCalls do
     end
   end
 
-  describe '#poll_child / #poll_stopped' do
-    it 'polls WNOHANG, adding WUNTRACED only for the monitor-mode form' do
+  describe '#poll_child / #poll_pid / #poll_stopped / #poll_pid_stopped' do
+    it 'polls WNOHANG, adding WUNTRACED only for the monitor-mode forms' do
       allow(Process).to receive(:waitpid2).and_return(nil)
       system.poll_child
+      system.poll_pid(7)
       expect(Process).to have_received(:waitpid2).with(-1, Process::WNOHANG)
+      expect(Process).to have_received(:waitpid2).with(7, Process::WNOHANG)
       system.poll_stopped
-      expect(Process).to have_received(:waitpid2).with(-1, Process::WNOHANG | Process::WUNTRACED)
+      system.poll_pid_stopped(7)
+      flags = Process::WNOHANG | Process::WUNTRACED
+      expect(Process).to have_received(:waitpid2).with(-1, flags)
+      expect(Process).to have_received(:waitpid2).with(7, flags)
     end
   end
 

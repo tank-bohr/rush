@@ -91,8 +91,18 @@ module FakeJobControl
     index && @children.delete_at(index)
   end
 
+  def poll_pid(pid)
+    child = @children.find { |child_pid, status| child_pid == pid && !status.stopped? }
+    child ? @children.delete(child) : [pid, @wait_status]
+  end
+
   def poll_stopped
     @children.shift
+  end
+
+  def poll_pid_stopped(pid)
+    child = @children.find { |child_pid, _status| child_pid == pid }
+    child ? @children.delete(child) : [pid, @wait_status]
   end
 
   def reap(pid, settled_only:)

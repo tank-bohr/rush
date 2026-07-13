@@ -17,8 +17,12 @@ module Rush
 
       def poll_child: () -> [ Integer, Process::Status ]?
 
+      def poll_pid: (Integer pid) -> [ Integer, Process::Status ]?
+
       # The monitor-mode WUNTRACED poll.
       def poll_stopped: () -> [ Integer, Process::Status ]?
+
+      def poll_pid_stopped: (Integer pid) -> [ Integer, Process::Status ]?
 
       def setpgid: (Integer pid, Integer pgid) -> void
 

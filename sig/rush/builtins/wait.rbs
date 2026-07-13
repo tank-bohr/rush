@@ -27,6 +27,8 @@ module Rush
       # wait answers the same); %ids validate through resolution itself.
       def each_pid: (Array[String] args) -> Status
 
+      def statuses: (Array[String] args) -> Status
+
       def status_of: (String operand) -> Status
 
       def job_pid: (String operand) -> Integer
@@ -36,6 +38,10 @@ module Rush
       def parse: (String operand) -> Integer?
 
       def awaited: (Integer pid) -> Status
+
+      def interruptible_wait: (Integer pid) -> Status?
+
+      def pending_status: (Status status) -> Status
 
       def bad: (String operand) -> Status
 

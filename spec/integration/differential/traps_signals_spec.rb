@@ -1,8 +1,18 @@
 # frozen_string_literal: true
 
+require 'shellwords'
+
 # Trap and signal-handling differential cases.
 RSpec.describe 'rush vs dash (differential traps/signals corpus)' do
   before { skip 'dash not installed' unless system('command -v dash > /dev/null 2>&1') }
+
+  def with_fifo
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, 'gate')
+      system('mkfifo', path)
+      yield(path)
+    end
+  end
 
   corpus = [
     # trap: only stdout + exit status are compared, so the "bad trap" diagnostics
@@ -22,6 +32,14 @@ RSpec.describe 'rush vs dash (differential traps/signals corpus)' do
     "trap 'echo X; shift' EXIT",
     %q[trap '(trap "echo inner-sub" EXIT; :)' EXIT],
     %q[trap 'x=$(trap "echo inner-cs" EXIT; :); echo "[$x]"' EXIT],
+    "trap 'echo T' USR1; sh -c 'kill -USR1 $1; echo S' sh $$; echo A",
+    "trap 'echo in=$?' USR1; sh -c 'kill -USR1 $1; exit 5' sh $$; echo out=$?",
+    "trap 'echo U1' USR1; trap 'echo U2' USR2; sh -c 'kill -USR2 $1; kill -USR1 $1' sh $$",
+    "trap 'echo A; kill -USR2 $$; echo B' USR1; trap 'echo C' USR2; kill -USR1 $$; echo D",
+    "n=0; trap 'n=$((n+1)); echo A$n; if [ $n -eq 1 ]; then kill -USR1 $$; fi; echo B$n' USR1; " \
+    'kill -USR1 $$; echo D',
+    "trap 'echo T' USR1; trap 'echo E' EXIT; sh -c 'kill -USR1 $1; echo S' sh $$",
+    "trap 'echo T' USR1; trap 'echo E1; kill -USR1 $$; echo E2' EXIT",
     "trap 'echo a' EXIT; trap 'echo b' INT; trap; echo end",
     "trap 'echo hi' INT TERM HUP; trap",
     "trap '' INT; trap",
@@ -70,6 +88,29 @@ RSpec.describe 'rush vs dash (differential traps/signals corpus)' do
 
     it "#{id}: matches dash for: #{snippet}" do
       expect(rush(snippet)).to eq(dash(snippet))
+    end
+  end
+
+  describe 'traps interrupting wait and read' do
+    it 'interrupts wait with 128+signal and leaves the job waitable' do
+      with_fifo do |gate|
+        source = "f=#{Shellwords.escape(gate)}; trap 'echo T:$?; echo go > \"$f\"' USR1; " \
+                 "sh -c 'while :; do case $(ps -o stat= -p \"$1\") in S*) break;; esac; done; " \
+                 "kill -USR1 \"$1\"; read x < \"$2\"; exit 7' sh $$ \"$f\" & p=$!; " \
+                 'wait $p; echo W:$?; wait $p; echo W2:$?'
+        expect(rush(source)).to eq(dash(source))
+      end
+    end
+
+    it 'interrupts read with 1, assigning only bytes consumed before the signal' do
+      with_fifo do |gate|
+        source = "f=#{Shellwords.escape(gate)}; exec 3<>\"$f\"; printf part >&3; " \
+                 "trap 'echo T:$?; echo data >&3' USR1; " \
+                 "sh -c 'while :; do case $(ps -o stat= -p \"$1\") in S*) break;; esac; done; " \
+                 "kill -USR1 \"$1\"' sh $$ & p=$!; read x <&3; echo R:$?:\"$x\"; " \
+                 'read y <&3; echo R2:$?:"$y"; wait $p'
+        expect(rush(source)).to eq(dash(source))
+      end
     end
   end
 

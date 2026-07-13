@@ -143,12 +143,13 @@ module Rush
       # repeatably (dash-probed), and a running one blocks in the supplied
       # wait — which may itself park the job. A fork-inherited display copy
       # is never reapable: it answers nil, the callers' unknown-job path.
-      sig { params(blk: T.proc.returns(Process::Status)).returns(T.nilable(Status)) }
+      sig { params(blk: T.proc.returns(T.any(Process::Status, Status))).returns(T.nilable(Status)) }
       def harvest(&blk)
         return if inherited?
+        return status unless running?
 
-        finish(yield) if running?
-        status
+        result = yield
+        result.is_a?(Status) ? result : finish(result)
       end
 
       sig { returns(T::Boolean) }

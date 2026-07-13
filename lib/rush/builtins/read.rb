@@ -59,7 +59,10 @@ module Rush
 
       sig { params(raw: T::Boolean, names: T::Array[String]).returns(Status) }
       def read_and_assign(raw, names)
-        chars, complete = ReadInput.new(stdin, raw).call
+        result = ReadInput.new(stdin, raw, pending: -> { executor.trap_runner.pending? }).call
+        return failure unless result
+
+        chars, complete = result
         assign(chars, names)
         complete ? success : failure
       end

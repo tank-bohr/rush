@@ -45,11 +45,19 @@ module Rush
         Process.waitpid2(-1, Process::WNOHANG)
       end
 
+      def poll_pid(pid)
+        Process.waitpid2(pid, Process::WNOHANG)
+      end
+
       # The monitor-mode poll (pairs with wait_stoppable as poll_child pairs
       # with waitpid2): WUNTRACED, so the jobs builtin also sees a background
       # job freshly SIGSTOPped since the last wait.
       def poll_stopped
         Process.waitpid2(-1, Process::WNOHANG | Process::WUNTRACED)
+      end
+
+      def poll_pid_stopped(pid)
+        Process.waitpid2(pid, Process::WNOHANG | Process::WUNTRACED)
       end
 
       # Place a process into a process group (pid 0 = the caller, pgid 0 = its

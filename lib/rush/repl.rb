@@ -35,9 +35,15 @@ module Rush
 
     sig { params(continuation: T::Boolean).returns(T.nilable(String)) }
     def prompt_line(continuation)
-      announce_jobs unless continuation
-      text = continuation ? prompt.continuation : prompt.primary
+      text = continuation ? prompt.continuation : primary_prompt
       system.tty? ? edited_line(text) : plain_line(text)
+    end
+
+    sig { returns(String) }
+    def primary_prompt
+      executor.trap_runner.run_pending
+      announce_jobs
+      prompt.primary
     end
 
     # dash's cmdloop showjobs(SHOW_CHANGED): before each PS1 under monitor

@@ -89,7 +89,7 @@ module Rush
       # Reap once: the first harvest fills raw from the supplied wait;
       # repeats answer from memory (dash never frees an entry on wait). A
       # fork-inherited display copy answers nil — never reapable here.
-      def harvest: () { () -> Process::Status } -> Status?
+      def harvest: () { () -> (Process::Status | Status) } -> Status?
 
       def pid: () -> Integer
 
@@ -145,6 +145,8 @@ module Rush
     # or a fork-inherited display copy (POSIX: 127).
     def wait_for: (Integer pid) -> Status?
 
+    def wait_for_interruptibly: (Integer pid) { () -> Integer? } -> Status?
+
     # A forked child environment is a duplicate of the shell environment
     # (POSIX 2.12), async pids included: entries stay for display (jobs,
     # jobs -p, the parent's `wait $(jobs -p)`) but demote to inherited
@@ -170,6 +172,8 @@ module Rush
     private
 
     def settle: (Integer pid) -> Process::Status
+
+    def interruptible_settle: (Integer pid, ^() -> Integer? pending) -> (Process::Status | Status)
 
     def free_number: () -> Integer
 

@@ -9,9 +9,9 @@ module Rush
 
     @executor: Executor
 
-    @state: ShellState
-
     @exit_trap: ExitTrap
+
+    @pending: PendingSignals
 
     @base: Hash[String, Proc]
 
@@ -29,6 +29,14 @@ module Rush
 
     def run_exit_trap: (Integer code) -> Integer
 
+    def run_pending: () -> void
+
+    def complete: (Status status) -> Status
+
+    def pending?: () -> bool
+
+    def pending_exitstatus: () -> Integer?
+
     # The status a bare `exit` reports: while the EXIT trap runs, the status the
     # shell is terminating with (POSIX), not the trap body's last $?; otherwise
     # the last command's status.
@@ -43,6 +51,8 @@ module Rush
     def reset_caught_for_subshell: () -> void
 
     private
+
+    def state: () -> ShellState
 
     def fire: (String action) -> void
 
@@ -64,6 +74,6 @@ module Rush
 
     # Run a delivered signal's action, restoring $? so the interrupted code is
     # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.
-    def fire_signal: (String name) -> void
+    def deliver: (String name) -> void
   end
 end

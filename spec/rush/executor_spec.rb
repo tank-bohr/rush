@@ -46,6 +46,21 @@ RSpec.describe Rush::Executor do
     expect(target.last_status.exitstatus).to eq(1)
   end
 
+  it 'delivers a caught signal after the current node records its status' do
+    executor = build(state)
+    executor.trap_runner.set('USR1', 'echo T:$?')
+    fake = system
+    node = Class.new(Rush::AST::Node) do
+      define_method(:execute) do |_executor|
+        fake.trap_block('USR1').call
+        fake.stdout.puts('S')
+        Rush::Status.new(5)
+      end
+    end
+    executor.run(node.new)
+    expect([system.stdout.string, executor.state.last_status.exitstatus]).to eq(["S\nT:5\n", 5])
+  end
+
   it 'skips synchronous and asynchronous execution under noexec' do
     target = state
     target.options.set(:noexec, true)

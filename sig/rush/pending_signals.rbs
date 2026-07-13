@@ -1,0 +1,28 @@
+module Rush
+  # Coalesces caught signals until the evaluator reaches a safe command
+  # boundary. POSIX does not require multiple instances of one signal to queue;
+  # dash drains distinct pending signals in signal-number order.
+  class PendingSignals
+    extend T::Sig
+
+    @names: Hash[String, bool]
+
+    def initialize: () -> void
+
+    def record: (String name) -> void
+
+    def drain: () { (String name) -> void } -> void
+
+    def first: () -> String?
+
+    def any?: () -> bool
+
+    def clear: () -> void
+
+    private
+
+    def take: () -> Array[String]
+
+    def empty: () -> Hash[String, bool]
+  end
+end

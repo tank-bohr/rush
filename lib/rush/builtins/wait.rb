@@ -34,7 +34,10 @@ module Rush
       # 128+stopsig at once, so wait never blocks on it (dash-probed).
       sig { returns(Status) }
       def all
-        executor.jobs.ordered.each { |job| executor.jobs.wait_for(job.pid) }
+        executor.jobs.ordered.each do |job|
+          status = interruptible_wait(job.pid)
+          return pending_status(T.must(status)) if executor.trap_runner.pending?
+        end
         success
       end
 
@@ -46,9 +49,16 @@ module Rush
         malformed = args.find { |operand| !operand.start_with?('%') && !parse(operand) }
         return bad(malformed) if malformed
 
-        args.map { |operand| status_of(operand) }.fetch(-1)
+        statuses(args)
       rescue JobError => e
         no_job(e)
+      end
+
+      sig { params(args: T::Array[String]).returns(Status) }
+      def statuses(args)
+        status = T.let(success, Status)
+        status = status_of(T.must(args.shift)) until args.empty? || executor.trap_runner.pending?
+        pending_status(status)
       end
 
       sig { params(operand: String).returns(Status) }
@@ -82,8 +92,19 @@ module Rush
       # never reports, also probed).
       sig { params(pid: Integer).returns(Status) }
       def awaited(pid)
-        status = executor.jobs.wait_for(pid)
+        status = interruptible_wait(pid)
         status ? SignalReport.report(status, stderr) : failure(127)
+      end
+
+      sig { params(pid: Integer).returns(T.nilable(Status)) }
+      def interruptible_wait(pid)
+        executor.jobs.wait_for_interruptibly(pid) { executor.trap_runner.pending_exitstatus }
+      end
+
+      sig { params(status: Status).returns(Status) }
+      def pending_status(status)
+        code = executor.trap_runner.pending_exitstatus
+        code ? Status.new(code) : status
       end
 
       sig { params(operand: String).returns(Status) }

@@ -13,8 +13,8 @@ module Rush
     sig { params(executor: Executor).void }
     def initialize(executor)
       @executor = executor
-      @state = executor.state
       @exit_trap = ExitTrap.new(executor)
+      @pending = PendingSignals.new
       @base = T.let(
         {}, #: Hash[String, Proc]
         T::Hash[String, Proc]
@@ -39,7 +39,7 @@ module Rush
     def set_base(name, handler)
       @base.delete(name)
       @base[name] = handler if handler
-      install_signal(name, :default) unless @state.traps.action(name)
+      install_signal(name, :default) unless state.traps.action(name)
     end
 
     # Run the EXIT trap (if any) as the shell terminates, returning the status the
@@ -47,7 +47,31 @@ module Rush
     # inside the trap is that same code (POSIX 2.14), so it is published first.
     sig { params(code: Integer).returns(Integer) }
     def run_exit_trap(code)
+      run_pending
       @exit_trap.run(code)
+    end
+
+    # Evaluate caught traps only at explicit shell checkpoints, never from the
+    # Ruby Signal.trap callback. No delivery guard: dash permits nested and
+    # same-signal traps to run at command boundaries inside an action.
+    sig { void }
+    def run_pending
+      @pending.drain { |name| deliver(name) }
+    end
+
+    sig { params(status: Status).returns(Status) }
+    def complete(status)
+      state.record_status(status).tap { run_pending }
+    end
+
+    sig { returns(T::Boolean) }
+    def pending?
+      @pending.any?
+    end
+
+    sig { returns(T.nilable(Integer)) }
+    def pending_exitstatus
+      @pending.first&.then { |name| Signals.number(name) + 128 }
     end
 
     # The status a bare `exit` reports: while the EXIT trap runs, the status the
@@ -62,28 +86,34 @@ module Rush
     # delivered signal runs the action / is ignored / restores the default.
     sig { params(name: String, action: String).void }
     def set(name, action)
-      @state.traps.set(name, action)
+      state.traps.set(name, action)
       install_signal(name, action)
     end
 
     sig { params(name: String).void }
     def reset(name)
-      @state.traps.clear(name)
+      state.traps.clear(name)
       install_signal(name, :default)
     end
 
     sig { void }
     def reset_caught_for_subshell
       @exit_trap = ExitTrap.new(@executor)
+      @pending.clear
       drop_base
-      @state.traps.reset_caught.each { |name| install_signal(name, :default) }
+      state.traps.reset_caught.each { |name| install_signal(name, :default) }
     end
 
     private
 
+    sig { returns(ShellState) }
+    def state
+      @executor.state
+    end
+
     sig { params(action: String).void }
     def fire(action)
-      @executor.run(Parser.new(Lexer.new(action, aliases: @state.aliases)).parse)
+      @executor.run(Parser.new(Lexer.new(action, aliases: state.aliases)).parse)
     rescue ParseError, ExpansionError, ReadonlyError, LoopControl, ReturnSignal
       nil
     end
@@ -105,7 +135,7 @@ module Rush
       base = @base.fetch(name, nil)
       return @executor.system.trap_signal(name, nil) { base.call } if disposition == 'SYSTEM_DEFAULT' && base
 
-      @executor.system.trap_signal(name, disposition) { fire_signal(name) }
+      @executor.system.trap_signal(name, disposition) { @pending.record(name) }
     end
 
     # Subshells reset the base handlers to the true OS default before the
@@ -131,11 +161,9 @@ module Rush
     # Run a delivered signal's action, restoring $? so the interrupted code is
     # unaffected (POSIX 2.14); an `exit` in the action propagates and terminates.
     sig { params(name: String).void }
-    def fire_signal(name)
-      action = @state.traps.action(name)
-      return unless action
-
-      @state.preserve_status { fire(action) }
+    def deliver(name)
+      action = state.traps.action(name)
+      state.preserve_status { fire(action) } if action
     end
   end
 end

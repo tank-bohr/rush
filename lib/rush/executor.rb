@@ -73,9 +73,10 @@ module Rush
     def run(node)
       return @state.last_status if noexec?
 
-      @state.record_status(node.execute(self))
+      @trap_runner.run_pending
+      @trap_runner.complete(node.execute(self))
     rescue RedirectError
-      @state.record_status(Status.new(2))
+      @trap_runner.complete(Status.new(2))
     end
 
     sig { returns(T::Boolean) }

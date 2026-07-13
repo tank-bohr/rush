@@ -134,6 +134,12 @@ RSpec.describe Rush::JobTable do
       expect(table.wait_for(9)).to be_success
       expect(table.wait_for(9)).to be_success
     end
+
+    it 'also guards ECHILD while polling an interruptible wait' do
+      table.record(9)
+      allow(system).to receive(:poll_pid).and_raise(Errno::ECHILD)
+      expect(table.wait_for_interruptibly(9) { nil }).to be_success
+    end
   end
 
   describe '#enter_subshell' do

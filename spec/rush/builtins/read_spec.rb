@@ -10,6 +10,18 @@ RSpec.describe Rush::Builtins::Read do
     [described_class.new(executor, ['read', *args], Rush::IoTable.standard(system)).call, system]
   end
 
+  def interrupt_after(reader, system, byte_count)
+    wait = reader.method(:wait_readable)
+    polls = 0
+    allow(reader).to receive(:wait_readable) do |timeout|
+      polls += 1
+      next wait.call(timeout) if polls <= byte_count
+
+      system.trap_block('USR1').call
+      false
+    end
+  end
+
   it 'reads fields into variables, the remainder to the last' do
     status, = read("x y z w\n", 'a', 'b', 'c')
     expect(status).to be_success
@@ -71,6 +83,35 @@ RSpec.describe Rush::Builtins::Read do
     status, = read("a\\ b c\n", 'first', 'rest')
     expect(status).to be_success
     expect([env.get('first'), env.get('rest')]).to eq(['a b', 'c'])
+  end
+
+  it 'fails an interrupted read but assigns input consumed before the signal' do
+    reader, writer = IO.pipe
+    writer.write('partial')
+    system = FakeSystemCalls.new
+    executor = Rush::Executor.new(system: system, state: state)
+    executor.trap_runner.set('USR1', 'echo T:$?')
+    interrupt_after(reader, system, 7)
+    io = Rush::IoTable.standard(system).with(0, reader)
+    status = executor.with_io(io) { executor.run(Rush::Parser.new(Rush::Lexer.new('read value')).parse) }
+    expect([status.exitstatus, system.stdout.string, env.get('value')]).to eq([1, "T:1\n", 'partial'])
+  ensure
+    reader&.close
+    writer&.close
+  end
+
+  it 'assigns nothing when interruption arrives before any input' do
+    reader, writer = IO.pipe
+    system = FakeSystemCalls.new
+    executor = Rush::Executor.new(system: system, state: state)
+    executor.trap_runner.set('USR1', 'true')
+    system.trap_block('USR1').call
+    io = Rush::IoTable.standard(system).with(0, reader)
+    status = described_class.new(executor, %w[read value], io).call
+    expect([status.exitstatus, env.get('value')]).to eq([1, nil])
+  ensure
+    reader&.close
+    writer&.close
   end
 
   it 'errors with exit status 2 when given no variable' do

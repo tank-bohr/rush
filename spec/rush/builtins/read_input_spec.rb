@@ -9,6 +9,42 @@ RSpec.describe Rush::Builtins::ReadInput do
     expect(gather("ab\n")).to eq([[['a', false], ['b', false]], true])
   end
 
+  it 'waits for readable IO before consuming a physical line' do
+    reader, writer = IO.pipe
+    writer.write("ab\n")
+    expect(described_class.new(reader, false).call).to eq([[['a', false], ['b', false]], true])
+  ensure
+    reader&.close
+    writer&.close
+  end
+
+  it 'returns a partial IO line when EOF arrives without a newline' do
+    reader, writer = IO.pipe
+    writer.write('ab')
+    writer.close
+    expect(described_class.new(reader, false).call).to eq([[['a', false], ['b', false]], false])
+  ensure
+    reader&.close
+    writer&.close unless writer&.closed?
+  end
+
+  it 'retries when readability races with a nonblocking read' do
+    reader, writer = IO.pipe
+    writer.write("a\n")
+    original = reader.method(:read_nonblock)
+    calls = 0
+    allow(reader).to receive(:read_nonblock) do |*args|
+      calls += 1
+      raise IO::EAGAINWaitReadable if calls == 1
+
+      original.call(*args)
+    end
+    expect(described_class.new(reader, false).call).to eq([[['a', false]], true])
+  ensure
+    reader&.close
+    writer&.close
+  end
+
   it 'annotates a backslash-escaped character and drops the backslash' do
     expect(gather("a\\ b\n")).to eq([[['a', false], [' ', true], ['b', false]], true])
   end

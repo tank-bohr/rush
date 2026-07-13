@@ -16,10 +16,12 @@ RSpec.describe Rush::TrapRunner do
     expect(system.trap_block('INT').call).to eq(:interrupted)
   end
 
-  it 'lets a trap action override a base handler' do
+  it 'queues a trap action until an explicit safe checkpoint' do
     install_base
     runner.set('INT', 'echo got')
     system.trap_block('INT').call
+    expect(system.stdout.string).to be_empty
+    runner.run_pending
     expect(system.stdout.string).to eq("got\n")
   end
 
@@ -74,13 +76,15 @@ RSpec.describe Rush::TrapRunner do
     runner.set('USR1', 'true')
     executor.state.record_status(Rush::Status.new(7))
     system.trap_block('USR1').call
+    runner.run_pending
     expect(executor.state.last_status.exitstatus).to eq(7)
   end
 
-  it 'does nothing when the action was cleared under a live handler' do
+  it 'does nothing when the action was cleared after delivery but before the checkpoint' do
     runner.set('USR1', 'echo got')
+    system.trap_block('USR1').call
     executor.state.traps.clear('USR1')
-    expect { system.trap_block('USR1').call }.not_to raise_error
+    expect { runner.run_pending }.not_to raise_error
     expect(system.stdout.string).to eq('')
   end
 
@@ -88,12 +92,23 @@ RSpec.describe Rush::TrapRunner do
     executor.state.aliases.define('greet', 'echo hi')
     runner.set('USR1', 'greet')
     system.trap_block('USR1').call
+    runner.run_pending
     expect(system.stdout.string).to eq("hi\n")
   end
 
   it 'swallows a broken trap action without killing the shell' do
     runner.set('USR1', 'if')
-    expect { system.trap_block('USR1').call }.not_to raise_error
+    system.trap_block('USR1').call
+    expect { runner.run_pending }.not_to raise_error
+  end
+
+  it 'reports the pending wait status and clears inherited pending signals in a subshell' do
+    runner.set('USR1', 'echo got')
+    system.trap_block('USR1').call
+    expect(runner.pending_exitstatus).to eq(138)
+    runner.reset_caught_for_subshell
+    runner.run_pending
+    expect(system.stdout.string).to be_empty
   end
 
   describe '#run_exit_trap' do

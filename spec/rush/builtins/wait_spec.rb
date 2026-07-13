@@ -15,6 +15,19 @@ RSpec.describe Rush::Builtins::Wait do
     system.provide_child(pid, exitstatus)
   end
 
+  def execute(source)
+    executor.run(Rush::Parser.new(Rush::Lexer.new(source)).parse)
+  end
+
+  def signal_on_reap(first_pid)
+    sent = false
+    allow(system).to receive(:poll_pid) do |pid|
+      system.trap_block('USR1').call if pid == first_pid && !sent
+      sent = true if pid == first_pid
+      [pid, FakeSystemCalls::ChildStatus.new(pid == 9 ? 3 : 5)]
+    end
+  end
+
   it 'succeeds with no operands after collecting every background job' do
     launch(9, 4)
     launch(11, 5)
@@ -31,9 +44,43 @@ RSpec.describe Rush::Builtins::Wait do
     expect(executor.jobs.current.stopped?).to be(true)
   end
 
+  it 'uses a WUNTRACED poll for a running job under monitor mode' do
+    executor.jobs.control.engage(nil)
+    launch(9, 4)
+    expect(run('9').exitstatus).to eq(4)
+  end
+
   it 'returns the status of a background job pid' do
     launch(9, 5)
     expect(run('9').exitstatus).to eq(5)
+  end
+
+  ['wait 9', 'wait'].each do |source|
+    it "interrupts #{source.inspect} for a caught signal without consuming the job" do
+      executor.jobs.record(9)
+      executor.trap_runner.set('USR1', 'echo T:$?')
+      polls = 0
+      allow(system).to receive(:poll_pid) do |pid|
+        polls += 1
+        system.trap_block('USR1').call if polls == 1
+        [pid, FakeSystemCalls::ChildStatus.new(7)] if polls > 1
+      end
+      status = execute(source)
+      expect([status.exitstatus, system.stdout.string, executor.jobs.current.running?]).to eq([138, "T:138\n", true])
+      expect(run('9').exitstatus).to eq(7)
+    end
+  end
+
+  [['wait 9 11', 9], ['wait', 11]].each do |source, first_pid|
+    it "interrupts #{source.inspect} when the signal races with a completed child" do
+      launch(9, 3)
+      launch(11, 5)
+      executor.trap_runner.set('USR1', 'echo T:$?')
+      signal_on_reap(first_pid)
+      status = execute(source)
+      expect([status.exitstatus, system.stdout.string]).to eq([138, "T:138\n"])
+      expect([run('9').exitstatus, run('11').exitstatus]).to eq([3, 5])
+    end
   end
 
   it 'returns the last operand status across several pids' do

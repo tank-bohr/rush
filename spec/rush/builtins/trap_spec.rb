@@ -102,10 +102,12 @@ RSpec.describe Rush::Builtins::Trap do
     expect(traps.action('KILL')).to eq('echo x')
   end
 
-  it 'runs the action and restores $? when the signal is delivered' do
+  it 'queues the action until a checkpoint and restores $? when delivered' do
     state.record_status(Rush::Status.failure(7))
     run('echo caught', 'TERM')
     system.trap_block('TERM').call
+    expect(system.stdout.string).to be_empty
+    executor.trap_runner.run_pending
     expect([system.stdout.string, state.last_status.exitstatus]).to eq(["caught\n", 7])
   end
 
@@ -114,6 +116,7 @@ RSpec.describe Rush::Builtins::Trap do
     run('echo caught', 'TERM')
     run('-', 'TERM')
     system.trap_block('TERM').call
+    executor.trap_runner.run_pending
     expect([system.stdout.string, state.last_status.exitstatus]).to eq(['', 7])
   end
 end

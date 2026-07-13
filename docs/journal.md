@@ -72,6 +72,9 @@ filed as a beads issue.
 16. **A fatal error inside the EXIT trap re-entered it and escaped as a Ruby backtrace** — **fixed
     (17b):** EXIT is claimed once before evaluation; syntax/expansion/readonly/special-builtin
     failures report once and terminate with 2, while explicit `exit` retains its override semantics.
+17. **Caught signal traps re-entered the parser/executor from Ruby's `Signal.trap` callback** —
+    **fixed (17c):** callbacks only coalesce pending signal names; explicit evaluator, EXIT, and
+    PS1 checkpoints deliver shell actions after the interrupted command publishes its status.
 
 **Notes:**
 - **`pwd` / `$PWD`**: a fuzz "divergence" where rush printed an inherited `$PWD` vs dash's
@@ -95,6 +98,34 @@ non-interactive shell with 2." Routing: `CLI#run_source` rescues it → abort 2 
 the **REPL reports and stays alive** (interactive ≠ abort); `SubshellRunner#report_fatal` → 2 so
 the error aborts only the subshell, parent continues. Now used by exit/return/break/continue arg
 validation, eval/dot syntax errors, and (7aj) redirect failures on special builtins.
+
+### Caught traps are queued; shell code runs only at safe checkpoints (17c)
+Ruby runs `Signal.trap` blocks on its main VM thread, but that does **not** make parser/executor
+re-entry safe: dash finishes a foreground utility before evaluating its trap (`S`, then `T`),
+where rush used to run the action inside the callback (`T`, then `S`). The callback now performs
+only one hash write into `PendingSignals`; the evaluator drains after publishing a node's status,
+before EXIT teardown, and before PS1. Subshell entry clears the copied queue. Batch transfer swaps
+in a fresh hash **before** sorting/delivery rather than snapshot-then-clearing the live hash: a
+callback may run between any two Ruby operations, and clearing would erase a signal recorded in
+that window. A detached batch also prevents already-pending USR2 from jumping ahead through the
+USR1 action's own entry checkpoint; distinct signals therefore drain by signal number (`USR1`,
+then `USR2`), while signals newly raised *inside* an action remain eligible at its next command
+boundary. dash permits that nested delivery, including same-signal `A A B B D`; no “trap active”
+guard is correct.
+
+Status timing is part of the boundary. A foreground child that exits 5 gives the trap `$?=5` and
+the following command still sees 5. Pending traps drain before EXIT (`S T E`) and checkpoints
+remain live inside EXIT (`E1 T E2`). Ruby restarts blocking `waitpid2` and `IO#gets` after a
+record-only handler, so only the `wait` and `read` builtins need interruptible polling: foreground
+await stays blocking, `wait` polls the requested pid with WNOHANG and returns `128+signal` without
+forgetting the child's eventual/remembered status, while IO-backed `read` consumes one
+nonblocking byte per readability poll (so a partial, unterminated line stays interruptible) and
+returns 1. With no bytes it assigns nothing; if bytes were consumed first, dash assigns that
+partial field while leaving input written by the trap for the next read. `JobTable` remains the
+sole reaper. The differential cases avoid
+timing sleeps: helper children wait until `ps` observes the shell blocked, and FIFOs keep the
+post-signal child/input alive; repeated runs pin first-wait interruption followed by the real
+status, and read interruption followed by consumption of the untouched line.
 
 ### Incremental execution — `ProgramReader` / `SourceRunner` (7v, 7x)
 The CLI and REPL both pump source **one line at a time** through `ProgramReader`, accumulating
