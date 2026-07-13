@@ -18,10 +18,8 @@ module Rush
     sig { returns(Integer) }
     def run
       super
-    rescue Interrupted
-      executor.trap_runner.run_exit_trap(130)
-    rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
-      abort_with(e)
+    rescue Error => e
+      handle_error(e)
     end
 
     private
@@ -59,6 +57,15 @@ module Rush
       super
     rescue ReturnSignal => e
       raise ExitSignal, e.code
+    end
+
+    sig { params(error: Error).returns(Integer) }
+    def handle_error(error)
+      decision = ErrorPolicy.decision(:batch, error)
+      return executor.trap_runner.run_exit_trap(130) if decision == :interrupt130
+      return abort_with(error) if decision == :abort2
+
+      raise error
     end
 
     # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then

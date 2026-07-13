@@ -127,6 +127,25 @@ timing sleeps: helper children wait until `ps` observes the shell blocked, and F
 post-signal child/input alive; repeated runs pin first-wait interruption followed by the real
 status, and read interruption followed by consumption of the untouched line.
 
+### Runtime errors are classified once, handled at their existing boundaries (17d)
+The same four operational failures (parse, expansion, readonly and special-builtin) had been
+spelled independently in batch, REPL, `command`, ordinary-trap and EXIT-trap rescue lists, while
+a subshell caught the entire `Rush::Error` hierarchy and guessed from a `case`. That made a new
+error silently fatal in children but uncaught elsewhere. `ErrorPolicy` is now an exact-class,
+six-context matrix: batch, interactive, subshell, command demotion, signal trap and EXIT trap.
+Its decisions are semantic (`abort2`, `recover2`, `return_code`, `preserve_code`, `propagate`,
+etc.), while reporting, fd choice, status publication and the one-shot EXIT lifecycle stay at
+the owning boundary. Exact lookup is deliberate: a new named `Rush::Error` must gain an explicit
+row, and the table spec compares the matrix against every named subclass.
+
+The asymmetries are the design, not duplication to erase. `BuiltinError` aborts batch/EXIT,
+recovers in the REPL, demotes under `command`, but propagates from an ordinary signal trap;
+`ReturnSignal` terminates batch through Source's existing conversion, is ignored by the REPL,
+returns a code from a subshell, and preserves the incoming EXIT status; loop control preserves a
+subshell/EXIT status; redirect, job, test and invocation errors retain their narrower owners.
+No inheritance-only catch-all decides policy, and control-flow rows are asserted not to acquire a
+diagnostic demotion accidentally.
+
 ### Incremental execution — `ProgramReader` / `SourceRunner` (7v, 7x)
 The CLI and REPL both pump source **one line at a time** through `ProgramReader`, accumulating
 until a complete program parses (`IncompleteInput` → read another line). Consequences that match

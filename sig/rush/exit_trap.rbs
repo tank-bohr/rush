@@ -41,6 +41,8 @@ module Rush
 
     def run_execution: (Execution execution) -> Integer
 
+    def decision: (Error error) -> Symbol
+
     def abort: (Error error) -> Integer
 
     def with_status: [T] (Integer code) { () -> T } -> T

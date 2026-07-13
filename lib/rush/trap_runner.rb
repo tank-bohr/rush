@@ -114,8 +114,8 @@ module Rush
     sig { params(action: String).void }
     def fire(action)
       @executor.run(Parser.new(Lexer.new(action, aliases: state.aliases)).parse)
-    rescue ParseError, ExpansionError, ReadonlyError, LoopControl, ReturnSignal
-      nil
+    rescue Error => e
+      raise unless ErrorPolicy.decision(:signal_trap, e) == :ignore
     end
 
     # An untrappable signal (KILL/STOP) raises; keep the table entry like dash.

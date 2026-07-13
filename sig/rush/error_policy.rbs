@@ -1,0 +1,28 @@
+module Rush
+  # Pure classification table for Rush::Error at runtime boundaries.
+  class ErrorPolicy
+    extend T::Sig
+
+    CONTEXTS: Array[Symbol]
+
+    DIAGNOSTIC_DECISIONS: Array[Symbol]
+
+    OPERATIONAL: Hash[Symbol, Symbol]
+
+    OWNED: Hash[Symbol, Symbol]
+
+    INTERRUPT: Hash[Symbol, Symbol]
+
+    EXIT: Hash[Symbol, Symbol]
+
+    RETURN: Hash[Symbol, Symbol]
+
+    LOOP: Hash[Symbol, Symbol]
+
+    BUILTIN: Hash[Symbol, Symbol]
+
+    MATRIX: Hash[Class, Hash[Symbol, Symbol]]
+
+    def self.decision: (Symbol context, Error error) -> Symbol
+  end
+end

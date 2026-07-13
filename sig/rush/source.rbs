@@ -32,6 +32,8 @@ module Rush
     # reaches here — with no enclosing loop the builtin is a no-op.
     def execute: (AST::List program) -> void
 
+    def handle_error: (Error error) -> Integer
+
     # A fatal error (syntax/expansion/readonly): report it, publish 2 as $?, then
     # fire the EXIT trap (which may override the code via `exit`) — like dash.
     def abort_with: (StandardError error) -> Integer

@@ -85,8 +85,6 @@ module Rush
     def execute(program)
       executor.jobs.control.tick_warning
       survive(nil) { super }
-    rescue ReturnSignal
-      nil
     end
 
     # The interactive survival policy: a recoverable error or a SIGINT reports,
@@ -99,7 +97,7 @@ module Rush
     end
     def survive(fallback, &blk)
       yield
-    rescue Interrupted, ParseError, ExpansionError, ReadonlyError, BuiltinError => e
+    rescue Error => e
       recover(e)
       fallback
     end
@@ -108,10 +106,18 @@ module Rush
     # Source#abort_with), the interactive shell reports the diagnostic,
     # publishes the same status as $?, and returns to the prompt. A SIGINT
     # publishes 130 instead, with a fresh line and no diagnostic.
-    sig { params(error: StandardError).void }
+    sig { params(error: Error).void }
     def recover(error)
-      return interrupt if error.is_a?(Interrupted)
+      decision = ErrorPolicy.decision(:interactive, error)
+      return interrupt if decision == :recover130
+      return recover_operational(error) if decision == :recover2
+      return if decision == :ignore
 
+      raise error
+    end
+
+    sig { params(error: Error).void }
+    def recover_operational(error)
       report(error)
       executor.state.record_status(Status.failure(2))
     end

@@ -46,22 +46,28 @@ module Rush
     sig { params(execution: Execution).returns(Integer) }
     def fire(execution)
       exit_result(execution)
-    rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
+    rescue Error => e
+      raise unless decision(e) == :abort2
+
       abort(e)
     end
 
     sig { params(execution: Execution).returns(Integer) }
     def exit_result(execution)
       control_result(execution)
-    rescue ExitSignal => e
-      e.code
+    rescue Error => e
+      return e.code if decision(e) == :override_code && e.is_a?(ExitSignal)
+
+      raise
     end
 
     sig { params(execution: Execution).returns(Integer) }
     def control_result(execution)
       run_execution(execution)
-    rescue LoopControl, ReturnSignal
-      execution.code
+    rescue Error => e
+      return execution.code if decision(e) == :preserve_code
+
+      raise
     end
 
     sig { params(execution: Execution).returns(Integer) }
@@ -69,6 +75,11 @@ module Rush
       source, code = execution.deconstruct
       with_status(code) { evaluate(source) }
       code
+    end
+
+    sig { params(error: Error).returns(Symbol) }
+    def decision(error)
+      ErrorPolicy.decision(:exit_trap, error)
     end
 
     sig { params(error: Error).returns(Integer) }

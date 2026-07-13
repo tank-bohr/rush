@@ -92,7 +92,9 @@ module Rush
       sig { params(builtin: T.class_of(Base), opts: CommandOptions).returns(Status) }
       def run_builtin(builtin, opts)
         builtin.new(executor, opts.operands, io, command_environment).call
-      rescue ParseError, ExpansionError, ReadonlyError, BuiltinError => e
+      rescue Error => e
+        raise unless ErrorPolicy.decision(:command, e) == :demote2
+
         demoted_error(e)
       end
 

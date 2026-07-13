@@ -46,11 +46,12 @@ module Rush
 
     sig { params(error: Error).returns(Status) }
     def resolve(error)
-      case error
-      when ExitSignal, ReturnSignal then Status.new(error.code)
-      when LoopControl then @executor.state.last_status
-      else report_fatal(error)
-      end
+      decision = ErrorPolicy.decision(:subshell, error)
+      return Status.new(T.cast(error, T.any(ExitSignal, ReturnSignal)).code) if decision == :return_code
+      return @executor.state.last_status if decision == :last_status
+      return report_fatal(error) if decision == :abort2
+
+      raise error
     end
 
     sig { params(error: Error).returns(Status) }

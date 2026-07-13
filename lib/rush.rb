@@ -8,6 +8,7 @@ require 'sorbet-runtime'
 
 require_relative 'rush/version'
 require_relative 'rush/errors'
+require_relative 'rush/error_policy'
 require_relative 'rush/status'
 require_relative 'rush/bracket_scanner'
 require_relative 'rush/bracket_expression'

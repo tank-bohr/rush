@@ -51,7 +51,9 @@ module Rush
     # Source#abort_with), the interactive shell reports the diagnostic,
     # publishes the same status as $?, and returns to the prompt. A SIGINT
     # publishes 130 instead, with a fresh line and no diagnostic.
-    def recover: (StandardError error) -> void
+    def recover: (Error error) -> void
+
+    def recover_operational: (Error error) -> void
 
     # ^C: a fresh line, $? = 130 (128+SIGINT), back to the prompt (dash
     # behaviour whether the signal arrived at the prompt or mid-command).
