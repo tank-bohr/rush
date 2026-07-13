@@ -235,6 +235,16 @@ unit specs, with a few deterministic differential cases.
 - **Differential harness + asdf:** invoke rush via the absolute `RbConfig.ruby` (bypasses the
   asdf shim, which otherwise needs a `.tool-versions` in the cwd) with `-Ilib exe/rush -c`, and
   `chdir` to a fresh `Dir.mktmpdir` for bad-path tests. Bare `ruby` from `/tmp` fails with 126.
+- **Every differential probe owns a bounded process tree:** the shared runner gives ordinary
+  rush/dash launches a fresh process group but deliberately keeps them in the harness session;
+  its 10-second monotonic deadline (`RUSH_PROBE_TIMEOUT` overrides it) always SIGKILLs that group
+  and reaps the leader. On Linux a dedicated supervisor subprocess becomes a child subreaper
+  and a procfs tracker follows start-time-identified descendants across `setpgrp` and reparenting;
+  cleanup stops the closure before killing/reaping it, so a stopped escapee cannot hold capture
+  pipes or survive under pid 1. The stopped-job helpers keep their explicit `setsid` argv and
+  must NOT also use `pgroup: true`: a process-group leader cannot call `setsid`, so util-linux
+  would fork and detach the status/cleanup handle. This is one cleanup implementation with two
+  preserved session topologies, not global session isolation disguised as timeout handling.
 - **Fuzzers are ad-hoc**, kept in the session scratchpad, not the repo. Their product is the
   divergences they surface, which get distilled into the differential corpus (deterministic,
   fast, dash-gated) and into beads issues.

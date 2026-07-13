@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'timeout'
-
 # Job control, the terminal-free half of `set -m` (rush-mv8.2): the monitor
 # flag in $- (and its refusal in an interactive shell without a tty), the
 # shell's SIGTSTP ignore and its interplay with user traps, and process-group
@@ -9,9 +7,9 @@ require 'timeout'
 # command) becomes its own group with the first process as leader, while
 # command substitution and non-root (forked) shells never group. All probed
 # against dash 0.5.13 off-tty; the pgid predicates compare groups by equality
-# so the output is deterministic. TSTP lines run under Timeout: the failure
-# mode of a broken disposition is a stopped shell, which would otherwise hang
-# the suite instead of failing it.
+# so the output is deterministic. Every probe has a harness deadline: the
+# failure mode of a broken disposition is a stopped shell, which must fail the
+# example instead of hanging the suite.
 RSpec.describe 'rush vs dash (differential job-control corpus)' do
   before { skip 'dash not installed' unless system('command -v dash > /dev/null 2>&1') }
 
@@ -80,8 +78,8 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
     tstp.each.with_index(1) do |snippet, index|
       id = format('jc-tstp-%03d', index)
 
-      it "#{id}: matches dash under Timeout for: #{snippet}" do
-        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      it "#{id}: matches dash within the probe deadline for: #{snippet}" do
+        expect(rush(snippet)).to eq(dash(snippet))
       end
     end
   end
@@ -104,7 +102,7 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
 
   it 'jc-tstp-cli: matches dash for -m on the command line ignoring TSTP' do
     args = ['-m', '-c', 'kill -TSTP $$; echo alive']
-    Timeout.timeout(10) { expect(rush_argv(args)).to eq(dash_argv(args)) }
+    expect(rush_argv(args)).to eq(dash_argv(args))
   end
 
   it 'jc-inp: a monitored background job keeps the shell stdin (no /dev/null redirect)' do
@@ -122,8 +120,8 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
   # parent's WUNTRACED wait parks the whole job exactly where dash — whose
   # exec'd simple stages stop directly — parks it. Compound stages stay
   # out: dash (and bash) genuinely hang there, the relay answers — the
-  # journal records the divergence. Everything under Timeout: the failure
-  # mode of a missing WUNTRACED is a hung shell. The stray stopped
+  # journal records the divergence. The harness deadline catches a missing
+  # WUNTRACED whose failure mode is a hung shell. The stray stopped
   # children die on their own (kernel orphaned-pgroup HUP+CONT) only when
   # the dead shell's children re-parent outside their session — hence the
   # _in_session runners; a container's same-session pid 1 otherwise keeps
@@ -151,8 +149,8 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
     stopped.each.with_index(1) do |snippet, index|
       id = format('jc-stop-%03d', index)
 
-      it "#{id}: matches dash under Timeout for: #{snippet}" do
-        Timeout.timeout(10) { expect(rush_in_session(snippet)).to eq(dash_in_session(snippet)) }
+      it "#{id}: matches dash within the probe deadline for: #{snippet}" do
+        expect(rush_in_session(snippet)).to eq(dash_in_session(snippet))
       end
     end
   end
@@ -185,8 +183,8 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
     resume.each.with_index(1) do |snippet, index|
       id = format('jc-fgbg-%03d', index)
 
-      it "#{id}: matches dash under Timeout for: #{snippet}" do
-        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      it "#{id}: matches dash within the probe deadline for: #{snippet}" do
+        expect(rush(snippet)).to eq(dash(snippet))
       end
     end
   end
@@ -224,9 +222,9 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
     rendered.each.with_index(1) do |command, index|
       id = format('jc-text-%03d', index)
 
-      it "#{id}: matches dash under Timeout for: #{command}" do
+      it "#{id}: matches dash within the probe deadline for: #{command}" do
         snippet = "set -m; #{command} & jobs; kill -9 %1 2>/dev/null; kill -CONT %1 2>/dev/null; wait"
-        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+        expect(rush(snippet)).to eq(dash(snippet))
       end
     end
   end
@@ -245,8 +243,8 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
     text_resume.each.with_index(1) do |snippet, index|
       id = format('jc-text-fgbg-%03d', index)
 
-      it "#{id}: matches dash under Timeout for: #{snippet}" do
-        Timeout.timeout(10) { expect(rush(snippet)).to eq(dash(snippet)) }
+      it "#{id}: matches dash within the probe deadline for: #{snippet}" do
+        expect(rush(snippet)).to eq(dash(snippet))
       end
     end
   end

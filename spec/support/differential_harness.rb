@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require 'open3'
+require_relative 'differential_probe'
 require 'tempfile'
 require 'tmpdir'
 
@@ -31,31 +31,30 @@ module DifferentialHarness
   # Raw invocation forms (no implied -c): option flags, -s/-i, script files.
   # `env` merges extra environment variables into both shells (e.g. ENV, HOME).
   def rush_argv(args, input = nil, env = {})
-    out, _err, status = Open3.capture3(env, RbConfig.ruby, '-Ilib', 'exe/rush', *args,
-                                       chdir: project_root, stdin_data: input.to_s, close_others: true)
-    [out, status.exitstatus]
+    run_probe([RbConfig.ruby, '-Ilib', 'exe/rush', *args], input, env, chdir: project_root, pgroup: true)
   end
 
   def dash_argv(args, input = nil, env = {})
-    out, _err, status = Open3.capture3(env, 'dash', *args, stdin_data: input.to_s, close_others: true)
-    [out, status.exitstatus]
+    run_probe(['dash', *args], input, env, pgroup: true)
   end
 
   # Session-isolated forms for snippets that exit leaving a stopped child
   # behind. The kernel reaps such a stray (orphaned-pgroup SIGHUP+SIGCONT)
-  # only if the dying shell's children re-parent OUTSIDE their session;
-  # inside a container they land on a same-session pid 1, the group never
-  # orphans, and the stopped child holds the capture pipes open past any
-  # Timeout (rush-erq). setsid restores the native topology for both shells.
+  # only if the dying shell's children re-parent OUTSIDE their session.
+  # `setsid` makes that true both for a container's pid 1 and for the probe
+  # supervisor, preserving the native topology for both shells (rush-erq).
   def rush_in_session(source)
-    out, _err, status = Open3.capture3('setsid', RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source,
-                                       chdir: project_root, stdin_data: '', close_others: true)
-    [out, status.exitstatus]
+    run_probe(['setsid', RbConfig.ruby, '-Ilib', 'exe/rush', '-c', source], '', {}, chdir: project_root)
   end
 
   def dash_in_session(source)
-    out, _err, status = Open3.capture3('setsid', 'dash', '-c', source, stdin_data: '', close_others: true)
-    [out, status.exitstatus]
+    run_probe(['setsid', 'dash', '-c', source], '', {})
+  end
+
+  private
+
+  def run_probe(argv, input, env, spawn_options = {})
+    ProbeRunner.call(argv, input.to_s, env, spawn_options)
   end
 end
 
