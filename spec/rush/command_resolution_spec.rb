@@ -9,7 +9,7 @@ RSpec.describe Rush::CommandResolution do
   end
 
   it 'carries the complete execution policy for every command kind' do
-    functions.define('f', Rush::AST::SimpleCommand.new([], [], []))
+    functions.define('f', Rush::AST::SimpleCommand.from_groups([], [], []))
     kind = described_class::Kind
     lifetime = described_class::AssignmentLifetime
     redirect = described_class::RedirectFailure
@@ -29,7 +29,7 @@ RSpec.describe Rush::CommandResolution do
 
   it 'requires a registered implementation before classifying a special name as a builtin' do
     empty = Rush::Builtins::Registry.new
-    functions.define(':', Rush::AST::SimpleCommand.new([], [], []))
+    functions.define(':', Rush::AST::SimpleCommand.from_groups([], [], []))
 
     resolution = described_class.for_execution(':', functions, empty)
     expect([resolution.kind, described_class.special_builtin?(':', empty)])
@@ -37,7 +37,7 @@ RSpec.describe Rush::CommandResolution do
   end
 
   it 'lets a registered special builtin outrank a function with the same name' do
-    functions.define(':', Rush::AST::SimpleCommand.new([], [], []))
+    functions.define(':', Rush::AST::SimpleCommand.from_groups([], [], []))
     resolution = resolve(':')
 
     expect([resolution.kind, resolution.builtin?, resolution.function?,

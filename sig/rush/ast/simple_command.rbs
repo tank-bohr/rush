@@ -17,11 +17,11 @@ module Rush
 
       Part: untyped
 
-      def self.from_parts: (Array[untyped] parts) -> SimpleCommand
+      def self.from_groups: (Array[Assignment] assignments, Array[Word] words, Array[Redirect] redirects, ?source_line: Integer) -> SimpleCommand
 
-      def self.source_line: (Array[untyped] parts) -> Integer
+      def self.source_line: (Array[simple_command_part] parts) -> Integer
 
-      def initialize: (Array[Assignment] assignments, Array[Word] words, Array[Redirect] redirects, ?source_line: Integer) -> void
+      def initialize: (Array[simple_command_part] parts, ?source_line: Integer) -> void
 
       def assignments: () -> Array[Assignment]
 

@@ -7,6 +7,12 @@ existing grouped accessors (`#assignments`, `#words`, `#redirects`). The grouped
 derived from `#parts`, so current execution code keeps its API and future execution work can opt into
 the original order without changing the parser again.
 
+`AST::SimpleCommand.new(parts)` is the sole canonical constructor: it receives the final source-order
+array and stores it directly. `ParserSupport` calls that constructor with its accumulated prefix,
+command word and suffix in grammar order. Tests and compatibility callers that only have grouped
+arrays must say `SimpleCommand.from_groups(assignments, words, redirects)` explicitly; that factory
+creates the artificial assignments-then-words-then-redirects order and is never a parser path.
+
 No separate `SimpleCommandPart` wrapper is needed yet: the part's concrete AST class (`Assignment`,
 `Word`, or `Redirect`) is the tag, and the original objects are preserved.
 
@@ -41,6 +47,8 @@ order-sensitive POSIX 2.9.1 rule:
 - `CommandRunner` uses `#words` for argv expansion, `#redirects` for redirection setup, and
   `#assignments` through `CommandAssignments`;
 - parser/AST tests assert both grouped access and source order;
+- production construction passes source-order parts directly to `SimpleCommand.new`; grouped test
+  setup uses the deliberately named `SimpleCommand.from_groups` factory;
 - `#parts` is the canonical source-order representation and may contain `Assignment`, `Word`, and
   `Redirect` objects only.
 

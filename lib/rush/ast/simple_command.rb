@@ -12,23 +12,22 @@ module Rush
 
       attr_reader :parts, :source_line
 
-      sig { params(parts: T::Array[T.untyped]).returns(SimpleCommand) }
-      def self.from_parts(parts)
-        new(parts.grep(Assignment), parts.grep(Word), parts.grep(Redirect), source_line: source_line(parts))
-          .tap { |command| command.parts.replace(parts) }
+      sig do
+        params(assignments: T::Array[Assignment], words: T::Array[Word], redirects: T::Array[Redirect],
+               source_line: Integer).returns(SimpleCommand)
+      end
+      def self.from_groups(assignments, words, redirects, source_line: 1)
+        new(assignments + words + redirects, source_line: source_line)
       end
 
-      sig { params(parts: T::Array[T.untyped]).returns(Integer) }
+      sig { params(parts: T::Array[Part]).returns(Integer) }
       def self.source_line(parts)
         parts.map(&:source_line).min || 1
       end
 
-      sig do
-        params(assignments: T::Array[Assignment], words: T::Array[Word], redirects: T::Array[Redirect],
-               source_line: Integer).void
-      end
-      def initialize(assignments, words, redirects, source_line: 1)
-        @parts = T.let(assignments + words + redirects, T::Array[Part])
+      sig { params(parts: T::Array[Part], source_line: Integer).void }
+      def initialize(parts, source_line: self.class.source_line(parts))
+        @parts = parts
         @source_line = source_line
       end
 

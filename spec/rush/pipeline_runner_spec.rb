@@ -6,7 +6,7 @@ RSpec.describe Rush::PipelineRunner do
   let(:executor) { Rush::Executor.new(system: system, state: state) }
 
   def echo(*args)
-    Rush::AST::SimpleCommand.new([], ['echo', *args].map { |a| Rush::AST::Word.literal(a) }, [])
+    Rush::AST::SimpleCommand.from_groups([], ['echo', *args].map { |a| Rush::AST::Word.literal(a) }, [])
   end
 
   describe '#call (parent orchestration)' do

@@ -44,7 +44,7 @@ RSpec.describe Rush::Builtins::Command do
   end
 
   it 'still reports functions and builtins under -p -v (dash-probed: -p only moves the file search)' do
-    state.functions.define('f', Rush::AST::SimpleCommand.new([], [], []))
+    state.functions.define('f', Rush::AST::SimpleCommand.from_groups([], [], []))
     expect([run('-pv', 'f'), run('-pv', 'echo')]).to all(be_success)
     expect(system.stdout.string).to eq("f\necho\n")
   end
@@ -87,7 +87,7 @@ RSpec.describe Rush::Builtins::Command do
   end
 
   it 'runs a builtin, bypassing a shadowing function' do
-    state.functions.define('echo', Rush::AST::SimpleCommand.new([], [], []))
+    state.functions.define('echo', Rush::AST::SimpleCommand.from_groups([], [], []))
     run('echo', 'hi')
     expect(system.stdout.string).to eq("hi\n")
   end

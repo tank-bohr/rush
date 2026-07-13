@@ -196,6 +196,18 @@ owner and `JobControl` remains stateless. Visibility specs pin the absence of ra
 existing behavioural specs pin allexport mirroring, monitor side effects, status publication,
 background pid publication and IO restoration without source-scanning the implementation.
 
+### Simple commands are born in source order instead of repaired afterward (17h)
+`SimpleCommand.from_parts` used to partition the parser's ordered array through the grouped
+constructor, then mutate `#parts` back into source order with `tap`/`replace`. That made the
+canonical representation true only after construction and let grouped test setup masquerade as
+the ordinary initializer. `SimpleCommand.new(parts)` now receives and stores the parser's final
+source-order array directly; source-line derivation and grouped execution views remain derived
+from that one representation.
+
+Tests that intentionally start from assignments/words/redirects use the explicitly artificial
+`from_groups` factory. No wrapper object or execution rewrite rides along: concrete part classes
+remain the tag, `CommandRunner` keeps its grouped views, and the parser grammar is unchanged.
+
 ### Incremental execution — `ProgramReader` / `SourceRunner` (7v, 7x)
 The CLI and REPL both pump source **one line at a time** through `ProgramReader`, accumulating
 until a complete program parses (`IncompleteInput` → read another line). Consequences that match

@@ -15,7 +15,7 @@ RSpec.describe Rush::CommandLookup do
   end
 
   it 'classifies a defined function' do
-    state.functions.define('f', Rush::AST::SimpleCommand.new([], [], []))
+    state.functions.define('f', Rush::AST::SimpleCommand.from_groups([], [], []))
     expect(lookup.describe('f')).to eq('f is a shell function')
   end
 
@@ -72,7 +72,7 @@ RSpec.describe Rush::CommandLookup do
 
   it 'classifies an alias, returning its value, outranking a function or builtin' do
     state.aliases.define('ll', "ls 'quoted'")
-    state.functions.define('ll', Rush::AST::SimpleCommand.new([], [], []))
+    state.functions.define('ll', Rush::AST::SimpleCommand.from_groups([], [], []))
     expect(lookup.describe('ll')).to eq("ll is an alias for ls 'quoted'")
     expect(lookup.find('ll').terse).to eq(%(alias 'll=ls '"'"'quoted'"'"''))
   end

@@ -42,7 +42,7 @@ RSpec.describe Rush::Executor do
   it 'records the last status when running a node' do
     target = state
     executor = build(target)
-    executor.run(Rush::AST::SimpleCommand.new([], [word('false')], []))
+    executor.run(Rush::AST::SimpleCommand.from_groups([], [word('false')], []))
     expect(target.last_status.exitstatus).to eq(1)
   end
 
@@ -82,7 +82,7 @@ RSpec.describe Rush::Executor do
     target = state
     executor = build(target)
     allow(system).to receive(:fork).and_return(4321)
-    status = executor.run_async(Rush::AST::SimpleCommand.new([], [word('false')], []))
+    status = executor.run_async(Rush::AST::SimpleCommand.from_groups([], [word('false')], []))
     expect([status.exitstatus, target.last_status.exitstatus, target.last_background_pid]).to eq([0, 0, 4321])
   end
 
@@ -213,7 +213,7 @@ RSpec.describe Rush::Executor do
 
   it 'runs a redirected compound command with temporary io' do
     executor = build(state)
-    status = executor.run_redirected(Rush::AST::SimpleCommand.new([], [word('echo'), word('body')], []),
+    status = executor.run_redirected(Rush::AST::SimpleCommand.from_groups([], [word('echo'), word('body')], []),
                                      [redirect(:out, '/compound')])
     expect([status.exitstatus, system.files.fetch('/compound').string, system.stdout.string])
       .to eq([0, "body\n", ''])

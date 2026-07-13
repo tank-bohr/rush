@@ -94,7 +94,7 @@ module Rush
     end
 
     def make_simple_command(prefix, word, suffix)
-      AST::SimpleCommand.from_parts(prefix + [word].compact + suffix)
+      AST::SimpleCommand.new(prefix + [word].compact + suffix)
     end
 
     def make_redirect(kind, target)

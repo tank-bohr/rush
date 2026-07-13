@@ -31,8 +31,8 @@ RSpec.describe Rush::Builtins::Unset do
   end
 
   it 'removes a function with -f' do
-    state.functions.define('-f', Rush::AST::SimpleCommand.new([], [], []))
-    state.functions.define('f', Rush::AST::SimpleCommand.new([], [], []))
+    state.functions.define('-f', Rush::AST::SimpleCommand.from_groups([], [], []))
+    state.functions.define('f', Rush::AST::SimpleCommand.from_groups([], [], []))
     run('-f', 'f')
     expect([state.functions.key?('-f'), state.functions.key?('f')]).to eq([true, false])
   end

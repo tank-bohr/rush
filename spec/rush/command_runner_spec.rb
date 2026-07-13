@@ -15,7 +15,7 @@ RSpec.describe Rush::CommandRunner do
   end
 
   def simple(assignments: [], words: [], redirects: [])
-    Rush::AST::SimpleCommand.new(assignments, words, redirects)
+    Rush::AST::SimpleCommand.from_groups(assignments, words, redirects)
   end
 
   def run(command)
@@ -139,7 +139,7 @@ RSpec.describe Rush::CommandRunner do
   end
 
   it 'binds a redirect on a function call to the function body' do
-    state.functions.define('f', Rush::AST::SimpleCommand.new([], [word('echo'), word('body')], []))
+    state.functions.define('f', Rush::AST::SimpleCommand.from_groups([], [word('echo'), word('body')], []))
     redirect = Rush::AST::Redirect.new(kind: :out, target: word('/f.txt'), io_number: nil)
     run(simple(words: [word('f')], redirects: [redirect]))
     expect(system.files.fetch('/f.txt').string).to eq("body\n")
@@ -171,7 +171,7 @@ RSpec.describe Rush::CommandRunner do
   end
 
   it 'dispatches to a defined function before falling through to an external' do
-    state.functions.define('greet', Rush::AST::SimpleCommand.new([], [word('true')], []))
+    state.functions.define('greet', Rush::AST::SimpleCommand.from_groups([], [word('true')], []))
     expect(run(simple(words: [word('greet')]))).to be_success
   end
 
