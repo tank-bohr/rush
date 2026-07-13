@@ -100,6 +100,12 @@ RSpec.describe Rush::ShellState do
     expect(state.loops.depth).to eq(0)
   end
 
+  it 'does not expose raw writers for status or the background pid' do
+    state = described_class.new
+    expect(state).not_to respond_to(:last_status=)
+    expect(state).not_to respond_to(:last_background_pid=)
+  end
+
   it 'preserves the last status around a block' do
     state = described_class.new
     state.record_status(Rush::Status.new(7))

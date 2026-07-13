@@ -109,6 +109,12 @@ RSpec.describe Rush::Executor do
     expect(build(state, builtins: registry).builtins).to be(registry)
   end
 
+  it 'does not expose raw writers for base io or command-substitution status' do
+    executor = build(state)
+    expect(executor).not_to respond_to(:io=)
+    expect(executor).not_to respond_to(:cmd_sub_status=)
+  end
+
   it 'resets and records command-substitution status explicitly' do
     executor = build(state)
     executor.record_cmd_sub_status(Rush::Status.new(7))

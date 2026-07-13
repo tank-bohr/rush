@@ -124,9 +124,10 @@ module Rush
       @last_status = T.must(saved)
     end
 
-    # Flip a shell option, keeping the side effects options carry in sync
-    # (allexport mirrors onto the variable table); shared by the set builtin
-    # and invocation flags.
+    # Flip an ordinary shell option, keeping the side effects options carry in
+    # sync (allexport mirrors onto the variable table). Invocation also uses
+    # this before an executor exists; live :monitor changes instead belong to
+    # JobControl, which owns the signal/terminal/process-group side effects.
     sig { params(option: Symbol, enabled: T::Boolean).void }
     def set_option(option, enabled)
       @options.set(option, enabled)

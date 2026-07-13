@@ -11,6 +11,37 @@ Unidirectional: **Source → Lexer → Racc Parser → AST → Expander → Exec
 **shell state**, with one feedback wire (the parser nudges lexer state for POSIX Grammar
 Rules 1–9) and **all OS access funnelled through one injectable port** (`Rush::SystemCalls`).
 
+## Interpreter state and mutation ownership
+
+`Executor` is the interpreter's execution environment: it wires execution policy, the current base
+IO table, registries, expansion, traps, errexit and jobs around one `ShellState`. `ShellState` is the
+POSIX state aggregate: it deliberately exposes domain objects such as variables, options,
+positionals, functions, aliases and traps for those objects' own APIs to mutate. Neither class is a
+metric-driven decomposition target, and callers should not gain facade methods that merely repeat a
+collaborator's API.
+
+Cross-object writes have these owners:
+
+- Ordinary option changes go through `ShellState#set_option`; it alone couples `Options#set` to the
+  `ShellVariables` allexport mirror. `:monitor` is the deliberate live-executor exception:
+  `JobControl` owns its flag together with signal, terminal and process-group side effects, so its
+  raw `Options#set(:monitor, ...)` calls must not spread. Invocation may seed the flag through
+  `ShellState#set_option` before an executor exists; `JobControl#startup` clears and re-enables it to
+  apply or refuse the live side effects.
+- `ShellState` owns `$?` and `$!`: status changes use `#record_status` (or the restoring
+  `#preserve_status` scope), and the async parent publishes its launch pid through
+  `#record_background_pid`. `Executor#run` via `TrapRunner#complete` publishes normal synchronous
+  status, while `Executor#run_async` publishes async launch success. Startup, REPL, EXIT-trap,
+  command-substitution and loop-control boundaries that need an early status still use only
+  `#record_status`. `BackgroundRunner` is the parent-side `$!` writer.
+- `Executor` owns the current base `IoTable`. `#with_io` is a scoped overlay restored by `ensure`;
+  `#replace_io` is durable and is reserved for redirect-only `exec` and forked async-child stdin
+  isolation. Command-substitution status is separate executor state, written only through
+  `#reset_cmd_sub_status` / `#record_cmd_sub_status`.
+- `JobTable` owns job entries, wait/reap state and durable job-control state. `JobControl` is a
+  stateless policy view over it; it does not become a second state store. The other mutable objects
+  exposed by `ShellState` likewise own their domain mutations behind their existing APIs.
+
 ## Rules
 
 - **One impure class.** `Rush::SystemCalls` is the *only* class that touches the OS — thin

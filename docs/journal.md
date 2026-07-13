@@ -181,6 +181,21 @@ pending signals. The characterization matrix and ordered tests now make that
 conditional guarantee explicit; any extraction must expose ordered phases rather than merge the
 modes behind flags. See `docs/architecture/forked-execution-modes.md`.
 
+### Mutation ownership stays with the aggregates, but every write gets a name (17g)
+`Executor` is the interpreter environment and `ShellState` the POSIX state aggregate; splitting
+registries or session tables out merely to lower a metric would replace useful direct collaborator
+APIs with facades. The safer boundary is writer ownership. Ordinary options pass through
+`ShellState#set_option` so `allexport` and `ShellVariables` cannot drift. Live `monitor` is the one
+exception: `JobControl` owns the option together with its signal/tty/process-group effects; an
+invocation may only seed the pre-executor flag, which `#startup` replays through that policy.
+
+The remaining scalar writes were already narrow and are now contractual: `ShellState` publishes
+`$?`/`$!` only through its record/scoped methods, while `Executor` owns scoped versus durable base IO
+and its separate command-substitution status channel. `JobTable` remains the job/reap/control-state
+owner and `JobControl` remains stateless. Visibility specs pin the absence of raw scalar writers;
+existing behavioural specs pin allexport mirroring, monitor side effects, status publication,
+background pid publication and IO restoration without source-scanning the implementation.
+
 ### Incremental execution — `ProgramReader` / `SourceRunner` (7v, 7x)
 The CLI and REPL both pump source **one line at a time** through `ProgramReader`, accumulating
 until a complete program parses (`IncompleteInput` → read another line). Consequences that match

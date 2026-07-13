@@ -18,7 +18,9 @@ module Rush
   # of their run. Only an interactive shell treats a missing tty as an error
   # (warn, flag off). The machinery is root-shell-only: a forked child keeps
   # `m` in $- but re-enabling there is flag-only, exactly like dash's
-  # rootshell guard.
+  # rootshell guard. Its raw Options#set(:monitor, ...) calls are deliberate:
+  # this policy is the sole live-executor owner of both that flag and its side
+  # effects; all ordinary option writes route through ShellState#set_option.
   class JobControl
     extend T::Sig
 
