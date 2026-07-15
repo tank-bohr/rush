@@ -58,7 +58,10 @@ jobs:
                 ...context.repo,
                 base: 'main',
                 head: 'live',
-                commit_message: "Merge branch 'live' into main (release back-merge)",
+                // [skip ci]: the merged tree is main content CI just proved
+                // plus the bot's version bump; without it every back-merge
+                // push cancelled the in-flight two-hour mutation run.
+                commit_message: "Merge branch 'live' into main (release back-merge) [skip ci]",
               })
               if (merge.status === 204) {
                 core.notice('main already contains live — nothing to back-merge')

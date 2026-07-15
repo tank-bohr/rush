@@ -1,12 +1,11 @@
-# The public gate for rush. Three independent jobs run concurrently:
+# The public gate for rush. Two independent jobs run concurrently:
 #   gate          — the same `bundle exec rake` developers run, plus an explicit
 #                   generated-parser drift audit, against the pinned dash oracle.
-#   mutant        — the mutation-coverage threshold gate (rake mutant:check);
-#                   by far the longest job (~38.8k mutations), which is why it
-#                   runs alongside the others instead of after them.
 #   docker-oracle — bin/test-in-docker: full gate plus container-only smokes in
 #                   the checksum-pinned image (dash built from source).
-# The dash pin lives in .github/actions/setup (keep in lockstep with
+# The mutation gate lives in mutant.yml: its ~2 h runtime needs queue
+# semantics, and this workflow's cancel-in-progress would kill it on every
+# push. The dash pin lives in .github/actions/setup (keep in lockstep with
 # docker/rush-test.Dockerfile).
 name: CI
 
