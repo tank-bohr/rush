@@ -1,0 +1,62 @@
+# Shared toolchain setup for CI jobs that run the test suite natively:
+# the checksum-pinned dash oracle (built from source, cached), the native
+# build inputs the specs need, and Ruby from .tool-versions with a cached
+# bundle. The docker-oracle job intentionally does not use this — its
+# toolchain is the image itself.
+name: Set up the rush toolchain
+description: Pinned dash oracle, native build inputs, Ruby + cached bundle
+
+inputs:
+  dash-version:
+    description: dash release to build; keep in lockstep with docker/rush-test.Dockerfile
+    default: 0.5.13.4
+  dash-sha256:
+    description: sha256 of the dash release tarball
+    default: d10dfd41cda59165560db39ca915c2c4a7636fff04281d8d2df77ad92c753e2b
+
+runs:
+  using: composite
+  steps:
+    - name: Cache the pinned dash oracle
+      id: dash-cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/dash
+        key: dash-${{ inputs.dash-version }}-${{ inputs.dash-sha256 }}
+
+    - name: Build the pinned dash oracle
+      if: steps.dash-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        DASH_VERSION: ${{ inputs.dash-version }}
+        DASH_SHA256: ${{ inputs.dash-sha256 }}
+      run: |
+        curl -fsSL "http://gondor.apana.org.au/~herbert/dash/files/dash-${DASH_VERSION}.tar.gz" \
+          -o /tmp/dash.tar.gz
+        echo "${DASH_SHA256}  /tmp/dash.tar.gz" | sha256sum -c -
+        tar -xzf /tmp/dash.tar.gz -C /tmp
+        cd "/tmp/dash-${DASH_VERSION}"
+        ./configure --prefix="$HOME/dash"
+        make -j"$(nproc)"
+        make install
+
+    - name: Put the pinned dash on PATH
+      shell: bash
+      run: |
+        echo "$HOME/dash/bin" >> "$GITHUB_PATH"
+        "$HOME/dash/bin/dash" -c 'echo "dash oracle ready"'
+
+    # locales: localedef inputs for the tailored LC_COLLATE spec.
+    # libffi-dev + pkg-config: the fiddle gem compiles from source on Ruby 4.
+    - name: Ensure native build inputs
+      shell: bash
+      run: |
+        if [ ! -f /usr/share/i18n/locales/cs_CZ ] || ! pkg-config --exists libffi; then
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libffi-dev locales pkg-config
+        fi
+
+    - name: Set up Ruby from .tool-versions
+      uses: ruby/setup-ruby@8e41b362d2589a22a44c1cfa214b3c83052c195b # v1.318.0
+      with:
+        bundler-cache: true

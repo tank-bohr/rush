@@ -2647,3 +2647,18 @@ commit-msg hook of its own, so the slot is free. Verified against real history: 
 Slice 18 messages, the release bot's `chore(release): x.y.z [skip ci]` and a merge subject
 pass; the pre-18 `Phase N (Slice Xy):` style and unknown types are rejected, including
 end-to-end (`git commit` with an old-style message leaves no commit).
+
+### Mutation testing joins CI as the long pole, so it runs beside the gate, not after it (rush-qr5.1)
+The mutation gate (`rake mutant:check`) becomes a third CI job. Calibration corrected
+itself twice: a small-subject sample suggested ~100 mutations/s, but the full 38,798-
+mutation run sustains 36/s on sixteen local jobs — 18 minutes locally, extrapolating to
+roughly two hours on a four-core runner. Two consequences: the job is skipped on pull
+requests (two-hour feedback is no feedback; pushes to main and manual dispatch still
+gate) and it declares no `needs:`, starting beside the gate and the docker oracle rather
+than after them. The full run also priced the threshold honestly: 94.43% with 2,161 alive
+mutants, so the default 95.0 in the Rakefile was aspiration, not fact. The enforced floor
+is now 94.0 — a ratchet (rush-tqq) to be raised as survivors burn down, never lowered. The shared native toolchain (pinned dash build, localedef and
+libffi inputs, Ruby from .tool-versions with a cached bundle) moved into a composite
+action, `.github/actions/setup`, so the gate and mutant jobs consume identical
+environments and the dash pin lives in one place next to the Dockerfile's.
+
