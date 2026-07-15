@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.name = 'rush-shell'
   # Read (not require) the version so the file loads fresh under coverage in specs.
   spec.version = File.read(File.expand_path('lib/rush/version.rb', __dir__))[/VERSION = '([^']+)'/, 1]
-  spec.authors = ['tank']
+  spec.authors = ['Alexey Nikitin']
   spec.email = ['tank@bohr.su']
 
   spec.summary = 'A pure-Ruby POSIX shell (sh) with a Racc-generated parser.'
