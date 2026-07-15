@@ -2698,3 +2698,15 @@ runner, interpreter start-up loses the race against the stubbed one-second timeo
 `Integer('')` raises. The stub is now three seconds and the read waits for the write with
 a bounded grace window — the assertion is unchanged, only its timing assumptions widened
 to match slower machines.
+
+### Release pushes ride the checkout credential; the bot files no issues (rush-qr5.2)
+The first live release run failed twice in one AggregateError, and the two errors had
+different owners. EGITNOPERMISSION was semantic-release core: a GitHub App installation
+token embedded bare in an https push URL does not authenticate — checking out WITH the app
+token instead persists a proper x-access-token credential, and semantic-release keeps the
+plain remote URL once its dry-run push probe passes. The 403 was the @semantic-release/
+github plugin's fail hook trying to create its label ("x-accepted-github-permissions:
+issues=write") to open a release-failure issue. Rather than widen the app's permissions,
+the comment/label features are disabled in config: failures are visible in Actions, and
+the app keeps the minimal contents-write surface (plus pull-requests for backmerge's
+conflict PRs).

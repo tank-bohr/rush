@@ -35,6 +35,18 @@ export default {
         message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
       },
     ],
-    '@semantic-release/github',
+    [
+      // Releases only: the comment/label features are disabled so the app
+      // token needs no Issues permission (their verify/fail hooks would 403
+      // trying to create the semantic-release label otherwise).
+      '@semantic-release/github',
+      {
+        successComment: false,
+        failComment: false,
+        failTitle: false,
+        labels: false,
+        releasedLabels: false,
+      },
+    ],
   ],
 }
