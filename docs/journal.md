@@ -2635,3 +2635,15 @@ keep their names. The rename touched exactly three self-consistency points — t
 (PATH specs at four spaces and CHECKSUMS at two; a first pass missed CHECKSUMS, which a
 `BUNDLE_FROZEN=true bundle check` against the bumped tree caught). `gem build` confirms
 the artifact identity: rush-shell-0.1.0.gem, executable `rush`.
+
+### The commit convention gets teeth: cog verifies messages at the active hooks path (rush-qr5.2)
+`make install-hooks` generates a commit-msg hook that runs `cog verify` (cocogitto 7) with
+merge and fixup!/squash! messages exempted — merging `main` into `live` is the release
+mechanism and must never be blocked by the linter. The non-obvious part was *where* the
+hook lives: beads already owns `core.hooksPath` (`.beads/hooks`, a tracked directory), so
+the Makefile resolves the destination through `git rev-parse --git-path hooks` instead of
+assuming `.git/hooks`, and the generated file is gitignored by exact path — beads ships no
+commit-msg hook of its own, so the slot is free. Verified against real history: all
+Slice 18 messages, the release bot's `chore(release): x.y.z [skip ci]` and a merge subject
+pass; the pre-18 `Phase N (Slice Xy):` style and unknown types are rejected, including
+end-to-end (`git commit` with an old-style message leaves no commit).
