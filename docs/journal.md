@@ -2662,3 +2662,15 @@ libffi inputs, Ruby from .tool-versions with a cached bundle) moved into a compo
 action, `.github/actions/setup`, so the gate and mutant jobs consume identical
 environments and the dash pin lives in one place next to the Dockerfile's.
 
+### The release becomes a button, and the same token rule bites twice (rush-qr5.2)
+Two operational workflows close the release loop: `cut-release.yml` (workflow_dispatch)
+merges `main` into `live`, and `backmerge.yml` (release published + manual) returns the
+bot's version-bump commit to `main`. The rule that created the App token in the first
+place applies to both ends of the pipeline: the *cut* push must also be made with the App
+token, or release.yml would never fire — recursion prevention silences pushes exactly like
+it silences releases. The cut's first run doubles as bootstrap: it creates `live` from
+`main` and lays the `v0.0.1` baseline tag, because semantic-release's first release
+defaults to 1.0.0 when no tag exists; the bootstrap push itself releases nothing, and the
+first `feat` merged afterwards computes 0.1.0. All release-path workflows share one
+concurrency group (`release`, no cancel), so cut → release → publish/back-merge serialize
+instead of racing.

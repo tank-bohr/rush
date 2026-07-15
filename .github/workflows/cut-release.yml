@@ -1,0 +1,77 @@
+# The release button. Merges main into live server-side via the Merges API,
+# authenticated with the GitHub App token: API events made with the default
+# GITHUB_TOKEN never trigger other workflows, and this push must fire
+# release.yml. No checkout needed — the merge happens on GitHub's side and
+# the commit is attributed to the app bot automatically.
+#
+# First run bootstraps the release branch: creates live from main and lays
+# the v0.0.1 baseline tag on its tip. semantic-release's very first release
+# would otherwise be 1.0.0; with the baseline, the next feat merged through
+# this button computes 0.1.0. The bootstrap push itself releases nothing
+# (no commits after the tag) — that is expected.
+name: Cut release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge main into live
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Mint a GitHub App installation token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Merge main into live (bootstrap on first run)
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const live = await github.rest.git
+              .getRef({ ...context.repo, ref: 'heads/live' })
+              .catch((error) => {
+                if (error.status !== 404) throw error
+                return null
+              })
+
+            if (live === null) {
+              const main = await github.rest.git.getRef({ ...context.repo, ref: 'heads/main' })
+              const sha = main.data.object.sha
+              await github.rest.git.createRef({ ...context.repo, ref: 'refs/heads/live', sha })
+              await github.rest.git.createRef({ ...context.repo, ref: 'refs/tags/v0.0.1', sha })
+              core.notice(`bootstrap: live created at ${sha} with the v0.0.1 baseline tag`)
+              return
+            }
+
+            try {
+              const merge = await github.rest.repos.merge({
+                ...context.repo,
+                base: 'live',
+                head: 'main',
+                commit_message: "Merge branch 'main' into live (release cut)",
+              })
+              if (merge.status === 204) {
+                core.notice('live already contains main — nothing to release')
+              } else {
+                core.notice(`release cut: merged main into live as ${merge.data.sha}`)
+              }
+            } catch (error) {
+              if (error.status === 409) {
+                core.setFailed('merge conflict between main and live — were the '
+                  + 'bot-owned version files changed on main? Resolve by hand.')
+                return
+              }
+              throw error
+            }

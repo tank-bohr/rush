@@ -1,0 +1,107 @@
+# Returns whatever accrued on live — the release cut merge, the bot's
+# version bump — back into main. No-op when main already contains live;
+# merges server-side when it can; opens a PR when the merge conflicts
+# (which means version files were changed on main against the AGENTS.md
+# ownership rule).
+#
+# Triggers: every push to live, PLUS release published — the bump commit's
+# message carries [skip ci], which suppresses push-triggered workflows for
+# that push, so the release event is what catches the bump. All API calls
+# use the app token: GITHUB_TOKEN events would not trigger CI on the merged
+# main or on the conflict PR. Creating the PR needs the app to hold the
+# "Pull requests: Read and write" permission.
+name: Back-merge
+
+on:
+  push:
+    branches: [live]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  backmerge:
+    name: Merge live back into main
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Mint a GitHub App installation token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Merge live into main, or open a PR on conflict
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          script: |
+            const compare = await github.rest.repos.compareCommitsWithBasehead({
+              ...context.repo,
+              basehead: 'main...live',
+            })
+            if (compare.data.ahead_by === 0) {
+              core.notice('main already contains live — nothing to back-merge')
+              return
+            }
+
+            try {
+              const merge = await github.rest.repos.merge({
+                ...context.repo,
+                base: 'main',
+                head: 'live',
+                commit_message: "Merge branch 'live' into main (release back-merge)",
+              })
+              if (merge.status === 204) {
+                core.notice('main already contains live — nothing to back-merge')
+              } else {
+                core.notice(`back-merge: merged live into main as ${merge.data.sha}`)
+              }
+              return
+            } catch (error) {
+              if (error.status !== 409) throw error
+            }
+
+            core.warning('live does not merge cleanly into main — opening a PR')
+            try {
+              const pr = await github.rest.pulls.create({
+                ...context.repo,
+                base: 'main',
+                head: 'live',
+                title: 'Back-merge live into main (conflict, resolve by hand)',
+                body: 'Automatic back-merge hit a conflict. This usually means the '
+                  + 'bot-owned version files (`lib/rush/version.rb`, `Gemfile.lock`, '
+                  + '`CHANGELOG.md`) were changed on `main` against the AGENTS.md '
+                  + 'ownership rule. Resolve the conflict and merge.',
+              })
+              core.notice(`conflict: opened PR #${pr.data.number}: ${pr.data.html_url}`)
+            } catch (error) {
+              if (error.status === 422) {
+                const open = await github.rest.pulls.list({
+                  ...context.repo,
+                  base: 'main',
+                  head: `${context.repo.owner}:live`,
+                  state: 'open',
+                })
+                if (open.data.length > 0) {
+                  core.notice(`conflict: PR #${open.data[0].number} is already open: `
+                    + open.data[0].html_url)
+                  return
+                }
+              }
+              if (error.status === 403) {
+                core.setFailed('cannot open the conflict PR: grant the app the '
+                  + '"Pull requests: Read and write" permission and approve it on '
+                  + 'the installation, then re-run this workflow.')
+                return
+              }
+              throw error
+            }

@@ -70,14 +70,19 @@ Work proceeds in numbered **slices**. Each slice is **exactly one commit on `mai
 
 ## Releases
 
-`live` is the release branch; merging `main` into `live` is the act of releasing. On push
-to `live`, semantic-release (`release.config.mjs`) computes the version from the
-Conventional Commits, bumps `lib/rush/version.rb` + `Gemfile.lock`, writes `CHANGELOG.md`,
-commits that back to `live` (`[skip ci]`) and creates the tag + GitHub Release using a
-GitHub App token (events made with plain `GITHUB_TOKEN` cannot trigger workflows). That
-Release fires `publish.yml`, which publishes the gem via RubyGems OIDC trusted publishing
-with sigstore attestations — no stored API key. The version lines of those three files are
-owned by the release bot on `live`; never bump them on `main`.
+`live` is the release branch; merging `main` into `live` is the act of releasing, done by
+the **Cut release** button (`cut-release.yml`, `workflow_dispatch`; its first run
+bootstraps `live` and the `v0.0.1` baseline tag). On push to `live`, semantic-release
+(`release.config.mjs`) computes the version from the Conventional Commits, bumps
+`lib/rush/version.rb` + `Gemfile.lock`, writes `CHANGELOG.md`, commits that back to `live`
+(`[skip ci]`) and creates the tag + GitHub Release using a GitHub App token (events made
+with plain `GITHUB_TOKEN` cannot trigger workflows). That Release fires `publish.yml`,
+which publishes the gem via RubyGems OIDC trusted publishing with sigstore attestations —
+no stored API key. `backmerge.yml` (any push to `live`, plus the release event — the bump
+commit's `[skip ci]` suppresses its own push trigger) returns `live` commits to `main`:
+no-op when `main` is current, server-side merge when clean, a PR when conflicted. The
+version lines of the bot's files are owned by the release bot on `live`; never bump them
+on `main`.
 
 ## Where things live
 
