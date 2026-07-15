@@ -2710,3 +2710,15 @@ issues=write") to open a release-failure issue. Rather than widen the app's perm
 the comment/label features are disabled in config: failures are visible in Actions, and
 the app keeps the minimal contents-write surface (plus pull-requests for backmerge's
 conflict PRs).
+
+### One concurrency group is one pending slot: the shared group evicted the release itself (rush-qr5.2)
+The button's second press exposed a GitHub Actions semantics detail the shared `release`
+concurrency group design missed: a group holds at most one running and ONE pending run,
+and a newly queued run evicts the previously pending one even with `cancel-in-progress:
+false`. The cut's push to `live` spawned Release and Back-merge simultaneously into the
+group the cut itself still occupied; Back-merge took the pending slot and Release — the
+actor the whole pipeline exists for — was cancelled two seconds in. Serialization is only
+needed between runs of the *same* workflow (their branches differ; there is no shared-ref
+race between different ones), so each workflow now owns its group: `cut-release`,
+`release`, `backmerge`, `publish`. The 18g journal claim that one shared group makes the
+pipeline serialize was exactly the bug.
