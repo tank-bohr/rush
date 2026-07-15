@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
 Gem::Specification.new do |spec|
-  spec.name = 'rush'
+  # 'rush' has been taken on rubygems.org since 2008; the executable stays rush.
+  spec.name = 'rush-shell'
   # Read (not require) the version so the file loads fresh under coverage in specs.
   spec.version = File.read(File.expand_path('lib/rush/version.rb', __dir__))[/VERSION = '([^']+)'/, 1]
   spec.authors = ['tank']

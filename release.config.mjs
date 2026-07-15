@@ -14,9 +14,11 @@
 // release early if either substitution missed.
 const bump = [
   `sed -i "s/VERSION = '[^']*'/VERSION = '\${nextRelease.version}'/" lib/rush/version.rb`,
-  `sed -i -E "s/^    rush \\([0-9][^)]*\\)/    rush (\${nextRelease.version})/" Gemfile.lock`,
+  // Both lockfile lines carry the version: PATH specs (4-space) and CHECKSUMS
+  // (2-space); the DEPENDENCIES entry is versionless and unaffected.
+  `sed -i -E "s/^( +rush-shell) \\([0-9][^)]*\\)/\\1 (\${nextRelease.version})/" Gemfile.lock`,
   `grep -q "VERSION = '\${nextRelease.version}'" lib/rush/version.rb`,
-  `grep -q "rush (\${nextRelease.version})" Gemfile.lock`,
+  `grep -q "rush-shell (\${nextRelease.version})" Gemfile.lock`,
 ].join(' && ')
 
 export default {

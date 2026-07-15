@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rush (0.1.0)
+    rush-shell (0.1.0)
       fiddle (~> 1.1)
       racc (~> 1.7, >= 1.7.3)
       reline (~> 0.6)
@@ -215,7 +215,7 @@ DEPENDENCIES
   rubocop (~> 1.72)
   rubocop-performance (~> 1.23)
   rubocop-rspec (~> 3.5)
-  rush!
+  rush-shell!
   simplecov (~> 0.22)
   sorbet (~> 0.5)
   stackprof (~> 0.2)
@@ -280,7 +280,7 @@ CHECKSUMS
   rubocop-performance (1.26.1) sha256=cd19b936ff196df85829d264b522fd4f98b6c89ad271fa52744a8c11b8f71834
   rubocop-rspec (3.10.2) sha256=0b3e2ecc592cd10ecbf0095bb58d1e357905276e069643523cc19eb7495f65e2
   ruby-progressbar (1.13.0) sha256=80fc9c47a9b640d6834e0dc7b3c94c9df37f08cb072b7761e4a71e22cff29b33
-  rush (0.1.0)
+  rush-shell (0.1.0)
   securerandom (0.4.1) sha256=cc5193d414a4341b6e225f0cb4446aceca8e50d5e1888743fac16987638ea0b1
   sexp_processor (4.17.5) sha256=ae2b48ba98353d5d465ce8759836b7a05f2e12c5879fcd14d7815b026de32f0e
   simplecov (0.22.0) sha256=fe2622c7834ff23b98066bb0a854284b2729a569ac659f82621fc22ef36213a5

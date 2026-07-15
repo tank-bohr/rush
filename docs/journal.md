@@ -2624,3 +2624,14 @@ tag (`v0.0.1`) on `live`'s initial tip. Second, the gem name `rush` has been tak
 rubygems.org since 2008, so the publish half stays parked until the gem is renamed; the
 workflows read the name from the gemspec and only the lockfile-bump sed and this journal
 know the string.
+
+### The gem is rush-shell; the shell stays rush (rush-qr5.2)
+`rush` on rubygems.org has pointed at Adam Wiggins' abandoned 2008 Ruby-shell since before
+this project existed, so the registry identity and the program diverge: the gem is
+`rush-shell`, while the executable, the `Rush` namespace, `lib/rush` and the repository
+keep their names. The rename touched exactly three self-consistency points — the gemspec
+(file and `spec.name`), the regenerated lockfile, and the release bump chain in
+`release.config.mjs`, whose sed now covers both lockfile lines that carry the version
+(PATH specs at four spaces and CHECKSUMS at two; a first pass missed CHECKSUMS, which a
+`BUNDLE_FROZEN=true bundle check` against the bumped tree caught). `gem build` confirms
+the artifact identity: rush-shell-0.1.0.gem, executable `rush`.
