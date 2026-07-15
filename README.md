@@ -1,101 +1,94 @@
 # rush
 
-A pure-Ruby **POSIX `sh`**. The specification is the POSIX.1-2017 *Shell Command
-Language* (IEEE Std 1003.1, §2); the verification oracle is **dash**. The parser
-is generated from a grammar transcribed from POSIX §2.10 with **Racc**.
+[![CI](https://github.com/tank-bohr/rush/actions/workflows/ci.yml/badge.svg)](https://github.com/tank-bohr/rush/actions/workflows/ci.yml)
+[![Gem](https://img.shields.io/gem/v/rush-shell)](https://rubygems.org/gems/rush-shell)
 
-## Architecture
+A **POSIX shell written in pure Ruby**. rush implements the POSIX.1-2017 *Shell
+Command Language* (IEEE Std 1003.1, §2) to the letter, with **dash** as its
+differential oracle: a large corpus of language tests verifies that rush and
+`dash -c` produce the same `[stdout, exit status]` byte for byte. Where dash
+itself diverges from the standard, the standard wins and the divergence is
+documented.
 
-A unidirectional pipeline over shared shell state:
+## Install
+
+```sh
+gem install rush-shell
+```
+
+Ruby >= 3.4 is required (rush is developed and CI-verified on Ruby 4.0). The
+gem is `rush-shell`; the executable is `rush`.
+
+## Use
+
+```sh
+rush                       # interactive shell
+rush -c 'echo hello'       # run a command string
+rush script.sh arg1 arg2   # run a script
+echo 'ls | wc -l' | rush   # read commands from stdin
+```
+
+rush accepts the standard `sh` invocation: `-c`, `-o option`/`+o option`, the
+`set`-builtin flag letters (`-e`, `-x`, `-u`, `-m`, …), `--` to end options,
+and behaves as a login shell when invoked with a leading-dash `argv[0]`.
+Interactive mode (auto-detected on a terminal) has Reline line editing and
+full job control: process groups, terminal handover, `Ctrl-Z`, `jobs`, `fg`,
+`bg`, and pre-prompt status change reports — matching dash's picture
+byte-for-byte in the pty smoke tests. Persistent history and the POSIX `fc`
+builtin are on the roadmap.
+
+The full §2 language is implemented: quoting, all parameter-expansion forms,
+command substitution, arithmetic expansion, field splitting, pathname
+expansion (including bracket expressions and locale collation via glibc),
+redirections and here-documents, pipelines and lists, compound commands,
+functions, traps, aliases, `getopts`, and the special builtins.
+
+## Why trust a shell?
+
+Correctness in rush is not a claim, it is machinery:
+
+- **Differential testing** — the language corpus runs every case against a
+  checksum-pinned dash 0.5.13.4 and compares `[stdout, exit status]`; CI
+  repeats this natively and inside a Docker oracle image.
+- **2831 examples, ~99.8% line / ~98.8% branch coverage** — irreducible
+  fork/exec paths are pinned by out-of-process differential tests instead.
+- **Mutation testing** — [mutant](https://github.com/mbj/mutant) over ~38,800
+  mutations gates CI at a ratcheted threshold.
+- **Two independent type systems** — inline Sorbet `sig {}` and RBS checked by
+  Steep, kept deliberately separate so each catches what the other misses.
+
+## Development
+
+```sh
+mise install         # Ruby from .tool-versions
+bundle install
+make install-hooks   # once per clone: Conventional Commits hook (cog)
+bundle exec rake     # the full parallel quality gate
+```
+
+`bundle exec rake` compiles the Racc parser from `grammar/shell.y`, then runs
+rubocop, reek, flay/flog, Steep, Sorbet and the sharded RSpec suite
+concurrently. `bin/test-in-docker` runs the same gate plus container-only
+smokes against the pinned oracle image. `lib/rush/parser.rb` is generated and
+committed; regenerate via `rake compile`, audit with `rake check_parser_drift`.
+
+The architecture is a unidirectional pipeline over shared shell state:
 
 ```
 Source → Lexer → Racc Parser → AST → Expander → Executor
 ```
 
-with one feedback wire (the parser nudges lexer state for POSIX Grammar Rules
-1-9) and **all OS access funneled through one injectable port**
-(`Rush::SystemCalls`). Variability lives behind O(1) registries (builtins,
-redirections, parameter-expansion forms, …); polymorphism (`node.execute(executor)`)
-replaces every type switch.
+with one feedback wire (the parser nudges lexer state for POSIX grammar rules
+1–9) and all OS access funneled through one injectable port
+(`Rush::SystemCalls`). Design decisions and per-slice lessons live in
+[docs/architecture/](docs/architecture) and [docs/journal.md](docs/journal.md);
+agent/contributor workflow lives in [AGENTS.md](AGENTS.md). Notable research:
+[Steep vs Sorbet under extreme quality pressure](docs/steep-vs-sorbet.md).
 
-## Research notes
+Releases are cut from the `live` branch: semantic-release computes the version
+from Conventional Commits and the gem is published to RubyGems via OIDC
+trusted publishing with sigstore attestations — no long-lived credentials.
 
-- [Steep vs Sorbet under extreme quality pressure](docs/steep-vs-sorbet.md) — what
-  two independent Ruby type systems caught, cost, and changed in the design.
+## License
 
-## Requirements
-
-- **Ruby 4.0.5** (pinned in `.tool-versions`).
-- `dash` for the differential test oracle (optional; the differential group
-  skips when no oracle is present).
-
-```sh
-mise install            # installs Ruby 4.0.5 from .tool-versions
-bundle install          # dev/runtime gems into vendor/bundle
-```
-
-## Build & verify
-
-`rake` compiles the parser once, then runs the independent quality checks concurrently.
-RSpec uses up to eight file shards; SimpleCov merges them before applying the coverage gate.
-The large language differential corpus is split evenly by stable case ID so a clean checkout
-is balanced without a machine-specific runtime log.
-
-```text
-compile (racc) → { rubocop, reek, flay, flog, steep, sorbet, parallel rspec (+ merged coverage) }
-```
-
-```sh
-bundle exec rake                  # fast parallel full pipeline
-RUSH_GATE_SERIAL=1 bundle exec rake # deterministic serial/debug fallback
-RUSH_SPEC_PROCESSES=4 bundle exec rake # override the default min(CPUs, 8)
-RUSH_SPEC_SEED=12345 bundle exec rake spec:parallel # reproduce a parallel RSpec run
-bundle exec rake compile          # regenerate lib/rush/parser.rb from grammar/shell.y
-bundle exec rake check_parser_drift # explicit generated-parser drift audit
-bundle exec rspec                 # serial tests + SimpleCov guardrail
-bundle exec rake docker:test      # opt-in Docker gate + syscall smoke
-bundle exec rake benchmark        # opt-in startup/loop/expansion timing suite
-bundle exec rake benchmark:check  # compare rush medians with benchmark/baseline.json
-bundle exec rake benchmark:record # explicitly replace that host-specific baseline
-bundle exec rake benchmark:profile # StackProf the 10k loop (writes under tmp/)
-bundle exec rake 'mutant[Rush::Status#success?]' # on-demand mutation testing
-bundle exec rake 'mutant:check[Rush*,95.0]'      # on-demand mutation score threshold
-echo 'echo hi; exit 2' | bundle exec ruby -Ilib exe/rush
-bundle exec ruby -Ilib exe/rush -c 'echo hello'
-```
-
-`docker:test` builds `docker/rush-test.Dockerfile`, mounts the working tree into
-`/work`, runs `bundle install --jobs ... --retry ...`, then runs `bundle exec rake`
-and a container-only `ulimit` smoke that lowers rush's `RLIMIT_NOFILE` soft limit.
-The image checksum-pins dash 0.5.13.4 so the differential oracle matches the
-native development oracle instead of Debian slim's older dash. The gate is
-intentionally opt-in: the host shell limits are not mutated, but Docker's own
-cgroup, capability, and `--ulimit` ceilings still bound what the container can do.
-
-The benchmark task runs fixed shell workloads in fresh subprocesses with a monotonic
-clock, reporting rush and dash medians plus raw JSON samples. Rush is launched without
-Bundler injection (using the bundle's runtime gem load paths), so startup approximates
-an installed executable rather than `bundle exec` overhead. The committed baseline is
-informational until `benchmark:check` is explicitly requested; that task allows 1.5× by
-default (`RUSH_BENCH_TOLERANCE`) because wall time is host-specific; it rejects a
-different host/CPU/Ruby/Sorbet context or fewer samples instead of comparing unlike runs.
-Sample, warmup and per-process timeout values use `RUSH_BENCH_SAMPLES`,
-`RUSH_BENCH_WARMUPS`, and `RUSH_BENCH_TIMEOUT`; `DASH` overrides the reference binary.
-
-The executable disables Sorbet's runtime method wrappers before loading rush; Steep and
-Sorbet static checking, plus runtime validation in specs/library use, remain unchanged.
-Set `RUSH_RUNTIME_TYPECHECKS=1` to restore production call validation for diagnostics.
-The same switch selects checked mode for `benchmark` and `benchmark:profile`, making the
-runtime-policy cost directly reproducible.
-
-Coverage policy: rush targets 100% meaningful coverage, but SimpleCov cannot observe every
-fork/exec path a shell must exercise. The configured thresholds are intentionally relaxed so
-features and design are not sacrificed for a metric; irreducible process-boundary wrappers are
-covered by differential tests against dash instead.
-
-## The parser is committed
-
-`lib/rush/parser.rb` and `grammar/shell.y.output` are generated by Racc and
-committed. Regenerate only via `rake compile`. The default `bundle exec rake`
-keeps the per-slice gate fast; run `bundle exec rake check_parser_drift` as the
-explicit audit when changing grammar/generated parser files or for release/CI checks.
+[MIT](LICENSE)

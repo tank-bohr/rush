@@ -2674,3 +2674,14 @@ defaults to 1.0.0 when no tag exists; the bootstrap push itself releases nothing
 first `feat` merged afterwards computes 0.1.0. All release-path workflows share one
 concurrency group (`release`, no cancel), so cut → release → publish/back-merge serialize
 instead of racing.
+
+### Docs split by audience: the README serves shell users; types already document the API (rush-qr5.2)
+The README flipped from developer-notes to a user-facing page: install, invocation surface,
+what of POSIX §2 is implemented, and — the part that differentiates rush — the verification
+machinery itself (differential oracle, coverage, mutation gate, dual type systems) as the
+answer to "why trust a shell". The deliberate non-decision is API documentation: types are
+already stated twice with machine checking (inline `sig {}`, RBS under Steep), so YARD
+`@param`/`@return` tags would be a third, uncheckable copy that drifts. When a docs site
+lands (rush-366) it will render signatures straight from Sorbet sigs via yard-sorbet,
+leaving the constraint-explaining prose comments exactly as they are. The gemspec now links
+the changelog and issue tracker so the rubygems.org page points somewhere useful.
