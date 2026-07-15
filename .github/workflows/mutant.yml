@@ -1,0 +1,34 @@
+# The mutation gate in its own workflow, because its runtime demands queue
+# semantics, not cancellation: ~18 min locally on 16 jobs (36 mutations/s over
+# 38.8k mutations) extrapolates to roughly 2 h on a 4-core runner, and inside
+# ci.yml every push — including the release loop's back-merges — cancelled the
+# run before it could finish. With cancel-in-progress: false the running sweep
+# always completes and only the newest push waits in the pending slot. No
+# pull_request trigger: a two-hour lag is no PR feedback. The threshold is the
+# ratchet floor in the Rakefile (rush-tqq).
+name: Mutation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: mutant-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  mutant:
+    name: Mutation gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: ./.github/actions/setup
+
+      - name: Mutation coverage
+        run: bundle exec rake mutant:check

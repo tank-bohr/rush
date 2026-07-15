@@ -2722,3 +2722,12 @@ needed between runs of the *same* workflow (their branches differ; there is no s
 race between different ones), so each workflow now owns its group: `cut-release`,
 `release`, `backmerge`, `publish`. The 18g journal claim that one shared group makes the
 pipeline serialize was exactly the bug.
+
+### The mutation gate needs queue semantics, not cancellation (rush-tqq)
+Two green pushes in a row still produced zero completed mutation runs on CI: the release
+loop's back-merge pushes to main kept tripping ci.yml's cancel-in-progress and killing the
+two-hour sweep mid-flight — a gate that never finishes gates nothing. The mutation job now
+lives in its own workflow with `cancel-in-progress: false`: the running sweep always
+completes, only the newest push occupies the pending slot, and pull requests never trigger
+it. Back-merge merge commits additionally carry `[skip ci]` — their tree is main content
+CI just proved plus the bot's version bump, so re-gating (and re-cancelling) added nothing.
