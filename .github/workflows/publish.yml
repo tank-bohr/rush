@@ -1,0 +1,37 @@
+# Publish the gem for a GitHub Release (rush-qr5.2).
+#
+# Fired by the Release that release.yml creates with its app token. Publishes
+# to RubyGems via OIDC trusted publishing — no stored API key — and uploads
+# sigstore attestations (provenance shown on the gem page). The trusted
+# publisher on rubygems.org must name this file (publish.yml) and the
+# `release` environment. The release event checks out the release tag;
+# bundler's `rake release` sees HEAD already tagged, skips its git work and
+# only pushes the gem.
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions: {}
+
+jobs:
+  publish:
+    name: RubyGems (OIDC + provenance)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release
+    permissions:
+      contents: write # bundler's rake release would push the tag if it were absent
+      id-token: write # the OIDC exchange with rubygems.org
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Ruby from .tool-versions
+        uses: ruby/setup-ruby@8e41b362d2589a22a44c1cfa214b3c83052c195b # v1.318.0
+        with:
+          bundler-cache: true
+
+      - uses: rubygems/release-gem@052cc82692552de3ef2b81fd670e41d13cba8092 # v1.4.0

@@ -1,5 +1,6 @@
 /.bundle/
 /vendor/bundle/
+/node_modules/
 /coverage/
 /.mutant/
 /pkg/

@@ -48,8 +48,10 @@ project's definition of quality.
 
 Work proceeds in numbered **slices**. Each slice is **exactly one commit on `main`**:
 
-- Commit message: `Phase N (Slice Xy): <summary>`, with a body explaining the change
-  and how it was verified.
+- Commit message (Conventional Commits): `<type>: <summary> (Phase N, Slice Xy)`, with a
+  body explaining the change and how it was verified. Types drive semver on `live`:
+  `fix`/`perf` → patch, `feat` → minor, `!` after the type or a `BREAKING CHANGE:` footer
+  → major; `ci`/`build`/`docs`/`refactor`/`test`/`chore` never release.
 - End every AI-authored commit message with a `Co-Authored-By:` trailer naming the
   actual model/agent that produced the slice; do not reuse another model's signature.
 - A slice lands only when `bundle exec rake` is green **and** the behaviour is verified
@@ -64,6 +66,17 @@ Work proceeds in numbered **slices**. Each slice is **exactly one commit on `mai
 - **Commit** per slice as above.
 - **Push ONLY when the user explicitly asks.** Do not push on session end, on "completion",
   or "to be safe". This **overrides** any beads guidance below that treats pushing as mandatory.
+
+## Releases
+
+`live` is the release branch; merging `main` into `live` is the act of releasing. On push
+to `live`, semantic-release (`release.config.mjs`) computes the version from the
+Conventional Commits, bumps `lib/rush/version.rb` + `Gemfile.lock`, writes `CHANGELOG.md`,
+commits that back to `live` (`[skip ci]`) and creates the tag + GitHub Release using a
+GitHub App token (events made with plain `GITHUB_TOKEN` cannot trigger workflows). That
+Release fires `publish.yml`, which publishes the gem via RubyGems OIDC trusted publishing
+with sigstore attestations — no stored API key. The version lines of those three files are
+owned by the release bot on `live`; never bump them on `main`.
 
 ## Where things live
 

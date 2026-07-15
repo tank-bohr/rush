@@ -2599,3 +2599,28 @@ pkg-config, and the full container gate (2831 examples, syscall/Reline/job-contr
 passes from an empty bundle directory. The bind mount doubles as the CI cache: the script's
 volume parameter accepts a host path, so actions/cache persists the container's gems
 without touching the script's named-volume default.
+
+### Releases become a branch semantics: merge to live releases, the App token makes it observable (rush-qr5.2)
+The release pipeline is three deliberately separated concerns. semantic-release on `live`
+computes the version from Conventional Commits (the commit convention itself changed with
+this slice: `<type>: <summary> (Phase N, Slice Xy)`), bumps `version.rb`, the lockfile's
+own-gem line and `CHANGELOG.md` in a `[skip ci]` commit it owns, and creates the tag plus
+GitHub Release. That release is created with a GitHub App installation token for one
+load-bearing reason: events created with the default `GITHUB_TOKEN` never trigger other
+workflows, so a plain-token release would leave `publish.yml` permanently silent — the
+failure would be an absence, not an error. Publishing stays in its own workflow on
+`release: published` because RubyGems trusted publishing matches the workflow *filename*
+plus the `release` environment: OIDC replaces any stored API key, and sigstore
+attestations (provenance on the gem page) are only accepted at all when pushing through a
+trusted publisher — an API key would not merely skip provenance, the upload of an
+attestation is rejected. `rake release` inside the publish job sees HEAD already tagged
+and skips its git half, leaving just the attested gem push.
+
+Two facts the dry-run surfaced, worth remembering. First, the repo's early history already
+used conventional commits, so `--dry-run --branches main` validated the whole chain
+against real history — and computed 1.0.0, because semantic-release's first release is
+always 1.0.0 when no previous tag exists; releasing 0.1.0 first requires a manual baseline
+tag (`v0.0.1`) on `live`'s initial tip. Second, the gem name `rush` has been taken on
+rubygems.org since 2008, so the publish half stays parked until the gem is renamed; the
+workflows read the name from the gemspec and only the lockfile-bump sed and this journal
+know the string.

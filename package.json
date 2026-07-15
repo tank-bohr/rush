@@ -1,0 +1,12 @@
+{
+  "name": "rush-release-toolchain",
+  "private": true,
+  "description": "Dev-only semantic-release toolchain for the live release branch; see release.config.mjs",
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "semantic-release": "^25.0.0"
+  }
+}
