@@ -30,24 +30,24 @@ RSpec.describe DifferentialHarness::ProbeRunner do
   end
 
   it 'times out and kills a stopped descendant process group' do
-    stub_const('DifferentialHarness::ProbeRunner::TIMEOUT', 1.0)
+    stub_const('DifferentialHarness::ProbeRunner::TIMEOUT', 3.0)
     Tempfile.create('rush-probe-pid') do |file|
       child = "echo $$ > #{Shellwords.escape(file.path)}; kill -STOP $$"
       argv = ['sh', '-c', "sh -c #{Shellwords.escape(child)} & wait"]
       expect { described_class.call(argv, '', {}, pgroup: true) }.to raise_error(DifferentialHarness::ProbeTimeout)
-      pid = track(Integer(File.read(file.path)))
+      pid = track(read_written_pid(file))
       expect(wait_until_gone?(pid)).to be(true)
     end
   end
 
   it 'kills a stopped descendant that creates a separate process group' do
-    stub_const('DifferentialHarness::ProbeRunner::TIMEOUT', 1.0)
+    stub_const('DifferentialHarness::ProbeRunner::TIMEOUT', 3.0)
     Tempfile.create('rush-probe-pid') do |file|
       source = 'child=fork do; Process.setpgrp; Signal.trap("HUP", "IGNORE"); ' \
                'File.write(ARGV[0], Process.pid); Process.kill("STOP", Process.pid); end; Process.wait(child)'
       argv = [RbConfig.ruby, '-e', source, file.path]
       expect { described_class.call(argv, '', {}, pgroup: true) }.to raise_error(DifferentialHarness::ProbeTimeout)
-      pid = track(Integer(File.read(file.path)))
+      pid = track(read_written_pid(file))
       expect(wait_until_gone?(pid)).to be(true)
     end
   end
@@ -104,6 +104,15 @@ RSpec.describe DifferentialHarness::ProbeRunner do
   def track(pid)
     child_pids << pid
     pid
+  end
+
+  # The descendant races the stubbed probe timeout to write its pidfile; on a
+  # loaded runner interpreter start-up can lose that race, so give the write a
+  # grace window after the timeout fires instead of reading immediately.
+  def read_written_pid(file)
+    deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + 2
+    sleep(0.01) until File.size?(file.path) || Process.clock_gettime(Process::CLOCK_MONOTONIC) >= deadline
+    Integer(File.read(file.path))
   end
 
   def wait_until_gone?(pid)

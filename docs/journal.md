@@ -2685,3 +2685,16 @@ already stated twice with machine checking (inline `sig {}`, RBS under Steep), s
 lands (rush-366) it will render signatures straight from Sorbet sigs via yard-sorbet,
 leaving the constraint-explaining prose comments exactly as they are. The gemspec now links
 the changelog and issue tracker so the rubygems.org page points somewhere useful.
+
+### The first CI run audits the audit: a stale lint cache and a pidfile race (rush-qr5.1)
+GitHub's runners falsified two things the local gate had been vouching for. First, RuboCop:
+raising TargetRubyVersion to 4.0 activates Style/ReverseFind, but the local result cache
+kept serving green for unchanged files, so the offense (`reverse.find` → `rfind` in the
+background-runner spec) only surfaced where no cache exists — CI. An uncached sweep found
+exactly one masked offense; the lesson is that a config-affecting change deserves one
+`rubocop --cache false` pass before trusting the local gate. Second, the probe-runner
+timeout specs read a descendant's pidfile immediately after ProbeTimeout: on a loaded
+runner, interpreter start-up loses the race against the stubbed one-second timeout and
+`Integer('')` raises. The stub is now three seconds and the read waits for the write with
+a bounded grace window — the assertion is unchanged, only its timing assumptions widened
+to match slower machines.
