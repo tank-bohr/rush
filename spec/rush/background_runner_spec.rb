@@ -47,7 +47,7 @@ RSpec.describe Rush::BackgroundRunner do
   it 'installs the ignores after the subshell trap reset, so interactive bases cannot undo them' do
     Rush::InteractiveSignals.install(executor)
     described_class.new(executor, node).run_body
-    expect(system.traps_installed.reverse.find { |name, _command| name == 'INT' }).to eq(%w[INT IGNORE])
+    expect(system.traps_installed.rfind { |name, _command| name == 'INT' }).to eq(%w[INT IGNORE])
   end
 
   def parsed(source)

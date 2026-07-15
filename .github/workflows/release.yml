@@ -33,11 +33,15 @@ jobs:
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
       # semantic-release needs the full history and tags to find the previous
-      # release; it pushes with GH_TOKEN, not the checkout credential.
+      # release. Checking out WITH the app token persists it as the git
+      # credential (proper x-access-token basic auth); semantic-release probes
+      # the plain remote URL first and keeps it once that push check passes,
+      # so the bump commit and tag ride the checkout credential. GH_TOKEN on
+      # the release step below only feeds the GitHub API plugin.
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
