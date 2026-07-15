@@ -1,0 +1,101 @@
+# The public gate for rush. Two independent jobs:
+#   gate          — the same `bundle exec rake` developers run, plus an explicit
+#                   generated-parser drift audit, against the pinned dash oracle.
+#   docker-oracle — bin/test-in-docker: full gate plus container-only smokes in
+#                   the checksum-pinned image (dash built from source).
+name: CI
+
+on:
+  push:
+    branches: [main, live]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Keep in lockstep with docker/rush-test.Dockerfile so the native job and the
+  # docker oracle differ only in packaging, never in oracle behaviour.
+  DASH_VERSION: 0.5.13.4
+  DASH_SHA256: d10dfd41cda59165560db39ca915c2c4a7636fff04281d8d2df77ad92c753e2b
+
+jobs:
+  gate:
+    name: Full gate + parser drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Cache the pinned dash oracle
+        id: dash-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/dash
+          key: dash-${{ env.DASH_VERSION }}-${{ env.DASH_SHA256 }}
+
+      - name: Build the pinned dash oracle
+        if: steps.dash-cache.outputs.cache-hit != 'true'
+        run: |
+          curl -fsSL "http://gondor.apana.org.au/~herbert/dash/files/dash-${DASH_VERSION}.tar.gz" \
+            -o /tmp/dash.tar.gz
+          echo "${DASH_SHA256}  /tmp/dash.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/dash.tar.gz -C /tmp
+          cd "/tmp/dash-${DASH_VERSION}"
+          ./configure --prefix="$HOME/dash"
+          make -j"$(nproc)"
+          make install
+
+      - name: Put the pinned dash on PATH
+        run: |
+          echo "$HOME/dash/bin" >> "$GITHUB_PATH"
+          "$HOME/dash/bin/dash" -c 'echo "dash oracle ready"'
+
+      # locales: localedef inputs for the tailored LC_COLLATE spec.
+      # libffi-dev + pkg-config: the fiddle gem compiles from source on Ruby 4.
+      - name: Ensure native build inputs
+        run: |
+          if [ ! -f /usr/share/i18n/locales/cs_CZ ] || ! pkg-config --exists libffi; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends libffi-dev locales pkg-config
+          fi
+
+      - name: Set up Ruby from .tool-versions
+        uses: ruby/setup-ruby@8e41b362d2589a22a44c1cfa214b3c83052c195b # v1.318.0
+        with:
+          bundler-cache: true
+
+      # `compile` is an mtime-based file task; a fresh checkout would consider
+      # the committed parser current. Clobber first so the drift audit compares
+      # a genuinely regenerated parser against the committed one.
+      - name: Parser drift audit
+        run: bundle exec rake clobber_parser check_parser_drift
+
+      - name: Full gate
+        run: bundle exec rake
+
+  docker-oracle:
+    name: Docker oracle (pinned dash image)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Cache the container bundle
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: tmp/docker-bundle
+          key: docker-bundle-${{ hashFiles('Gemfile.lock', 'docker/rush-test.Dockerfile') }}
+          restore-keys: docker-bundle-
+
+      # RUSH_DOCKER_BUNDLE_VOLUME accepts a host path as well as a named
+      # volume; a bind mount lets actions/cache persist the container bundle.
+      - name: Run the docker oracle gate
+        run: |
+          mkdir -p tmp/docker-bundle
+          RUSH_DOCKER_BUNDLE_VOLUME="$PWD/tmp/docker-bundle" bin/test-in-docker

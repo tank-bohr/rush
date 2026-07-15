@@ -2578,3 +2578,24 @@ allocations fall from **3,931,347 / 3,063,543** to
 contain no `flat_map`; the expansion-heavy profile's new dominant cost is glibc collation through
 Fiddle for parameter-removal patterns, a different algorithmic boundary rather than hidden
 collection churn.
+
+### The public gate reproduces the developer's oracle instead of trusting the runner's (rush-qr5.1)
+The CI workflow's design constraint was that no job may weaken what a slice already proves
+locally. GitHub's ubuntu-24.04 runner ships dash 0.5.12 while the differential corpus is
+pinned against 0.5.13.4, so the native job builds the same checksum-verified dash release
+the docker image compiles, caches it by version+sha256, and prepends it to PATH — dev
+machine, native CI and the docker oracle now agree on the oracle binary exactly. The
+parser-drift audit needed one non-obvious step: `compile` is an mtime-based file task, and
+a fresh checkout stamps grammar and generated parser with the same time, so `rake
+check_parser_drift` alone would compare the committed parser with itself. CI runs
+`clobber_parser` first, forcing a true regeneration before the `git diff --exit-code`.
+
+Rehearsing the docker job with a cold bind-mounted bundle directory — exactly what CI
+sees — surfaced a latent bootstrap failure the warm `rush-bundle` named volume had always
+masked: Ruby 4 moved fiddle out of the default gems, fiddle 1.1.8 compiles its extension
+from source, and the image carried neither libffi headers nor pkg-config, so a fresh
+environment could never install the bundle at all. The image now installs libffi-dev and
+pkg-config, and the full container gate (2831 examples, syscall/Reline/job-control smokes)
+passes from an empty bundle directory. The bind mount doubles as the CI cache: the script's
+volume parameter accepts a host path, so actions/cache persists the container's gems
+without touching the script's named-volume default.

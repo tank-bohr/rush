@@ -12,9 +12,11 @@ ENV BUNDLE_PATH=/bundle \
     DEBIAN_FRONTEND=noninteractive
 
 # procps supplies ps for the job-control pty smoke's pgid/tpgid probes; locales
-# supplies localedef + cs_CZ source for the tailored LC_COLLATE gate.
+# supplies localedef + cs_CZ source for the tailored LC_COLLATE gate; libffi-dev
+# and pkg-config let the fiddle gem compile on a cold bundle dir (Ruby 4 no
+# longer ships fiddle or the libffi headers it needs).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential ca-certificates curl git locales procps \
+    && apt-get install -y --no-install-recommends build-essential ca-certificates curl git libffi-dev locales pkg-config procps \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /bundle /work /tmp/rush-home \
     && chmod 0777 /bundle /work /tmp/rush-home
