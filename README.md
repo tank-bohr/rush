@@ -16,8 +16,8 @@ documented.
 gem install rush-shell
 ```
 
-Ruby >= 3.4 is required (rush is developed and CI-verified on Ruby 4.0). The
-gem is `rush-shell`; the executable is `rush`.
+Ruby >= 4.0 is required — the floor is what CI actually proves. The gem is
+`rush-shell`; the executable is `rush`.
 
 ## Use
 

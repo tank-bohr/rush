@@ -13,7 +13,9 @@ Gem::Specification.new do |spec|
                      '(IEEE Std 1003.1 §2) in pure Ruby, verified differentially against dash.'
   spec.homepage = 'https://github.com/tank-bohr/rush'
   spec.license = 'MIT'
-  spec.required_ruby_version = '>= 3.4'
+  # The floor is what CI proves: the gate and the docker oracle run Ruby 4.0
+  # (.tool-versions / rush-test.Dockerfile), and nothing older is tested.
+  spec.required_ruby_version = '>= 4.0'
 
   spec.metadata = {
     'rubygems_mfa_required' => 'true',
