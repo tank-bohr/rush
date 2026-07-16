@@ -59,6 +59,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rubocop-performance', '~> 1.23'
   spec.add_development_dependency 'rubocop-rspec', '~> 3.5'
   spec.add_development_dependency 'simplecov', '~> 0.22'
+  spec.add_development_dependency 'simplecov-cobertura', '~> 3.0'
   spec.add_development_dependency 'sorbet', '~> 0.5'
   spec.add_development_dependency 'stackprof', '~> 0.2'
   spec.add_development_dependency 'steep', '~> 2.0'

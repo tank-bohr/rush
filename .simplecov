@@ -16,11 +16,13 @@ SimpleCov.start do
   if group && group != groups
     formatter SimpleCov::Formatter::SimpleFormatter
   else
-    # coverage/coverage.json is what CI ships to Codecov; the JSON formatter is
-    # simplecov's own runtime dependency, so no extra Gemfile entry.
-    require 'simplecov_json_formatter'
+    # coverage/coverage.xml (cobertura) is what CI ships to Codecov. Not the
+    # bundled JSON formatter: Codecov's simplecov processor matches only the
+    # third-party simplecov-json layout, so the official JSON parses to
+    # nothing there (state: error, observed on run 29473353200).
+    require 'simplecov-cobertura'
     formatter SimpleCov::Formatter::MultiFormatter.new(
-      [SimpleCov::Formatter::HTMLFormatter, SimpleCov::Formatter::JSONFormatter]
+      [SimpleCov::Formatter::HTMLFormatter, SimpleCov::Formatter::CoberturaFormatter]
     )
   end
 
