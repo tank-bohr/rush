@@ -22,6 +22,11 @@ RSpec.describe Rush::Builtins::Command do
     expect(system.stdout.string).to be_empty
   end
 
+  it 'runs bare command with no operands as the colon no-op (dash-probed)' do
+    expect(run).to be_success
+    expect(system.stdout.string).to be_empty
+  end
+
   it 'describes a name verbosely with -V like type does' do
     expect(run('-V', 'echo')).to be_success
     expect(system.stdout.string).to eq("echo is a shell builtin\n")

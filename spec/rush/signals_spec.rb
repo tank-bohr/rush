@@ -43,4 +43,9 @@ RSpec.describe Rush::Signals do
     expect([described_class.description(17), described_class.description(99)])
       .to eq(['CHLD', 'Signal 99'])
   end
+
+  it 'labels each stop signal as the jobs listing shows it, defaulting to Stopped' do
+    expect([19, 20, 21, 22, 99].map { |number| described_class.stop_description(number) })
+      .to eq(['Stopped (signal)', 'Stopped', 'Stopped (tty input)', 'Stopped (tty output)', 'Stopped'])
+  end
 end
