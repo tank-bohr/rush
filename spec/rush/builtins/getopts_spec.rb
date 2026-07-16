@@ -103,4 +103,25 @@ RSpec.describe Rush::Builtins::Getopts do
     expect(run(':a:', 'opt').exitstatus).to eq(0)
     expect([*vars('opt', 'OPTIND', 'OPTARG'), system.stderr.string]).to eq([':', '2', 'a', ''])
   end
+
+  it 'leaves OPTARG untouched at end of options (the KEEP sentinel)' do
+    state.positional.replace(%w[-a val])
+    run('a:', 'opt')
+    expect(run('a:', 'opt').exitstatus).to eq(1)
+    expect(vars('opt', 'OPTARG')).to eq(['?', 'val'])
+  end
+
+  it 'restarts from position 1 when OPTIND is unset instead of crashing' do
+    state.variables.unset('OPTIND')
+    state.positional.replace(%w[-a])
+    expect(snapshot(run('a', 'opt'), 'opt', 'OPTIND')).to eq([0, 'a', '2'])
+  end
+
+  it 'restarts from position 1 for a zero, negative, or garbage OPTIND' do
+    %w[0 -3 junk].each do |value|
+      state.variables.assign('OPTIND', value)
+      state.positional.replace(%w[-a])
+      expect(snapshot(run('a', 'opt'), 'opt', 'OPTIND')).to eq([0, 'a', '2'])
+    end
+  end
 end

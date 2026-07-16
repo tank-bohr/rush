@@ -57,6 +57,22 @@ RSpec.describe Rush::JobControl do
       expect(system.stderr.string).to include('job control not supported')
     end
 
+    it 'treats re-enabling while on as a no-op, preserving the machinery (dash: on == jobctl)' do
+      control.enable(system.stderr)
+      installed = system.traps_installed.size
+      control.enable(system.stderr)
+      expect(state.options.on?(:monitor)).to be(true)
+      expect(system.traps_installed.size).to eq(installed)
+    end
+
+    it 'sets only the flag in a forked child environment: no root, no dispositions' do
+      executor.jobs.control.fork_child
+      installed = system.traps_installed.size
+      control.enable(system.stderr)
+      expect(state.options.on?(:monitor)).to be(true)
+      expect(system.traps_installed.size).to eq(installed)
+    end
+
     it 'leaves TTOU alone without a terminal (dash-probed: off-tty TTOU still stops the shell)' do
       control.enable(system.stderr)
       expect(system.traps_installed.map(&:first)).not_to include('TTOU')

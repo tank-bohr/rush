@@ -45,6 +45,27 @@ RSpec.describe Rush::Builtins::ReadInput do
     writer&.close
   end
 
+  it 'answers nil for a trap arriving before any character' do
+    reader, writer = IO.pipe
+
+    expect(described_class.new(reader, false, pending: -> { true }).call).to be_nil
+  ensure
+    reader&.close
+    writer&.close
+  end
+
+  it 'hands back the incomplete partial when a trap interrupts mid-line' do
+    reader, writer = IO.pipe
+    writer.write('ab')
+    polls = 0
+    interrupted = described_class.new(reader, false, pending: -> { (polls += 1) > 3 }).call
+
+    expect(interrupted).to eq([[['a', false], ['b', false]], false])
+  ensure
+    reader&.close
+    writer&.close
+  end
+
   it 'annotates a backslash-escaped character and drops the backslash' do
     expect(gather("a\\ b\n")).to eq([[['a', false], [' ', true], ['b', false]], true])
   end

@@ -25,6 +25,11 @@ RSpec.describe Rush::Builtins::TestTokens do
     expect(kinds('-e', '-a', '-e')).to eq(%i[unop band operand])
   end
 
+  it 'keeps the unary reading when a binary follows with nothing beyond (dash t_lex)' do
+    expect(kinds('-t', '=')).to eq(%i[unop binop])
+    expect(kinds('x', '-t', '=')).to eq(%i[operand unop binop])
+  end
+
   it 'demotes a ( that closes the argument list to an operand' do
     expect(kinds('(')).to eq([:operand])
     expect(kinds('(', 'x')).to eq(%i[lparen operand])

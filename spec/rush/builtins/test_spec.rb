@@ -56,6 +56,23 @@ RSpec.describe Rush::Builtins::Test do
     expect(test('!', 'x', '=', 'x')).not_to be_success
   end
 
+  # dash's isoperand rows: a unary primary reads as an operand when nothing
+  # follows, or when a binary primary with more arguments follows; otherwise
+  # it applies as the unary operator (all vectors dash-verified).
+  it 'reads a unary primary as an operand at the tail of a longer expression' do
+    expect(test('a', '=', 'a', '-a', '-n')).to be_success
+    expect(test('-e', '=', '-e')).to be_success
+  end
+
+  it 'reads a unary primary as an operand before a binary with more following' do
+    expect(test('a', '=', 'a', '-a', '-n', '=', '-n')).to be_success
+  end
+
+  it 'applies the unary reading when what follows is not a binary primary' do
+    expect(test('a', '=', 'a', '-a', '-n', '')).not_to be_success
+    expect(test('x', '-o', '-z', '')).to be_success
+  end
+
   it 'reports a binary primary missing its right operand with exit status 2' do
     expect(test('x', '=').exitstatus).to eq(2)
     expect(system.stderr.string).to eq("rush: test: =: argument expected\n")
