@@ -28,6 +28,16 @@ RSpec.describe Rush::ExitTrap do
     expect(runner.run_exit_trap(3)).to eq(9)
   end
 
+  it 'reports the terminating status to a bare exit inside the body (POSIX)' do
+    exit_trap('exit')
+    expect(runner.run_exit_trap(5)).to eq(5)
+  end
+
+  it 'reports the last command status when no exit run is in flight' do
+    state.record_status(Rush::Status.new(7))
+    expect(runner.exiting_status).to eq(7)
+  end
+
   it 'preserves the terminating code against a return in the body' do
     exit_trap('return')
     expect(runner.run_exit_trap(3)).to eq(3)

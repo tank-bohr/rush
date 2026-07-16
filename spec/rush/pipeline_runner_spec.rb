@@ -186,4 +186,13 @@ RSpec.describe Rush::PipelineRunner do
       expect([status.exitstatus, system.stderr.string]).to eq([2, "rush: x: is read only\n"])
     end
   end
+
+  describe '#text (the adopted-job column)' do
+    it 'renders the stage pipeline only under job control' do
+      runner = described_class.new(executor, [echo('a'), echo('b')])
+      expect(runner.__send__(:text)).to be_nil
+      executor.job_control.enable(system.stderr)
+      expect(runner.__send__(:text)).to eq('echo a | echo b')
+    end
+  end
 end

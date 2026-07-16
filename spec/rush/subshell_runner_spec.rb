@@ -66,6 +66,27 @@ RSpec.describe Rush::SubshellRunner do
       expect(result.exitstatus).to eq(7)
     end
 
+    it 'ends with the code of an uncaught return, a fresh top level' do
+      expect(described_class.new(executor, body('return 5')).run_body.exitstatus).to eq(5)
+    end
+  end
+
+  describe '#resolve (the child error boundary)' do
+    it 'treats stray loop control as a successful no-op (dash-probed)' do
+      expect(described_class.new(executor, body('true; break')).run_body.exitstatus).to eq(0)
+      expect(described_class.new(executor, body('false; continue')).run_body.exitstatus).to eq(0)
+    end
+
+    it 'adopts an exit code without letting the signal escape the fork' do
+      expect(described_class.new(executor, body('exit 9')).run_body.exitstatus).to eq(9)
+    end
+
+    it 'aborts only the subshell on a fatal expansion error, with the diagnostic' do
+      status = described_class.new(executor, body(': ${nope?boom}')).run_body
+      expect(status.exitstatus).to eq(2)
+      expect(system.stderr.string).to include('boom')
+    end
+
     it 'resets inherited caught traps while preserving ignored traps' do
       state.traps.set(Rush::Signals::EXIT, 'echo parent')
       state.traps.set('TERM', 'echo term')
