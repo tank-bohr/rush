@@ -13,7 +13,16 @@ SimpleCov.start do
   # no-output formatter so they do not overwrite coverage/ with partial reports.
   group = ENV.fetch('TEST_ENV_NUMBER', nil)
   groups = ENV.fetch('PARALLEL_TEST_GROUPS', nil)
-  formatter SimpleCov::Formatter::SimpleFormatter if group && group != groups
+  if group && group != groups
+    formatter SimpleCov::Formatter::SimpleFormatter
+  else
+    # coverage/coverage.json is what CI ships to Codecov; the JSON formatter is
+    # simplecov's own runtime dependency, so no extra Gemfile entry.
+    require 'simplecov_json_formatter'
+    formatter SimpleCov::Formatter::MultiFormatter.new(
+      [SimpleCov::Formatter::HTMLFormatter, SimpleCov::Formatter::JSONFormatter]
+    )
+  end
 
   # Guardrail, not dogma: rush aims for 100% meaningful coverage, but shell
   # behaviour crosses fork/exec boundaries that SimpleCov cannot observe.

@@ -1,6 +1,7 @@
 # rush
 
 [![CI](https://github.com/tank-bohr/rush/actions/workflows/ci.yml/badge.svg)](https://github.com/tank-bohr/rush/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/tank-bohr/rush/graph/badge.svg)](https://codecov.io/gh/tank-bohr/rush)
 [![Gem](https://img.shields.io/gem/v/rush-shell)](https://rubygems.org/gems/rush-shell)
 
 A **POSIX shell written in pure Ruby**. rush implements the POSIX.1-2017 *Shell

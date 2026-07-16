@@ -44,6 +44,16 @@ jobs:
       - name: Full gate
         run: bundle exec rake
 
+      # Decorative upload for the README badge — the enforcing coverage gate is
+      # SimpleCov's thresholds inside `rake` above, so a Codecov outage must
+      # never fail CI (fail_ci_if_error stays default-false).
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage/coverage.json
+          disable_search: true
+
   # ~18 min locally on 16 jobs (36 mutations/s over 38.8k mutations) — expect
   # roughly 2 h on a 4-core runner. Skipped on pull requests: a two-hour lag
   # is no PR feedback; pushes to main and manual dispatch still gate.
