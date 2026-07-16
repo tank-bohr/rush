@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 BENCHMARK_BASELINE = 'benchmark/baseline.json'
+BENCHMARK_BUDGETS = 'benchmark/timing_budgets.json'
 BENCHMARK_RUNNER = [Gem.ruby, 'benchmark/run.rb'].freeze
 ALLOCATION_RUNNER = [Gem.ruby, 'benchmark/allocations.rb'].freeze
 ALLOCATION_BASELINE = 'benchmark/allocation_baseline.json'
@@ -15,9 +16,9 @@ task benchmark: :compile do
 end
 
 namespace :benchmark do
-  desc 'Compare benchmark medians with the committed baseline (default tolerance 1.5x)'
+  desc 'Check timing medians against the recorded baseline and the reviewed budgets (host-local alarm)'
   task check: :compile do
-    sh(*BENCHMARK_RUNNER, '--check', BENCHMARK_BASELINE)
+    sh(*BENCHMARK_RUNNER, '--check', BENCHMARK_BASELINE, '--budgets', BENCHMARK_BUDGETS)
   end
 
   desc 'Record benchmark medians and environment metadata as the new baseline'

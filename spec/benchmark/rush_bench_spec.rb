@@ -70,23 +70,25 @@ RSpec.describe RushBench do
     expect(report).to include('schema' => 1, 'samples' => 2, 'warmups' => 1)
   end
 
-  it 'reports only explicitly checked rush regressions beyond the tolerance' do
-    baseline = report_hash(100.0)
-    current = report_hash(151.0)
+  it 'fails only on an explicit budget breach, never against the recorded baseline' do
+    improved_baseline = report_hash(100.0)
 
-    expect(RushBench::RegressionCheck.new(current, baseline, tolerance: 1.5).failures).to eq(
-      ['tiny: 151.000ms exceeds 150.000ms']
+    expect(RushBench::RegressionCheck.new(report_hash(151.0), improved_baseline, budgets_hash(150.0)).failures).to eq(
+      ['tiny: 151.000ms exceeds the budget 150.000ms']
     )
+    expect(RushBench::RegressionCheck.new(report_hash(149.0), improved_baseline, budgets_hash(150.0)).failures)
+      .to eq([])
   end
 
-  it 'rejects incompatible contexts, sampling, schemas, and workloads' do
+  it 'rejects incompatible contexts, sampling, schemas, budgets, and workloads' do
     baseline = report_hash(100.0)
     current = report_hash(100.0).merge('schema' => 2, 'host' => 'elsewhere', 'samples' => 1)
     current.dig('cases', 'tiny')['source_sha256'] = 'changed'
 
-    expect(RushBench::RegressionCheck.new(current, baseline).failures).to include(
+    expect(RushBench::RegressionCheck.new(current, baseline, { 'schema' => 1, 'budgets' => {} }).failures).to include(
       /unsupported benchmark schema/, 'benchmark context host differs from the baseline',
-      'sample count is lower than the baseline', 'tiny: workload definition differs from the baseline'
+      'sample count is lower than the baseline', 'tiny: workload definition differs from the baseline',
+      'benchmark budgets do not cover exactly the baseline case set'
     )
   end
 
@@ -112,5 +114,9 @@ RSpec.describe RushBench do
   def report_context
     { 'ruby' => 'ruby', 'platform' => 'platform', 'host' => 'host', 'os' => 'os', 'cpu' => 'cpu',
       'rush_runtime_typechecks' => 'disabled', 'sorbet_runtime_default_checked_level_env' => 'unset' }
+  end
+
+  def budgets_hash(ceiling)
+    { 'schema' => 1, 'budgets' => { 'tiny' => ceiling } }
   end
 end

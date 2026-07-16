@@ -2753,3 +2753,19 @@ design: after an improvement, re-record the baseline and lower the budget in the
 reviewed slice; raising a budget demands a justified commit body. `rake
 benchmark:allocations:record` writes only the baseline — ceilings are hand-edited or not
 at all.
+
+### Timing budgets separate from the baseline — the ratchet finally captures the win (rush-1eo.4)
+The committed timing baseline still described pre-optimization rush (while_arithmetic
+1771ms median where current reality is ~1096ms), and because the old check derived its
+ceiling as baseline x tolerance, re-recording was the only way to tighten it — the exact
+"recording legalizes" trap the epic names. The timing check now shares AllocationCheck's
+frame (BaselineCheck): the baseline is attributable evidence that pins context, sampling
+and workload identity; benchmark/timing_budgets.json holds the only ceilings, hand-edited
+and reviewed. Fresh baseline recorded on the quiet pinned host (startup 125.6ms, while
+1096.5ms, expansion 1210.8ms — the Phase-8 improvements are now the recorded reality);
+budgets sit at median x 1.5 rounded up (190 / 1650 / 1820ms) as the host-local
+catastrophic alarm — notably the pre-optimization while median would now breach its
+ceiling, which is precisely the ratchet the old scheme could not express. Timings stay
+out of the default gate: the full context (host/os/cpu) must match, so the alarm is
+meaningful only on the recording host; portable timing evidence remains the same-runner
+A/B lane (18q scaffolding, thresholds pending in rush-1eo.5).

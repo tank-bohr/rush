@@ -1,18 +1,18 @@
 {
-  "schema": 1,
-  "generated_at": "2026-07-12T13:25:28Z",
-  "revision": "d50a7a2-dirty",
+  "generated_at": "2026-07-16T06:29:24Z",
+  "revision": "0b90b3a-dirty",
   "ruby": "ruby 4.0.5 (2026-05-20 revision 64336ffd0e) +PRISM [x86_64-linux]",
   "platform": "x86_64-linux",
   "host": "xoma-desktop",
-  "os": "Linux 7.1.3-zen1-2-zen x86_64",
+  "os": "Linux 7.1.3-zen1-3-zen x86_64",
   "cpu": "11th Gen Intel(R) Core(TM) i9-11900K @ 3.50GHz",
-  "rush_source_sha256": "9d221b3d7f6f09912dc23de8896af6470eaa8d460783e74102ecbd85e831b5f5",
+  "rush_source_sha256": "e0a49dc9c6227d8aa3bdf5c8947de348189b18c620afc48dae1a37710e118fb3",
+  "rush_runtime_typechecks": "disabled",
+  "sorbet_runtime_default_checked_level_env": "unset",
+  "schema": 1,
   "samples": 5,
   "warmups": 1,
   "timeout": 30.0,
-  "rush_runtime_typechecks": "disabled",
-  "sorbet_runtime_default_checked_level_env": "unset",
   "cases": {
     "startup": {
       "description": "parse and execute a no-op",
@@ -20,27 +20,27 @@
       "source_sha256": "e7ac0786668e0ff0f02b62bd04f45ff636fd82db63b1104601c975dc005f3a67",
       "targets": {
         "rush": {
-          "median_ms": 124.553058,
-          "min_ms": 123.861231,
-          "max_ms": 125.102629,
+          "median_ms": 125.602995,
+          "min_ms": 125.103918,
+          "max_ms": 127.859832,
           "samples_ms": [
-            125.102629,
-            125.050122,
-            123.861231,
-            124.553058,
-            124.109568
+            125.301588,
+            125.602995,
+            127.859832,
+            125.103918,
+            127.774838
           ]
         },
         "dash": {
-          "median_ms": 0.533452,
-          "min_ms": 0.50542,
-          "max_ms": 0.688909,
+          "median_ms": 0.497594,
+          "min_ms": 0.457212,
+          "max_ms": 0.580757,
           "samples_ms": [
-            0.533452,
-            0.566174,
-            0.688909,
-            0.509467,
-            0.50542
+            0.513806,
+            0.497594,
+            0.580757,
+            0.457212,
+            0.483728
           ]
         }
       }
@@ -51,27 +51,27 @@
       "source_sha256": "32f259eec5cae844b051c80653105bfb0ac6ecb54359a2dca044312b72f3a4f7",
       "targets": {
         "rush": {
-          "median_ms": 1771.276872,
-          "min_ms": 1760.372267,
-          "max_ms": 1779.315473,
+          "median_ms": 1096.480511,
+          "min_ms": 1091.947349,
+          "max_ms": 1101.672699,
           "samples_ms": [
-            1769.898427,
-            1779.315473,
-            1778.216152,
-            1760.372267,
-            1771.276872
+            1101.672699,
+            1096.793496,
+            1096.480511,
+            1092.154471,
+            1091.947349
           ]
         },
         "dash": {
-          "median_ms": 6.523142,
-          "min_ms": 6.380639,
-          "max_ms": 6.540413,
+          "median_ms": 6.54693,
+          "min_ms": 6.484207,
+          "max_ms": 6.597705,
           "samples_ms": [
-            6.381351,
-            6.523142,
-            6.540413,
-            6.380639,
-            6.52559
+            6.484207,
+            6.597705,
+            6.586132,
+            6.521676,
+            6.54693
           ]
         }
       }
@@ -82,27 +82,27 @@
       "source_sha256": "084a54a04f6a83372e13cc8a85e79b5929f73e18d040cdced16a01bafdccdb90",
       "targets": {
         "rush": {
-          "median_ms": 1351.352914,
-          "min_ms": 1341.167856,
-          "max_ms": 1355.383866,
+          "median_ms": 1210.808378,
+          "min_ms": 1208.258443,
+          "max_ms": 1213.630348,
           "samples_ms": [
-            1349.605333,
-            1355.383866,
-            1354.101867,
-            1351.352914,
-            1341.167856
+            1210.808378,
+            1208.258443,
+            1213.630348,
+            1211.8847,
+            1210.701722
           ]
         },
         "dash": {
-          "median_ms": 3.772425,
-          "min_ms": 3.659837,
-          "max_ms": 5.499243,
+          "median_ms": 3.880625,
+          "min_ms": 3.771408,
+          "max_ms": 3.990429,
           "samples_ms": [
-            3.715161,
-            3.772425,
-            3.955047,
-            3.659837,
-            5.499243
+            3.771408,
+            3.929182,
+            3.990429,
+            3.775079,
+            3.880625
           ]
         }
       }
