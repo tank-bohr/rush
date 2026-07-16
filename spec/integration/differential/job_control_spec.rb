@@ -219,11 +219,19 @@ RSpec.describe 'rush vs dash (differential job-control corpus)' do
       '{ sleep 9; echo x; }'
     ].freeze
 
+    # The two instant-exit jobs (4: an invalid sleep operand, 15: an empty
+    # `for i` loop over no args) die before or after the `jobs` probe
+    # depending on scheduling, and slow CI runners roll that dice differently
+    # per shell (rush-n3a) — the settle sleep (journal: corpus lines carry
+    # it) lets them die first, so both shells deterministically render Done.
+    # The long-lived lines stay unsettled: a settle adds no determinism they
+    # need and would expose the stage-relay gap on jc-text-002 (rush-2rr).
     rendered.each.with_index(1) do |command, index|
       id = format('jc-text-%03d', index)
 
       it "#{id}: matches dash within the probe deadline for: #{command}" do
-        snippet = "set -m; #{command} & jobs; kill -9 %1 2>/dev/null; kill -CONT %1 2>/dev/null; wait"
+        settle = [4, 15].include?(index) ? 'sleep 0.2; ' : ''
+        snippet = "set -m; #{command} & #{settle}jobs; kill -9 %1 2>/dev/null; kill -CONT %1 2>/dev/null; wait"
         expect(rush(snippet)).to eq(dash(snippet))
       end
     end
