@@ -26,7 +26,7 @@ to eight file shards. SimpleCov merges all shard results before enforcing covera
 `RUSH_SPEC_SEED=<seed> bundle exec rake spec:parallel` to reproduce a parallel test run.
 
 ```bash
-make install-hooks                # once per clone: cog commit-msg hook (Conventional Commits)
+make install-hooks                # once per clone: commit-msg (cog, Conventional Commits) + pre-commit (actionlint)
 bundle exec rake                  # the fast parallel full green gate
 RUSH_GATE_SERIAL=1 bundle exec rake # serial/debug fallback
 bundle exec rake check_parser_drift # explicit generated-parser audit when needed

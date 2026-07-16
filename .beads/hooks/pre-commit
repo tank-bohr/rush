@@ -22,3 +22,10 @@ if command -v bd >/dev/null 2>&1; then
   if [ $_bd_exit -ne 0 ]; then exit $_bd_exit; fi
 fi
 # --- END BEADS INTEGRATION v1.0.3 ---
+# --- BEGIN RUSH ACTIONLINT ---
+# Installed by `make install-hooks`; lints .github/workflows when staged.
+git diff --cached --quiet -- .github/workflows || {
+  command -v actionlint >/dev/null || { echo "pre-commit: actionlint is not installed" >&2; exit 1; }
+  actionlint || exit 1
+}
+# --- END RUSH ACTIONLINT ---
