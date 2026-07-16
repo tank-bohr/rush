@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "budgets": {
-    "while_arithmetic": 2710000,
-    "expansion_heavy": 2695000
+    "while_arithmetic": 2683000,
+    "expansion_heavy": 2669000
   }
 }

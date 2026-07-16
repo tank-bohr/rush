@@ -2731,3 +2731,25 @@ lives in its own workflow with `cancel-in-progress: false`: the running sweep al
 completes, only the newest push occupies the pending slot, and pull requests never trigger
 it. Back-merge merge commits additionally carry `[skip ci]` — their tree is main content
 CI just proved plus the bot's version bump, so re-gating (and re-cancelling) added nothing.
+
+### Allocation counts ratchet where timings cannot: zero-spread medians, absolute headroom (rush-1eo.2)
+Twenty independent process invocations (5 samples after 1 warmup each) produced
+byte-identical medians in all twenty runs for both canonical workloads: while_arithmetic
+2681063, expansion_heavy 2667091 — spread exactly zero. The only within-process variance
+is a first-measured-sample residue the warmup does not fully absorb (+116 objects on
+while, +5 on expansion), which the median already discards; three samples are therefore
+as good as five for the gate form. An `env -i` probe pinned the environment-shape effect:
+stripping ~50 environment variables moves both medians by exactly −168 objects (~3.4 per
+var, from Environment's ENV copy), so a CI-versus-developer-host delta is bounded well
+under ±500 objects — which is why AllocationCheck deliberately compares ruby/platform/
+typecheck-policy context but not host/os/cpu. Budgets are the recorded median plus ~2k
+absolute headroom (2683000 / 2669000): an order of magnitude above the environment bound,
+five times below the smallest structural regression (+1 object per while iteration is
++10k). A relative budget was rejected — 1% here is ~27k objects, room enough to hide a
+real per-iteration leak. Injected-regression proof: three throwaway objects added to
+ArithmeticExpander#expand moved the medians by exactly +30000/+6000 and the check failed
+both cases with observed-versus-ceiling messages. The budget workflow is asymmetric by
+design: after an improvement, re-record the baseline and lower the budget in the same
+reviewed slice; raising a budget demands a justified commit body. `rake
+benchmark:allocations:record` writes only the baseline — ceilings are hand-edited or not
+at all.
