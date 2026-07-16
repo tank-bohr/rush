@@ -141,13 +141,14 @@ module Rush
         install(LC_CTYPE, settings.fetch(1))
       end
 
-      sig { params(category: Integer, requested: String).returns(String) }
+      # setlocale refusing the requested name (NULL) falls back to the C
+      # locale; the effect lives in libc state, so there is nothing to return.
+      sig { params(category: Integer, requested: String).void }
       def install(category, requested)
         result = call(:setlocale, category, requested)
-        return requested unless result.null?
+        return unless result.null?
 
         call(:setlocale, category, 'C')
-        'C'
       end
     end
     # rubocop:enable Metrics/ClassLength

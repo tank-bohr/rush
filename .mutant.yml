@@ -40,5 +40,16 @@ matcher:
     - Rush::SubshellRunner#spawn_child
     - Rush::SubshellRunner#run_child
     - Rush::PipelineRunner#start_stage
+    # The Collation fiddle lifecycle: loading libc symbols, malloc/regfree
+    # pointer ownership and the T.let annotation around the function table.
+    # Mutations here are leaks, double-frees or annotation changes no
+    # in-process example can observe; the behaviour-bearing methods of the
+    # same class (match?/glob/compare/activate/install/locale_value) stay
+    # under mutation with direct unit specs (rush-tqq).
+    - Rush::SystemCalls::Collation#initialize
+    - Rush::SystemCalls::Collation#load_functions
+    - Rush::SystemCalls::Collation#native_function
+    - Rush::SystemCalls::Collation#compiled
+    - Rush::SystemCalls::Collation#free_after
 mutation:
   timeout: 5.0

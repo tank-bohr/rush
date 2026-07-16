@@ -31,7 +31,7 @@ module Rush
       def compiled: (String regex) { (untyped pointer) -> bool } -> bool
       def free_after: (untyped pointer) { (untyped pointer) -> bool } -> bool
       def activate: (Array[String] settings) -> void
-      def install: (Integer category, String requested) -> String
+      def install: (Integer category, String requested) -> void
     end
   end
 end
