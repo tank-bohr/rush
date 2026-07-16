@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-16T05:59:43Z",
-  "revision": "3c919b4-dirty",
+  "generated_at": "2026-07-16T06:15:45Z",
+  "revision": "91031c1-dirty",
   "ruby": "ruby 4.0.5 (2026-05-20 revision 64336ffd0e) +PRISM [x86_64-linux]",
   "platform": "x86_64-linux",
   "host": "xoma-desktop",
@@ -10,7 +10,7 @@
   "rush_runtime_typechecks": "disabled",
   "sorbet_runtime_default_checked_level_env": "unset",
   "schema": 1,
-  "samples": 5,
+  "samples": 3,
   "warmups": 1,
   "cases": {
     "while_arithmetic": {
@@ -19,8 +19,6 @@
       "source_sha256": "32f259eec5cae844b051c80653105bfb0ac6ecb54359a2dca044312b72f3a4f7",
       "counts": [
         2681179,
-        2681063,
-        2681063,
         2681063,
         2681063
       ],
@@ -32,8 +30,6 @@
       "source_sha256": "084a54a04f6a83372e13cc8a85e79b5929f73e18d040cdced16a01bafdccdb90",
       "counts": [
         2667086,
-        2667091,
-        2667091,
         2667091,
         2667091
       ],

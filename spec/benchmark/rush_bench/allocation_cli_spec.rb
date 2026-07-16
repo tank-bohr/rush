@@ -37,7 +37,7 @@ RSpec.describe RushBench::AllocationCLI do
       run_cli(['--json', path])
       report = JSON.parse(File.read(path))
 
-      expect(report).to include('schema' => 1, 'samples' => 5, 'warmups' => 1)
+      expect(report).to include('schema' => 1, 'samples' => 3, 'warmups' => 1)
       expect(report.dig('cases', 'tiny')).to include('counts' => [120, 100, 110], 'median' => 110.0)
       expect(report.dig('cases', 'tiny', 'source_sha256')).to match(/\A[0-9a-f]{64}\z/)
     end

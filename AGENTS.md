@@ -20,8 +20,9 @@ EV_EXIT optimization stays parked as `rush-mv8.7`). Ruby 4.0.5 (asdf); dash at
 
 `bundle exec rake` must be **fully green** before any commit. It first runs **racc
 compile** to regenerate the parser from `grammar/shell.y`, then runs the independent gates
-concurrently: **rubocop**, **reek**, **flay / flog**, **steep**, **sorbet**, and RSpec in up
-to eight file shards. SimpleCov merges all shard results before enforcing coverage. Use
+concurrently: **rubocop**, **reek**, **flay / flog**, **steep**, **sorbet**, the
+**allocation ratchet** (`benchmark:allocations:check` against reviewed budgets), and RSpec
+in up to eight file shards. SimpleCov merges all shard results before enforcing coverage. Use
 `RUSH_GATE_SERIAL=1 bundle exec rake` for the original deterministic serial/debug path, and
 `RUSH_SPEC_SEED=<seed> bundle exec rake spec:parallel` to reproduce a parallel test run.
 

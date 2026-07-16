@@ -10,7 +10,7 @@ require 'fileutils'
 module QualityGate
   module_function
 
-  TASKS = %w[rubocop reek flay flog steep sorbet spec:parallel].freeze
+  TASKS = %w[rubocop reek flay flog steep sorbet benchmark:allocations:check spec:parallel].freeze
   LOG_DIR = 'tmp/quality-gate'
   RAKE_COMMAND = [Gem.ruby, Gem.bin_path('rake', 'rake')].freeze
   MAX_SPEC_PROCESSES = 8
@@ -135,7 +135,7 @@ namespace :gate do
   end
 
   desc 'Full gate in the original deterministic serial order (debug fallback)'
-  task serial: %i[compile rubocop reek flay flog steep sorbet spec]
+  task serial: %i[compile rubocop reek flay flog steep sorbet benchmark:allocations:check spec]
 end
 
 default_gate = ENV['RUSH_GATE_SERIAL'] == '1' ? 'gate:serial' : 'gate:parallel'

@@ -25,7 +25,7 @@ namespace :benchmark do
     sh(*BENCHMARK_RUNNER, '--json', BENCHMARK_BASELINE)
   end
 
-  desc 'Count allocations for the canonical interpreter workloads (five samples by default)'
+  desc 'Count allocations for the canonical interpreter workloads (three samples by default)'
   task allocations: :compile do
     sh(*ALLOCATION_RUNNER)
   end

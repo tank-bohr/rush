@@ -37,8 +37,12 @@ module RushBench
 
     private
 
+    # Three samples, not the timing suite's five: the 20-run characterization
+    # (docs/journal.md, rush-1eo.2) measured zero median spread, with the only
+    # variance a first-sample warmup residue the median of three already
+    # discards — so the gate form stays as cheap as the evidence allows.
     def configuration
-      options = { samples: integer_env('RUSH_BENCH_SAMPLES', 5, 1..),
+      options = { samples: integer_env('RUSH_BENCH_SAMPLES', 3, 1..),
                   warmups: integer_env('RUSH_BENCH_WARMUPS', 1, 0..),
                   json_path: nil, baseline_path: nil, budgets_path: nil }
       parser(options).parse!(@argv)
