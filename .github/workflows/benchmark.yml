@@ -56,23 +56,17 @@ jobs:
           bundle install --jobs 4 --retry 3
           bundle exec rake compile
 
-      # Alternating base/current cohorts: drift (thermal, cache, noisy
-      # neighbor) lands on both sides instead of accumulating into one.
-      - name: Run interleaved timing cohorts
+      # ab_run.rb interleaves the cohorts (alternating which side goes first,
+      # so drift lands on both), judges each case against its own measured
+      # noise floor, retries one borderline cohort, and writes report.txt
+      # next to the raw JSONs. Exit 1 = confirmed regression.
+      - name: Run the interleaved A/B comparison
         env:
           RUSH_BENCH_SAMPLES: '3'
         run: |
           export DASH="$HOME/dash/bin/dash"
-          mkdir -p tmp/ab/base tmp/ab/current
-          for cohort in 1 2 3; do
-            (cd /tmp/base-worktree \
-              && BUNDLE_PATH="$GITHUB_WORKSPACE/vendor/bundle" bundle exec ruby benchmark/run.rb \
-                --json "$GITHUB_WORKSPACE/tmp/ab/base/run-${cohort}.json")
-            bundle exec ruby benchmark/run.rb --json "tmp/ab/current/run-${cohort}.json"
-          done
-
-      - name: Compare sides
-        run: bundle exec ruby benchmark/ab_compare.rb tmp/ab/base tmp/ab/current
+          export BUNDLE_PATH="$GITHUB_WORKSPACE/vendor/bundle"
+          bundle exec ruby benchmark/ab_run.rb --base /tmp/base-worktree --out tmp/ab
 
       - name: Upload raw cohorts
         if: always()

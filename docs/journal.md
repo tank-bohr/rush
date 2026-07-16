@@ -2769,3 +2769,16 @@ ceiling, which is precisely the ratchet the old scheme could not express. Timing
 out of the default gate: the full context (host/os/cpu) must match, so the alarm is
 meaningful only on the recording host; portable timing evidence remains the same-runner
 A/B lane (18q scaffolding, thresholds pending in rush-1eo.5).
+
+### Same-runner A/B: the noise floor is measured, not configured (rush-1eo.5)
+ab_run.rb interleaves merge-base and head cohorts on one machine, alternating which side
+goes first, and judges each workload against a floor the run itself measured: the larger
+side's own cohort spread, bounded below by 5ms so fast cases cannot flag on scheduler
+jitter. A regression additionally requires every paired cohort to agree in sign; clearing
+half the floor is only "borderline" and buys one extra cohort, not a verdict. Live proof
+on the pinned host: a clean HEAD-vs-HEAD run reported ok across the board (deltas within
+±1.5%, floors 5/21/23ms), while a synthetic 20µs sleep per arithmetic expansion was
+flagged as regression on both loop workloads (+69.6%/+13.0% against ~11ms floors) with
+exit 1 — and startup, untouched by the patch, stayed ok. The interesting operational
+detail: sleep(20µs) costs ~75µs wall per call through timer slack, which is exactly why
+the floor must come from the run's own spread rather than a hand-tuned percentage.

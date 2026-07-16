@@ -18,15 +18,23 @@ module RushBench
       reports
     end
 
+    def self.case_names(reports)
+      reports.flat_map { |report| report.fetch('cases').keys }.uniq
+    end
+
+    def self.case_medians(reports, name)
+      reports.map { |report| report.dig('cases', name, 'targets', 'rush', 'median_ms') }
+    end
+
     def initialize(base, current)
       @base = base
       @current = current
     end
 
-    def print_report(io = $stdout)
+    def print_report(io = $stdout, verdicts: nil)
       io.puts identity_line
       io.puts 'case                        base ms     current ms     delta'
-      common_names.each { |name| io.puts row(name) }
+      common_names.each { |name| io.puts row(name, verdicts&.fetch(name, nil)) }
       report_uncomparable(io)
     end
 
@@ -41,30 +49,27 @@ module RushBench
       side.first.fetch('revision')
     end
 
-    def row(name)
+    def row(name, judged)
       base = side_median(@base, name)
       current = side_median(@current, name)
-      format('%<name>-20s %<base>14.3f %<current>14.3f %<delta>+8.1f%%',
-             name: name, base: base, current: current, delta: ((current - base) / base) * 100)
+      format('%<name>-20s %<base>14.3f %<current>14.3f %<delta>+8.1f%%%<verdict>s',
+             name: name, base: base, current: current, delta: ((current - base) / base) * 100,
+             verdict: judged ? "  #{judged.verdict} (floor #{format('%.1f', judged.floor)}ms)" : '')
     end
 
     # The median of per-cohort medians: each cohort is one warmup-plus-samples
     # run.rb invocation, so cross-cohort drift (thermal, caches, runner load)
     # is damped instead of accumulating into one side.
     def side_median(side, name)
-      RushBench.median(side.map { |report| report.dig('cases', name, 'targets', 'rush', 'median_ms') })
+      RushBench.median(ABReport.case_medians(side, name))
     end
 
     def common_names
-      names(@base) & names(@current)
-    end
-
-    def names(side)
-      side.flat_map { |report| report.fetch('cases').keys }.uniq
+      ABReport.case_names(@base) & ABReport.case_names(@current)
     end
 
     def report_uncomparable(io)
-      leftover = (names(@base) | names(@current)) - common_names
+      leftover = (ABReport.case_names(@base) | ABReport.case_names(@current)) - common_names
       io.puts "not comparable (present on one side only): #{leftover.join(', ')}" unless leftover.empty?
     end
   end

@@ -2,6 +2,7 @@
 
 require 'tmpdir'
 
+require_relative '../../../benchmark/ab_judge'
 require_relative '../../../benchmark/ab_report'
 
 RSpec.describe RushBench::ABReport do
@@ -17,6 +18,13 @@ RSpec.describe RushBench::ABReport do
                                  [cohort({ 'startup' => 10.0 }, revision: 'bbb2222')])
 
     expect(output_of(report)).to include('base aaa1111 vs current bbb2222 on runner (1+1 cohorts); ruby 4')
+  end
+
+  it 'annotates rows with the verdict and its evidence floor when judged' do
+    report = described_class.new([cohort({ 'startup' => 10.0 })], [cohort({ 'startup' => 30.0 })])
+    verdicts = { 'startup' => RushBench::ABVerdict.new(verdict: :regression, median_delta: 20.0, floor: 5.0) }
+
+    expect(output_of(report, verdicts: verdicts)).to match(/startup.*\+200\.0%\s+regression \(floor 5\.0ms\)/)
   end
 
   it 'lists a workload present on one side only instead of comparing it' do
@@ -49,9 +57,9 @@ RSpec.describe RushBench::ABReport do
     { 'revision' => revision, 'host' => 'runner', 'ruby' => 'ruby 4', 'cases' => cases }
   end
 
-  def output_of(report)
+  def output_of(report, verdicts: nil)
     io = StringIO.new
-    report.print_report(io)
+    report.print_report(io, verdicts: verdicts)
     io.string
   end
 end
