@@ -31,6 +31,13 @@ RSpec.describe Rush::Expansion::ReadFieldScanner do
     expect(scan(plain(' ') + esc(' ') + plain('a'), 1)).to eq([' a'])
   end
 
+  it 'absorbs one non-whitespace IFS char into a whitespace delimiter run, never two' do
+    expect(scan(plain('a : b'), 2, ': ')).to eq(%w[a b])
+    expect(scan(plain('a  :  b'), 2, ': ')).to eq(%w[a b])
+    expect(scan(plain('a : : b'), 2, ': ')).to eq(['a', ': b'])
+    expect(scan(plain('a::b'), 2, ': ')).to eq(['a', ':b'])
+  end
+
   it 'lets an escaped character interrupt whitespace-delimiter absorption' do
     expect(scan(plain('a ') + esc(':') + plain(' b'), 2, ': ')).to eq(['a', ': b'])
   end

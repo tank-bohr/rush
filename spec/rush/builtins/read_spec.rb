@@ -61,6 +61,12 @@ RSpec.describe Rush::Builtins::Read do
     expect([unknown, invalid].map(&:exitstatus)).to eq([2, 2])
   end
 
+  it 'rejects an unknown option even when a valid variable name follows' do
+    unknown, = read("hi\n", '-x', 'v')
+    expect(unknown.exitstatus).to eq(2)
+    expect(env.get('v')).to be_nil
+  end
+
   it 'continues onto the next physical line after a trailing unescaped backslash' do
     status, = read("a\\\nb\n", 'joined')
     expect(status).to be_success
