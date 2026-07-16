@@ -38,8 +38,11 @@ production default.
 
 ## The experiment
 
-Both checkers run in the default gate over the same implementation (Steep checks `lib/`;
-Sorbet checks `lib/`, `exe/`, and its configured RBI shims, so their scopes are not identical):
+Both checkers run in the default gate over the same implementation, but their measured scopes are
+not identical. Steep checks `lib/`. Sorbet's config names `lib/`, `exe/`, and its RBI shims; its
+current file table contains the 204 Ruby files under `lib/` plus four shims, but not the extensionless
+`exe/rush`. The exact current scope and typed-send ledger live in
+[`docs/sorbet-coverage.md`](sorbet-coverage.md):
 
 ```text
 compile (Racc) → { RuboCop, reek, flay, flog, Steep, Sorbet, parallel RSpec }
@@ -404,7 +407,7 @@ would overstate both tools.
 | Dynamic Ruby friction | Frozen callable registries, repeated-call narrowing, Racc/generated code | Non-static splats, literal narrowing, generated superclass visibility |
 | Runtime effect | None | Optional validation; approximately 2× interpreter-workload cost here |
 | Main maintenance cost | 7,801-line parallel signature tree and boundary augmentations | 1,504 inline declarations, RBI shims, runtime dependency, metric noise |
-| Current residual ledger | Generated Racc parser; 18 untyped calls in two files | Generated parser ignored; five production files remain `typed: false` |
+| Current residual ledger | Generated Racc parser; 23 untyped calls in five files | Generated parser ignored; five production files remain `typed: false` |
 
 Steep was the better primary static checker for rush by the criteria this project needed: a detailed
 external domain model, an explicit receiver-based boundary ledger, and no runtime tax. Sorbet was
@@ -477,6 +480,11 @@ bin=$(bundle exec ruby -e \
   's=Gem::Specification.find_by_name("sorbet-static"); print File.join(s.full_gem_path,"libexec","sorbet")')
 "$bin" --track-untyped --counters
 ```
+
+The refreshed numerator/denominator, observed input scope, forced-strong location probe and
+anti-gaming rules are recorded in the current
+[`Sorbet typed-send coverage ledger`](sorbet-coverage.md). The 2026-07-12 figures above remain the
+historical experiment snapshot, not the ratchet baseline.
 
 The detailed chronological lab notes and individual design conflicts remain in
 [`docs/journal.md`](journal.md). Relevant historical milestones are

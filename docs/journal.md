@@ -2898,3 +2898,44 @@ mode-sensitive methods (`WordScanner#continuation`, `HeredocReader#eof_line`) al
 an unpinned whole-word/interactive combination; the focused whole-word assertion now kills
 all 55/55 mutations. Parser drift is clean, the 24-row focused matrices match dash, and the
 full gate is green with 2965 examples, 99.87% line and 98.98% branch coverage.
+
+### Sorbet coverage needs a scope ledger, not one rising percentage (rush-435.1)
+The refreshed raw-sorbet baseline is 11,085 / 12,401 typed sends (89.39%), leaving
+1,316 untyped sends. The historical 2026-07-12 snapshot was 10,598 / 11,891
+(89.13%, gap 1,293): 487 new typed sends arrived with 510 total sends, so the ratio
+improved while the absolute gap grew by 23. That is the proof for ratcheting both values
+and for refusing to call counter movement an implementation improvement.
+
+The file table also corrected the prose scope. `sorbet/config` names lib, exe and four
+project RBIs, but the extensionless `exe/rush` is not loaded by the directory input. The
+208 observed files are all 204 lib Ruby files plus four RBIs: 198 explicit typed:true
+implementations, five typed:false implementations, the no-sigil generated parser, and
+four typed:true shims. Sorbet's aggregate calls the last two implementation groups six
+false-sigil inputs; the generated parser remains in input accounting even though its
+diagnostics are ignored. Steep independently checks 203 lib implementations (parser
+excluded), currently 11,253 / 11,276 receiver-typed calls; the percentages remain
+non-comparable.
+
+Normal tracking finds 1,669 untyped usages in 147 typed-true files. A separate
+`--typed=strong --isolate-error-code 7018` location probe finds 1,827 diagnostics in 153
+files / 980 unique file-line pairs: the delta is 156 diagnostics in the five unchecked
+handwritten bodies plus two in generated parser.rb. These are flow diagnostics, not
+untyped sends. The prebuilt Sorbet binary's optional untyped-blame graph is empty, so the
+strong probe — with its expected exit 100 — is the reproducible shipped-binary inventory.
+
+The material roots are now ordered rather than guessed from callers: the five false
+files (PrintfFormatter, ResourceLimits, ProcessControl, SystemCalls, ParserSupport);
+ordinary missing signatures/ivar declarations and untyped Data readers; bounded token,
+AST, getopts and IO variants; reflective/callable registries; the native/Fiddle port; and
+the generated Racc semantic stack. The 37 files with at least 15 usages account for
+1,103 / 1,669 normal usages and are listed individually in docs/sorbet-coverage.md.
+At today's fixed denominator, 95% means 11,781 typed sends, a gain of 696 and no more
+than 620 remaining untyped — removing 52.9% of the gap. The denominator grows when the
+false/no-sigil bodies become checked: forcing every current input true gives a conservative
+11,290 / 12,800 planning envelope, where 95% requires +870 typed sends and removes 57.6%
+of the gap. The strong probe contains 936 send-shaped diagnostics (935 outside generated
+parser.rb), 532 concentrated in 28 files with at least ten each. They are not one-to-one
+counter yields, but they make 95% an evidence-backed stretch target rather than a percentage
+wish. The final ledger must justify any lower honest native/Racc ceiling instead of casting
+it away. Independent review is clean after that send-level correction; the full gate remains
+green with 2965 examples, 99.87% line and 98.98% branch coverage.
