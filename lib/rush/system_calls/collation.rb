@@ -2,13 +2,16 @@
 # frozen_string_literal: true
 
 require 'fiddle'
+require_relative 'regex_abi'
 
 module Rush
   class SystemCalls
     # Optional glibc bridge for the locale data Ruby does not expose. POSIX ERE
     # matching supplies bracket classes/equivalence/collating elements/ranges;
-    # strcoll supplies pathname order. The fixed regex buffer is deliberately
-    # glibc-gated (regex_t is opaque at the Fiddle boundary).
+    # strcoll supplies pathname order. regex_t is opaque at the Fiddle boundary,
+    # so RegexAbi admits only glibc-2 Linux with 32/64-bit words before this class
+    # loads native calls; the Docker C probe pins its exact size and alignment.
+    # Unknown ABIs, including a future glibc 3, fall back before regcomp runs.
     # One cohesive native-resource boundary; splitting function loading from
     # regex ownership would separate lifecycle halves only to satisfy a metric.
     # rubocop:disable Metrics/ClassLength
@@ -18,7 +21,7 @@ module Rush
       LC_CTYPE = 0
       LC_COLLATE = 3
       REG_EXTENDED = 1
-      REGEX_BYTES = 256
+      REGEX_BYTES = RegexAbi::REGEX_BYTES
       MUTEX = Thread::Mutex.new
       SIGNATURES = {
         setlocale: [[Fiddle::TYPE_INT, Fiddle::TYPE_VOIDP], Fiddle::TYPE_VOIDP],
@@ -100,7 +103,8 @@ module Rush
       sig { returns(T::Hash[Symbol, T.untyped]) }
       def load_functions
         handle = Fiddle::Handle::DEFAULT
-        handle['gnu_get_libc_version']
+        return {} unless RegexAbi.available?(handle)
+
         SIGNATURES.to_h { |name, signature| [name, native_function(handle, name, signature)] }
       rescue Fiddle::DLError
         {}

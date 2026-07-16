@@ -3,9 +3,10 @@
 RSpec.describe Rush::SystemCalls::Collation do
   subject(:collation) { described_class.new }
 
-  it 'falls back cleanly when the native function table is unavailable' do
-    fallback = described_class.allocate
-    fallback.instance_variable_set(:@functions, {})
+  it 'falls back cleanly before loading native calls when the regex ABI is unsupported' do
+    allow(Rush::SystemCalls::RegexAbi).to receive(:available?).and_return(false)
+    fallback = described_class.new
+    expect(fallback.available?).to be(false)
     expect(fallback.match_shell?('*', 'x', %w[C C]) { true }).to be(true)
     expect(fallback.glob('*', %w[C C]) { ['fallback'] }).to eq(['fallback'])
   end

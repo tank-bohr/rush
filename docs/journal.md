@@ -2839,3 +2839,30 @@ runner/lifecycle/differential specs are green; the new relay omission is killed 
 BackgroundRunner mutant selection (its nine previously catalogued survivors remain).
 Full rake is green: 2935 examples, 99.87% line / 98.98% branch coverage, all quality and
 allocation gates passing.
+
+### The glibc regex buffer gets an executable ABI contract (rush-f84.14)
+POSIX makes `regex_t` opaque, so the 15o Fiddle bridge's 256-byte allocation was generous
+but unproved. glibc's public `struct re_pattern_buffer` is word-scaled: seven pointer/word
+members plus one bitfield word, 64 bytes aligned to 8 on the 64-bit hosts measured here.
+The layout is necessarily stable within glibc's `libc.so.6` ABI because callers embed
+`regex_t` by value, but that argument has a boundary now: RegexAbi admits only Linux,
+4/8-byte pointers and a well-formed glibc 2.x version read through
+`gnu_get_libc_version`. Missing symbols, musl-labelled hosts, unusual word sizes and a
+future glibc 3 all disable the whole cohesive native collation backend before regcomp is
+loaded, taking the existing Ruby matcher fallback instead. glibc 3 is the explicit
+re-validation trigger; no runtime compiler or speculative canary call is introduced.
+
+The release-image proof is executable rather than prose. `docker/regex-abi-smoke.sh`
+reads the bound from the Ruby constant (one source of truth), compiles C11 static asserts
+that `sizeof(regex_t) <= REGEX_BYTES` and its alignment is no stronger than
+`max_align_t`, then logs the measured values. The Docker gate runs it before RSpec can
+reach native collation. It reports 64/8 inside the glibc 2.41 image
+and 64/8 on the glibc 2.43 development host, against the retained 256-byte buffer. The
+constant-keyed RegexAbi contract is mutation-complete (126/126 killed), including the
+Fiddle version-pointer gatherer; the existing Collation allocation/regfree lifecycle
+exclusions remain unchanged.
+
+Verified: focused ABI/collation/tailored-locale specs green; native full rake green (2940
+examples, 99.87% line / 98.98% branch, allocation ratchet unchanged); the Docker gate is
+green end-to-end, including the new compile-time ABI smoke, the same 2940 specs and all
+syscall/Reline/job-control smokes.

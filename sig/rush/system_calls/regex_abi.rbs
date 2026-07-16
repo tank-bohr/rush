@@ -1,0 +1,17 @@
+module Rush
+  class SystemCalls
+    # Runtime guard for the fixed-size glibc regex_t buffer.
+    module RegexAbi
+      extend T::Sig
+
+      REGEX_BYTES: Integer
+      POINTER_BYTES: Array[Integer]
+      LINUX: Regexp
+      GLIBC_2: Regexp
+
+      def self.available?: (?untyped handle) -> bool
+      def self.supported?: (host: String, pointer_size: Integer, version: String) -> bool
+      def self.libc_version: (untyped handle) -> String?
+    end
+  end
+end

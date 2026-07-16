@@ -6,6 +6,7 @@ module Fiddle
   TYPE_SIZE_T: Integer
   TYPE_VOID: Integer
   RUBY_FREE: Integer
+  SIZEOF_VOIDP: Integer
 
   class DLError < StandardError
   end
