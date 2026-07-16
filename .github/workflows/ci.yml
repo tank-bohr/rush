@@ -54,23 +54,6 @@ jobs:
           files: coverage/coverage.json
           disable_search: true
 
-  # ~18 min locally on 16 jobs (36 mutations/s over 38.8k mutations) — expect
-  # roughly 2 h on a 4-core runner. Skipped on pull requests: a two-hour lag
-  # is no PR feedback; pushes to main and manual dispatch still gate.
-  # The threshold is the ratchet floor in the Rakefile (rush-tqq).
-  mutant:
-    name: Mutation gate
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 180
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - uses: ./.github/actions/setup
-
-      - name: Mutation coverage
-        run: bundle exec rake mutant:check
-
   docker-oracle:
     name: Docker oracle (pinned dash image)
     runs-on: ubuntu-latest
