@@ -2,8 +2,8 @@
   "schema": 1,
   "budgets": {
     "parse_heavy": 1298000,
-    "dispatch_heavy": 1316000,
-    "while_arithmetic": 2683000,
-    "expansion_heavy": 2669000
+    "dispatch_heavy": 1336000,
+    "while_arithmetic": 2693000,
+    "expansion_heavy": 2671000
   }
 }

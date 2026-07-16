@@ -2799,3 +2799,23 @@ five-sample spreads, budgets at x1.5; the allocation gate lane grows to ~20s, st
 fully shadowed by spec:parallel. The epic's ratchet geometry holds for all four cases:
 ~2k budget headroom sits an order of magnitude above measured noise and well below the
 smallest structural regression (+1 object per iteration).
+
+### Same Ruby version, different allocation floor: the toolcache build's hidden arrays (rush-chb)
+The allocation ratchet's first CI run failed with a pattern no noise model predicted:
+byte-identical RUBY_DESCRIPTION, context check green, yet exactly +1 object per
+dispatched builtin or function (while +10054 over 10k iterations, dispatch +20054 =
+2500 rounds x 8 dispatches, expansion +2054, parse-only +53 — the environment-shape
+constant). A throwaway diag branch isolated it in three steps: the divergence appears
+in every context on the runner (bare CLI, rake-nested, parallel gate) — but
+allocation-site tracing on the same runner matched the developer host site for site.
+ObjectSpace.count_objects closed the case: the entire delta is T_ARRAY while every
+other type matches — hidden arrays (NULL klass), which NEWOBJ tracing and each_object
+never see but total_allocated_objects counts. The official docker ruby and the
+mise-built ruby do not allocate them; GitHub's toolcache build does. Two lessons.
+(1) "Allocation counts are a property of the pinned Ruby version" is false at the
+build level: the ratchet's context keys can match while the floor differs — budgets
+now sit at the max-environment median (the runner's) + 2k, keeping the enforcing CI
+envelope tight while local headroom widens to ~12k; the CI gate backstops what local
+then misses. (2) When a counter and a tracer disagree, believe both: the gap between
+GC.stat and each_object IS the classification — internal objects were the only
+suspects left. Root cause (build flag or VM config) tracked in rush-chb.
