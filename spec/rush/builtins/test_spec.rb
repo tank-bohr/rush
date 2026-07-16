@@ -34,6 +34,28 @@ RSpec.describe Rush::Builtins::Test do
     expect(test('(')).to be_success
   end
 
+  # The 3/4-argument POSIX rows, pinned against dash: the paren row protects
+  # operator-lookalike operands the grammar would reject, and a binary at
+  # exactly three arguments outranks the parens (rush-tqq mutation gaps).
+  it 'protects an operator-lookalike operand inside the three-argument paren row' do
+    expect(bracket('(', '-e', ')', ']')).to be_success
+    expect(bracket('(', '', ')', ']')).not_to be_success
+  end
+
+  it 'lets a binary primary at three arguments outrank the paren row' do
+    expect(test('(', '=', ')')).not_to be_success
+  end
+
+  it 'peels parens at four arguments, inside or under negation' do
+    expect(test('(', '!', 'x', ')')).not_to be_success
+    expect(test('!', '(', 'x', ')')).not_to be_success
+  end
+
+  it 'negates a three-argument binary via the four-argument ! row' do
+    expect(test('!', 'x', '=', 'y')).to be_success
+    expect(test('!', 'x', '=', 'x')).not_to be_success
+  end
+
   it 'reports a binary primary missing its right operand with exit status 2' do
     expect(test('x', '=').exitstatus).to eq(2)
     expect(system.stderr.string).to eq("rush: test: =: argument expected\n")

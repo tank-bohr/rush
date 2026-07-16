@@ -176,6 +176,34 @@ RSpec.describe Rush::SystemCalls do
       .to eq([true, false, true, false])
   end
 
+  it 'falls back to the Ruby shell pattern when the collation backend declines fnmatch' do
+    allow(Rush::SystemCalls::COLLATION).to receive(:match_shell?) { |*_args, &fallback| fallback.call }
+
+    expect(system.fnmatch?('a[bc]d', 'abd')).to be(true)
+    expect(system.fnmatch?('a[bc]d', 'aed')).to be(false)
+  end
+
+  it 'globs by pathname expansion through the collation backend under the C locale' do
+    Dir.mktmpdir do |dir|
+      %w[ab.txt ac.txt ad.md].each { |name| File.write(File.join(dir, name), '') }
+
+      expect(system.glob("#{dir}/a[bc]*", locale: %w[C C]))
+        .to eq([File.join(dir, 'ab.txt'), File.join(dir, 'ac.txt')])
+    end
+  end
+
+  it 'falls back to widened Dir.glob results filtered by the shell pattern' do
+    allow(Rush::SystemCalls::COLLATION).to receive(:glob) { |*_args, &fallback| fallback.call }
+
+    Dir.mktmpdir do |dir|
+      %w[ab.txt ac.txt ad.md].each { |name| File.write(File.join(dir, name), '') }
+
+      expect(system.glob("#{dir}/a[bc]*")).to contain_exactly(
+        File.join(dir, 'ab.txt'), File.join(dir, 'ac.txt')
+      )
+    end
+  end
+
   it 'delegates stat-style file tests to File' do
     allow(File).to receive_messages(exist?: true, file?: true, directory?: true, symlink?: true, size?: 10)
     expect([system.exist?('/f'), system.file?('/f'), system.directory?('/d'),

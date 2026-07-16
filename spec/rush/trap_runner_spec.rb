@@ -38,6 +38,32 @@ RSpec.describe Rush::TrapRunner do
     expect(system.traps_installed.last).to eq(%w[HUP SYSTEM_DEFAULT])
   end
 
+  it 'flips one base disposition on without disturbing the others (set -m adds TSTP)' do
+    install_base
+    runner.set_base('TSTP', proc { :tstp_base })
+
+    expect(system.traps_installed.last).to eq(['TSTP', nil])
+    expect(system.trap_block('TSTP').call).to eq(:tstp_base)
+    expect(system.trap_block('INT').call).to eq(:interrupted)
+  end
+
+  it 'flips one base disposition off, back to the OS default (set +m removes TSTP)' do
+    runner.set_base('TSTP', proc { :tstp_base })
+    runner.set_base('TSTP', nil)
+
+    expect(system.traps_installed.last).to eq(%w[TSTP SYSTEM_DEFAULT])
+  end
+
+  it 'updates the base underneath a user trap without touching its disposition' do
+    runner.set('TSTP', 'echo trapped')
+    installed_before = system.traps_installed.length
+    runner.set_base('TSTP', proc { :tstp_base })
+
+    expect(system.traps_installed.length).to eq(installed_before)
+    runner.reset('TSTP')
+    expect(system.trap_block('TSTP').call).to eq(:tstp_base)
+  end
+
   it 'drops base handlers to the OS default for a subshell' do
     install_base
     runner.reset_caught_for_subshell
