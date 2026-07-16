@@ -2,6 +2,9 @@
 
 BENCHMARK_BASELINE = 'benchmark/baseline.json'
 BENCHMARK_RUNNER = [Gem.ruby, 'benchmark/run.rb'].freeze
+ALLOCATION_RUNNER = [Gem.ruby, 'benchmark/allocations.rb'].freeze
+ALLOCATION_BASELINE = 'benchmark/allocation_baseline.json'
+ALLOCATION_BUDGETS = 'benchmark/allocation_budgets.json'
 
 # A transitive development gem installs an unrelated top-level benchmark task.
 Rake::Task['benchmark'].clear if Rake::Task.task_defined?('benchmark')
@@ -24,7 +27,19 @@ namespace :benchmark do
 
   desc 'Count allocations for the canonical interpreter workloads (five samples by default)'
   task allocations: :compile do
-    sh Gem.ruby, 'benchmark/allocations.rb'
+    sh(*ALLOCATION_RUNNER)
+  end
+
+  namespace :allocations do
+    desc 'Record allocation counts and context as the committed baseline (never touches budgets)'
+    task record: :compile do
+      sh(*ALLOCATION_RUNNER, '--json', ALLOCATION_BASELINE)
+    end
+
+    desc 'Check allocation medians against the recorded baseline and the reviewed budgets'
+    task check: :compile do
+      sh(*ALLOCATION_RUNNER, '--check', ALLOCATION_BASELINE, '--budgets', ALLOCATION_BUDGETS)
+    end
   end
 
   desc 'Profile both interpreter workloads in StackProf CPU, wall, and object modes'

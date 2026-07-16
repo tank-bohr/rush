@@ -2,6 +2,7 @@
 
 require 'optparse'
 
+require_relative 'env_options'
 require_relative 'regression_check'
 require_relative 'report'
 
@@ -10,6 +11,8 @@ module RushBench
 
   # Command-line front end for the opt-in benchmark and regression-check tasks.
   class CLI
+    include EnvOptions
+
     def self.run(argv)
       new(argv).run
     rescue OptionParser::ParseError, ArgumentError, JSON::ParserError, KeyError, Errno::ENOENT, ExecutionError => e
@@ -67,22 +70,6 @@ module RushBench
 
       warn failures.join("\n")
       1
-    end
-
-    def integer_env(name, default, valid)
-      value = Integer(ENV.fetch(name, default.to_s), 10)
-      return value if valid.cover?(value)
-
-      raise ArgumentError, "#{name} is outside #{valid}"
-    rescue ArgumentError
-      raise ArgumentError, "#{name} must be an integer in #{valid}"
-    end
-
-    def float_env(name, default, minimum)
-      value = Float(ENV.fetch(name, default.to_s))
-      return value if value >= minimum
-
-      raise ArgumentError, "#{name} must be at least #{minimum}"
     end
   end
 end

@@ -1,12 +1,9 @@
 # frozen_string_literal: true
 
 require 'digest'
-require 'etc'
 require 'json'
-require 'open3'
-require 'socket'
-require 'time'
 
+require_relative 'context'
 require_relative 'suite'
 
 module RushBench
@@ -39,12 +36,9 @@ module RushBench
     private
 
     def metadata
-      { 'schema' => SCHEMA, 'generated_at' => Time.now.utc.iso8601, 'revision' => revision,
-        'ruby' => RUBY_DESCRIPTION, 'platform' => RUBY_PLATFORM, 'host' => Socket.gethostname,
-        'os' => os, 'cpu' => cpu, 'rush_source_sha256' => rush_source_digest,
-        'samples' => @samples, 'warmups' => @warmups, 'timeout' => @timeout,
-        'rush_runtime_typechecks' => runtime_typechecks,
-        'sorbet_runtime_default_checked_level_env' => ENV.fetch('SORBET_RUNTIME_DEFAULT_CHECKED_LEVEL', 'unset') }
+      Context.snapshot.merge(
+        'schema' => SCHEMA, 'samples' => @samples, 'warmups' => @warmups, 'timeout' => @timeout
+      )
     end
 
     def cases_hash
@@ -75,45 +69,7 @@ module RushBench
 
     def metadata_line
       "Ruby #{RUBY_VERSION} on #{RUBY_PLATFORM}; #{@samples} samples after #{@warmups} warmup(s); " \
-        "runtime checks=#{runtime_typechecks}"
-    end
-
-    def runtime_typechecks
-      ENV.fetch('RUSH_RUNTIME_TYPECHECKS', nil) == '1' ? 'enabled' : 'disabled'
-    end
-
-    def rush_source_digest
-      digest = Digest::SHA256.new
-      source_paths.each { |path| digest << path.delete_prefix(RushBench::ROOT) << "\0" << File.binread(path) }
-      digest.hexdigest
-    end
-
-    def source_paths
-      Dir[File.join(RushBench::ROOT, '{lib/**/*.rb,exe/*}')]
-    end
-
-    def os
-      Etc.uname.values_at(:sysname, :release, :machine).join(' ')
-    end
-
-    def cpu
-      line = File.foreach('/proc/cpuinfo').find { |entry| entry.start_with?('model name') }
-      line ? line.split(':', 2).last.strip : RbConfig::CONFIG.fetch('host_cpu')
-    rescue Errno::ENOENT
-      RbConfig::CONFIG.fetch('host_cpu')
-    end
-
-    def revision
-      output, status = Open3.capture2('git', 'rev-parse', '--short', 'HEAD', chdir: RushBench::ROOT)
-      return 'unknown' unless status.success?
-
-      revision = output.strip
-      dirty_worktree? ? "#{revision}-dirty" : revision
-    end
-
-    def dirty_worktree?
-      output, = Open3.capture2('git', 'status', '--porcelain', chdir: RushBench::ROOT)
-      !output.empty?
+        "runtime checks=#{Context.runtime_typechecks}"
     end
 
     def rounded(value)

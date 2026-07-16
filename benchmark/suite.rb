@@ -4,6 +4,7 @@ require 'tempfile'
 require 'timeout'
 
 require_relative 'cases'
+require_relative 'statistics'
 
 module RushBench
   # Raised when a benchmarked shell fails or exceeds its workload timeout.
@@ -39,7 +40,7 @@ module RushBench
       verify(target, benchmark_case)
       @timing.warmups.times { invoke(target, benchmark_case) }
       timings = Array.new(@timing.samples) { elapsed_ms(target, benchmark_case) }
-      Stats.new(median_ms: median(timings), min_ms: timings.min, max_ms: timings.max, samples_ms: timings)
+      Stats.new(median_ms: RushBench.median(timings), min_ms: timings.min, max_ms: timings.max, samples_ms: timings)
     end
 
     def verify(target, benchmark_case)
@@ -100,11 +101,6 @@ module RushBench
 
     def failure_message(status, output, target, benchmark_case)
       "#{target.name} failed for #{benchmark_case.name}: #{status.inspect}; output=#{output.inspect}"
-    end
-
-    def median(values)
-      sorted = values.sort
-      (sorted[(sorted.length - 1) / 2] + sorted[sorted.length / 2]) / 2.0
     end
   end
 end
