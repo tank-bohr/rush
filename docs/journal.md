@@ -2866,3 +2866,35 @@ Verified: focused ABI/collation/tailored-locale specs green; native full rake gr
 examples, 99.87% line / 98.98% branch, allocation ratchet unchanged); the Docker gate is
 green end-to-end, including the new compile-time ABI smoke, the same 2940 specs and all
 syscall/Reline/job-control smokes.
+
+### Recursive shell languages share scanners, not one context protocol (rush-f84.12)
+The characterization matrix separates two questions that a prospective ScanContext would
+otherwise blur. Fourteen dash comparisons cross the recursive language boundaries: braced
+operator words containing braces, quotes, command substitutions and arithmetic; command
+substitutions containing quoted/commented close-parens and nested case state; dynamic case
+patterns; and quoted versus expanding here-documents. Ten direct parser rows then run the
+same source with `interactive: true` and `false`. Quotes, `${`, `$()`, `$((` and incomplete
+case syntax remain classified as incomplete in either mode (ProgramReader retries only the
+interactive attempt and propagates the final one); a real syntax error stays an error in
+either mode. Only trailing line continuation and an unterminated here-document change at
+final parse, and they change differently: WordScanner drops the continuation while
+HeredocReader accepts the body accumulated through EOF.
+
+That inventory rejects a ScanContext for now. `quoted` changes dollar/braced scanning,
+the injected error class distinguishes speculative parameter scans, `interactive` governs
+two domain-specific EOF rules, and whole-word/terminator mode belongs only to WordScanner.
+Putting those values in one immutable object would rename existing constructor arguments
+without removing a repeated decision or protocol. The recursive readers therefore remain
+small and explicit rather than becoming one shell-within-a-shell parser. The known
+rush-no1.9 residue is unchanged and still named in ParenReader's unit spec: a bare `)` in a
+here-document body inside `$()` can close the substitution before the full parser sees the
+here-document. It is a parser-aware boundary fix, not justification for merging every
+scanner.
+
+The review found one initially dormant branch: setting `x=V` meant the unquoted heredoc
+row parsed `${x:-$(printf no)}` but never executed its nested substitution. Unsetting x
+makes the row prove both scanning and selection. A targeted mutation run on the two
+mode-sensitive methods (`WordScanner#continuation`, `HeredocReader#eof_line`) also exposed
+an unpinned whole-word/interactive combination; the focused whole-word assertion now kills
+all 55/55 mutations. Parser drift is clean, the 24-row focused matrices match dash, and the
+full gate is green with 2965 examples, 99.87% line and 98.98% branch coverage.

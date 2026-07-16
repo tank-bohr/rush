@@ -104,6 +104,12 @@ RSpec.describe Rush::Lexer::WordScanner do
     expect(word.segments.map(&:value).join).to eq('a b c')
   end
 
+  it 'drops a final continuation in whole mode regardless of interactive input policy' do
+    scanner = StringScanner.new("a\\\n")
+    word = described_class.new(scanner, terminator: nil, interactive: true).scan
+    expect(word.literal_text).to eq('a')
+  end
+
   it 'raises on an unterminated braced parameter' do
     expect { scan('${x') }.to raise_error(Rush::ParseError, /unterminated/)
   end
