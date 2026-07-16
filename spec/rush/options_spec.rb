@@ -23,6 +23,20 @@ RSpec.describe Rush::Options do
     end
   end
 
+  describe '#letters' do
+    it 'renders nothing with every option off and the single letter when one is on' do
+      expect(options.letters).to eq('')
+      options.set(:errexit, true)
+      expect(options.letters).to eq('e')
+    end
+
+    it 'renders every enabled flag in the exact dash order' do
+      %i[nounset allexport noclobber verbose xtrace stdin
+         noexec monitor interactive noglob errexit].each { |name| options.set(name, true) }
+      expect(options.letters).to eq('uaCvxsnmife')
+    end
+  end
+
   describe '#reinput_lines' do
     it 'renders a set +o line for an option that is off' do
       expect(options.reinput_lines).to include('set +o pipefail')

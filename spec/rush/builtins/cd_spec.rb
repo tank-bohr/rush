@@ -34,6 +34,30 @@ RSpec.describe Rush::Builtins::Cd do
     expect(system.stdout.string).to eq("/search/project\n")
   end
 
+  it 'skips the CDPATH search for absolute and dot-anchored operands, decoys present' do
+    env.assign('CDPATH', '/search')
+    operands = %w[/elsewhere ./project ../project . ..]
+    operands.each { |dir| system.register(dir, type: :dir) }
+    # A search hit would chdir into /search and print — the mutation gate
+    # needs live decoys or a broken predicate degrades into the silent
+    # plain-chdir fallback and survives (rush-tqq).
+    decoys = %w[/search/elsewhere /search//elsewhere /search/./project /search/../project
+                /search/. /search/.. /search/project]
+    decoys.each { |dir| system.register(dir, type: :dir) }
+
+    expect(operands.map { |dir| cd(dir) }).to all(be_success)
+    expect(system.stdout.string).to be_empty
+    expect(system.chdirs).to eq(operands)
+  end
+
+  it 'searches CDPATH for a dot-prefixed name that is not the dot directory' do
+    env.assign('CDPATH', '/search')
+    system.register('/search/.hidden', type: :dir)
+
+    expect(cd('.hidden')).to be_success
+    expect(system.stdout.string).to eq("/search/.hidden\n")
+  end
+
   it 'uses an empty CDPATH entry as the current directory without printing' do
     env.assign('CDPATH', ':/search')
     system.register('project', type: :dir)
