@@ -11,10 +11,18 @@ RSpec.describe RushBench do
   end
   let(:stats) { RushBench::Stats.new(median_ms: 10.0, min_ms: 9.0, max_ms: 11.0, samples_ms: [9.0, 11.0]) }
 
-  it 'pins the three named workloads and their work counts' do
+  it 'pins the named workloads and their work counts' do
     expect(described_class::CASES.map { |entry| [entry.name, entry.iterations] }).to eq(
-      [['startup', 1], ['while_arithmetic', 10_000], ['expansion_heavy', 2_000]]
+      [['startup', 1], ['parse_heavy', 220], ['dispatch_heavy', 2_500],
+       ['while_arithmetic', 10_000], ['expansion_heavy', 2_000]]
     )
+  end
+
+  it 'keeps both shells honest on the parse-heavy source (valid, silent, never-executed bodies)' do
+    parse_heavy = described_class::CASES.find { |entry| entry.name == 'parse_heavy' }
+
+    expect(parse_heavy.source.length).to be > 10_000
+    expect(system('dash', '-c', parse_heavy.source, out: File::NULL, err: File::NULL)).to be(true)
   end
 
   it 'builds a bare rush command and actually removes Bundler injection' do

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-07-16T06:15:45Z",
-  "revision": "91031c1-dirty",
+  "generated_at": "2026-07-16T06:50:52Z",
+  "revision": "e12c6fc-dirty",
   "ruby": "ruby 4.0.5 (2026-05-20 revision 64336ffd0e) +PRISM [x86_64-linux]",
   "platform": "x86_64-linux",
   "host": "xoma-desktop",
@@ -13,12 +13,34 @@
   "samples": 3,
   "warmups": 1,
   "cases": {
+    "parse_heavy": {
+      "description": "220 grammar-dense function definitions, parsed but never called",
+      "iterations": 220,
+      "source_sha256": "c3689a0858d2c85705a5af4bf75d439f20b6ce348492f212120a5e8192895473",
+      "counts": [
+        1295998,
+        1295827,
+        1295827
+      ],
+      "median": 1295827.0
+    },
+    "dispatch_heavy": {
+      "description": "2,500 rounds of nested function and builtin dispatch",
+      "iterations": 2500,
+      "source_sha256": "dc8699a2194590aa0836e605ee0b71b6f3b5324eff4d972790b27830d288786f",
+      "counts": [
+        1314176,
+        1314166,
+        1314166
+      ],
+      "median": 1314166.0
+    },
     "while_arithmetic": {
       "description": "10,000 while/test/arithmetic increments",
       "iterations": 10000,
       "source_sha256": "32f259eec5cae844b051c80653105bfb0ac6ecb54359a2dca044312b72f3a4f7",
       "counts": [
-        2681179,
+        2681063,
         2681063,
         2681063
       ],

@@ -1,8 +1,10 @@
 {
   "schema": 1,
   "budgets": {
-    "startup": 190.0,
-    "while_arithmetic": 1650.0,
+    "startup": 195.0,
+    "parse_heavy": 870.0,
+    "dispatch_heavy": 1140.0,
+    "while_arithmetic": 1640.0,
     "expansion_heavy": 1820.0
   }
 }

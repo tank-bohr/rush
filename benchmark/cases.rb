@@ -8,8 +8,42 @@ module RushBench
   Case = Data.define(:name, :description, :iterations, :source)
   Target = Data.define(:name, :command, :environment)
 
+  # A grammar-dense function body multiplied into a large source: the
+  # functions are defined but never called, so the workload is parse/lex
+  # dominated while remaining a valid POSIX program for both shells. IDX
+  # keeps each copy textually distinct so no caching layer can collapse them.
+  PARSE_CHUNK = <<~'SH'
+    fIDX() {
+      case "$1" in
+        a | b*) x="${1:-default}" && y=$((IDX + 1)) ;;
+        *) for v in one "two three" 'four'; do x="$v$x${y:-}"; done ;;
+      esac
+      while [ "${#x}" -gt 99 ]; do x=${x%?}; done
+      printf '%s\n' "$x" > /dev/null 2>&1
+    }
+  SH
+
+  def self.parse_heavy_source
+    "#{(1..220).map { |index| PARSE_CHUNK.gsub('IDX', index.to_s) }.join}:"
+  end
+
   CASES = [
     Case.new(name: 'startup', description: 'parse and execute a no-op', iterations: 1, source: ':'),
+    Case.new(
+      name: 'parse_heavy', description: '220 grammar-dense function definitions, parsed but never called',
+      iterations: 220, source: parse_heavy_source
+    ),
+    Case.new(
+      name: 'dispatch_heavy', description: '2,500 rounds of nested function and builtin dispatch',
+      iterations: 2_500,
+      source: <<~SH
+        f() { :; }
+        g() { f; }
+        i=0
+        while [ "$i" -lt 2500 ]; do g; f; :; true; i=$((i + 1)); done
+        test "$i" -eq 2500
+      SH
+    ),
     Case.new(
       name: 'while_arithmetic', description: '10,000 while/test/arithmetic increments', iterations: 10_000,
       source: 'i=0; while [ "$i" -lt 10000 ]; do i=$((i + 1)); done; test "$i" -eq 10000'

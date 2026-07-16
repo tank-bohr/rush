@@ -13,7 +13,7 @@ module RushBench
   # VM-boot noise — which is what makes the counts deterministic enough to
   # ratchet where wall-clock timings are not.
   class AllocationSuite
-    CASE_NAMES = %w[while_arithmetic expansion_heavy].freeze
+    CASE_NAMES = %w[parse_heavy dispatch_heavy while_arithmetic expansion_heavy].freeze
 
     def self.canonical_cases
       CASES.select { |entry| CASE_NAMES.include?(entry.name) }

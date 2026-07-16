@@ -2782,3 +2782,20 @@ flagged as regression on both loop workloads (+69.6%/+13.0% against ~11ms floors
 exit 1 — and startup, untouched by the patch, stayed ok. The interesting operational
 detail: sleep(20µs) costs ~75µs wall per call through timer slack, which is exactly why
 the floor must come from the run's own spread rather than a hand-tuned percentage.
+
+### Parser and dispatch get their own ratchet lanes (rush-1eo.6)
+Two workloads close the epic's coverage gaps. parse_heavy multiplies one grammar-dense
+function body (case with patterns, quoted for-list, pattern-removal while, redirected
+printf) into 220 textually distinct definitions that are parsed but never called — a
+lexer/parser workload that is still a valid, silent POSIX program for the dash oracle.
+dispatch_heavy runs 2,500 rounds of nested function calls plus bare builtins. Twenty
+independent recordings: zero median spread for both (1295827 / 1314166), same as the
+original pair. Path specificity proven by construction and by injection: one throwaway
+string per Lexer#next_token moved parse_heavy alone (+59k — the token count of the big
+source; the small sources stayed inside their 2k headroom), and three objects per
+FunctionTable#fetch moved dispatch_heavy alone (+22,500 = 2,500 rounds x 3 lookups x 3
+objects — nothing else calls functions). Timing medians 578ms / 757ms with 15-27ms
+five-sample spreads, budgets at x1.5; the allocation gate lane grows to ~20s, still
+fully shadowed by spec:parallel. The epic's ratchet geometry holds for all four cases:
+~2k budget headroom sits an order of magnitude above measured noise and well below the
+smallest structural regression (+1 object per iteration).
