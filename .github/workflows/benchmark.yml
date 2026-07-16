@@ -1,0 +1,82 @@
+# Same-runner A/B timing comparison (rush-1eo.5 scaffolding): the merge-base
+# and the head revision run in interleaved cohorts on one runner, so both
+# sides share machine, load, and toolchain — the only portable way to read
+# rush timings, per the epic; cross-machine absolute numbers and the
+# rush/dash ratio stay non-gating. Report-only for now: the paired
+# noise-envelope thresholds land with rush-1eo.4/.5. Opt-in — the `benchmark`
+# PR label or manual dispatch — and cancel-in-progress on purpose: unlike the
+# mutation queue, a superseded comparison is worthless, so the newest push
+# should win.
+name: Benchmark
+
+on:
+  pull_request:
+    types: [labeled, opened, synchronize]
+  workflow_dispatch:
+    inputs:
+      base:
+        description: base ref to compare against
+        default: main
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ab-compare:
+    name: A/B vs merge-base
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'benchmark')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0 # the merge-base and its full tree
+
+      - uses: ./.github/actions/setup
+
+      - name: Materialize the merge-base worktree
+        run: |
+          base_ref='${{ github.event_name == 'workflow_dispatch' && inputs.base || github.base_ref }}'
+          base=$(git merge-base "origin/${base_ref}" HEAD)
+          echo "comparing HEAD against merge-base ${base}"
+          git worktree add /tmp/base-worktree "${base}"
+
+      # The worktree shares the head checkout's bundle path: with an unchanged
+      # lockfile (the usual case) this is a no-op, and a changed lockfile only
+      # installs the delta.
+      - name: Bundle and compile both revisions
+        run: |
+          bundle exec rake compile
+          cd /tmp/base-worktree
+          export BUNDLE_PATH="$GITHUB_WORKSPACE/vendor/bundle"
+          bundle install --jobs 4 --retry 3
+          bundle exec rake compile
+
+      # Alternating base/current cohorts: drift (thermal, cache, noisy
+      # neighbor) lands on both sides instead of accumulating into one.
+      - name: Run interleaved timing cohorts
+        env:
+          RUSH_BENCH_SAMPLES: '3'
+        run: |
+          export DASH="$HOME/dash/bin/dash"
+          mkdir -p tmp/ab/base tmp/ab/current
+          for cohort in 1 2 3; do
+            (cd /tmp/base-worktree \
+              && BUNDLE_PATH="$GITHUB_WORKSPACE/vendor/bundle" bundle exec ruby benchmark/run.rb \
+                --json "$GITHUB_WORKSPACE/tmp/ab/base/run-${cohort}.json")
+            bundle exec ruby benchmark/run.rb --json "tmp/ab/current/run-${cohort}.json"
+          done
+
+      - name: Compare sides
+        run: bundle exec ruby benchmark/ab_compare.rb tmp/ab/base tmp/ab/current
+
+      - name: Upload raw cohorts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: benchmark-ab
+          path: tmp/ab/
