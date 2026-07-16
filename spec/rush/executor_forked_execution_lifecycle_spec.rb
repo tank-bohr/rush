@@ -73,19 +73,20 @@ RSpec.describe Rush::Executor do
       .to eq([%i[monitor enter], true, %i[enter body], 0])
   end
 
-  it 'snapshots monitored mode before both entries without unmonitored isolation' do
+  it 'snapshots monitored mode, arms the relay, then enters without unmonitored isolation' do
     events = []
     executor.job_control.enable(system.stderr)
     control = executor.job_control
     allow(executor).to receive(:job_control).and_return(control)
     trace(events, control, :monitored?, :monitor)
+    trace(events, executor.jobs.control, :arm_stage_relay, :arm)
     trace(events, executor, :enter_subshell, :enter)
 
     status = Rush::BackgroundRunner.new(executor, node(events)).run_body
 
     ignores = system.traps_installed.select { |name, command| %w[INT QUIT].include?(name) && command == 'IGNORE' }
-    expect([events, status.exitstatus, executor.io.get(0), ignores])
-      .to eq([%i[monitor enter enter body], 0, system.stdin, []])
+    expect([events, status.exitstatus, executor.io.get(0), ignores, executor.jobs.control.relay?])
+      .to eq([%i[monitor arm enter enter body], 0, system.stdin, [], true])
   end
 
   it 'binds command-substitution stdout before entry and forces an untested body before EXIT' do

@@ -69,6 +69,11 @@ RSpec.describe Rush::BackgroundRunner do
       expect(executor.jobs.current.text).to eq('sleep ${T} | cat')
     end
 
+    it "arms a relay before subshell entry so a nested external's stop reaches the job owner" do
+      described_class.new(executor, node).run_body
+      expect(executor.jobs.control.relay?).to be(true)
+    end
+
     it 'leaves the child stdin alone — the job sits in its own group (dash-probed)' do
       seen = nil
       capture = Class.new(Rush::AST::Node) do

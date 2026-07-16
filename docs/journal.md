@@ -2819,3 +2819,23 @@ envelope tight while local headroom widens to ~12k; the CI gate backstops what l
 then misses. (2) When a counter and a tracer disagree, believe both: the gap between
 GC.stat and each_object IS the classification — internal objects were the only
 suspects left. Root cause (build flag or VM config) tracked in rush-chb.
+
+### Background supervisors relay a nested external's stop too (rush-2rr)
+The command-text corpus had hidden one last stage-supervisor gap by racing `jobs` before
+`sh -c 'kill -TSTP $$' &` stopped: after a settle, dash rendered Stopped while rush left
+the background job Running. A monitored asynchronous list has the same extra fork layer
+as a rush pipeline stage — the job table owns the wrapper pid, while External waits on the
+grandchild — but only PipelineRunner armed StopRelay. BackgroundRunner now snapshots
+monitor mode, arms that existing relay, and only then enters the subshell environment;
+the relay makes the nested wait WUNTRACED and re-raises the stop onto the wrapper, where
+the root shell can adopt it as the job's true state.
+
+The ordering is load-bearing: `arm_stage_relay` changes Control from `:monitor` to
+`:relay`, so reading `monitored?` afterwards would incorrectly install the no-job-control
+SIGINT/SIGQUIT and /dev/null isolation. The lifecycle spec pins monitor -> arm -> entry,
+and jc-text-002 now carries the same 0.2s settle as the instant-exit rows, making its
+Stopped column deterministic rather than accepting the pre-stop Running window. Focused
+runner/lifecycle/differential specs are green; the new relay omission is killed by the
+BackgroundRunner mutant selection (its nine previously catalogued survivors remain).
+Full rake is green: 2935 examples, 99.87% line / 98.98% branch coverage, all quality and
+allocation gates passing.

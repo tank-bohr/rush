@@ -24,36 +24,37 @@ module Rush
       Status.success
     end
 
+    # POSIX 2.9.3.1 / 2.11 with job control disabled: an async child reads
+    # stdin from /dev/null (its own redirections may rebind it) and starts
+    # with SIGINT/SIGQUIT ignored. Both apply ONLY without job control — under
+    # set -m the job sits in its own process group, so POSIX (and dash,
+    # probed) leave stdin and SIGINT alone; monitored? is read before the
+    # stop relay is armed, since arming changes the control mode from monitor
+    # to relay. That relay survives enter_subshell switching the monitor
+    # machinery off and propagates a nested external's stop to this job's
+    # owner. The subshell entry (trap reset + job-table clear) must run first —
+    # an interactive session's base handlers reinstall OS defaults as they
+    # drop, which would undo the ignores. The immediate repeat inside
+    # SubshellRunner#run_body is harmless because isolation creates no
+    # reset-sensitive shell state between entries: no body, child job, pending
+    # signal, caught trap or EXIT action. Raw dispositions and stdin are
+    # deliberately installed there, and the second entry does not reset them.
+    # This is not general idempotence. The ignores are a real SIG_IGN, kept off
+    # the trap table: they survive exec and nested subshells, while `trap`
+    # overrides them and `trap - INT` restores the OS default (dash-verified).
     sig { returns(Status) }
     def run_body
-      isolate
+      monitored = @executor.job_control.monitored?
+      @executor.jobs.control.arm_stage_relay
+      @executor.enter_subshell
+      isolate unless monitored
       SubshellRunner.new(@executor, @body).run_body
     end
 
     private
 
-    # POSIX 2.9.3.1 / 2.11 with job control disabled: an async child reads
-    # stdin from /dev/null (its own redirections may rebind it) and starts
-    # with SIGINT/SIGQUIT ignored. Both apply ONLY without job control — under
-    # set -m the job sits in its own process group, so POSIX (and dash,
-    # probed) leave stdin and SIGINT alone; monitored? is read before
-    # enter_subshell switches the machinery off for this child. The subshell
-    # entry (trap reset + job-table clear) must run first — an interactive
-    # session's base handlers reinstall OS defaults as they drop, which would
-    # undo the ignores. The immediate repeat inside SubshellRunner#run_body is
-    # harmless because isolation creates no reset-sensitive shell state between
-    # entries: no body, child job, pending signal, caught trap or EXIT action.
-    # Raw dispositions and stdin are deliberately installed there, and the
-    # second entry does not reset them. This is not general idempotence. The
-    # ignores are a real SIG_IGN, kept off the trap table: they
-    # survive exec and nested subshells, while `trap` overrides them and
-    # `trap - INT` restores the OS default (dash-verified).
     sig { void }
     def isolate
-      monitored = @executor.job_control.monitored?
-      @executor.enter_subshell
-      return if monitored
-
       %w[INT QUIT].each { |name| @executor.system.trap_signal(name, 'IGNORE') { nil } }
       @executor.replace_io(@executor.io.with(0, @executor.system.open_file(File::NULL, 'r')))
     end
