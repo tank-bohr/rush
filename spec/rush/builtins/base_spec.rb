@@ -59,4 +59,18 @@ RSpec.describe Rush::Builtins::Base do
     expect { builtin.numeric('0', min: 1) }.to raise_error(Rush::BuiltinError, 'name: Illegal number: 0')
     expect { builtin.numeric_default('12x') }.to raise_error(Rush::BuiltinError, 'name: Illegal number: 12x')
   end
+
+  it 'prefers the invocation environment over the exported variables' do
+    with_env = subclass.new(executor, %w[name], io, { 'TMP' => 'prefix' })
+    expect(with_env.__send__(:command_environment)).to eq({ 'TMP' => 'prefix' })
+  end
+
+  it 'assembles the exported variables when no invocation environment rode in' do
+    state = Rush::ShellState.new(environment: Rush::Environment.new({}))
+    state.variables.assign('EXP', 'v')
+    state.variables.export('EXP')
+    real = Rush::Executor.new(system: system, state: state)
+
+    expect(subclass.new(real, %w[name], io).__send__(:command_environment)).to eq({ 'EXP' => 'v' })
+  end
 end

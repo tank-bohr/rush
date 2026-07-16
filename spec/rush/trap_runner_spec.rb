@@ -54,6 +54,28 @@ RSpec.describe Rush::TrapRunner do
     expect(system.traps_installed.last).to eq(%w[TSTP SYSTEM_DEFAULT])
   end
 
+  it 'exposes queued deliveries through pending? until the checkpoint drains them' do
+    install_base
+    runner.set('USR1', 'echo got')
+    expect(runner.pending?).to be(false)
+    system.trap_block('USR1').call
+    expect([runner.pending?, runner.pending_exitstatus]).to eq([true, 138])
+    runner.run_pending
+    expect(runner.pending?).to be(false)
+  end
+
+  it 'drops the EXIT trap and queued deliveries for a subshell' do
+    install_base
+    runner.set('EXIT', 'echo exiting')
+    runner.set('USR1', 'echo got')
+    system.trap_block('USR1').call
+    runner.reset_caught_for_subshell
+
+    expect(runner.pending?).to be(false)
+    expect(runner.run_exit_trap(3)).to eq(3)
+    expect(system.stdout.string).to be_empty
+  end
+
   it 'updates the base underneath a user trap without touching its disposition' do
     runner.set('TSTP', 'echo trapped')
     installed_before = system.traps_installed.length
