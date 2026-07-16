@@ -4,6 +4,13 @@ set -eu
 IMAGE=${RUSH_DOCKER_IMAGE:-rush-test:latest}
 DOCKERFILE=${RUSH_DOCKERFILE:-docker/rush-test.Dockerfile}
 BUNDLE_VOLUME=${RUSH_DOCKER_BUNDLE_VOLUME:-rush-bundle}
+# The static gate half (rubocop, reek, flay/flog, steep, sorbet) is
+# environment-independent, so a second OS adds nothing there — the container
+# reruns only the spec suite (the differential corpus against the image's
+# source-built dash; compile and coverage ride in via task deps) before the
+# container-only pty/ulimit smokes. RUSH_DOCKER_RAKE_TASK=default restores
+# the full gate for a hermetic local run.
+RAKE_TASK=${RUSH_DOCKER_RAKE_TASK:-spec:parallel}
 USER_ID=$(id -u)
 GROUP_ID=$(id -g)
 
@@ -16,8 +23,9 @@ docker run --rm \
   -e BUNDLE_JOBS="${BUNDLE_JOBS:-4}" \
   -e BUNDLE_RETRY="${BUNDLE_RETRY:-3}" \
   -e HOME=/tmp/rush-home \
+  -e RUSH_DOCKER_RAKE_TASK="$RAKE_TASK" \
   -v "$PWD:/work" \
   -v "$BUNDLE_VOLUME:/bundle" \
   -w /work \
   "$IMAGE" \
-  sh -lc 'mkdir -p "$HOME" "$BUNDLE_PATH" && bundle install --jobs "$BUNDLE_JOBS" --retry "$BUNDLE_RETRY" && bundle exec rake && docker/syscall-smoke.sh && bundle exec ruby docker/reline-smoke.rb && bundle exec ruby docker/job-control-smoke.rb'
+  sh -lc 'mkdir -p "$HOME" "$BUNDLE_PATH" && bundle install --jobs "$BUNDLE_JOBS" --retry "$BUNDLE_RETRY" && bundle exec rake "$RUSH_DOCKER_RAKE_TASK" && docker/syscall-smoke.sh && bundle exec ruby docker/reline-smoke.rb && bundle exec ruby docker/job-control-smoke.rb'
