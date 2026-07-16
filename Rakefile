@@ -91,10 +91,12 @@ module MutantRake
   end
 end
 
-# Ratchet floor: the 2026-07-15 full run scores 94.43% (2161 alive of 38798).
-# Raise toward 95 as alive mutants burn down (rush-tqq tracks the ratchet);
-# never lower it to admit new survivors.
-MUTANT_DEFAULT_THRESHOLD = 94.0
+# Ratchet floor at the measured baseline: 94.43% local (2026-07-15, 2161
+# alive of 38798) and 94.44%/94.45% on the two first CI sweeps (runs
+# 29474104905/29473353187) — the floor sits one notch under the weakest
+# observation, ~12 mutants of slack. Raise toward 95 as alive mutants burn
+# down (rush-tqq tracks the ratchet); never lower it to admit new survivors.
+MUTANT_DEFAULT_THRESHOLD = 94.4
 MUTANT_DEFAULT_SUBJECT = 'Rush*'
 
 namespace :mutant do
