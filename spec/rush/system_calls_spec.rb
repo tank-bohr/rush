@@ -127,7 +127,7 @@ RSpec.describe Rush::SystemCalls do
       inherited.write('x')
       inherited.flush
       file.rewind
-      expect([inherited.fileno, file.read]).to eq([file.fileno, 'x'])
+      expect([inherited.fileno, inherited.autoclose?, file.read]).to eq([file.fileno, false, 'x'])
     end
   end
 
@@ -156,10 +156,13 @@ RSpec.describe Rush::SystemCalls do
 
   it 'expands paths and opens files in sync mode' do
     expect(system.expand_path('a', '/base')).to eq('/base/a')
-    io = instance_double(File, :sync= => true)
-    allow(File).to receive(:new).with('/f', 'w').and_return(io)
-    expect(system.open_file('/f', 'w')).to be(io)
-    expect(io).to have_received(:sync=).with(true)
+    Tempfile.create('rush-open') do |target|
+      io = system.open_file(target.path, 'w')
+      properties = [io.path, io.sync]
+      io.write('replacement')
+      io.close
+      expect([*properties, File.read(target.path)]).to eq([target.path, true, 'replacement'])
+    end
   end
 
   it 'closes a redirect file through IO#close' do
@@ -174,17 +177,22 @@ RSpec.describe Rush::SystemCalls do
   end
 
   it 'builds a here-document stream through a rewound tempfile' do
-    file = instance_double(Tempfile, write: nil, rewind: nil)
-    allow(Tempfile).to receive(:new).with('rush-heredoc').and_return(file)
-    expect(system.here_doc('body')).to be(file)
-    expect(file).to have_received(:write).with('body')
-    expect(file).to have_received(:rewind)
+    file = system.here_doc('body')
+    expect(file.read).to eq('body')
+  ensure
+    file&.close!
   end
 
   it 'matches ordinary and POSIX-class patterns with fnmatch' do
     expect([system.fnmatch?('a*', 'abc'), system.fnmatch?('a*', 'xyz'),
             system.fnmatch?('[[:alpha:]]', 'a'), system.fnmatch?('[[:digit:]]', 'a')])
       .to eq([true, false, true, false])
+  end
+
+  it 'uses the collation verdict before its Ruby fnmatch fallback' do
+    allow(Rush::SystemCalls::COLLATION).to receive(:match_shell?).with('native', 'value', %w[C C]).and_return(true)
+    expect(system.fnmatch?('native', 'value', locale: %w[C C])).to be(true)
+    expect(Rush::SystemCalls::COLLATION).to have_received(:match_shell?).with('native', 'value', %w[C C])
   end
 
   it 'falls back to the Ruby shell pattern when the collation backend declines fnmatch' do
@@ -207,11 +215,9 @@ RSpec.describe Rush::SystemCalls do
     allow(Rush::SystemCalls::COLLATION).to receive(:glob) { |*_args, &fallback| fallback.call }
 
     Dir.mktmpdir do |dir|
-      %w[ab.txt ac.txt ad.md].each { |name| File.write(File.join(dir, name), '') }
+      %w[filea fileb].each { |name| File.write(File.join(dir, name), '') }
 
-      expect(system.glob("#{dir}/a[bc]*")).to contain_exactly(
-        File.join(dir, 'ab.txt'), File.join(dir, 'ac.txt')
-      )
+      expect(system.glob("#{dir}/file[[=a=]]")).to eq([File.join(dir, 'filea')])
     end
   end
 
@@ -256,9 +262,10 @@ RSpec.describe Rush::SystemCalls do
     expect([system.read_line, system.tty?]).to eq(["line\n", true])
   end
 
-  it 'reports terminal status of stderr separately' do
-    allow($stderr).to receive(:tty?).and_return(true)
-    expect(system.stderr_tty?).to be(true)
+  it 'reports terminal status of stdin and stderr separately' do
+    allow($stdin).to receive(:tty?).and_return(false)
+    allow($stderr).to receive(:tty?).and_return(true, false)
+    expect([system.tty?, system.stderr_tty?, system.stderr_tty?]).to eq([false, true, false])
   end
 
   it 'reports root privileges from the effective uid' do

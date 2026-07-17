@@ -3035,3 +3035,40 @@ WUNTRACED flag bits. A focused retry row killed the one real missing mutation â€
 Interrupted retry from `wait_stoppable`. Independent review found no blocker. The final native gate is
 green with 2983 examples (99.89% line / 98.65% branch), and the Docker gate is green including the
 source-built dash differential suite plus real ABI, ulimit, Reline and full ^Z/fg/bg terminal smokes.
+
+### The main syscall port is checked; two Ruby variadic splats stay visible (rush-435.6)
+SystemCalls is now typed:true with inline contracts mirrored by its public Sorbet RBI and RBS.
+Spawn/exec options are no longer an entirely open argument: their environment, argv, key union
+(`Integer | Symbol`) and return/non-return shapes are checked, while values remain honestly open at
+the existing logical-IO table boundary. Signals, stdin/out/err, Tempfile, Reline, filesystem and
+user lookup all have concrete contracts. The close-only redirect stream stays one explicitly
+untyped parameter in both public checker surfaces: RBS can express `_IoStream`, but Sorbet has no
+runtime-compatible structural protocol, and pretending it is only `IO | Tempfile` rejects valid
+test ports under runtime checks. The new Reline shim only tightens its
+variadic stdlib declaration's result to `String?`; it adds one reviewed input, taking the exact
+ratchet scope from 208 to 209 rather than changing the send denominator.
+
+There are exactly two call-site escapes, `T.unsafe(Process).spawn` and `.exec`, plus that one
+structural stream parameter. Sorbet rejects a dynamically sized argv splat even on Ruby's
+intrinsically variadic process APIs; the receiver-only escapes leave every surrounding argument
+and public result checked and remain counted in the residual ledger. Moving them into a false helper would make the metric prettier by hiding the same
+boundary, so this slice deliberately does not. Runtime-call probes cover external spawn, pipeline
+and background waits, process replacement, signal traps, and an inherited fd.
+
+The inherited-fd adapter now uses IO.new's real `autoclose: false` keyword and asserts sync before
+return; an explicit negative guard proved redundant because IO.new raises the already-handled EBADF.
+Behavior rows now pin non-ownership, writable file mode, rewound here-doc content, backend fnmatch
+arguments, widened-glob filtering, and both tty boolean values with real IO/Tempfile objects rather
+than doubles that cannot satisfy runtime assertions.
+
+The ratchet moves from 11,404 / 12,690 to 11,595 / 12,878 (90.04%): 191 new typed sends on 188
+new total sends, gap 1,283 (-3), with usages unchanged at 1,647. Main SystemCalls mutation kills
+401 / 409 (98.04%). Seven survivors are annotation/API invariants (confstr/getpwnam narrowing,
+two receiver escapes, Kernel-vs-Process exec dispatch, and the unobservable tempfile basename);
+the remaining nil-argument mutant is killed by the exact backend expectation when applied directly
+but survives Mutant's coverage-selected run, so it is recorded as a harness false-negative rather
+than mislabeled equivalent. Review first caught the Steep `_IoStream` versus Sorbet nominal-union
+runtime mismatch; the final deliberately open close-only parameter has exact implementation/RBI/RBS
+parity and a runtime custom-port probe. Re-review has no blocker. The final native gate is green with
+2984 examples (99.89% line / 98.65% branch), and the Docker differential plus ABI, ulimit, Reline and
+full terminal job-control smokes are green.

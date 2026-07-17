@@ -97,13 +97,16 @@ prioritization surface, not a one-to-one reconciliation with Sorbet's 1,316-send
 | **Total** | **208** |
 
 The aggregate counter calls this 202 true and 6 false; the latter folds the no-sigil parser into the
-false bucket. The parser remains in input accounting even though its diagnostics are ignored.
+false bucket. That is the inventory snapshot: the four implementation-typing slices raised their
+owned sigils and `rush-435.6` added one narrow Reline result shim, so the current ratchet scope is
+209 inputs (207 true, ParserSupport false, and the no-sigil parser). The parser remains in input
+accounting even though its diagnostics are ignored.
 The extensionless `exe/rush` is configured through `--dir ./exe` but is absent from the file table,
 so it is outside this baseline. A later scope change must record a side-by-side baseline rather than
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's four RBI inputs or the executable. Its current receiver-based ledger is 11,253 / 11,276
+not Sorbet's current five RBI inputs or the executable. Its current receiver-based ledger is 11,253 / 11,276
 typed calls (99.80%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
@@ -116,8 +119,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-435.5`, at most 1,286 untyped
-  sends and an exact rational minimum ratio of 11,404 / 12,690. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-435.6`, at most 1,283 untyped
+  sends and an exact rational minimum ratio of 11,595 / 12,878. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -152,6 +155,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19n | `PrintfFormatter` checked end to end | 11,191 / 12,503 | 89.51% | 1,312 | 1,666 |
 | 19o | `ResourceLimits` checked end to end | 11,236 / 12,537 | 89.62% | 1,301 | 1,661 |
 | 19p | `ProcessControl` checked end to end | 11,404 / 12,690 | 89.87% | 1,286 | 1,647 |
+| 19q | `SystemCalls` checked end to end | 11,595 / 12,878 | 90.04% | 1,283 | 1,647 |
 
 ## Material usage clusters
 
@@ -210,12 +214,10 @@ counter yield:
 
 ### Root-cause ledger
 
-1. **Five handwritten unchecked bodies.** The forced-strong probe reports 156 diagnostics that the
-   normal file table cannot see: `ParserSupport` 54, `PrintfFormatter` 40, `ProcessControl` 35,
-   `SystemCalls` 18, and `ResourceLimits` 9. Their callers can still receive typed public surfaces,
-   but the implementations themselves are not checked. `rush-435.3` through `.6` own the four
-   tractable formatter/syscall files; `rush-435.8` adjudicates ParserSupport rather than claiming a
-   sigil win around an open Racc stack.
+1. **One handwritten unchecked body remains.** The inventory forced-strong probe found 156 hidden
+   diagnostics across ParserSupport (54) and the four formatter/syscall bodies (102). Slices
+   `rush-435.3` through `.6` raised all four tractable files and checked their implementations;
+   `rush-435.8` adjudicates ParserSupport rather than claiming a sigil win around an open Racc stack.
 
 2. **Generated Racc glue.** `lib/rush/parser.rb` has no sigil, is generated and is ignored by both
    type-checker gates. Forced strong finds two locations there. `Lexer` currently exports
@@ -241,32 +243,34 @@ counter yield:
    so the first move is to sign their module methods and values. Replace reflection only when a
    residual root remains; do not turn a registry into a case statement solely for the metric.
 
-6. **System and native ports.** The `SystemCalls` RBI omits resource-limit and job-control methods and
-   keeps spawn/exec options, signals and redirect streams open. The Fiddle collation backend has an
-   intentionally dynamic callable/pointer table. `rush-435.4`–`.6` should normalize platform return
-   shapes and add narrow project RBIs; `rush-435.7` must retain a small native ledger for values
-   Sorbet cannot honestly model.
+6. **System and native ports.** Resource, job-control, signal, redirect ownership and interactive
+   contracts are now explicit in the implementation/RBS/Sorbet surfaces; the close-only logical
+   stream parameter remains mirrored and open because Sorbet lacks RBS structural protocols.
+   Process.spawn and exec retain exactly two narrow receiver escapes because Sorbet rejects Ruby's dynamically sized
+   non-terminal argv splat; their option keys and return contracts remain checked. The Fiddle
+   collation backend still has an intentionally dynamic callable/pointer table, which
+   `rush-435.7` must retain in the measured native ledger.
 
-The explicit source ledger currently contains 111 `T.untyped` declaration lines across production
-and project RBIs (37 production files and three RBI files), plus three `T.unsafe` lines. These are
+The explicit source ledger currently contains 112 `T.untyped` declaration lines across production
+and project RBIs (38 production files and four RBI files), plus three `T.unsafe` lines. These are
 review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
 remain honestly open after the ordinary roots are removed.
 
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After `rush-435.5`, at the normal denominator:
+escape only for measured native/Racc/variant residue. After `rush-435.6`, at the normal denominator:
 
-- `ceil(12,690 × 0.95) = 12,056` typed sends;
-- this needs 652 additional typed sends;
-- no more than 634 sends may remain untyped;
-- that removes 50.7% of the current 1,286-send gap.
+- `ceil(12,878 × 0.95) = 12,235` typed sends;
+- this needs 640 additional typed sends;
+- no more than 643 sends may remain untyped;
+- that removes 49.9% of the current 1,283-send gap.
 
 Raising the remaining false/no-sigil bodies changes the denominator, so the fixed calculation is not
 the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 11,518 / 12,937 typed sends (89.03%, gap 1,419). At that denominator
-95% is 12,291 typed sends: +773, leaving at most 646 untyped, a 54.5% gap reduction. The current
-location probe finds 893 concrete send-shaped diagnostics (892 outside generated parser), with 496
+conservative scope envelope of 11,637 / 13,042 typed sends (89.23%, gap 1,405). At that denominator
+95% is 12,390 typed sends: +753, leaving at most 652 untyped, a 53.6% gap reduction. The current
+location probe finds 888 concrete send-shaped diagnostics (887 outside generated parser), with 496
 concentrated in 26 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, false-body, registry and bounded-variant roots above.

@@ -1,15 +1,15 @@
 # typed: true
 # frozen_string_literal: true
 
-# Hand-written shim: SystemCalls is kept `# typed: false` because a few Ruby
-# syscall forms are beyond Sorbet's static model, but callers still benefit from
-# the public port's typed surface.
+# Hand-written mirror for callers that load signatures without implementation bodies.
+# Keep these contracts exact with the typed syscall port; only Process.spawn/exec's
+# dynamically sized argv splat remains a narrow implementation-only escape.
 module Rush
   # Public static surface for the typed callers of the impure syscall port.
   class SystemCalls
     sig do
-      params(file: String, env: T::Hash[String, String], argv: T::Array[String], options: T.untyped)
-        .returns(Integer)
+      params(file: String, env: T::Hash[String, String], argv: T::Array[String],
+             options: T::Hash[T.any(Integer, Symbol), T.untyped]).returns(Integer)
     end
     def spawn(file, env, argv, options); end
 
@@ -19,7 +19,10 @@ module Rush
     sig { params(pid: Integer).returns([Integer, Process::Status]) }
     def waitpid2(pid); end
 
-    sig { params(env: T::Hash[String, String], argv: T::Array[String], options: T.untyped).returns(T.untyped) }
+    sig do
+      params(env: T::Hash[String, String], argv: T::Array[String],
+             options: T::Hash[T.any(Integer, Symbol), T.untyped]).returns(T.noreturn)
+    end
     def exec(env, argv, options); end
 
     sig { returns(Integer) }
@@ -28,22 +31,25 @@ module Rush
     sig { returns(Process::Tms) }
     def times; end
 
-    sig { params(signal: T.untyped, pid: Integer).returns(Integer) }
+    sig { params(signal: T.any(Integer, String), pid: Integer).returns(Integer) }
     def kill(signal, pid); end
 
     sig do
       params(name: String, command: T.nilable(String),
-             block: T.proc.params(arg0: T.untyped).returns(T.untyped)).returns(T.untyped)
+             block: T.nilable(T.proc.params(signal: Integer).returns(T.untyped))).returns(T.untyped)
     end
     def trap_signal(name, command, &block); end
 
     sig { returns([IO, IO]) }
     def pipe; end
 
-    sig { params(blk: T.proc.void).returns(T.nilable(Integer)) }
+    sig { params(fd: Integer).returns(T.nilable(IO)) }
+    def inherited_fd(fd); end
+
+    sig { params(blk: T.nilable(T.proc.void)).returns(T.nilable(Integer)) }
     def fork(&blk); end
 
-    sig { params(code: Integer).returns(T.untyped) }
+    sig { params(code: Integer).returns(T.noreturn) }
     def exit!(code); end
 
     sig { params(path: String).returns(Integer) }
@@ -56,14 +62,15 @@ module Rush
     def expand_path(path, base); end
 
     sig { params(pattern: String, str: String, locale: T::Array[String]).returns(T::Boolean) }
-    def fnmatch?(pattern, str, locale: T.unsafe(nil)); end
+    def fnmatch?(pattern, str, locale: []); end
 
     sig { params(pattern: String, locale: T::Array[String]).returns(T::Array[String]) }
-    def glob(pattern, locale: T.unsafe(nil)); end
+    def glob(pattern, locale: []); end
 
     sig { params(path: String, mode: T.any(String, Integer)).returns(File) }
     def open_file(path, mode); end
 
+    # Sorbet cannot express the close-only structural stream protocol used by Steep.
     sig { params(io: T.untyped).void }
     def close_redirect(io); end
 
@@ -85,8 +92,14 @@ module Rush
     sig { returns(T.nilable(String)) }
     def read_line; end
 
+    sig { params(prompt: String).returns(T.nilable(String)) }
+    def edit_line(prompt); end
+
     sig { returns(T::Boolean) }
     def tty?; end
+
+    sig { returns(T::Boolean) }
+    def stderr_tty?; end
 
     sig { params(name: String).returns(T.nilable(String)) }
     def home_dir(name); end

@@ -773,7 +773,7 @@
       },
       {
         "path": "./lib/rush/system_calls.rb",
-        "sigil": "False"
+        "sigil": "True"
       },
       {
         "path": "./lib/rush/system_calls/collation.rb",
@@ -824,6 +824,10 @@
         "sigil": "True"
       },
       {
+        "path": "./sorbet/rbi/shims/reline.rbi",
+        "sigil": "True"
+      },
+      {
         "path": "./sorbet/rbi/shims/rush.rbi",
         "sigil": "True"
       },
@@ -838,9 +842,9 @@
     ]
   },
   "observed": {
-    "typed_sends": 11404,
-    "total_sends": 12690,
-    "untyped_sends": 1286,
+    "typed_sends": 11595,
+    "total_sends": 12878,
+    "untyped_sends": 1283,
     "untyped_usages": 1647
   }
 }
