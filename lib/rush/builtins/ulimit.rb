@@ -9,7 +9,7 @@ module Rush
     UlimitRequest = Data.define(:all, :resource, :target, :explicit_target, :value)
     # Parser error code plus optional option text for diagnostics.
     UlimitParseError = Data.define(:kind, :detail)
-    ULIMIT_RESOURCE_LIST = [
+    ULIMIT_RESOURCE_LIST = T.let([
       UlimitResource.new('t', 'time(seconds)', :cpu, 1),
       UlimitResource.new('f', 'file(blocks)', :fsize, 512),
       UlimitResource.new('d', 'data(kbytes)', :data, 1024),
@@ -22,10 +22,59 @@ module Rush
       UlimitResource.new('v', 'vmemory(kbytes)', :as, 1024),
       UlimitResource.new('w', 'locks', :locks, 1),
       UlimitResource.new('r', 'rtprio', :rtprio, 1)
-    ].freeze
-    ULIMIT_RESOURCES = ULIMIT_RESOURCE_LIST.to_h { |resource| [resource.flag, resource] }.freeze
+    ].freeze, T::Array[UlimitResource])
+    ULIMIT_RESOURCES = T.let(
+      ULIMIT_RESOURCE_LIST.to_h { |resource| [resource.flag, resource] }.freeze,
+      T::Hash[String, UlimitResource]
+    )
     ULIMIT_DEFAULT_RESOURCE = T.let(ULIMIT_RESOURCES.fetch('f'), UlimitResource)
-    ULIMIT_TARGETS = { 'H' => :hard, 'S' => :soft }.freeze
+    ULIMIT_TARGETS = T.let({ 'H' => :hard, 'S' => :soft }.freeze, T::Hash[String, Symbol])
+
+    # Typed mutable state while a compact ulimit option cluster is folded.
+    class UlimitOptionState
+      extend T::Sig
+
+      sig { returns(T::Boolean) }
+      attr_reader :all
+
+      sig { returns(UlimitResource) }
+      attr_reader :resource
+
+      sig { returns(Symbol) }
+      attr_reader :target
+
+      sig { returns(T::Boolean) }
+      attr_reader :explicit_target
+
+      sig { params(default: UlimitResource).void }
+      def initialize(default)
+        @all = T.let(false, T::Boolean)
+        @resource = T.let(default, UlimitResource)
+        @target = T.let(:soft, Symbol)
+        @explicit_target = T.let(false, T::Boolean)
+      end
+
+      sig { void }
+      def select_all
+        @all = true
+      end
+
+      sig { params(resource: UlimitResource).void }
+      def select_resource(resource)
+        @resource = resource
+      end
+
+      sig { params(target: Symbol).void }
+      def select_target(target)
+        @target = target
+        @explicit_target = true
+      end
+
+      sig { params(value: T.nilable(String)).returns(UlimitRequest) }
+      def request(value)
+        UlimitRequest.new(all, resource, target, explicit_target, value)
+      end
+    end
 
     # Mutable parser for ulimit's compact option clusters (`-Hn`, `-Sn`, `-a`).
     # It returns either a UlimitRequest or a small parse-error value that the
@@ -36,7 +85,7 @@ module Rush
       sig { params(resources: T::Hash[String, UlimitResource], default: UlimitResource).void }
       def initialize(resources, default)
         @resources = resources
-        @state = { all: false, resource: default, target: :soft, explicit_target: false }
+        @state = T.let(UlimitOptionState.new(default), UlimitOptionState)
       end
 
       sig { params(args: T::Array[String]).returns(T.any(UlimitRequest, UlimitParseError)) }
@@ -58,10 +107,20 @@ module Rush
 
       sig { params(args: T::Array[String], value: T.nilable(String)).returns(T.any(UlimitRequest, UlimitParseError)) }
       def parse_options(args, value)
-        args.each { |arg| apply(arg).tap { |error| return error if error } }
-        return error(:too_many) if @state.fetch(:all) && value
+        option_failure = option_error(args)
+        return option_failure if option_failure
+        return error(:too_many) if @state.all && value
 
         request(value)
+      end
+
+      sig { params(args: T::Array[String]).returns(T.nilable(UlimitParseError)) }
+      def option_error(args)
+        args.each do |arg|
+          argument_failure = apply(arg)
+          return argument_failure if argument_failure
+        end
+        nil
       end
 
       sig { params(arg: String).returns(T.nilable(UlimitParseError)) }
@@ -74,7 +133,8 @@ module Rush
       sig { params(flags: String).returns(T.nilable(UlimitParseError)) }
       def apply_flags(flags)
         flags.each_char do |flag|
-          apply_or_error(flag).tap { |error| return error if error }
+          flag_failure = apply_or_error(flag)
+          return flag_failure if flag_failure
         end
         nil
       end
@@ -99,22 +159,19 @@ module Rush
 
       sig { params(flag: String).void }
       def apply_flag(flag)
-        @state[:all] = true if flag == 'a'
-        @state[:resource] = @resources.fetch(flag) if @resources.key?(flag)
+        @state.select_all if flag == 'a'
+        @state.select_resource(@resources.fetch(flag)) if @resources.key?(flag)
         apply_target(flag) if ULIMIT_TARGETS.key?(flag)
       end
 
       sig { params(flag: String).void }
       def apply_target(flag)
-        @state[:target] = ULIMIT_TARGETS.fetch(flag)
-        @state[:explicit_target] = true
+        @state.select_target(ULIMIT_TARGETS.fetch(flag))
       end
 
       sig { params(value: T.nilable(String)).returns(UlimitRequest) }
       def request(value)
-        UlimitRequest.new(
-          @state.fetch(:all), @state.fetch(:resource), @state.fetch(:target), @state.fetch(:explicit_target), value
-        )
+        @state.request(value)
       end
 
       sig { params(kind: Symbol, detail: T.nilable(String)).returns(UlimitParseError) }

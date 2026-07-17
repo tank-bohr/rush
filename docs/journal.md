@@ -3128,3 +3128,22 @@ that grammar termination always overwrites before AST construction. Review caugh
 ParserSupport RBS parse result; it now distinguishes generated `do_parse` from the narrowed
 `AST::List` public result. Re-review has no blocker, and the final full gate is green with 2996
 examples (99.89% line / 98.67% branch).
+
+### ulimit's untyped Data/hash root becomes an exact state boundary (rush-435.7)
+The first untyped-root sweep removes one high-fan-out cause rather than annotating its consumers.
+Sorbet's generic `Data` declaration could not recover the readers or positional constructors for
+`UlimitResource`, `UlimitRequest`, and `UlimitParseError`; one narrow checked RBI now mirrors their
+existing RBS value contracts exactly. Resource tables are concrete frozen arrays/hashes, and the
+request builder's heterogeneous `Hash[Symbol, untyped]` has become a small typed option-state object
+with domain operations for selecting all resources, one resource, or a soft/hard target. No broad
+cast, unsafe receiver, or new untyped declaration was introduced.
+
+The ratchet moves from 11,816 / 13,095 to 11,886 / 13,123 (90.57%): 70 new typed sends on 28 new
+total sends, gap 1,237 (-42), usages 1,589 (-53). The added RBI is an explicit scope change, taking
+the baseline from 209 to 210 inputs. Targeted Ulimit mutation kills 565 / 586 (96.41%); the
+survivors are pre-existing annotation/invariant equivalents or behavior gaps outside this typing
+refactor, while all option-state transitions are covered by the existing focused behavior suite.
+The runtime-check probe covers soft, hard and list-all reads. Independent review found the code and
+three checker surfaces consistent, then caught stale forced-envelope, Steep-stat and ceiling prose;
+the reproduced values now replace it. The final full gate is green with 2996 examples (99.89% line /
+98.67% branch).

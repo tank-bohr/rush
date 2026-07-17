@@ -824,6 +824,10 @@
         "sigil": "True"
       },
       {
+        "path": "./sorbet/rbi/shims/builtin_data.rbi",
+        "sigil": "True"
+      },
+      {
         "path": "./sorbet/rbi/shims/reline.rbi",
         "sigil": "True"
       },
@@ -842,9 +846,9 @@
     ]
   },
   "observed": {
-    "typed_sends": 11816,
-    "total_sends": 13095,
-    "untyped_sends": 1279,
-    "untyped_usages": 1642
+    "typed_sends": 11886,
+    "total_sends": 13123,
+    "untyped_sends": 1237,
+    "untyped_usages": 1589
   }
 }

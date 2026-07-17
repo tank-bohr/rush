@@ -31,6 +31,26 @@ module Rush
     ULIMIT_DEFAULT_RESOURCE: UlimitResource
     ULIMIT_TARGETS: ::Hash[String, Symbol]
 
+    # Typed mutable state while a compact ulimit option cluster is folded.
+    class UlimitOptionState
+      extend T::Sig
+
+      attr_reader all: bool
+      attr_reader resource: UlimitResource
+      attr_reader target: Symbol
+      attr_reader explicit_target: bool
+
+      def initialize: (UlimitResource default) -> void
+
+      def select_all: () -> void
+
+      def select_resource: (UlimitResource resource) -> void
+
+      def select_target: (Symbol target) -> void
+
+      def request: (String? value) -> UlimitRequest
+    end
+
     # Mutable parser for ulimit's compact option clusters (`-Hn`, `-Sn`, `-a`).
     # It returns either a UlimitRequest or a small parse-error value that the
     # builtin turns into the user-facing diagnostic.
@@ -38,7 +58,7 @@ module Rush
       extend T::Sig
 
       @resources: ::Hash[String, UlimitResource]
-      @state: ::Hash[Symbol, untyped]
+      @state: UlimitOptionState
 
       def initialize: (::Hash[String, UlimitResource] resources, UlimitResource default) -> void
 
@@ -49,6 +69,8 @@ module Rush
       def extract_value: (Array[String] args) -> String?
 
       def parse_options: (Array[String] args, String? value) -> (UlimitRequest | UlimitParseError)
+
+      def option_error: (Array[String] args) -> UlimitParseError?
 
       def apply: (String arg) -> UlimitParseError?
 
