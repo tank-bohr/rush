@@ -6,8 +6,9 @@ require 'flay'
 # production code minus the racc-generated parser. Thresholds sit at the
 # measured baseline and only go down: new duplication mass or a method past
 # the complexity cap fails the build. Both meters measure code, not type
-# ceremony: flay hashes the tree with Sorbet sig blocks filtered out, and
-# flog caps logic methods while constructors answer to rubocop's AbcSize
+# ceremony: flay hashes the tree with Sorbet sig blocks and exact frozen hash
+# declarations filtered out, and flog caps logic methods while constructors
+# answer to rubocop's AbcSize
 # (docs/journal.md, slices 14g/14n/14q).
 module ComplexityRake
   module_function
@@ -21,12 +22,19 @@ module ComplexityRake
   # the tree it hashes.
   SORBET_SIG = Sexp::Matcher.parse('(iter (call nil sig) ___)')
 
+  # Exact T.let-wrapped frozen hash literals are declarative registries, not
+  # duplicated control flow. Keep the filter narrow: computed and mutable
+  # constants remain visible to flay.
+  SORBET_TYPED_FROZEN_HASH = Sexp::Matcher.parse(
+    '(cdecl _ (call (const :T) let (call (hash ___) freeze) ___))'
+  )
+
   def run(*command)
     IO.popen(command, &:read)
   end
 
-  def sigless_flay
-    flay = Flay.new(Flay.default_options.merge(filters: [SORBET_SIG]))
+  def code_flay
+    flay = Flay.new(Flay.default_options.merge(filters: [SORBET_SIG, SORBET_TYPED_FROZEN_HASH]))
     flay.process(*FILES)
     flay.analyze
     flay
@@ -51,7 +59,7 @@ FLOG_METHOD_MAX = 16.0
 
 desc "Structural-duplication ratchet (flay, Sorbet sigs filtered; total mass <= #{FLAY_THRESHOLD})"
 task :flay do
-  flay = ComplexityRake.sigless_flay
+  flay = ComplexityRake.code_flay
   score = flay.total
   flay.report if score > FLAY_THRESHOLD
   puts "flay: total duplication mass #{score} (ratchet #{FLAY_THRESHOLD})"

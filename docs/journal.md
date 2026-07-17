@@ -3170,3 +3170,25 @@ evaluators kills 875 / 928 (94.28%) with 18 timeouts; the surviving behavior mut
 contract-only slice, while the one expression rewrite is pinned by the existing binary rows.
 Independent review found the behavior proof, checker parity and coverage arithmetic clean. The final
 full gate is green with 2996 examples (99.89% line / 98.67% branch).
+
+### UmaskMode's registries become exact without removing reflective dispatch (rush-435.7)
+UmaskMode already had inline method contracts, but its class/permission/operator registries and
+mutable allowed-bit field were inferred only at the normal sigil. Exact frozen array/hash constants
+and one integer ivar declaration remove the root at strong as well as normal precision. Once `WHO`
+was typed, Sorbet correctly rejected Ruby's dynamically sized `start_with?(*WHO)` splat; an explicit
+`WHO.any?` applies the same prefix predicate without an escape. The method-symbol registry and
+reflective call stay intact because their receiver is already typed and no residual 7018 diagnostic
+justifies replacing that design.
+
+The ratchet moves from 12,074 / 13,218 to 12,103 / 13,218 (91.56%): 29 sends become typed with no
+denominator growth, gap 1,115 (-29), usages 1,451 (-44). UmaskMode now reports zero forced-strong
+7018 diagnostics; Steep advances to 11,844 / 11,872 typed calls with its same 28-call residue.
+Focused specs cover 18 examples, and a runtime-check probe matches dash for octal/symbolic read and
+write behavior. Targeted mutation kills 615 / 624 (98.55%) with eight timeouts; the surviving
+`T.must` erasure is an annotation equivalent in the changed loop, while the other survivors exercise
+pre-existing formatter/parser invariants. The first full gate exposed 64 false-positive flay mass
+from same-sized `T.let`-wrapped frozen registry literals. The existing type-ceremony filter now also
+excludes exactly that declarative cdecl shape; computed and mutable constants remain measured, and
+the 156 budget is not loosened. A direct matcher probe pins exact=true, mutable=false and
+computed=false; independent review confirmed the same narrow shape and found the code, parity and
+arithmetic clean. The repeated full gate is green with 2996 examples (99.89% line / 98.67% branch).

@@ -8,11 +8,12 @@ module Rush
   class UmaskMode
     extend T::Sig
 
-    CLASSES = { 'u' => 6, 'g' => 3, 'o' => 0 }.freeze
-    PERMISSIONS = { 'r' => 4, 'w' => 2, 'x' => 1 }.freeze
-    WHO = (CLASSES.keys + ['a']).freeze
-    OPERATORS = { '+' => :add_allowed, '-' => :remove_allowed, '=' => :assign_allowed }.freeze
-    ALL = 0o777
+    CLASSES = T.let({ 'u' => 6, 'g' => 3, 'o' => 0 }.freeze, T::Hash[String, Integer])
+    PERMISSIONS = T.let({ 'r' => 4, 'w' => 2, 'x' => 1 }.freeze, T::Hash[String, Integer])
+    WHO = T.let((CLASSES.keys + ['a']).freeze, T::Array[String])
+    OPERATORS = T.let({ '+' => :add_allowed, '-' => :remove_allowed, '=' => :assign_allowed }.freeze,
+                      T::Hash[String, Symbol])
+    ALL = T.let(0o777, Integer)
 
     sig { params(mask: Integer).returns(String) }
     def self.format_octal(mask)
@@ -44,7 +45,7 @@ module Rush
 
     sig { params(current: Integer).void }
     def initialize(current)
-      @allowed = (~current) & ALL
+      @allowed = T.let((~current) & ALL, Integer)
     end
 
     sig { params(text: String).returns(T.nilable(Integer)) }
@@ -71,7 +72,7 @@ module Rush
     sig { params(clause: String).returns([T::Array[String], String]) }
     def split_who(clause)
       who = [] #: Array[String]
-      who.concat(expand_who(T.must(clause.slice!(0)))) while clause.start_with?(*WHO)
+      who.concat(expand_who(T.must(clause.slice!(0)))) while WHO.any? { |name| clause.start_with?(name) }
       [who.empty? ? CLASSES.keys : who, clause]
     end
 

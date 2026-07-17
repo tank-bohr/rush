@@ -301,10 +301,11 @@ annotations from executable logic:
   blocks.
 
 The project changed the metrics rather than pretending declarations were logic.
-[`tasks/complexity.rake`](../tasks/complexity.rake) filters `sig` AST nodes before flay analyzes
-structural duplication, and RuboCop is configured for explicit block forwarding. Once signature
-noise was removed, flay exposed a real duplicated option-cluster parser that had been hidden below
-the inflated threshold.
+[`tasks/complexity.rake`](../tasks/complexity.rake) filters `sig` AST nodes and exact
+`T.let`-wrapped frozen hash registries before flay analyzes structural duplication; computed or
+mutable constants remain visible. RuboCop is configured for explicit block forwarding. Once
+signature noise was removed, flay exposed a real duplicated option-cluster parser that had been
+hidden below the inflated threshold.
 
 The larger cost was runtime. Profiling the canonical 10,000-iteration shell loop with Sorbet call
 validation enabled put `UnboundMethod#bind_call` on 96.2% of sampled stacks. Disabling wrappers
