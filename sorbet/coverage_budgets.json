@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "maximum_untyped_sends": 1237,
+  "maximum_untyped_sends": 1144,
   "minimum_typed_ratio": {
-    "typed_sends": 11886,
-    "total_sends": 13123
+    "typed_sends": 12074,
+    "total_sends": 13218
   }
 }

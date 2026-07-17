@@ -16,6 +16,8 @@ module Rush
     # `!` form as the negated three-argument test, so rush negates honestly.
     # Pinned in the unit specs.
     class TestExpr
+      extend T::Sig
+
       @args: Array[String]
 
       @context: TestContext

@@ -3147,3 +3147,26 @@ The runtime-check probe covers soft, hard and list-all reads. Independent review
 three checker surfaces consistent, then caught stale forced-envelope, Steep-stat and ceiling prose;
 the reproduced values now replace it. The final full gate is green with 2996 examples (99.89% line /
 98.67% branch).
+
+### test/[ gains contracts without replacing its operator tables (rush-435.7)
+The next ordinary-declaration root spans the `TestExpr` argument-count front end, `TestGrammar`
+recursive descent, and `TestOperators` vocabulary. Every method now has an exact inline contract
+mirrored by the existing RBS, including the unary callable shape and nullable integer parse. The
+three files consequently report zero normal 7018 diagnostics. Sorbet cannot infer a three-element
+array from the private shortcut predicate, so the binary row reads its already-proven operands with
+`fetch` rather than leaving pattern-bound locals open; the call remains reachable only when size is
+exactly three and the middle word is a binary operator.
+
+The typed operator lambdas and grammar ivars still report under the intentionally stricter
+`--typed=strong` planning probe. They no longer contaminate normal callers, and replacing the tables
+or adding casts solely to satisfy that diagnostic experiment would be a broader architecture change,
+not a precision gain for the enforced typed-true scope. The ratchet moves from 11,886 / 13,123 to
+12,074 / 13,218 (91.35%): 188 new typed sends on 95 new total sends, gap 1,144 (-93), usages 1,495
+(-94). Steep advances to 11,833 / 11,861 typed calls without changing its 28-call open residue.
+
+Focused unit and differential checks cover 222 examples, and runtime-call checking exercises unary,
+numeric, negation, conjunction and error paths. Broad targeted mutation across all three existing
+evaluators kills 875 / 928 (94.28%) with 18 timeouts; the surviving behavior mutations predate this
+contract-only slice, while the one expression rewrite is pinned by the existing binary rows.
+Independent review found the behavior proof, checker parity and coverage arithmetic clean. The final
+full gate is green with 2996 examples (99.89% line / 98.67% branch).

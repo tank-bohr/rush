@@ -19,11 +19,15 @@ module Rush
     # `!` form as the negated three-argument test, so rush negates honestly.
     # Pinned in the unit specs.
     class TestExpr
+      extend T::Sig
+
+      sig { params(args: T::Array[String], context: TestContext).void }
       def initialize(args, context)
         @args = args
         @context = context
       end
 
+      sig { returns(T::Boolean) }
       def true?
         evaluate(@args)
       end
@@ -32,16 +36,19 @@ module Rush
 
       # A binary primary at exactly three arguments outranks every other
       # reading; only then do the `!` and `( ... )` rows apply.
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def evaluate(args)
         return binary(args) if shortcut?(args)
 
         peel(args)
       end
 
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def shortcut?(args)
-        args.size == 3 && TestOperators.binary?(args[1])
+        args.size == 3 && TestOperators.binary?(args.fetch(1))
       end
 
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def peel(args)
         return !evaluate(args.drop(1)) if negation?(args)
         return grammar(args[1...-1].to_a) if wrapped?(args)
@@ -51,21 +58,24 @@ module Rush
 
       # `!` peels only at three or four arguments (POSIX's 3- and 4-argument
       # rows); at other lengths the grammar owns `!` with tighter binding.
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def negation?(args)
         (3..4).cover?(args.size) && args.first == '!'
       end
 
       # A full `( ... )` wrapper likewise drops to its contents only at three
       # or four arguments; longer groupings are parsed as grammar primaries.
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def wrapped?(args)
         (3..4).cover?(args.size) && args.first == '(' && args.last == ')'
       end
 
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def binary(args)
-        args => [lhs, op, rhs]
-        TestOperators.apply_binary(op, lhs, rhs)
+        TestOperators.apply_binary(args.fetch(1), args.fetch(0), args.fetch(2))
       end
 
+      sig { params(args: T::Array[String]).returns(T::Boolean) }
       def grammar(args)
         TestGrammar.new(args, @context).truth
       end

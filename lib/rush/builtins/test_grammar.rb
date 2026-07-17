@@ -19,6 +19,9 @@ module Rush
     # connective parses as the missing expression, which is false, so
     # `[ x -o ]` is true and `[ x -a ]` is false, exactly as in dash.
     class TestGrammar
+      extend T::Sig
+
+      sig { params(args: T::Array[String], context: TestContext).void }
       def initialize(args, context)
         @args = args
         @context = context
@@ -26,6 +29,7 @@ module Rush
         @pos = 0
       end
 
+      sig { returns(T::Boolean) }
       def truth
         result = or_expr(kind_at(@pos))
         trailing = @args[@pos + 1]
@@ -36,16 +40,19 @@ module Rush
 
       private
 
+      sig { params(index: Integer).returns(Symbol) }
       def kind_at(index)
         @tokens.kind_at(index)
       end
 
+      sig { params(kind: Symbol).returns(T::Boolean) }
       def or_expr(kind)
         result = and_expr(kind)
         result = and_expr(kind_at(@pos += 2)) || result while connective == :bor
         result
       end
 
+      sig { params(kind: Symbol).returns(T::Boolean) }
       def and_expr(kind)
         result = not_expr(kind)
         result = not_expr(kind_at(@pos += 2)) && result while connective == :band
@@ -54,11 +61,13 @@ module Rush
 
       # The kind of the word after the cursor, or :eoi once the current word
       # is exhausted — dash's `if (!*t_wp) break; t_lex(t_wp + 1)`.
+      sig { returns(Symbol) }
       def connective
         @args.fetch(@pos) { return :eoi }
         kind_at(@pos + 1)
       end
 
+      sig { params(kind: Symbol).returns(T::Boolean) }
       def not_expr(kind)
         return primary(kind) unless kind == :bunop
 
@@ -69,6 +78,7 @@ module Rush
 
       # The missing expression is false, `(` opens a grouping, a unary
       # primary applies, and any other kind reads as a word primary.
+      sig { params(kind: Symbol).returns(T::Boolean) }
       def primary(kind)
         case kind
         in :eoi then false
@@ -77,6 +87,7 @@ module Rush
         end
       end
 
+      sig { returns(T::Boolean) }
       def group
         inner = kind_at(@pos += 1)
         return false if inner == :rparen
@@ -89,6 +100,7 @@ module Rush
 
       # The operand always exists: a unary primary with nothing after it is
       # demoted to a plain operand by TestTokens, never classified :unop.
+      sig { returns(T::Boolean) }
       def unary
         op = current
         @context.unary(op, @args.fetch(@pos += 1))
@@ -96,12 +108,14 @@ module Rush
 
       # A word primary: a binary comparison when a binary primary follows,
       # otherwise the plain non-empty test of the word itself.
+      sig { returns(T::Boolean) }
       def word
         return binary if kind_at(@pos + 1) == :binop
 
         !current.empty?
       end
 
+      sig { returns(T::Boolean) }
       def binary
         lhs = current
         op = @args.fetch(@pos += 1)
@@ -109,6 +123,7 @@ module Rush
         TestOperators.apply_binary(op, lhs, rhs)
       end
 
+      sig { returns(String) }
       def current
         @args.fetch(@pos)
       end

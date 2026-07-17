@@ -8,6 +8,8 @@ module Rush
     # SystemCalls port; -t parses its operand as a file-descriptor number
     # first, rejecting non-numbers like dash's "Illegal number" (exit 2).
     module TestOperators
+      extend T::Sig
+
       UNARY: ::Hash[String, ^(SystemCalls, String) -> bool]
 
       STRING: ::Hash[String, ^(String, String) -> bool]
@@ -18,6 +20,8 @@ module Rush
       # integer when it is a valid (optionally signed, blank-padded) decimal, else
       # nil. Underscores and 0x are rejected, matching dash's strtol-strictness.
       class MaybeInteger
+        extend T::Sig
+
         @text: String
 
         PATTERN: ::Regexp

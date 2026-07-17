@@ -16,6 +16,8 @@ module Rush
     # connective parses as the missing expression, which is false, so
     # `[ x -o ]` is true and `[ x -a ]` is false, exactly as in dash.
     class TestGrammar
+      extend T::Sig
+
       @args: Array[String]
 
       @context: TestContext

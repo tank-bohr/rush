@@ -11,6 +11,8 @@ module Rush
     # SystemCalls port; -t parses its operand as a file-descriptor number
     # first, rejecting non-numbers like dash's "Illegal number" (exit 2).
     module TestOperators
+      extend T::Sig
+
       UNARY = T.let({
         '-n' => ->(_files, val) { !val.empty? },                          #: ^(SystemCalls, String) -> bool
         '-z' => ->(_files, val) { val.empty? },                           #: ^(SystemCalls, String) -> bool
@@ -48,33 +50,44 @@ module Rush
       # integer when it is a valid (optionally signed, blank-padded) decimal, else
       # nil. Underscores and 0x are rejected, matching dash's strtol-strictness.
       class MaybeInteger
+        extend T::Sig
+
         PATTERN = /\A\s*[+-]?\d+\s*\z/
 
+        sig { params(text: String).void }
         def initialize(text)
           @text = text
         end
 
+        sig { returns(T::Boolean) }
         def valid?
           @text.match?(PATTERN)
         end
 
+        sig { returns(T.nilable(Integer)) }
         def value
           Integer(@text, 10) if valid?
         end
       end
 
+      sig { params(word: String).returns(T::Boolean) }
       def self.unary?(word)
         UNARY.key?(word)
       end
 
+      sig { params(word: String).returns(T::Boolean) }
       def self.binary?(word)
         STRING.key?(word) || INTEGER.key?(word)
       end
 
+      sig do
+        params(op: String).returns(T.proc.params(files: SystemCalls, val: String).returns(T::Boolean))
+      end
       def self.unary(op)
         UNARY.fetch(op)
       end
 
+      sig { params(op: String, lhs: String, rhs: String).returns(T::Boolean) }
       def self.apply_binary(op, lhs, rhs)
         string = STRING[op]
         return string.call(lhs, rhs) if string
@@ -82,10 +95,12 @@ module Rush
         INTEGER.fetch(op).call(to_int(lhs), to_int(rhs))
       end
 
+      sig { params(text: String).returns(Integer) }
       def self.to_int(text)
         MaybeInteger.new(text).value || raise(TestError, "#{text}: integer expected")
       end
 
+      sig { params(text: String).returns(Integer) }
       def self.fd_number(text)
         MaybeInteger.new(text).value || raise(TestError, "Illegal number: #{text}")
       end
