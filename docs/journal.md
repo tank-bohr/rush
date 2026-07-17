@@ -2939,3 +2939,28 @@ counter yields, but they make 95% an evidence-backed stretch target rather than 
 wish. The final ledger must justify any lower honest native/Racc ceiling instead of casting
 it away. Independent review is clean after that send-level correction; the full gate remains
 green with 2965 examples, 99.87% line and 98.98% branch coverage.
+
+### The Sorbet ratchet pins both the denominator and the gap (rush-435.2)
+The normal `sorbet` task now asks the raw binary for metrics JSON and file-table JSON in
+the same pass that type-checks source. The committed baseline pins the exact binary version
+and all 208 path/sigil pairs, so adding an RBI, losing the extensionless-exe exclusion, or
+raising one of the five false sigils is a visible scope event rather than silent denominator
+movement. Observations live there for attribution only. A separate reviewed budget owns
+policy: untyped sends may not exceed 1,316 and the typed ratio may not fall below the exact
+11,085 / 12,401 rational. Requiring both closes the two easy loopholes — growth hiding a
+larger absolute gap, and deletion preserving the gap while lowering coverage.
+
+`rake sorbet:coverage:record` updates version, scope and observations but cannot touch the
+budget file. Improvements therefore tighten the gap and ratio by hand in the same reviewed
+slice; a Sorbet upgrade needs old/new evidence before its baseline changes. The checker is
+unit-pinned for schema/version/scope drift and independent gap/ratio failures, including a
+missing-sigil parser row. Eight interleaved process cohorts put the old raw check at 63.3 ms
+median and version + metrics/file-table at 70.5 ms, only +7.2 ms before the unchanged rake
+startup. It stays in the default gate: an opt-in ratchet would be too easy to forget.
+
+The first review supplied the adversarial rows the initial checker lacked: reject zero/zero,
+negative and inverted counters; stop on a future schema before fetching obsolete keys; and
+exercise the real runner's version failure, diagnostic replay, abort, and baseline write.
+Fifteen focused examples now cover those paths. The full gate is green with 2980 examples,
+99.87% line / 98.72% branch coverage, and the enforced Sorbet lane prints the expected
+11,085 / 12,401 result.

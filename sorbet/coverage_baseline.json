@@ -1,0 +1,846 @@
+{
+  "schema": 1,
+  "sorbet_version": "Sorbet typechecker 0.6.13320 git 48f0881afa809e9b6239de89ae73c5ce5257a2fb debug_symbols=true clean=0",
+  "scope": {
+    "inputs": [
+      {
+        "path": "./lib/rush.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/alias_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/assignments.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/and_or.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/assignment.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/brace_group.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/case_node.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/condition_loop.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/for_node.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/function_def.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/if_node.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/list.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/node.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/param_ref.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/pipeline.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/redirect.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/redirected.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/simple_command.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/subshell.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/until_node.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/while_node.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/word.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/ast/word_segment.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/background_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/bracket_expression.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/bracket_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/alias_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/base.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/break_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/cd.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/colon.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/command.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/command_options.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/continue_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/declare.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/defaults.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/dot.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/echo.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/eval.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/exec.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/exit.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/export.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/false_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/fd_operand.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/getopts.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/hash.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/job_resume.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/jobs.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/kill.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/local.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/loop_jump.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/printf.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/printf_formatter.rb",
+        "sigil": "False"
+      },
+      {
+        "path": "./lib/rush/builtins/pwd.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/read.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/read_input.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/readonly.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/registry.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/return_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/set.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/shift.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/test_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/test_context.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/test_expr.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/test_grammar.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/test_operators.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/test_tokens.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/times.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/trap.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/true_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/type_.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/ulimit.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/umask.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/unalias.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/unset.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/builtins/wait.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/cli.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/command_assignments.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/command_lookup.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/command_resolution.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/command_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/command_text.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/environment.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/errexit_context.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/error_policy.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/errors.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/escape_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/escaped_bracket.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/executor.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/exit_trap.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/arithmetic/evaluator.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/arithmetic/nodes.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/arithmetic/number.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/arithmetic/parser.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/arithmetic/tokenizer.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/arithmetic_expander.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/command_substitution.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/field_part.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/field_splitter.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/glob_expander.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/ifs.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/ifs_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/parameter_expander.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/parameter_forms.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/pattern_removal.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/pipeline.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/read_char.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/read_field_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/read_splitter.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/resolver.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/expansion/tilde_expander.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/external.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/fd_entry.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/for_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/function_frame.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/function_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/function_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/getopts_parser.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/getopts_state.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/here_doc.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/interactive_signals.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/invocation.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/io_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_control.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_report.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_spec.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_table/control.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_table/interruptible_wait.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/job_table/job.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/alias_expander.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/braced_reader.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/case_frame.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/case_tracker.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/dollar_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/double_quote_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/heredoc_body.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/heredoc_reader.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/lex_state.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/operator_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/param_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/paren_reader.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/paren_regions.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/quote_skips.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/quoted_word.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/scanner_predicates.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/source_lines.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/substitution_reader.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/token_classifier.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/token_predicates.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/lexer/word_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/loop_control_handling.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/loop_nesting.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/loop_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/option_cluster.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/options.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/param_text.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/parser.rb",
+        "sigil": "None"
+      },
+      {
+        "path": "./lib/rush/parser_support.rb",
+        "sigil": "False"
+      },
+      {
+        "path": "./lib/rush/pattern_scanner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/pending_signals.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/pipeline_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/pipeline_statuses.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/positional.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/posix_pattern.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/program_input.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/program_reader.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/program_session.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/prompt.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/redirect_scope.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/redirection/dup_redirect.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/redirection/file_redirect.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/redirection/here_doc_redirect.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/redirection/registry.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/repl.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/runtime_type_checks.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/scope.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/segment_buffer.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/shell_parameters.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/shell_pattern.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/shell_state.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/shell_variables.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/signal_report.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/signals.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/source.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/source_line_counter.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/source_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/startup.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/status.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/stop_relay.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/subshell_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/system_calls.rb",
+        "sigil": "False"
+      },
+      {
+        "path": "./lib/rush/system_calls/collation.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/system_calls/file_tests.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/system_calls/process_control.rb",
+        "sigil": "False"
+      },
+      {
+        "path": "./lib/rush/system_calls/process_identity.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/system_calls/regex_abi.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/system_calls/resource_limits.rb",
+        "sigil": "False"
+      },
+      {
+        "path": "./lib/rush/terminal.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/trap_runner.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/trap_table.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/umask_mode.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./lib/rush/version.rb",
+        "sigil": "True"
+      },
+      {
+        "path": "./sorbet/rbi/shims/ast_data.rbi",
+        "sigil": "True"
+      },
+      {
+        "path": "./sorbet/rbi/shims/rush.rbi",
+        "sigil": "True"
+      },
+      {
+        "path": "./sorbet/rbi/shims/strscan.rbi",
+        "sigil": "True"
+      },
+      {
+        "path": "./sorbet/rbi/shims/system_calls.rbi",
+        "sigil": "True"
+      }
+    ]
+  },
+  "observed": {
+    "typed_sends": 11085,
+    "total_sends": 12401,
+    "untyped_sends": 1316,
+    "untyped_usages": 1669
+  }
+}

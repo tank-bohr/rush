@@ -105,6 +105,42 @@ typed calls (99.80%). That percentage is not comparable to Sorbet's send metric;
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
+## Enforced ratchet
+
+`bundle exec rake sorbet` now performs the normal type check and coverage check in one raw-binary
+pass. It exports Sorbet's internal counters and file table to temporary JSON, replays diagnostics,
+then checks two separately reviewed files:
+
+- `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
+  the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
+- `sorbet/coverage_budgets.json` owns pass/fail policy: at most 1,316 untyped sends and an exact
+  rational minimum ratio of 11,085 / 12,401. Both checks apply, so codebase growth cannot hide a
+  larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
+
+The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
+
+```sh
+bundle exec rake sorbet
+bundle exec rake sorbet:coverage:record # updates scope/observations only; never budgets
+```
+
+After a real improvement, lower `maximum_untyped_sends` and raise the rational ratio in the budget
+file in the same reviewed slice. Run `record` only when a sigil/path or Sorbet version deliberately
+changes; for a Sorbet upgrade, retain old/new results side by side in the journal before accepting
+the new baseline. Never loosen a budget merely because `record` observed a regression.
+
+Default-gate cost is negligible. Eight interleaved local process cohorts measured the old raw type
+check at 63.3 ms median and the version + metrics/file-table run at 70.5 ms: +7.2 ms before the
+unchanged rake startup, far below the gate's existing multi-second Sorbet lane and fully shadowed by
+RSpec/allocation work. The ratchet therefore stays in the default `sorbet` task rather than becoming
+an opt-in alarm.
+
+The timing probe used Python `time.perf_counter`, alternated which side ran first, discarded all
+output, and timed these argv shapes: `sorbet`; versus `sorbet --version` followed by
+`sorbet --track-untyped=everywhere --metrics-file=<tmp> --print=file-table-json:<tmp>`. Raw old
+samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were 95.8, 89.2,
+66.9, 69.4, 69.1, 123.2, 70.6, 70.4 ms. The medians, not the noisy maxima, support the gate choice.
+
 ## Material usage clusters
 
 For this inventory, a material destination cluster is a typed-true file with at least 15 normal

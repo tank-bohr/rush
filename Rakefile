@@ -4,6 +4,7 @@ require 'bundler/gem_tasks'
 require 'json'
 require 'rspec/core/rake_task'
 require 'rubocop/rake_task'
+require_relative 'tasks/sorbet_coverage'
 
 load 'tasks/compile.rake'
 load 'tasks/docker.rake'
@@ -29,14 +30,26 @@ task :steep do
   sh 'steep check'
 end
 
-desc 'Type-check gate (Sorbet over inline sig {}; independent of Steep — see docs/journal.md)'
+SORBET_COVERAGE_BASELINE = 'sorbet/coverage_baseline.json'
+SORBET_COVERAGE_BUDGETS = 'sorbet/coverage_budgets.json'
+SORBET_BINARY = File.join(Gem::Specification.find_by_name('sorbet-static').full_gem_path, 'libexec', 'sorbet')
+
+desc 'Type-check plus typed-send ratchet (Sorbet; independent of Steep)'
 task :sorbet do
-  # Sorbet is the second, independent type checker (inline sig {} + sorbet/config).
-  # Run the sorbet-static binary directly, not `srb tc`: the `srb` wrapper auto-loads
-  # every gem-shipped RBI in the bundle (some, e.g. prism's, are self-inconsistent
-  # and error) — noise unrelated to our code. The binary reads sorbet/config from cwd.
-  bin = File.join(Gem::Specification.find_by_name('sorbet-static').full_gem_path, 'libexec', 'sorbet')
-  sh bin
+  # The raw binary reads only sorbet/config, avoiding unrelated gem RBIs that
+  # the srb wrapper discovers. One pass supplies both errors and ratchet data.
+  SorbetCoverage.check!(binary: SORBET_BINARY,
+                        baseline_path: SORBET_COVERAGE_BASELINE,
+                        budgets_path: SORBET_COVERAGE_BUDGETS)
+end
+
+namespace :sorbet do
+  namespace :coverage do
+    desc 'Record Sorbet version, exact input scope, and observations (never changes budgets)'
+    task record: :compile do
+      SorbetCoverage.record!(binary: SORBET_BINARY, baseline_path: SORBET_COVERAGE_BASELINE)
+    end
+  end
 end
 
 # Mutant exits non-zero when any mutation survives. The threshold gate therefore
