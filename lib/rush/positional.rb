@@ -1,8 +1,6 @@
 # typed: true
 # frozen_string_literal: true
 
-require 'forwardable'
-
 module Rush
   # The positional parameters $1..$n: a list of strings that `set` replaces,
   # `shift` drops the front of, and a function call brackets with #with so the
@@ -10,13 +8,37 @@ module Rush
   # delegate to the underlying array.
   class Positional
     extend T::Sig
-    extend Forwardable
-
-    def_delegators :@values, :==, :empty?, :map, :each
 
     sig { params(values: T::Array[String]).void }
     def initialize(values = [])
       @values = values
+    end
+
+    sig { params(other: T.untyped).returns(T::Boolean) }
+    def ==(other)
+      @values == other
+    end
+
+    sig { returns(T::Boolean) }
+    def empty?
+      @values.empty?
+    end
+
+    sig do
+      type_parameters(:U)
+        .params(blk: T.nilable(T.proc.params(value: String).returns(T.type_parameter(:U))))
+        .returns(T.any(T::Array[T.type_parameter(:U)], T::Enumerator[String]))
+    end
+    def map(&blk)
+      blk ? @values.map(&blk) : @values.map
+    end
+
+    sig do
+      params(blk: T.nilable(T.proc.params(value: String).returns(BasicObject)))
+        .returns(T.any(T::Array[String], T::Enumerator[String]))
+    end
+    def each(&blk)
+      blk ? @values.each(&blk) : @values.each
     end
 
     sig { params(index: Integer).returns(T.nilable(String)) }

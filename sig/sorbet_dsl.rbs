@@ -113,4 +113,8 @@ module T
   class Set
     def self.[]: (*untyped) -> untyped
   end
+
+  class Enumerator
+    def self.[]: (*untyped) -> untyped
+  end
 end

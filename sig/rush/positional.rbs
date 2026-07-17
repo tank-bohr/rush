@@ -8,9 +8,7 @@ module Rush
 
     @values: Array[String]
 
-    extend Forwardable
-
-    # def_delegators :@values — reads delegated to the underlying array.
+    # Array-compatible reads over the underlying positional values.
     def ==: (untyped other) -> bool
     def []: (Integer index) -> String?
     def size: () -> Integer
@@ -19,6 +17,7 @@ module Rush
     def map: [U] () { (String value) -> U } -> Array[U]
            | () -> ::Enumerator[String, ::Array[untyped]]
     def each: () { (String value) -> void } -> Array[String]
+            | () -> ::Enumerator[String, ::Array[untyped]]
     def to_a: () -> Array[String]
 
     def initialize: (?Array[String] values) -> void

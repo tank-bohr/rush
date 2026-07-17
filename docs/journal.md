@@ -3311,3 +3311,21 @@ source changes are annotation-only and the survivors are inherited Cd/ExitTrap b
 annotation erasures. Independent review found every constructor style, reader, ivar, Cd checker
 surface and arithmetic clean. The final full gate is green with 3000 examples (99.89% line / 98.67%
 branch).
+
+### Positional completes the array-compatible forwarding boundary (rush-435.7)
+The prior shell/getopts slices hand-wrote Positional's indexed, sized, joined and to_a reads. Its last
+Forwardable macro now becomes exact comparison, empty?, map and each methods; map/each preserve both
+block and Enumerator forms rather than pretending generated variadic methods have fixed arity. The
+Steep Sorbet-DSL bridge gains only the value-level `T::Enumerator[...]` constructor needed to read
+the inline unions, and RBS now records each's already-supported no-block overload. The one remaining
+strong diagnostic is intentional: Array-compatible `==` accepts any object, mirrored as untyped in
+both checker surfaces.
+
+The ratchet moves from 12,232 / 13,152 to 12,240 / 13,152 (93.07%): eight sends become typed with no
+denominator growth, gap 912 (-8), usages 1,229 (-3). Steep advances by 32 typed calls to 11,997 /
+12,025 with the same 28-call residue. Two focused specs pin nonempty/empty, equality, block and
+Enumerator behavior; a runtime-check implicit positional for-loop matches dash. Broad Positional mutation kills 104 / 170 because older state-management
+methods lack direct subject coverage; the four changed readers kill 49 / 63, with surviving map/each
+branches equivalent for nil block forwarding. Independent review differentially confirmed Array
+behavior, checker parity, tests and arithmetic. The final full gate is green with 3001 examples
+(99.89% line / 98.68% branch).
