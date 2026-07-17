@@ -3267,3 +3267,26 @@ seven changed representation/update methods kill 157 / 162 (96.91%), with a to_a
 and pre-existing finish-state survivors. Review found the code/parity/arithmetic clean and one stale
 getopts variant in the residual prose; correction and re-review are clean. Focused specs cover 29
 examples. The final full gate is green with 2998 examples (99.89% line / 98.67% branch).
+
+### ShellVariables replaces Forwardable's open splat with its real facade (rush-435.7)
+ShellVariables' RBS has always exposed exact Environment and Scope operations, but source-level
+Forwardable generated one variadic untyped body for every name. The prior parameter slice hand-wrote
+`get`; this slice completes the facade with exact variable lifecycle, temporary scope, logical PWD
+and function-scope methods, plus concrete Environment/Scope/Assignments/boolean ivars. The class is
+intentionally five lines over the generic length limit: splitting these cohesive delegations would
+leak the two storage owners again, so a scoped ClassLength exception records the measured reason.
+No generated-method RBI or broad splat signature is introduced.
+
+Removing two macro calls also removes more total sends than the explicit methods add. The ratchet
+moves from 12,224 / 13,213 to 12,215 / 13,152 (92.88%): typed sends fall by nine, total sends by 61,
+and the actual gap improves to 937 (-52), with usages 1,260 (-26). This is why both ratio and absolute
+gap remain mandatory. ShellVariables now has zero forced-strong 7018 diagnostics; Steep advances by
+63 typed calls to 11,960 / 11,988 with the same 28-call residue.
+
+Facade-focused environment/scope tests cover 42 examples and pin all formerly generated operations,
+including generic block return, readonly validation, variable removal, logical directory movement
+and local-frame restoration. Targeted mutation improves from 248 / 329 to 324 / 329 (98.48%); five
+survivors are the pre-existing boolean normalization, initial annotation and locale-table variants.
+A runtime-check local-variable/function probe matches dash. Independent review found all fifteen
+forwarders, their return shapes, tests, checker parity and arithmetic clean. The final full gate is
+green with 3000 examples (99.89% line / 98.67% branch).

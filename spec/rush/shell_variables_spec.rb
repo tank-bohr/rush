@@ -65,4 +65,32 @@ RSpec.describe Rush::ShellVariables do
     variables.end_scope
     expect(variables.get('x')).to eq('global')
   end
+
+  it 'forwards environment lifecycle operations with their results' do
+    variables.assign('A', 'old')
+    variables.export('A')
+    temporary = variables.with_temporary('A' => 'temp') { [variables.get('A'), 42] }
+    variables.update_lineno(7)
+    variables.assign('B', 'gone')
+    variables.unset('B')
+    variables.readonly('A')
+
+    expect([temporary, variables.get('A'), variables.get('B'), variables.get('LINENO'), variables.exported]).to eq(
+      [['temp', 42], 'old', nil, '7', { 'x' => 'global', 'A' => 'old' }]
+    )
+    expect { variables.validate_assignment('A') }.to raise_error(Rush::ReadonlyError)
+    variables.unset('missing')
+  end
+
+  it 'forwards logical-directory and function-scope operations' do
+    variables.seed_pwd('/start')
+    variables.move_to('/next')
+    variables.begin_scope
+    variables.declare_local('x')
+    variables.assign('x', 'inner')
+
+    expect([variables.pwd, variables.current_pwd, variables.in_function?]).to eq(['/next', '/next', true])
+    variables.end_scope
+    expect([variables.in_function?, variables.get('x')]).to eq([false, 'global'])
+  end
 end
