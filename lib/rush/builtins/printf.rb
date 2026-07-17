@@ -14,18 +14,19 @@ module Rush
       def call
         return usage if operands.empty?
 
-        text, ok = PrintfFormatter.new(operands.drop(1)).render(operands.fetch(0))
+        formatter = PrintfFormatter.new(operands.drop(1))
+        text, = formatter.render(operands.fetch(0))
         stdout.write(text)
-        report(ok)
+        report(formatter.errors)
       end
 
       private
 
-      sig { params(valid: T::Boolean).returns(Status) }
-      def report(valid)
-        return success if valid
+      sig { params(errors: Integer).returns(Status) }
+      def report(errors)
+        return success if errors.zero?
 
-        stderr.puts('rush: printf: expected numeric value')
+        errors.times { stderr.puts('rush: printf: expected numeric value') }
         failure
       end
 

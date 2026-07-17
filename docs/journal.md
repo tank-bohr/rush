@@ -3072,3 +3072,33 @@ runtime mismatch; the final deliberately open close-only parameter has exact imp
 parity and a runtime custom-port probe. Re-review has no blocker. The final native gate is green with
 2984 examples (99.89% line / 98.65% branch), and the Docker differential plus ABI, ulimit, Reline and
 full terminal job-control smokes are green.
+
+### printf keeps the value accumulated before a numeric error (rush-tk6)
+POSIX requires integer operands to be evaluated as unsuffixed C constants and, when conversion is
+incomplete, to diagnose, continue, return nonzero, and print the value accumulated at the error.
+PrintfFormatter now scans the signed decimal/octal/hex prefix explicitly: leading blanks follow the
+strtoimax convention, while trailing blanks/text mark failure without discarding the parsed value.
+Thus `12x`, `-010x`, `0x10z`, `08`, invalid text, and complete signed/base-prefixed values match the
+required stdout/status picture. The formatter counts failures per operand, so three bad arguments
+produce three diagnostics even when one is both incomplete and out of range; wording stays generic
+because POSIX leaves its format unspecified.
+
+The same boundary now models 64-bit intmax/uintmax behavior instead of leaking Ruby's arbitrary
+precision and negative `..f` hexadecimal rendering: signed overflow clamps to INTMAX bounds,
+unsigned negatives wrap through UINTMAX, and unsigned overflow clamps while failing. Leading quote
+operands use the following Ruby character's ordinal, including a lone-quote error. For multibyte
+quoted characters this follows POSIX's stated wchar_t intent; dash instead returns the first UTF-8
+byte, so the standard deliberately wins at that edge. Two more dash extensions are intentionally
+rejected: a lone quote succeeds as zero in dash despite lacking the required following character,
+and `0b10` is accepted as binary although binary constants are not unsuffixed C17 integer constants.
+
+Five differential corpus rows cover complete, partial, trailing-space, invalid, signed, octal, hex,
+unsigned-negative and overflow cases; focused rows pin each boundary independently. Targeted
+PrintfFormatter mutation kills 655 / 667 (98.20%); the twelve survivors erase T.let/T.must, alter an
+initial validity marker overwritten before first read, or substitute Ruby's equivalent auto-base spellings
+and an unreachable nonnegative lower bound proven by branch invariants. The Sorbet
+ratchet records code growth at 11,659 / 12,942 typed sends (90.09%), unchanged gap 1,283, usages
+1,647. Review caught the missing per-operand diagnostic count; the formatter now records one error
+per bad operand (without double-counting incomplete overflow), and the builtin emits each diagnostic.
+Re-review has no blocker. The final full gate is green with 2996 examples, 99.89% line / 98.67%
+branch coverage.

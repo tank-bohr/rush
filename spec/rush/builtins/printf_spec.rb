@@ -20,6 +20,12 @@ RSpec.describe Rush::Builtins::Printf do
     expect(system.stderr.string).to eq("rush: printf: expected numeric value\n")
   end
 
+  it 'writes accumulated prefixes and diagnoses every bad numeric operand' do
+    expect(run('%d %d %d', '12x', 'oops', '08')).not_to be_success
+    expect(system.stdout.string).to eq('12 0 0')
+    expect(system.stderr.string).to eq("rush: printf: expected numeric value\n" * 3)
+  end
+
   it 'errors with exit status 2 when given no format' do
     expect(run.exitstatus).to eq(2)
     expect(system.stderr.string).to eq("rush: printf: usage: printf format [arguments]\n")

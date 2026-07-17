@@ -13,9 +13,23 @@ module Rush
 
       @cursor: Integer
 
-      @ok: bool
+      @argument_valid: bool
+
+      @errors: Integer
 
       NUMERIC: ::Array["d" | "i" | "o" | "u" | "x" | "X"]
+
+      SIGNED: ::Array["d" | "i"]
+
+      INTEGER_PREFIX: Regexp
+
+      SIGNED_MIN: Integer
+
+      SIGNED_MAX: Integer
+
+      UNSIGNED_MODULUS: Integer
+
+      UNSIGNED_MAX: Integer
 
       # Scans and walks one pass of a printf template: literal runs and resolved
       # backslash escapes pass straight through, while each %conversion is handed
@@ -43,6 +57,8 @@ module Rush
         def escape: () -> String
       end
 
+      attr_reader errors: Integer
+
       def initialize: (Array[String] args) -> void
 
       def render: (String template) -> [ String, bool ]
@@ -57,7 +73,19 @@ module Rush
 
       def to_int: (String arg) -> Integer
 
-      def invalid: () -> Integer
+      def quoted_character: (String arg) -> Integer
+
+      def parse_integer: (String source) -> Integer
+
+      def signed_value: (Integer value) -> Integer
+
+      def unsigned_value: (Integer value) -> Integer
+
+      def clamp: (Integer value, Integer minimum, Integer maximum) -> Integer
+
+      def argument_valid?: () -> bool
+
+      def invalid: (?Integer value) -> Integer
 
       def take: () -> String
 

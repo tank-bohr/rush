@@ -15,6 +15,12 @@ module Rush
       extend T::Sig
 
       NUMERIC = T.let(%w[d i o u x X].freeze, T::Array[String])
+      SIGNED = T.let(%w[d i].freeze, T::Array[String])
+      INTEGER_PREFIX = T.let(/\A[+-]?(?:0[xX][0-9a-fA-F]+|0[0-7]*|[1-9][0-9]*)/, Regexp)
+      SIGNED_MIN = T.let(-(1 << 63), Integer)
+      SIGNED_MAX = T.let((1 << 63) - 1, Integer)
+      UNSIGNED_MODULUS = T.let(1 << 64, Integer)
+      UNSIGNED_MAX = T.let(UNSIGNED_MODULUS - 1, Integer)
 
       # Scans and walks one pass of a printf template: literal runs and resolved
       # backslash escapes pass straight through, while each %conversion is handed
@@ -62,21 +68,25 @@ module Rush
         end
       end
 
+      sig { returns(Integer) }
+      attr_reader :errors
+
       sig { params(args: T::Array[String]).void }
       def initialize(args)
         @args = T.let(args, T::Array[String])
         @cursor = T.let(0, Integer)
-        @ok = T.let(true, T::Boolean)
+        @argument_valid = T.let(true, T::Boolean)
+        @errors = T.let(0, Integer)
       end
 
       sig { params(template: String).returns([String, T::Boolean]) }
       def render(template)
         start = @cursor
         text = Template.new(template).emit(self)
-        return [text, @ok] if @cursor == start || @cursor >= @args.size
+        return [text, @errors.zero?] if @cursor == start || @cursor >= @args.size
 
         rest, = render(template)
-        [text + rest, @ok]
+        [text + rest, @errors.zero?]
       end
 
       # Render one %conversion (called back from Template): %% is a literal %, a
@@ -96,22 +106,69 @@ module Rush
 
       sig { params(flags: String, conv: String, arg: String).returns(String) }
       def numeric(flags, conv, arg)
-        format("%#{flags}#{conv}", to_int(arg))
+        @argument_valid = true
+        value = to_int(arg)
+        value = SIGNED.include?(conv) ? signed_value(value) : unsigned_value(value)
+        @errors += 1 unless argument_valid?
+        format("%#{flags}#{conv}", value)
       end
 
       sig { params(arg: String).returns(Integer) }
       def to_int(arg)
-        return 0 if arg.empty?
-
-        Integer(arg)
-      rescue ArgumentError
-        invalid
+        case arg
+        when '' then 0
+        when /\A['"]/ then quoted_character(arg)
+        else parse_integer(arg.lstrip)
+        end
       end
 
-      sig { returns(Integer) }
-      def invalid
-        @ok = false
-        0
+      sig { params(arg: String).returns(Integer) }
+      def quoted_character(arg)
+        character = arg[1]
+        character ? character.ord : invalid
+      end
+
+      sig { params(source: String).returns(Integer) }
+      def parse_integer(source)
+        match = INTEGER_PREFIX.match(source)
+        return invalid unless match
+
+        value = Integer(T.must(match[0]), 0)
+        match.end(0) == source.length ? value : invalid(value)
+      end
+
+      sig { params(value: Integer).returns(Integer) }
+      def signed_value(value)
+        clamp(value, SIGNED_MIN, SIGNED_MAX)
+      end
+
+      sig { params(value: Integer).returns(Integer) }
+      def unsigned_value(value)
+        return clamp(value, 0, UNSIGNED_MAX) if value >= 0
+
+        magnitude = -value
+        return invalid(UNSIGNED_MAX) if magnitude > UNSIGNED_MAX
+
+        UNSIGNED_MODULUS - magnitude
+      end
+
+      sig { params(value: Integer, minimum: Integer, maximum: Integer).returns(Integer) }
+      def clamp(value, minimum, maximum)
+        return invalid(minimum) if value < minimum
+        return invalid(maximum) if value > maximum
+
+        value
+      end
+
+      sig { returns(T::Boolean) }
+      def argument_valid?
+        @argument_valid
+      end
+
+      sig { params(value: Integer).returns(Integer) }
+      def invalid(value = 0)
+        @argument_valid = false
+        value
       end
 
       sig { returns(String) }

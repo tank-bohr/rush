@@ -842,8 +842,8 @@
     ]
   },
   "observed": {
-    "typed_sends": 11595,
-    "total_sends": 12878,
+    "typed_sends": 11659,
+    "total_sends": 12942,
     "untyped_sends": 1283,
     "untyped_usages": 1647
   }

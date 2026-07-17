@@ -7,13 +7,13 @@ module Rush
     class Printf < Base
       extend T::Sig
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def report: (untyped valid) -> untyped
+      def report: (Integer errors) -> Status
 
-      def usage: () -> untyped
+      def usage: () -> Status
     end
   end
 end
