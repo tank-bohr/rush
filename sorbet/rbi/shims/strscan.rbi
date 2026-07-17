@@ -1,11 +1,12 @@
 # typed: true
+# frozen_string_literal: true
 
 # Hand-written shim for the StringScanner surface rush uses. Sorbet's bundled
 # stdlib RBI leaves this C extension loose at key scanner boundaries; Steep gets
 # the parallel declarations from sig/strscan_ext.rbs.
 class StringScanner
   sig { params(string: String, fixed_anchor: T.untyped).void }
-  def initialize(string, fixed_anchor=T.unsafe(nil)); end
+  def initialize(string, fixed_anchor = T.unsafe(nil)); end
 
   sig { params(pattern: T.any(Regexp, String)).returns(T.nilable(String)) }
   def scan(pattern); end
@@ -33,4 +34,7 @@ class StringScanner
 
   sig { returns(Integer) }
   def charpos; end
+
+  sig { returns(T.nilable(T::Array[T.nilable(String)])) }
+  def captures; end
 end

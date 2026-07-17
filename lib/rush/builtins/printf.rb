@@ -14,7 +14,7 @@ module Rush
       def call
         return usage if operands.empty?
 
-        text, ok = PrintfFormatter.new(operands.drop(1)).render(operands.first)
+        text, ok = PrintfFormatter.new(operands.drop(1)).render(operands.fetch(0))
         stdout.write(text)
         report(ok)
       end

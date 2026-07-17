@@ -7,6 +7,8 @@ module Rush
     # non-number is reported via the ok flag and treated as 0, a missing one as
     # 0 silently). %b and octal escapes arrive in a later slice. Returns [text, ok].
     class PrintfFormatter
+      extend T::Sig
+
       @args: Array[String]
 
       @cursor: Integer
@@ -20,6 +22,8 @@ module Rush
       # back to the formatter to render against the next argument (double
       # dispatch), so the scanning lives here and the formatting stays there.
       class Template < StringScanner
+        extend T::Sig
+
         ESCAPES: ::Hash[String, String]
 
         ESCAPE_TABLE: EscapeTable

@@ -48,6 +48,10 @@ RSpec.describe Rush::Builtins::PrintfFormatter do
     expect(render('[%s][%d]')).to eq(['[][0]', true])
   end
 
+  it 'accepts signed and base-prefixed integer spellings' do
+    expect(render('%d %d %d', '+7', '010', '0x10')).to eq(['7 8 16', true])
+  end
+
   it 'reports a present non-numeric argument and uses zero' do
     result, ok = render('%d', 'abc')
     expect([result, ok]).to eq(['0', false])

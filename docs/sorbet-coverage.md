@@ -51,7 +51,10 @@ a binary built with its optional `untyped-blame` configuration; the prebuilt 0.6
 empty report. The forced-strong 7018 probe above is reproducible with the shipped binary and exposes
 usage locations, but it is a diagnostic experiment, not the normal typed-send metric.
 
-## Current counters
+## Inventory counters (rush-435.1)
+
+These figures preserve the pre-ratchet inventory snapshot. The live budgets and progress table below
+advance after each typing slice.
 
 | Metric | Value |
 |---|---:|
@@ -113,8 +116,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: at most 1,316 untyped sends and an exact
-  rational minimum ratio of 11,085 / 12,401. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-435.3`, at most 1,312 untyped
+  sends and an exact rational minimum ratio of 11,191 / 12,503. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -140,6 +143,13 @@ output, and timed these argv shapes: `sorbet`; versus `sorbet --version` followe
 `sorbet --track-untyped=everywhere --metrics-file=<tmp> --print=file-table-json:<tmp>`. Raw old
 samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were 95.8, 89.2,
 66.9, 69.4, 69.1, 123.2, 70.6, 70.4 ms. The medians, not the noisy maxima, support the gate choice.
+
+### Ratchet progress
+
+| Slice | Change | Typed / total sends | Ratio | Untyped sends | Untyped usages |
+|---|---|---:|---:|---:|---:|
+| 19l | Inventory baseline | 11,085 / 12,401 | 89.39% | 1,316 | 1,669 |
+| 19n | `PrintfFormatter` checked end to end | 11,191 / 12,503 | 89.51% | 1,312 | 1,666 |
 
 ## Material usage clusters
 
@@ -243,25 +253,25 @@ remain honestly open after the ordinary roots are removed.
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. At today's fixed denominator:
+escape only for measured native/Racc/variant residue. After `rush-435.3`, at the normal denominator:
 
-- `ceil(12,401 × 0.95) = 11,781` typed sends;
-- this needs 696 additional typed sends;
-- no more than 620 sends may remain untyped;
-- that removes 52.9% of the current 1,316-send gap.
+- `ceil(12,503 × 0.95) = 11,878` typed sends;
+- this needs 687 additional typed sends;
+- no more than 625 sends may remain untyped;
+- that removes 52.4% of the current 1,312-send gap.
 
-Raising the false/no-sigil bodies changes the denominator, so the fixed calculation is not the whole
-plan. Forcing every current input to `typed: true` without changing source produces a conservative
-scope envelope of 11,290 / 12,800 typed sends (88.20%, gap 1,510). At that denominator 95% is
-12,160 typed sends: +870, leaving at most 640 untyped, a 57.6% gap reduction. The location probe
-finds 936 concrete send-shaped diagnostics (935 outside generated parser), with 532 concentrated in
-28 files having at least ten each. These diagnostics still do not map one-for-one to the counter,
-but they demonstrate a candidate send surface larger than the required gain and tie it to the
-ordinary declaration, false-body, registry and bounded-variant roots above.
+Raising the remaining false/no-sigil bodies changes the denominator, so the fixed calculation is not
+the whole plan. Forcing every current input to `typed: true` without changing source produces a
+conservative scope envelope of 11,368 / 12,843 typed sends (88.51%, gap 1,475). At that denominator
+95% is 12,201 typed sends: +833, leaving at most 642 untyped, a 56.5% gap reduction. The current
+location probe finds 917 concrete send-shaped diagnostics (916 outside generated parser), with 515
+concentrated in 27 files having at least ten each. These diagnostics still do not map one-for-one to
+the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
+to the ordinary declaration, false-body, registry and bounded-variant roots above.
 
 That makes 95% a defensible **target**, not a demonstrated ceiling: it requires resolving most of
 the measured send-shaped surface, while the known hard native/Racc subset must remain narrow. If
-precise boundaries leave more than 640 sends untyped at the expanded scope, `rush-435.9` must publish
+precise boundaries leave more than 642 sends untyped at the expanded scope, `rush-435.9` must publish
 the lower honest ceiling and residual arithmetic rather than add escapes.
 
 Work order:

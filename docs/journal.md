@@ -2964,3 +2964,26 @@ exercise the real runner's version failure, diagnostic replay, abort, and baseli
 Fifteen focused examples now cover those paths. The full gate is green with 2980 examples,
 99.87% line / 98.72% branch coverage, and the enforced Sorbet lane prints the expected
 11,085 / 12,401 result.
+
+### PrintfFormatter becomes checked without teaching Sorbet to lie (rush-435.3)
+The first false body moves to typed:true with signatures on both the formatter and its
+StringScanner subclass, explicit ivar declarations, and one precise `captures` shim. The
+numeric seam uses raising `Integer` plus `ArgumentError` rescue instead of Sorbet's incorrect
+nil-free model for `Integer(..., exception: false)`; the guarded caller now uses `fetch(0)`
+rather than passing an abstractly nilable first operand. Formatter itself reports zero
+untyped usages after the change.
+
+The ratchet shows why numerator-only claims are misleading: checking the formerly false body
+adds 106 typed sends and 102 total sends, while the actual gap falls only four. The reviewed
+budget tightens to 11,191 / 12,503 (89.51%), at most 1,312 untyped sends; normal untyped
+usages fall from 1,669 to 1,666. The full formatter mutant selection kills 375 / 379; the
+four survivors are annotation/invariant equivalents (`T.let`'s erased element type plus the
+aggregate and two element `T.must`s after a successful regex match), not behavior gaps.
+
+Seven dash probes pin signed, octal, hex, empty and invalid operands through the refactor.
+They also exposed a pre-existing separate gap: dash keeps a valid numeric prefix and fails
+status 1 for trailing text/space, while rush currently either zeroes or silently accepts it.
+That is filed as rush-tk6 rather than expanding a typing slice into printf semantics.
+Independent review corrected `captures` to `Array[String?]?` (aggregate nilability matters
+when no regex matched); the successful-scan path narrows it explicitly. The final full gate
+is green with 2981 examples, 99.87% line / 98.72% branch coverage.
