@@ -3216,3 +3216,28 @@ matches dash for count, indexed, all-positional and ordinary variable reads. Tar
 equivalences, while the remaining old parser cases are outside this delegation slice. Independent
 review found behavior, checker parity, scope and arithmetic clean. The final full gate is green with
 2997 examples (99.89% line / 98.67% branch).
+
+### Environment's storage and block result stop erasing types (rush-435.7)
+Environment already described its hash/set/boolean storage in RBS, but its inline implementation let
+all four ivars infer only at the normal sigil and declared both temporary-scope block adapters with
+`T.untyped` arguments/results. Exact `T.let` storage and shared generic block type parameters now
+preserve the caller's return type through ensure-based restoration. The Steep Sorbet-DSL bridge gains
+only the value-level `T::Set[...]` constructor needed to read those annotations; Environment's public
+RBS remains unchanged.
+
+Typing the exported-name set exposed another dynamically sized splat that Sorbet rejects.
+`exported` now folds the ordered export set into a new hash and copies only names still present in
+the variable table. That preserves Hash#slice's argument order and missing-key behavior without an
+escape; a reverse-export regression row caught the difference from filtering in variable order.
+Environment now reports zero forced-strong 7018 diagnostics.
+
+The ratchet moves from 12,151 / 13,203 to 12,181 / 13,210 (92.21%): 30 new typed sends on seven new
+total sends, gap 1,029 (-23), usages 1,345 (-29). The explicit production `T.untyped` ledger falls by
+two lines and one file; Steep advances to 11,872 / 11,900 typed calls with its same 28-call residue.
+Focused environment/variable specs cover 29 examples, and a runtime-check prefix-assignment probe
+matches dash for temporary external export plus restoration. Targeted mutation kills 543 / 558
+(97.31%); changed annotation survivors are expected erasures, while the remaining equality/cast and
+state-invariant variants predate the slice. Review caught variable-order filtering where Hash#slice
+had followed export argument order; the set-fold implementation and missing-name/order regression
+restore the exact behavior. Re-review found the fix, parity and revised arithmetic clean. The final
+full gate is green with 2998 examples (99.89% line / 98.67% branch).

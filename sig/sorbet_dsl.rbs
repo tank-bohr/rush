@@ -109,4 +109,8 @@ module T
   class Hash
     def self.[]: (*untyped) -> untyped
   end
+
+  class Set
+    def self.[]: (*untyped) -> untyped
+  end
 end

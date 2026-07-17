@@ -19,6 +19,16 @@ RSpec.describe Rush::Environment do
     expect(env.exported).to eq('A' => 'x')
   end
 
+  it 'retains export order independently of assignment order while skipping missing names' do
+    env = described_class.new({})
+    env.assign('A', 'x')
+    env.assign('B', 'y')
+    env.export('MISSING')
+    env.export('B')
+    env.export('A')
+    expect(env.exported.keys).to eq(%w[B A])
+  end
+
   it 'unsets a variable and drops it from the exported set' do
     env = described_class.new({})
     env.assign('A', 'x')

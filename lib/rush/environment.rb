@@ -7,18 +7,16 @@ module Rush
   class Environment
     extend T::Sig
 
-    VariableState = T.type_alias do
-      [T::Boolean, T.nilable(String), T::Boolean, T::Boolean]
-    end
+    VariableState = T.type_alias { [T::Boolean, T.nilable(String), T::Boolean, T::Boolean] }
     DynamicState = T.type_alias { T.any(T::Boolean, Symbol) }
     Snapshot = T.type_alias { [T::Hash[String, VariableState], DynamicState] }
 
     sig { params(source: T::Hash[String, String]).void }
     def initialize(source = ENV.to_h)
-      @vars = source.dup
-      @exported = source.keys.to_set
-      @readonly = Set.new
-      @dynamic_lineno = !@vars.key?('LINENO')
+      @vars = T.let(source.dup, T::Hash[String, String])
+      @exported = T.let(source.keys.to_set, T::Set[String])
+      @readonly = T.let(Set.new, T::Set[String])
+      @dynamic_lineno = T.let(!@vars.key?('LINENO'), T::Boolean)
     end
 
     sig { params(name: String).returns(T.nilable(String)) }
@@ -63,17 +61,15 @@ module Rush
 
     sig { returns(T::Hash[String, String]) }
     def exported
-      # *@exported.to_a: splat needs an Array (Set splats via to_a at runtime, but
-      # the checker won't); slice keeps @vars's own order, so this is unchanged.
-      @vars.slice(*@exported.to_a)
+      @exported.each_with_object(
+        {} #: Hash[String, String]
+      ) { |name, values| values[name] = @vars.fetch(name) if @vars.key?(name) }
     end
 
     # Prefix assignments on a regular builtin are visible/exported only for the
     # invocation. Writes to those same names stay temporary; changes to every
     # other shell variable remain live, matching a builtin's in-process effects.
-    sig do
-      params(values: T::Hash[String, String], blk: T.proc.returns(T.untyped)).returns(T.untyped)
-    end
+    sig { type_parameters(:U).params(values: T::Hash[String, String], blk: T.proc.returns(T.type_parameter(:U))).returns(T.type_parameter(:U)) }
     def with_temporary(values, &blk)
       saved = snapshot(values)
       restore_after(saved) do
@@ -84,7 +80,11 @@ module Rush
 
     private
 
-    sig { params(saved: Snapshot, blk: T.proc.returns(T.untyped)).returns(T.untyped) }
+    sig do
+      type_parameters(:U)
+        .params(saved: Snapshot, blk: T.proc.returns(T.type_parameter(:U)))
+        .returns(T.type_parameter(:U))
+    end
     def restore_after(saved, &blk)
       yield
     ensure
