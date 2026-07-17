@@ -3192,3 +3192,27 @@ excludes exactly that declarative cdecl shape; computed and mutable constants re
 the 156 budget is not loosened. A direct matcher probe pins exact=true, mutable=false and
 computed=false; independent review confirmed the same narrow shape and found the code, parity and
 arithmetic clean. The repeated full gate is green with 2996 examples (99.89% line / 98.67% branch).
+
+### shell parameters stop inheriting an open state/delegator root (rush-435.7)
+ShellParameters' public RBS already required `ShellState`, but its inline constructor still accepted
+`T.untyped`; that single root opened every special, ordinary and positional lookup. The inline
+contract now matches RBS. Sorbet also cannot recover exact signatures from Forwardable's generic
+splat implementation, so the three reads on this path (`Positional#[]/#size/#join` and
+`ShellVariables#get`) are ordinary typed forwarding methods instead. The generated `ShellProcessIds`
+readers/constructor get one exact Data shim mirrored from RBS. No generated Forwardable RBI pretends
+to narrow Ruby's runtime splat shape.
+
+The ratchet moves from 12,103 / 13,218 to 12,151 / 13,203 (92.03%): 48 new typed sends while the
+more precise declarations remove 15 total sends, gap 1,052 (-63), usages 1,374 (-77). The explicit
+production `T.untyped` ledger falls by one line/file, and the reviewed shim expands scope from 210 to
+211 inputs. ShellParameters itself now reports zero forced-strong 7018 diagnostics; remaining
+Forwardable definition diagnostics stay visible in Positional/ShellVariables. Steep advances to
+11,863 / 11,891 typed calls with the same 28-call residue.
+
+Focused state/parameter/variable/positional specs cover 39 examples, including the default-nil and
+explicit separator paths that the stdlib Sorbet Array RBI cannot correlate. A runtime-check CLI probe
+matches dash for count, indexed, all-positional and ordinary variable reads. Targeted mutation kills
+324 / 333 (97.29%); the changed-method survivors are Array `[]`/`at` and nil/default join
+equivalences, while the remaining old parser cases are outside this delegation slice. Independent
+review found behavior, checker parity, scope and arithmetic clean. The final full gate is green with
+2997 examples (99.89% line / 98.67% branch).

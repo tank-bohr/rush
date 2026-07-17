@@ -9,9 +9,9 @@ module Rush
   class ShellParameters
     extend T::Sig
 
-    sig { params(state: T.untyped).void }
+    sig { params(state: ShellState).void }
     def initialize(state)
-      @state = state
+      @state = T.let(state, ShellState)
     end
 
     sig { params(parameter: String).returns(T.nilable(String)) }

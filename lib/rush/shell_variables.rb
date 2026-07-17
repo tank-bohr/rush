@@ -11,7 +11,7 @@ module Rush
     extend T::Sig
     extend Forwardable
 
-    def_delegators :@environment, :get, :export, :readonly, :unset, :exported, :update_lineno, :with_temporary,
+    def_delegators :@environment, :export, :readonly, :unset, :exported, :update_lineno, :with_temporary,
                    :validate_assignment
     def_delegators :@scope, :pwd, :move_to, :seed_pwd, :current_pwd,
                    :begin_scope, :end_scope, :in_function?, :declare_local
@@ -22,6 +22,11 @@ module Rush
       @scope = Scope.new(environment)
       @assignments = Assignments.new(self)
       @allexport = false
+    end
+
+    sig { params(name: String).returns(T.nilable(String)) }
+    def get(name)
+      @environment.get(name)
     end
 
     sig { params(enabled: T::Boolean).void }
