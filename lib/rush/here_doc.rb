@@ -18,8 +18,8 @@ module Rush
 
     sig { params(delimiter: String, quoted: T::Boolean, strip: T::Boolean, source_line: Integer).void }
     def initialize(delimiter:, quoted:, strip:, source_line: 1)
-      @definition = Definition.new(delimiter, quoted, strip, source_line)
-      @body = AST::Word.new([], source_line: source_line)
+      @definition = T.let(Definition.new(delimiter, quoted, strip, source_line), Definition)
+      @body = T.let(AST::Word.new([], source_line: source_line), AST::Word)
     end
 
     sig { returns(String) }

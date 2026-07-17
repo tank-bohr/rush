@@ -18,6 +18,51 @@ module Rush
     def self.new(shell, parent); end
   end
 
+  # Here-document host for generated delimiter metadata.
+  class HereDoc
+    # Immutable here-document delimiter metadata.
+    class Definition < Data
+      extend T::Sig
+
+      sig { returns(String) }
+      attr_reader :delimiter
+
+      sig { returns(T::Boolean) }
+      attr_reader :quoted
+
+      sig { returns(T::Boolean) }
+      attr_reader :strip
+
+      sig { returns(Integer) }
+      attr_reader :source_line
+
+      sig do
+        params(delimiter: String, quoted: T::Boolean, strip: T::Boolean, source_line: Integer).returns(Definition)
+      end
+      def self.new(delimiter, quoted, strip, source_line); end
+    end
+  end
+
+  # EXIT trap host for generated execution context.
+  class ExitTrap
+    # EXIT trap source paired with the status being terminated.
+    class Execution < Data
+      extend T::Sig
+
+      sig { returns(String) }
+      attr_reader :source
+
+      sig { returns(Integer) }
+      attr_reader :code
+
+      sig { params(source: String, code: Integer).returns(Execution) }
+      def self.new(source, code); end
+
+      sig { returns([String, Integer]) }
+      def deconstruct; end
+    end
+  end
+
   class GetoptsParser
     # One getopts parser step's variable updates and status.
     class Result < Data

@@ -3290,3 +3290,24 @@ survivors are the pre-existing boolean normalization, initial annotation and loc
 A runtime-check local-variable/function probe matches dash. Independent review found all fifteen
 forwarders, their return shapes, tests, checker parity and arithmetic clean. The final full gate is
 green with 3000 examples (99.89% line / 98.67% branch).
+
+### The remaining non-AST Data consumers become exact (rush-435.7)
+The last unmodeled handwritten Data values were `Cd::Target`, `HereDoc::Definition`, and
+`ExitTrap::Execution`. Exact readers plus positional/keyword constructors (and Execution's tuple
+deconstruction) now extend the two existing generated-value shims without changing Sorbet's input
+scope. HereDoc and ExitTrap also declare their owned definition/body and executor/state/flag ivars.
+The consumers consequently type-check end to end; forced-strong still reports the Data.define macro
+sites themselves, plus HereDoc's intentionally open WordSegment payload and builtins' logical stderr.
+
+This audit also found Cd's RBS surface still returning broad untyped values even though every inline
+method contract was already exact. Its status, string, target and void contracts now match the
+implementation; no shell behavior changes. The ratchet moves from 12,215 / 13,152 to 12,232 / 13,152
+(93.00%): 17 sends become typed with no denominator growth, gap 920 (-17), usages 1,232 (-28). Steep
+advances to 11,965 / 11,993 typed calls with its same 28-call residue.
+
+Focused cd/here-doc/EXIT specs cover 27 examples; a runtime-check CLI probe matches dash for chdir,
+here-doc body expansion and EXIT-trap status. Broad targeted mutation kills 863 / 910 (94.83%); the
+source changes are annotation-only and the survivors are inherited Cd/ExitTrap behavior gaps or
+annotation erasures. Independent review found every constructor style, reader, ivar, Cd checker
+surface and arithmetic clean. The final full gate is green with 3000 examples (99.89% line / 98.67%
+branch).

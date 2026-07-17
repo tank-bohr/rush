@@ -13,10 +13,10 @@ module Rush
 
     sig { params(executor: Executor).void }
     def initialize(executor)
-      @executor = executor
-      @state = executor.state
+      @executor = T.let(executor, Executor)
+      @state = T.let(executor.state, ShellState)
       @exiting = T.let(nil, T.nilable(Integer))
-      @fired = false
+      @fired = T.let(false, T::Boolean)
     end
 
     sig { params(code: Integer).returns(Integer) }

@@ -104,8 +104,8 @@ so it is outside this baseline. A later scope change must record a side-by-side 
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,960 /
-11,988 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
+not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,965 /
+11,993 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
@@ -117,8 +117,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after the seventh `rush-435.7` root slice, at
-  most 937 untyped sends and an exact rational minimum ratio of 12,215 / 13,152. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after the eighth `rush-435.7` root slice, at
+  most 920 untyped sends and an exact rational minimum ratio of 12,232 / 13,152. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -163,6 +163,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19x | `Environment` storage/block roots | 12,181 / 13,210 | 92.21% | 1,029 | 1,345 |
 | 19y | getopts Data/state/variant roots | 12,224 / 13,213 | 92.51% | 989 | 1,286 |
 | 19z | `ShellVariables` Forwardable surface | 12,215 / 13,152 | 92.88% | 937 | 1,260 |
+| 19aa | remaining non-AST Data roots | 12,232 / 13,152 | 93.00% | 920 | 1,232 |
 
 ## Material usage clusters
 
@@ -243,14 +244,14 @@ counter yield:
 
 4. **Untyped value readers and bounded variants.** Slice 19t gave the three `ulimit` values exact
    Data-reader/constructor shims and replaced its heterogeneous mutable hash with a typed state
-   object; Slice 19w did the same for `ShellProcessIds`, and hand-wrote the three Forwardable reads
-   that feed shell-parameter resolution; Slice 19z replaced the remainder of ShellVariables'
-   Forwardable splat surface with exact Environment/Scope facade methods. Slice 19y modeled getopts'
-   Result/Option Data values and separated its keep-OPTARG control bit from the nullable string value. Non-AST `Data.define`
-   values in `cd`, `HereDoc` and `ExitTrap` still expose untyped readers. Other explicit opens are
-   domain variants: lexer token kind/value, `AST::WordSegment` payloads, redirect targets, logical IO
-   streams, and generic block returns. These should become named unions or value contracts where consumers
-   discriminate them; broad casts would only move the counter.
+   object; Slice 19w did the same for `ShellProcessIds` and the three Forwardable reads feeding shell
+   parameters. Slice 19y modeled getopts' Result/Option values and separated its keep-OPTARG control
+   bit; Slice 19z completed ShellVariables' exact Environment/Scope facade. Slice 19aa completes the
+   non-AST Data set with `cd`, `HereDoc` and `ExitTrap` contracts: only generated definition-site
+   diagnostics remain, not open consumers. Other explicit opens are domain variants: lexer token
+   kind/value, `AST::WordSegment` payloads, redirect targets, logical IO streams, and generic block
+   returns. These should become named unions or value contracts where consumers discriminate them;
+   broad casts would only move the counter.
 
 5. **Dynamic registries.** `CommandText`, parameter forms, redirection, and test operators use
    reflective or callable tables. Slice 19v made `UmaskMode`'s registries and mutable bit field exact;
@@ -275,20 +276,20 @@ remain honestly open after the ordinary roots are removed.
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After the seventh `rush-435.7` root slice, at
+escape only for measured native/Racc/variant residue. After the eighth `rush-435.7` root slice, at
 the normal denominator:
 
 - `ceil(13,152 × 0.95) = 12,495` typed sends;
-- this needs 280 additional typed sends;
+- this needs 263 additional typed sends;
 - no more than 657 sends may remain untyped;
-- that removes 29.9% of the current 937-send gap.
+- that removes 28.6% of the current 920-send gap.
 
 Forcing the remaining no-sigil generated parser changes the denominator, so the fixed calculation
 is not the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 12,232 / 13,273 typed sends (92.16%, gap 1,041). At that denominator
-95% is 12,610 typed sends: +378, leaving at most 663 untyped, a 36.3% gap reduction. The current
-location probe finds 678 concrete send-shaped diagnostics (677 outside generated parser), with 313
-concentrated in 20 files having at least ten each. These diagnostics still do not map one-for-one to
+conservative scope envelope of 12,249 / 13,273 typed sends (92.29%, gap 1,024). At that denominator
+95% is 12,610 typed sends: +361, leaving at most 663 untyped, a 35.3% gap reduction. The current
+location probe finds 666 concrete send-shaped diagnostics (665 outside generated parser), with 293
+concentrated in 18 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, registry and bounded-variant roots above.
 

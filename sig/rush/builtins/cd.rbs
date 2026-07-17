@@ -12,15 +12,15 @@ module Rush
         def self.new: (path: String, echo: bool) -> Target
       end
 
-      def call: () -> untyped
+      def call: () -> Status
 
       private
 
-      def change_to: (untyped dir) -> untyped
+      def change_to: (String dir) -> Status
 
-      def change_back: () -> untyped
+      def change_back: () -> Status
 
-      def oldpwd: () -> untyped
+      def oldpwd: () -> String
 
       def resolve_cdpath: (String dir) -> Target
 
@@ -40,15 +40,15 @@ module Rush
 
       def cdpath_echo?: (String prefix) -> bool
 
-      def perform_chdir: (untyped dir) -> untyped
+      def perform_chdir: (String dir) -> void
 
-      def success_with_echo: () -> untyped
+      def success_with_echo: () -> Status
 
-      def success_after_cdpath: (Target target) -> untyped
+      def success_after_cdpath: (Target target) -> Status
 
-      def update_pwd: (untyped dir) -> untyped
+      def update_pwd: (String dir) -> void
 
-      def report: (untyped message) -> untyped
+      def report: (String message) -> Status
     end
   end
 end

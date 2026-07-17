@@ -5,6 +5,23 @@
 # recover. These mirror the independent RBS value contracts.
 module Rush
   module Builtins
+    # cd builtin host for its generated target value.
+    class Cd
+      # Resolved cd path plus whether POSIX requires echoing it.
+      class Target < Data
+        extend T::Sig
+
+        sig { returns(String) }
+        attr_reader :path
+
+        sig { returns(T::Boolean) }
+        attr_reader :echo
+
+        sig { params(path: String, echo: T::Boolean).returns(Target) }
+        def self.new(path:, echo:); end
+      end
+    end
+
     # Immutable resource metadata for ulimit.
     class UlimitResource < Data
       extend T::Sig
