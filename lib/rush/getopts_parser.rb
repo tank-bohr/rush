@@ -12,9 +12,9 @@ module Rush
 
     sig { params(mode: Symbol).void }
     def initialize(mode)
-      @missing_name = mode == :silent ? ':' : '?'
-      @keep_optarg = mode == :silent
-      @diagnostic = mode == :normal
+      @missing_name = T.let(mode == :silent ? ':' : '?', String)
+      @keep_optarg = T.let(mode == :silent, T::Boolean)
+      @diagnostic = T.let(mode == :normal, T::Boolean)
     end
 
     sig { params(value: String).returns(T.nilable(String)) }
@@ -40,8 +40,8 @@ module Rush
 
     sig { params(text: String).void }
     def initialize(text)
-      @error_mode = GetoptsErrorMode.new(text.start_with?(':') ? :silent : :normal)
-      @letters = text.delete_prefix(':')
+      @error_mode = T.let(GetoptsErrorMode.new(text.start_with?(':') ? :silent : :normal), GetoptsErrorMode)
+      @letters = T.let(text.delete_prefix(':'), String)
     end
 
     sig { params(option: String).returns(T::Boolean) }
@@ -69,20 +69,19 @@ module Rush
   class GetoptsParser
     extend T::Sig
 
-    # Sentinel optarg: leave OPTARG untouched (a real optarg is always a
-    # String, so a Symbol can never collide with one).
-    KEEP = :keep
-    # The variable updates and status produced by one getopts step.
-    Result = Data.define(:name, :optarg, :optind, :message, :exitstatus)
+    # The variable updates and status produced by one getopts step. A separate
+    # keep flag avoids mixing the internal no-update sentinel into OPTARG's
+    # String-or-nil value domain.
+    Result = Data.define(:name, :optarg, :optind, :message, :exitstatus, :keep_optarg)
     # The option character plus the argv word it came from.
     Option = Data.define(:argument, :name)
 
     sig { params(state: GetoptsState, optstring: String, arguments: T::Array[String], optind: Integer).void }
     def initialize(state:, optstring:, arguments:, optind:)
-      @state = state
-      @optstring = Optstring.new(optstring)
-      @error_mode = @optstring.error_mode
-      @arguments = arguments
+      @state = T.let(state, GetoptsState)
+      @optstring = T.let(Optstring.new(optstring), Optstring)
+      @error_mode = T.let(@optstring.error_mode, GetoptsErrorMode)
+      @arguments = T.let(arguments, T::Array[String])
       @state.prepare(arguments, optind)
     end
 
@@ -128,13 +127,13 @@ module Rush
     sig { returns(Result) }
     def finish
       @state.finish
-      result('?', KEEP, nil, 1)
+      kept_result
     end
 
     sig { returns(Result) }
     def finish_double_dash
       @state.finish_double_dash
-      result('?', KEEP, nil, 1)
+      kept_result
     end
 
     sig { params(value: String).void }
@@ -162,9 +161,15 @@ module Rush
       result(name, @error_mode.optarg(silent_optarg), @error_mode.message(normal_message), 0)
     end
 
-    sig { params(name: String, optarg: T.untyped, message: T.nilable(String), exitstatus: Integer).returns(Result) }
-    def result(name, optarg, message, exitstatus)
-      Result.new(name: name, optarg: optarg, optind: @state.optind, message: message, exitstatus: exitstatus)
+    sig { params(name: String, optarg: T.nilable(String), message: T.nilable(String), status: Integer).returns(Result) }
+    def result(name, optarg, message, status)
+      Result.new(name: name, optarg: optarg, optind: @state.optind, message: message,
+                 exitstatus: status, keep_optarg: false)
+    end
+
+    sig { returns(Result) }
+    def kept_result
+      Result.new(name: '?', optarg: nil, optind: @state.optind, message: nil, exitstatus: 1, keep_optarg: true)
     end
 
     sig { params(argument: String).returns(Option) }

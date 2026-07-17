@@ -36,14 +36,12 @@ module Rush
       sig { params(result: GetoptsParser::Result).void }
       def store(result)
         variables.assign(name, result.name)
-        update_optarg(result.optarg)
+        update_optarg(result.optarg) unless result.keep_optarg
         variables.assign('OPTIND', result.optind.to_s)
       end
 
-      sig { params(value: T.untyped).void }
+      sig { params(value: T.nilable(String)).void }
       def update_optarg(value)
-        return if value.is_a?(Symbol) # GetoptsParser::KEEP, the only Symbol optarg
-
         value ? variables.assign('OPTARG', value) : variables.unset('OPTARG')
       end
 

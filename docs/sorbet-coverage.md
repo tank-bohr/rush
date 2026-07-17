@@ -104,8 +104,8 @@ so it is outside this baseline. A later scope change must record a side-by-side 
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,872 /
-11,900 typed calls (99.76%). That percentage is not comparable to Sorbet's send metric; even their input
+not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,897 /
+11,925 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
@@ -117,8 +117,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after the fifth `rush-435.7` root slice, at
-  most 1,029 untyped sends and an exact rational minimum ratio of 12,181 / 13,210. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after the sixth `rush-435.7` root slice, at
+  most 989 untyped sends and an exact rational minimum ratio of 12,224 / 13,213. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -161,6 +161,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19v | `UmaskMode` constant/ivar roots | 12,103 / 13,218 | 91.56% | 1,115 | 1,451 |
 | 19w | shell-parameter state/delegate roots | 12,151 / 13,203 | 92.03% | 1,052 | 1,374 |
 | 19x | `Environment` storage/block roots | 12,181 / 13,210 | 92.21% | 1,029 | 1,345 |
+| 19y | getopts Data/state/variant roots | 12,224 / 13,213 | 92.51% | 989 | 1,286 |
 
 ## Material usage clusters
 
@@ -242,10 +243,11 @@ counter yield:
 4. **Untyped value readers and bounded variants.** Slice 19t gave the three `ulimit` values exact
    Data-reader/constructor shims and replaced its heterogeneous mutable hash with a typed state
    object; Slice 19w did the same for `ShellProcessIds`, and hand-wrote the three Forwardable reads
-   that feed shell-parameter resolution. Non-AST `Data.define` values in `getopts`, `cd`, `HereDoc`
-   and `ExitTrap` still expose untyped readers. Other explicit opens are domain variants: lexer token kind/value,
-   `AST::WordSegment` payloads, redirect targets, getopts' `String | :keep | nil`, logical IO streams,
-   and generic block returns. These should become named unions or value contracts where consumers
+   that feed shell-parameter resolution. Slice 19y modeled getopts' Result/Option Data values and
+   separated its keep-OPTARG control bit from the nullable string value. Non-AST `Data.define`
+   values in `cd`, `HereDoc` and `ExitTrap` still expose untyped readers. Other explicit opens are
+   domain variants: lexer token kind/value, `AST::WordSegment` payloads, redirect targets, logical IO
+   streams, and generic block returns. These should become named unions or value contracts where consumers
    discriminate them; broad casts would only move the counter.
 
 5. **Dynamic registries.** `CommandText`, parameter forms, redirection, and test operators use
@@ -263,27 +265,27 @@ counter yield:
    collation backend still has an intentionally dynamic callable/pointer table, which
    `rush-435.7` must retain in the measured native ledger.
 
-The explicit source ledger currently contains 113 `T.untyped` declaration lines across production
-and project RBIs (37 production files and five RBI files), plus three `T.unsafe` and seven `T.cast`
+The explicit source ledger currently contains 111 `T.untyped` declaration lines across production
+and project RBIs (35 production files and five RBI files), plus three `T.unsafe` and seven `T.cast`
 lines. These are review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
 remain honestly open after the ordinary roots are removed.
 
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After the fifth `rush-435.7` root slice, at
+escape only for measured native/Racc/variant residue. After the sixth `rush-435.7` root slice, at
 the normal denominator:
 
-- `ceil(13,210 × 0.95) = 12,550` typed sends;
-- this needs 369 additional typed sends;
+- `ceil(13,213 × 0.95) = 12,553` typed sends;
+- this needs 329 additional typed sends;
 - no more than 660 sends may remain untyped;
-- that removes 35.9% of the current 1,029-send gap.
+- that removes 33.3% of the current 989-send gap.
 
 Forcing the remaining no-sigil generated parser changes the denominator, so the fixed calculation
 is not the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 12,198 / 13,331 typed sends (91.50%, gap 1,133). At that denominator
-95% is 12,665 typed sends: +467, leaving at most 666 untyped, a 41.2% gap reduction. The current
-location probe finds 720 concrete send-shaped diagnostics (719 outside generated parser), with 341
+conservative scope envelope of 12,241 / 13,334 typed sends (91.80%, gap 1,093). At that denominator
+95% is 12,668 typed sends: +427, leaving at most 666 untyped, a 39.1% gap reduction. The current
+location probe finds 697 concrete send-shaped diagnostics (696 outside generated parser), with 331
 concentrated in 21 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, registry and bounded-variant roots above.

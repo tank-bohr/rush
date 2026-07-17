@@ -15,10 +15,10 @@ module Rush
 
     sig { void }
     def initialize
-      @signature = nil
-      @current_index = 0
-      @cursor = 1
-      @optind = 1
+      @signature = T.let(nil, T.nilable(String))
+      @current_index = T.let(0, Integer)
+      @cursor = T.let(1, Integer)
+      @optind = T.let(1, Integer)
     end
 
     sig { params(arguments: T::Array[String], optind: Integer).void }

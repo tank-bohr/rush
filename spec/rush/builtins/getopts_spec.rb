@@ -82,8 +82,11 @@ RSpec.describe Rush::Builtins::Getopts do
 
   it 'reports invalid options in normal mode' do
     state.positional.replace(%w[-x])
+    state.variables.assign('OPTARG', 'old')
+    state.variables.export('OPTARG')
     expect(run('a', 'opt').exitstatus).to eq(0)
     expect([*vars('opt', 'OPTIND', 'OPTARG'), system.stderr.string]).to eq(['?', '2', nil, "Illegal option -x\n"])
+    expect(state.variables.exported).not_to include('OPTARG')
   end
 
   it 'reports invalid options in silent mode without diagnostics' do

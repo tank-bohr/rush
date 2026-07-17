@@ -3241,3 +3241,29 @@ state-invariant variants predate the slice. Review caught variable-order filteri
 had followed export argument order; the set-fold implementation and missing-name/order regression
 restore the exact behavior. Re-review found the fix, parity and revised arithmetic clean. The final
 full gate is green with 2998 examples (99.89% line / 98.67% branch).
+
+### getopts separates control state from OPTARG's value type (rush-435.7)
+Getopts' Result and Option were Data values with untyped generated readers; its parser/state/error
+objects also left their ivars implicit at strong, and the Result's `String | :keep | nil` optarg made
+the builtin's update method explicitly untyped. Exact ivar declarations plus generated Data
+reader/keyword-constructor shims now mirror RBS. The internal `:keep` sentinel is replaced by a
+separate boolean Result field, so `optarg` is honestly `String?`; finish steps set the keep bit while
+found/error steps carry only the nullable value. The builtin consequently has no Symbol branch or
+open parameter. One more Forwardable boundary, Positional#to_a, is handwritten with its existing
+Array contract because getopts consumes it directly.
+
+This changes only internal representation: finish still leaves OPTARG untouched, while a normal
+error still unsets it. Existing end-of-options coverage pins the former; the normal-error row now
+starts with exported OPTARG and proves the latter removes both value and export mark. A runtime-check
+attached-argument/finish probe matches dash. GetoptsState and every handwritten parser consumer now
+report zero forced-strong 7018 diagnostics; only generated Data definition lines and Base's logical
+stderr remain in the focused strong output.
+
+The ratchet moves from 12,181 / 13,210 to 12,224 / 13,213 (92.51%): 43 new typed sends on three new
+total sends, gap 989 (-40), usages 1,286 (-59). The explicit production `T.untyped` ledger falls by
+two lines/files; Steep advances to 11,897 / 11,925 typed calls with the same 28-call residue. Broad
+getopts mutation kills 1,384 / 1,456 (95.05%), exposing inherited parser/state behavior gaps; the
+seven changed representation/update methods kill 157 / 162 (96.91%), with a to_a identity equivalent
+and pre-existing finish-state survivors. Review found the code/parity/arithmetic clean and one stale
+getopts variant in the residual prose; correction and re-review are clean. Focused specs cover 29
+examples. The final full gate is green with 2998 examples (99.89% line / 98.67% branch).

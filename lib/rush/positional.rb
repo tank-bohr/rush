@@ -12,7 +12,7 @@ module Rush
     extend T::Sig
     extend Forwardable
 
-    def_delegators :@values, :==, :empty?, :map, :each, :to_a
+    def_delegators :@values, :==, :empty?, :map, :each
 
     sig { params(values: T::Array[String]).void }
     def initialize(values = [])
@@ -22,6 +22,11 @@ module Rush
     sig { params(index: Integer).returns(T.nilable(String)) }
     def [](index)
       @values[index]
+    end
+
+    sig { returns(T::Array[String]) }
+    def to_a
+      @values.to_a
     end
 
     sig { returns(Integer) }
