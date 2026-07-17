@@ -45,7 +45,10 @@ module Rush
       sig { returns(T.nilable(Process::Status)) }
       def poll
         pair = @control.stoppable_waits? ? @system.poll_pid_stopped(@target) : @system.poll_pid(@target)
-        pair&.fetch(1)
+        return unless pair
+
+        _pid, status = pair
+        status
       end
     end
 

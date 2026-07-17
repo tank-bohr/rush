@@ -36,6 +36,17 @@ RSpec.describe Rush::SystemCalls do
       allow(Process).to receive(:waitpid2).with(7, Process::WUNTRACED).and_return([7, :stopped])
       expect(system.wait_stoppable(7)).to eq([7, :stopped])
     end
+
+    it 'retries an interrupted stoppable wait' do
+      calls = 0
+      allow(Process).to receive(:waitpid2).with(7, Process::WUNTRACED) do
+        calls += 1
+        raise Rush::Interrupted, 'interrupted' if calls == 1
+
+        [7, :stopped]
+      end
+      expect(system.wait_stoppable(7)).to eq([7, :stopped])
+    end
   end
 
   describe '#poll_child / #poll_pid / #poll_stopped / #poll_pid_stopped' do

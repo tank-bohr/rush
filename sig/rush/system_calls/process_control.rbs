@@ -4,6 +4,8 @@ module Rush
     # reaping, process grouping, terminal handover (tcsetpgrp/tcgetpgrp via
     # IO#ioctl), and the platform gate.
     module ProcessControl
+      extend T::Sig
+
       TIOCGPGRP: Hash[Symbol, Integer]
 
       TIOCSPGRP: Hash[Symbol, Integer]
@@ -47,6 +49,8 @@ module Rush
       def terminal_family: () -> Symbol?
 
       private
+
+      def host_os: () -> String
 
       def ignoring_ttou: [U] () { () -> U } -> U
     end

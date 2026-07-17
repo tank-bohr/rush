@@ -785,7 +785,7 @@
       },
       {
         "path": "./lib/rush/system_calls/process_control.rb",
-        "sigil": "False"
+        "sigil": "True"
       },
       {
         "path": "./lib/rush/system_calls/process_identity.rb",
@@ -838,9 +838,9 @@
     ]
   },
   "observed": {
-    "typed_sends": 11236,
-    "total_sends": 12537,
-    "untyped_sends": 1301,
-    "untyped_usages": 1661
+    "typed_sends": 11404,
+    "total_sends": 12690,
+    "untyped_sends": 1286,
+    "untyped_usages": 1647
   }
 }

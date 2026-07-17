@@ -3010,3 +3010,28 @@ now includes ResourceLimits instead of duplicating its five methods, and the opt
 row checks the host's exact constant when present. The final native full gate is green with
 2982 examples (99.87% line / 98.65% branch); the Docker gate is green too, including the
 real ulimit smoke (soft nofile 1024 -> 64, hard 1024), ABI, Reline and job-control smokes.
+
+### Process control types the fork/wait/tty boundary without hiding it (rush-435.5)
+ProcessControl is now typed:true. Waits expose exact pid/status tuples: blocking forms use
+`T.must` only at the stdlib RBI's conservative nil edge, while WNOHANG forms remain nilable;
+JobTable consumes those tuples through typed first/last or destructuring rather than union-valued
+numeric fetches. The process-group and terminal seams carry explicit Integer/IO/block contracts,
+the ioctl tables are typed frozen hashes, and the generic TTOU guard preserves its block return.
+The grouped fork deliberately casts the mixin receiver back to SystemCalls before invoking the
+existing injectable `fork` wrapper — calling `Process.fork` would have silently bypassed the test
+and process-boundary seam.
+
+At the tty fallback, one narrow `Array[IO]` assertion contains Sorbet's untyped standard-stream
+globals; the native-long ioctl result is normalized through `Kernel.Integer`; and the required Ruby
+`RbConfig::CONFIG.fetch('host_os')` fact has one exact String contract. The latter removes fake
+nil branches while keeping unknown-but-real Unix strings on the existing grouping-only path.
+Runtime-call probes cover background wait, monitor-mode wait and pipelines with wrappers enabled.
+The ratchet moves from 11,236 / 12,537 to 11,404 / 12,690 (89.87%): 168 new typed sends on
+153 new total sends, gap 1,286 (-15), usages 1,647 (-14).
+
+Targeted ProcessControl mutation kills 164 / 168. The four survivors are erasure/invariant
+equivalents: two blocking-wait `T.must` removals and OR-to-XOR for the disjoint WNOHANG and
+WUNTRACED flag bits. A focused retry row killed the one real missing mutation — removing the
+Interrupted retry from `wait_stoppable`. Independent review found no blocker. The final native gate is
+green with 2983 examples (99.89% line / 98.65% branch), and the Docker gate is green including the
+source-built dash differential suite plus real ABI, ulimit, Reline and full ^Z/fg/bg terminal smokes.

@@ -124,7 +124,7 @@ module Rush
     sig { void }
     def poll
       while (reaped = @control.monitor? ? @system.poll_stopped : @system.poll_child)
-        store(reaped.fetch(0), reaped.fetch(1))
+        store(reaped.first, reaped.last)
       end
     rescue Errno::ECHILD
       nil
