@@ -3,6 +3,8 @@ module Rush
     # Resource-limit wrappers for the `ulimit` builtin. The mapping lives outside
     # SystemCalls proper so the impure syscall port stays small as it grows.
     module ResourceLimits
+      extend T::Sig
+
       RLIMITS: Hash[Symbol, Integer?]
 
       def current_umask: () -> Integer
@@ -13,7 +15,7 @@ module Rush
 
       def getrlimit: (Symbol resource) -> [Integer, Integer]
 
-      def setrlimit: (Symbol resource, Integer soft, Integer hard) -> untyped
+      def setrlimit: (Symbol resource, Integer soft, Integer hard) -> nil
     end
   end
 end

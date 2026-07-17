@@ -797,7 +797,7 @@
       },
       {
         "path": "./lib/rush/system_calls/resource_limits.rb",
-        "sigil": "False"
+        "sigil": "True"
       },
       {
         "path": "./lib/rush/terminal.rb",
@@ -838,9 +838,9 @@
     ]
   },
   "observed": {
-    "typed_sends": 11191,
-    "total_sends": 12503,
-    "untyped_sends": 1312,
-    "untyped_usages": 1666
+    "typed_sends": 11236,
+    "total_sends": 12537,
+    "untyped_sends": 1301,
+    "untyped_usages": 1661
   }
 }

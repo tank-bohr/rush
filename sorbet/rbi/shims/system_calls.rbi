@@ -1,9 +1,11 @@
 # typed: true
+# frozen_string_literal: true
 
 # Hand-written shim: SystemCalls is kept `# typed: false` because a few Ruby
 # syscall forms are beyond Sorbet's static model, but callers still benefit from
 # the public port's typed surface.
 module Rush
+  # Public static surface for the typed callers of the impure syscall port.
   class SystemCalls
     sig do
       params(file: String, env: T::Hash[String, String], argv: T::Array[String], options: T.untyped)
@@ -29,7 +31,10 @@ module Rush
     sig { params(signal: T.untyped, pid: Integer).returns(Integer) }
     def kill(signal, pid); end
 
-    sig { params(name: String, command: T.nilable(String), block: T.proc.params(arg0: T.untyped).returns(T.untyped)).returns(T.untyped) }
+    sig do
+      params(name: String, command: T.nilable(String),
+             block: T.proc.params(arg0: T.untyped).returns(T.untyped)).returns(T.untyped)
+    end
     def trap_signal(name, command, &block); end
 
     sig { returns([IO, IO]) }
@@ -85,5 +90,20 @@ module Rush
 
     sig { params(name: String).returns(T.nilable(String)) }
     def home_dir(name); end
+
+    sig { returns(Integer) }
+    def current_umask; end
+
+    sig { params(mask: Integer).returns(Integer) }
+    def change_umask(mask); end
+
+    sig { returns(Integer) }
+    def infinity_limit; end
+
+    sig { params(resource: Symbol).returns([Integer, Integer]) }
+    def getrlimit(resource); end
+
+    sig { params(resource: Symbol, soft: Integer, hard: Integer).returns(NilClass) }
+    def setrlimit(resource, soft, hard); end
   end
 end

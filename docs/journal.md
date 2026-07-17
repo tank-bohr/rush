@@ -2987,3 +2987,26 @@ That is filed as rush-tk6 rather than expanding a typing slice into printf seman
 Independent review corrected `captures` to `Array[String?]?` (aggregate nilability matters
 when no regex matched); the successful-scan path narrows it explicitly. The final full gate
 is green with 2981 examples, 99.87% line / 98.72% branch coverage.
+
+### Resource limits expose one platform-aware typed port (rush-435.4)
+ResourceLimits is now typed:true. Its constant table is explicitly
+`Hash[Symbol, Integer?]`: the optional Linux `RLIMIT_LOCKS` lookup accepts only an actual
+Integer from `const_get`, while an unsupported resource remains nil and keeps the existing
+infinite-query / EINVAL-set behavior. Every wrapper has an inline and RBS contract, and the
+SystemCalls RBI now exposes umask, infinity, getrlimit and setrlimit to typed callers.
+`setrlimit` returns NilClass rather than Sorbet `void`; that preserves the real syscall return
+under runtime wrappers instead of replacing nil with Sorbet's VOID sentinel.
+
+The ratchet moves to 11,236 / 12,537 typed sends (89.62%), gap 1,301, usages 1,661 —
+45 new typed sends on 34 new total sends, so eleven real untyped sends disappear. Unit rows
+pin optional-constant normalization, prior-umask return/call arguments, available limit tuples,
+and missing-limit failure. ResourceLimits mutation kills 94 / 96; `Kernel.raise` versus the
+same included Kernel method on self and the regex-proven `T.must`-style nil narrowing are
+the two equivalents.
+
+Review caught the parallel-contract trap this epic is meant to expose: the mixin RBS said
+nil but `SystemCalls` still repeated an older untyped setrlimit declaration. The public RBS
+now includes ResourceLimits instead of duplicating its five methods, and the optional-locks
+row checks the host's exact constant when present. The final native full gate is green with
+2982 examples (99.87% line / 98.65% branch); the Docker gate is green too, including the
+real ulimit smoke (soft nofile 1024 -> 64, hard 1024), ABI, Reline and job-control smokes.

@@ -290,15 +290,23 @@ RSpec.describe Rush::SystemCalls do
   end
 
   it 'delegates umask and resource-limit syscalls' do
-    allow(File).to receive(:umask) { |*args| args.empty? ? 0o022 : 0o077 }
+    allow(File).to receive(:umask) { |*args| args.empty? ? 0o022 : 0o011 }
     allow(Process).to receive(:getrlimit).with(Process::RLIMIT_NOFILE).and_return([1024, 4096])
     allow(Process).to receive(:setrlimit).with(Process::RLIMIT_NOFILE, 64, 128)
 
-    expect([system.current_umask, system.change_umask(0o077), system.infinity_limit]).to eq([0o022, 0o077,
+    expect([system.current_umask, system.change_umask(0o077), system.infinity_limit]).to eq([0o022, 0o011,
                                                                                              Process::RLIM_INFINITY])
+    expect(File).to have_received(:umask).with(0o077)
     expect(system.getrlimit(:nofile)).to eq([1024, 4096])
-    system.setrlimit(:nofile, 64, 128)
+    expect(system.setrlimit(:nofile, 64, 128)).to be_nil
     expect(Process).to have_received(:setrlimit).with(Process::RLIMIT_NOFILE, 64, 128)
+  end
+
+  it 'normalizes every platform resource constant to an integer or nil' do
+    limits = Rush::SystemCalls::ResourceLimits::RLIMITS
+    expected_locks = Process.const_get(:RLIMIT_LOCKS) if Process.const_defined?(:RLIMIT_LOCKS)
+    expect([limits.fetch(:locks), limits.values.all? { |value| value.nil? || value.is_a?(Integer) }])
+      .to eq([expected_locks, true])
   end
 
   it 'treats unavailable resource limits as infinite and unsettable' do

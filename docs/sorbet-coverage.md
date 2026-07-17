@@ -116,8 +116,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-435.3`, at most 1,312 untyped
-  sends and an exact rational minimum ratio of 11,191 / 12,503. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-435.4`, at most 1,301 untyped
+  sends and an exact rational minimum ratio of 11,236 / 12,537. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -150,6 +150,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 |---|---|---:|---:|---:|---:|
 | 19l | Inventory baseline | 11,085 / 12,401 | 89.39% | 1,316 | 1,669 |
 | 19n | `PrintfFormatter` checked end to end | 11,191 / 12,503 | 89.51% | 1,312 | 1,666 |
+| 19o | `ResourceLimits` checked end to end | 11,236 / 12,537 | 89.62% | 1,301 | 1,661 |
 
 ## Material usage clusters
 
@@ -253,18 +254,18 @@ remain honestly open after the ordinary roots are removed.
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After `rush-435.3`, at the normal denominator:
+escape only for measured native/Racc/variant residue. After `rush-435.4`, at the normal denominator:
 
-- `ceil(12,503 × 0.95) = 11,878` typed sends;
-- this needs 687 additional typed sends;
-- no more than 625 sends may remain untyped;
-- that removes 52.4% of the current 1,312-send gap.
+- `ceil(12,537 × 0.95) = 11,911` typed sends;
+- this needs 675 additional typed sends;
+- no more than 626 sends may remain untyped;
+- that removes 51.9% of the current 1,301-send gap.
 
 Raising the remaining false/no-sigil bodies changes the denominator, so the fixed calculation is not
 the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 11,368 / 12,843 typed sends (88.51%, gap 1,475). At that denominator
-95% is 12,201 typed sends: +833, leaving at most 642 untyped, a 56.5% gap reduction. The current
-location probe finds 917 concrete send-shaped diagnostics (916 outside generated parser), with 515
+conservative scope envelope of 11,404 / 12,862 typed sends (88.66%, gap 1,458). At that denominator
+95% is 12,219 typed sends: +815, leaving at most 643 untyped, a 55.9% gap reduction. The current
+location probe finds 912 concrete send-shaped diagnostics (911 outside generated parser), with 511
 concentrated in 27 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, false-body, registry and bounded-variant roots above.
