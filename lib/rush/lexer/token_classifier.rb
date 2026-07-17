@@ -10,6 +10,9 @@ module Rush
     class TokenClassifier
       extend T::Sig
 
+      TokenValue = T.type_alias { T.any(AST::Word, AST::Assignment) }
+      Token = T.type_alias { [Symbol, TokenValue] }
+
       # The assignment-name capture plus the literal segment it came from.
       class AssignmentHead
         extend T::Sig
@@ -41,13 +44,13 @@ module Rush
       NAME = /\A([a-zA-Z_]\w*)=/
       # `esac` is a reserved word in command position (POSIX 2.4): it closes a
       # case item whose last list omits `;;`, and is a syntax error elsewhere.
-      RESERVED = {
+      RESERVED = T.let({
         'if' => :If, 'then' => :Then, 'else' => :Else, 'elif' => :Elif, 'fi' => :Fi,
         'while' => :While, 'until' => :Until, 'do' => :Do, 'done' => :Done,
         'for' => :For, 'case' => :Case, 'esac' => :Esac,
         '{' => :Lbrace, '}' => :Rbrace, '!' => :Bang
-      }.freeze
-      FOR_IN = { 'in' => :In, 'do' => :Do }.freeze
+      }.freeze, T::Hash[String, Symbol])
+      FOR_IN = T.let({ 'in' => :In, 'do' => :Do }.freeze, T::Hash[String, Symbol])
 
       sig { params(word: AST::Word, state: LexState).void }
       def initialize(word, state)
@@ -55,19 +58,19 @@ module Rush
         @state = state
       end
 
-      sig { returns([Symbol, T.untyped]) }
+      sig { returns(Token) }
       def call
         state_token || classify
       end
 
       private
 
-      sig { returns(T.nilable([Symbol, T.untyped])) }
+      sig { returns(T.nilable(Token)) }
       def state_token
         forced || header_token
       end
 
-      sig { returns(T.nilable([Symbol, T.untyped])) }
+      sig { returns(T.nilable(Token)) }
       def forced
         return [:NAME, @word] if @state.for_name?
         return [arm_token, @word] if @state.case_arm?
@@ -75,7 +78,7 @@ module Rush
         [:WORD, @word] if @state.case_subject? || @state.case_pat?
       end
 
-      sig { returns(T.nilable([Symbol, T.untyped])) }
+      sig { returns(T.nilable(Token)) }
       def header_token
         keyword = for_header
         return [keyword, @word] if @state.for_in? && keyword
@@ -88,7 +91,7 @@ module Rush
         @word.literal_name == 'esac' ? :Esac : :WORD
       end
 
-      sig { returns([Symbol, T.untyped]) }
+      sig { returns(Token) }
       def classify
         keyword = reserved
         return [keyword, @word] if keyword
@@ -135,7 +138,7 @@ module Rush
         match && match[1]
       end
 
-      sig { params(head: AssignmentHead).returns([Symbol, T.untyped]) }
+      sig { params(head: AssignmentHead).returns(Token) }
       def assignment_token(head)
         [:ASSIGNMENT_WORD, head.assignment(@word.segments.drop(1))]
       end

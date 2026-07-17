@@ -3329,3 +3329,38 @@ methods lack direct subject coverage; the four changed readers kill 49 / 63, wit
 branches equivalent for nil block forwarding. Independent review differentially confirmed Array
 behavior, checker parity, tests and arithmetic. The final full gate is green with 3001 examples
 (99.89% line / 98.68% branch).
+
+### The lexer/Racc handoff gets one exact token vocabulary (rush-435.7)
+The lexer no longer erases every pair to `[T.untyped, T.untyped]`: named kind, value, ordinary-token
+and end-token unions now cover the scanner pump, predicates and classifier. This is the handwritten
+side of the exact vocabulary ParserSupport already exposed to the generated host; Racc's generated
+semantic stack remains the bounded unchecked adapter. TokenClassifier narrows its smaller payload to
+Word-or-Assignment, OperatorTable records the Symbol-or-literal-string terminal map, and `AST::Word`
+now exposes exact segment/source-line readers. These are domain unions, not casts or loose RBI.
+
+The same root audit found two stale stdlib seams: rush's existing StringScanner shim omitted the
+integer `pos` reader and gave its native constructor an unsafe nil default. The default is now the
+real `false` and `pos` is exact. Sorbet's bundled RBI fixes initialize at two positional arguments,
+so the one options parameter stays honestly untyped: it carries either native `dup` or the keyword
+option hash and cannot express both without a broad fake shape. Steep's native RBS models positional
+`dup` and keyword `fixed_anchor` exactly. No Sorbet input is added. The explicit ledger consequently
+drops from 112 to 96 untyped lines and from three to two unsafe lines.
+
+The first full gate caught an important non-goal: `T.let` on every Lexer, TokenClassifier and Word
+construction added about 70,000 allocations to the parse workload. Those hot ivars remain inferred
+from exact constructor inputs; only load-time table declarations use `T.let`. The allocation gate
+returns below every budget without weakening any token or reader contract.
+
+The final ratchet moves from 12,240 / 13,152 to 12,269 / 13,127 (93.46%): typed sends rise by 29 while
+removing 25 type-erased sends from the denominator, so the gap falls to 858 (-54) and usages to 1,162
+(-67). Steep advances to 11,998 / 12,026 typed calls with the same 28-call residue. The forced-true
+planning envelope is now 12,286 / 13,248 (92.74%, gap 962), and the forced-strong send-shaped probe
+falls to 617 sites, one in generated Racc.
+
+Focused lexer/classifier/parser/word tests cover 120 examples. Runtime-checked words, here-doc,
+for-loop and case parsing match dash. Targeted Lexer/TokenClassifier/Word mutation kills 954 / 982
+(97.15%); survivors are the invariant-only `T.must`, equivalent nil/tuple indexing forms, or
+pre-existing classifier/Word behavior gaps rather than this slice's token contracts. Independent
+review caught the native StringScanner positional/keyword distinction and two ledger off-by-ones;
+the honest Sorbet boundary and corrected arithmetic passed re-review. The final full gate is green
+with 3001 examples (99.89% line / 98.68% branch).

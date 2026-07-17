@@ -5,8 +5,10 @@
 # stdlib RBI leaves this C extension loose at key scanner boundaries; Steep gets
 # the parallel declarations from sig/strscan_ext.rbs.
 class StringScanner
-  sig { params(string: String, fixed_anchor: T.untyped).void }
-  def initialize(string, fixed_anchor = T.unsafe(nil)); end
+  # rubocop:disable Style/OptionalBooleanParameter -- preserve Sorbet's bundled two-argument entry point
+  sig { params(string: String, options: T.untyped).void }
+  def initialize(string, options = false); end
+  # rubocop:enable Style/OptionalBooleanParameter
 
   sig { params(pattern: T.any(Regexp, String)).returns(T.nilable(String)) }
   def scan(pattern); end
@@ -34,6 +36,9 @@ class StringScanner
 
   sig { returns(Integer) }
   def charpos; end
+
+  sig { returns(Integer) }
+  def pos; end
 
   sig { returns(T.nilable(T::Array[T.nilable(String)])) }
   def captures; end

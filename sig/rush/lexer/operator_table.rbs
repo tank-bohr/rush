@@ -9,7 +9,7 @@ module Rush
 
       CONTINUATION: Regexp
 
-      PATTERN: untyped
+      PATTERN: Regexp
     end
   end
 end

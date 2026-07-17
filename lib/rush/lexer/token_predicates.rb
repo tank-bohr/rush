@@ -11,7 +11,7 @@ module Rush
 
       private
 
-      sig { params(token: [T.untyped, T.untyped]).returns(T::Boolean) }
+      sig { params(token: Lexer::Token).returns(T::Boolean) }
       def word_token?(token)
         case token.first
         when :WORD then true

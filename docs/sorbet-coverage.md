@@ -104,8 +104,8 @@ so it is outside this baseline. A later scope change must record a side-by-side 
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,997 /
-12,025 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
+not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,998 /
+12,026 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
@@ -117,8 +117,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after the ninth `rush-435.7` root slice, at
-  most 912 untyped sends and an exact rational minimum ratio of 12,240 / 13,152. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after the tenth `rush-435.7` root slice, at
+  most 858 untyped sends and an exact rational minimum ratio of 12,269 / 13,127. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -165,6 +165,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19z | `ShellVariables` Forwardable surface | 12,215 / 13,152 | 92.88% | 937 | 1,260 |
 | 19aa | remaining non-AST Data roots | 12,232 / 13,152 | 93.00% | 920 | 1,232 |
 | 19ab | `Positional` Forwardable surface | 12,240 / 13,152 | 93.07% | 912 | 1,229 |
+| 19ac | lexer token/value boundary and word readers | 12,269 / 13,127 | 93.46% | 858 | 1,162 |
 
 ## Material usage clusters
 
@@ -230,11 +231,11 @@ counter yield:
    result crosses one `T.cast` to the grammar-proven `AST::List` start symbol.
 
 2. **Generated Racc glue.** `lib/rush/parser.rb` has no sigil, is generated and is ignored by both
-   type-checker gates. Forced strong finds two locations there. `Lexer` currently exports
-   `[T.untyped, T.untyped]` token pairs internally, while ParserSupport gives that pair an exact
-   terminal/value union and the parser RBI exposes typed construction, the `AST::List` start result,
-   and only the two generated host methods it consumes. The generated table/semantic stack remains a
-   bounded adapter, not permission to type or patch generated code by hand.
+   type-checker gates. Forced strong finds one send-shaped location there. `Lexer` and
+   `ParserSupport` now model the same exact terminal/value union on their two sides of the generated
+   host, while the parser RBI exposes typed construction, the `AST::List` start result, and only the
+   two generated host methods it consumes. The generated table/semantic stack remains a bounded
+   adapter, not permission to type or patch generated code by hand.
 
 3. **Missing ordinary declarations.** Slice 19u typed every method in `TestOperators`,
    `TestGrammar`, and `TestExpr`; their normal 7018 diagnostics are now zero without replacing the
@@ -249,9 +250,10 @@ counter yield:
    parameters, and Slice 19ab completed Positional's array-compatible reader surface. Slice 19y modeled getopts' Result/Option values and separated its keep-OPTARG control
    bit; Slice 19z completed ShellVariables' exact Environment/Scope facade. Slice 19aa completes the
    non-AST Data set with `cd`, `HereDoc` and `ExitTrap` contracts: only generated definition-site
-   diagnostics remain, not open consumers. Other explicit opens are domain variants: lexer token
-   kind/value, `AST::WordSegment` payloads, redirect targets, logical IO streams, and generic block
-   returns. These should become named unions or value contracts where consumers discriminate them;
+   diagnostics remain, not open consumers. Slice 19ac closes the lexer token kind/value pair and the
+   `AST::Word` reader boundary; the remaining explicit opens are domain variants:
+   `AST::WordSegment` payloads, redirect targets, logical IO streams, and generic block returns.
+   These should become named unions or value contracts where consumers discriminate them;
    broad casts would only move the counter.
 
 5. **Dynamic registries.** `CommandText`, parameter forms, redirection, and test operators use
@@ -269,34 +271,34 @@ counter yield:
    collation backend still has an intentionally dynamic callable/pointer table, which
    `rush-435.7` must retain in the measured native ledger.
 
-The explicit source ledger currently contains 111 `T.untyped` declaration lines across production
-and project RBIs (35 production files and five RBI files), plus three `T.unsafe` and seven `T.cast`
+The explicit source ledger currently contains 96 `T.untyped` declaration lines across production
+and project RBIs (34 production files and five RBI files), plus two `T.unsafe` and seven `T.cast`
 lines. These are review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
 remain honestly open after the ordinary roots are removed.
 
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After the ninth `rush-435.7` root slice, at
+escape only for measured native/Racc/variant residue. After the tenth `rush-435.7` root slice, at
 the normal denominator:
 
-- `ceil(13,152 × 0.95) = 12,495` typed sends;
-- this needs 255 additional typed sends;
-- no more than 657 sends may remain untyped;
-- that removes 28.0% of the current 912-send gap.
+- `ceil(13,127 × 0.95) = 12,471` typed sends;
+- this needs 202 additional typed sends;
+- no more than 656 sends may remain untyped;
+- that removes 23.5% of the current 858-send gap.
 
 Forcing the remaining no-sigil generated parser changes the denominator, so the fixed calculation
 is not the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 12,257 / 13,273 typed sends (92.35%, gap 1,016). At that denominator
-95% is 12,610 typed sends: +353, leaving at most 663 untyped, a 34.7% gap reduction. The current
-location probe finds 662 concrete send-shaped diagnostics (661 outside generated parser), with 293
-concentrated in 18 files having at least ten each. These diagnostics still do not map one-for-one to
+conservative scope envelope of 12,286 / 13,248 typed sends (92.74%, gap 962). At that denominator
+95% is 12,586 typed sends: +300, leaving at most 662 untyped, a 31.2% gap reduction. The current
+location probe finds 617 concrete send-shaped diagnostics (616 outside generated parser), with 258
+concentrated in 17 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, registry and bounded-variant roots above.
 
 That makes 95% a defensible **target**, not a demonstrated ceiling: it requires resolving most of
 the measured send-shaped surface, while the known hard native/Racc subset must remain narrow. If
-precise boundaries leave more than 663 sends untyped at the expanded scope, `rush-435.9` must publish
+precise boundaries leave more than 662 sends untyped at the expanded scope, `rush-435.9` must publish
 the lower honest ceiling and residual arithmetic rather than add escapes.
 
 Work order:

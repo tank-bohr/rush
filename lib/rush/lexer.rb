@@ -29,9 +29,17 @@ module Rush
   # blanks and comments, then emits NEWLINE, an IO_NUMBER, an operator, or a
   # WORD/ASSIGNMENT_WORD (classified against LexState, which advances after each
   # token to track command position — the seed of POSIX Grammar Rules 1-9).
+  # Exact token aliases keep the Racc boundary local; the cohesive scanner stays
+  # above the generic class-length threshold rather than being split around them.
+  # rubocop:disable Metrics/ClassLength
   class Lexer
     extend T::Sig
     include TokenPredicates
+
+    TokenKind = T.type_alias { T.any(Symbol, String) }
+    TokenValue = T.type_alias { T.any(AST::Word, AST::Assignment, HereDoc, String, Integer) }
+    Token = T.type_alias { [TokenKind, TokenValue] }
+    NextToken = T.type_alias { T.any(Token, [FalseClass, FalseClass]) }
 
     # Between tokens, blanks, comments and backslash-newline continuations
     # (POSIX 2.2.1) are all insignificant. A continuation at the buffer's very
@@ -41,7 +49,10 @@ module Rush
     # "Immediately before < or >" sees through spliced continuations, like the
     # operator matcher: dash-verified, `2\<newline>>f` redirects fd 2.
     IO_NUMBER = /\d+(?=(?:\\\n)*[<>])/
-    HEREDOC_OPS = { DLESS: :plain, DLESSDASH: :strip }.freeze
+    HEREDOC_OPS = T.let(
+      { DLESS: :plain, DLESSDASH: :strip }.freeze,
+      T::Hash[T.any(Symbol, String), Symbol]
+    )
 
     sig { params(source: String, interactive: T::Boolean, aliases: T.nilable(AliasTable), line_offset: Integer).void }
     def initialize(source, interactive: false, aliases: nil, line_offset: 0)
@@ -59,7 +70,7 @@ module Rush
       @scanner.charpos
     end
 
-    sig { returns([T.untyped, T.untyped]) }
+    sig { returns(NextToken) }
     def next_token
       drain
       return [false, false] if @scanner.eos?
@@ -70,7 +81,7 @@ module Rush
 
     private
 
-    sig { params(token: [T.untyped, T.untyped]).returns([T.untyped, T.untyped]) }
+    sig { params(token: Token).returns(Token) }
     def emit(token)
       @state.advance(token.first)
       @aliases.spend
@@ -84,7 +95,7 @@ module Rush
       skip_insignificant
       return unless @scanner.eos? && @aliases.nested?
 
-      @scanner = @aliases.pop
+      @scanner = T.must(@aliases.pop)
       drain
     end
 
@@ -93,20 +104,20 @@ module Rush
       @scanner.skip(INSIGNIFICANT)
     end
 
-    sig { returns(T.nilable([T.untyped, T.untyped])) }
+    sig { returns(T.nilable(Token)) }
     def scan_token
       return heredoc_newline if @scanner.scan("\n")
 
       io_number || operator || word
     end
 
-    sig { returns(T.nilable([T.untyped, T.untyped])) }
+    sig { returns(T.nilable(Token)) }
     def io_number
       digits = @scanner.scan(IO_NUMBER)
       digits ? [:IO_NUMBER, Integer(digits, 10)] : nil
     end
 
-    sig { returns(T.nilable([T.untyped, T.untyped])) }
+    sig { returns(T.nilable(Token)) }
     def operator
       matched = @scanner.scan(OperatorTable::PATTERN)
       matched ? operator_token(matched) : nil
@@ -114,7 +125,7 @@ module Rush
 
     # The match may carry line continuations between its characters (see
     # OperatorTable::PATTERN); splicing them out recovers the operator.
-    sig { params(matched: String).returns([T.untyped, T.untyped]) }
+    sig { params(matched: String).returns(Token) }
     def operator_token(matched)
       operator = matched.gsub(OperatorTable::CONTINUATION, '')
       symbol = OperatorTable::OPERATORS.fetch(operator)
@@ -126,7 +137,7 @@ module Rush
     # classified, aliased or reserved. Otherwise classify it, then (only a
     # plain WORD) splice its alias replacement in its place; a splice returns
     # nil so next_token re-reads from the new frame.
-    sig { returns(T.nilable([T.untyped, T.untyped])) }
+    sig { returns(T.nilable(Token)) }
     def word
       scanned = @lines.word { WordScanner.next_word(@scanner, interactive: @interactive) }
       return delimiter(scanned) if @awaiting
@@ -136,7 +147,7 @@ module Rush
       replacement ? splice(replacement) : token
     end
 
-    sig { params(token: [T.untyped, T.untyped], word: AST::Word).returns(T.nilable(AliasExpander::Replacement)) }
+    sig { params(token: Token, word: AST::Word).returns(T.nilable(AliasExpander::Replacement)) }
     def alias_for(token, word)
       return if !word_token?(token) || !@state.command_mode?
 
@@ -150,7 +161,7 @@ module Rush
       nil
     end
 
-    sig { params(word: AST::Word).returns([T.untyped, T.untyped]) }
+    sig { params(word: AST::Word).returns(Token) }
     def delimiter(word)
       holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
                            quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip,
@@ -162,7 +173,7 @@ module Rush
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
-    sig { returns([T.untyped, T.untyped]) }
+    sig { returns(Token) }
     def heredoc_newline
       start = @scanner.pos
       HeredocReader.new(@scanner, interactive: @interactive).fill(@heredocs)
@@ -171,4 +182,5 @@ module Rush
       [:NEWLINE, "\n"]
     end
   end
+  # rubocop:enable Metrics/ClassLength
 end

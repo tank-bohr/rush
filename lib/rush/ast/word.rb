@@ -9,7 +9,11 @@ module Rush
     class Word < Node
       extend T::Sig
 
-      attr_reader :segments, :source_line
+      sig { returns(T::Array[WordSegment[T.untyped]]) }
+      attr_reader :segments
+
+      sig { returns(Integer) }
+      attr_reader :source_line
 
       sig { params(segments: T::Array[WordSegment[T.untyped]], source_line: Integer).void }
       def initialize(segments, source_line: 1)
@@ -32,7 +36,7 @@ module Rush
       # alias substitution, all of which only apply to a plain literal word.
       sig { returns(T.nilable(String)) }
       def literal_name
-        (segments.first.literal_value if segments.one?)
+        (segments.fetch(0).literal_value if segments.one?)
       end
 
       sig { returns(T.nilable(String)) }

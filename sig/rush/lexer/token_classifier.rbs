@@ -7,6 +7,9 @@ module Rush
     class TokenClassifier
       extend T::Sig
 
+      TokenValue: untyped
+      Token: untyped
+
       class AssignmentHead
         extend T::Sig
 

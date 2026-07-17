@@ -20,6 +20,11 @@ module Rush
     # input and is spelled separately where it can occur).
     type token = [token_kind, token_value]
 
+    TokenKind: untyped
+    TokenValue: untyped
+    Token: untyped
+    NextToken: untyped
+
     @scanner: StringScanner
 
     @aliases: AliasExpander
@@ -44,7 +49,7 @@ module Rush
 
     # keys are :DLESS/:DLESSDASH, but operator tags are looked up here as Symbol|String
     # (some operators are literal strings), and a non-heredoc op just misses.
-    HEREDOC_OPS: Hash[untyped, Symbol]
+    HEREDOC_OPS: Hash[Symbol | String, Symbol]
 
     def initialize: (String source, ?interactive: bool, ?aliases: AliasTable?, ?line_offset: Integer) -> void
 
