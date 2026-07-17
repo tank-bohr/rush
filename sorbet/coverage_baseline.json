@@ -641,7 +641,7 @@
       },
       {
         "path": "./lib/rush/parser_support.rb",
-        "sigil": "False"
+        "sigil": "True"
       },
       {
         "path": "./lib/rush/pattern_scanner.rb",
@@ -842,9 +842,9 @@
     ]
   },
   "observed": {
-    "typed_sends": 11659,
-    "total_sends": 12942,
-    "untyped_sends": 1283,
-    "untyped_usages": 1647
+    "typed_sends": 11816,
+    "total_sends": 13095,
+    "untyped_sends": 1279,
+    "untyped_usages": 1642
   }
 }

@@ -3102,3 +3102,29 @@ ratchet records code growth at 11,659 / 12,942 typed sends (90.09%), unchanged g
 per bad operand (without double-counting incomplete overflow), and the builtin emits each diagnostic.
 Re-review has no blocker. The final full gate is green with 2996 examples, 99.89% line / 98.67%
 branch coverage.
+
+### ParserSupport is checked; only the generated semantic stack stays open (rush-435.8)
+The forced-true probe started with exactly four ParserSupport failures: generated-host `do_parse`
+and `token_to_str` were invisible, and module bodies could not resolve two implicit Kernel raises.
+A narrow generated-host RBI supplies only those two methods; explicit Kernel dispatch removes the
+other pair. Inline contracts then type every grammar factory with named list-entry, command-part,
+token-kind and token-value unions. The public generated Parser RBI now pins `Lexer -> AST::List`
+instead of merely declaring two untyped method names.
+
+This is a real checked-body gain, not a sigil shell. ParserSupport moves to typed:true and forced
+strong reports zero diagnostics in it. Racc's `do_parse` result remains one explicit `T.untyped`
+host method followed immediately by a grammar-proven `T.cast(..., AST::List)`; on_error's unused
+semantic stack is the other open parameter. The generated parser stays no-sigil and ignored for
+diagnostics. Forcing that generated file true expands the planning denominator by 121 sends while
+adding only 17 typed sends, evidence that typing generated tables would worsen precision rather than
+check hand-written policy.
+
+The ratchet moves from 11,659 / 12,942 to 11,816 / 13,095 (90.23%): 157 new typed sends on 153
+total, gap 1,279 (-4), usages 1,642 (-5). Narrowing the mutation ignore from `Rush::Parser*` to the
+exact generated `Rush::Parser` brings the hand-written mixin under mutation: 432 / 443 killed
+(97.51%). The eleven survivors are two erased `T.must`s, two Kernel/self dispatch equivalents, an
+is_a?/instance_of? equivalence for the exact Word domain, and six placeholder-separator variants
+that grammar termination always overwrites before AST construction. Review caught the stale
+ParserSupport RBS parse result; it now distinguishes generated `do_parse` from the narrowed
+`AST::List` public result. Re-review has no blocker, and the final full gate is green with 2996
+examples (99.89% line / 98.67% branch).

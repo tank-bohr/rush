@@ -99,7 +99,7 @@ prioritization surface, not a one-to-one reconciliation with Sorbet's 1,316-send
 The aggregate counter calls this 202 true and 6 false; the latter folds the no-sigil parser into the
 false bucket. That is the inventory snapshot: the four implementation-typing slices raised their
 owned sigils and `rush-435.6` added one narrow Reline result shim, so the current ratchet scope is
-209 inputs (207 true, ParserSupport false, and the no-sigil parser). The parser remains in input
+209 inputs (208 true plus the no-sigil generated parser). The parser remains in input
 accounting even though its diagnostics are ignored.
 The extensionless `exe/rush` is configured through `--dir ./exe` but is absent from the file table,
 so it is outside this baseline. A later scope change must record a side-by-side baseline rather than
@@ -119,8 +119,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-tk6`, at most 1,283 untyped
-  sends and an exact rational minimum ratio of 11,659 / 12,942. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after `rush-435.8`, at most 1,279 untyped
+  sends and an exact rational minimum ratio of 11,816 / 13,095. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -157,6 +157,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19p | `ProcessControl` checked end to end | 11,404 / 12,690 | 89.87% | 1,286 | 1,647 |
 | 19q | `SystemCalls` checked end to end | 11,595 / 12,878 | 90.04% | 1,283 | 1,647 |
 | 19r | POSIX `printf` numeric conversion | 11,659 / 12,942 | 90.09% | 1,283 | 1,647 |
+| 19s | `ParserSupport` checked; generated Racc bounded | 11,816 / 13,095 | 90.23% | 1,279 | 1,642 |
 
 ## Material usage clusters
 
@@ -215,16 +216,18 @@ counter yield:
 
 ### Root-cause ledger
 
-1. **One handwritten unchecked body remains.** The inventory forced-strong probe found 156 hidden
+1. **No handwritten unchecked body remains.** The inventory forced-strong probe found 156 hidden
    diagnostics across ParserSupport (54) and the four formatter/syscall bodies (102). Slices
-   `rush-435.3` through `.6` raised all four tractable files and checked their implementations;
-   `rush-435.8` adjudicates ParserSupport rather than claiming a sigil win around an open Racc stack.
+   `rush-435.3` through `.6` raised the four tractable files; `rush-435.8` then checked every
+   ParserSupport factory through exact aliases and a generated-host RBI. Its sole semantic-stack
+   result crosses one `T.cast` to the grammar-proven `AST::List` start symbol.
 
 2. **Generated Racc glue.** `lib/rush/parser.rb` has no sigil, is generated and is ignored by both
    type-checker gates. Forced strong finds two locations there. `Lexer` currently exports
-   `[T.untyped, T.untyped]` token pairs and the parser RBI exposes only construction and `#parse`.
-   This is a bounded adapter/semantic-value decision for `rush-435.8`, not permission to type the
-   generated file by hand.
+   `[T.untyped, T.untyped]` token pairs internally, while ParserSupport gives that pair an exact
+   terminal/value union and the parser RBI exposes typed construction, the `AST::List` start result,
+   and only the two generated host methods it consumes. The generated table/semantic stack remains a
+   bounded adapter, not permission to type or patch generated code by hand.
 
 3. **Missing ordinary declarations.** The biggest pure-Ruby cluster is not inherently dynamic:
    `TestOperators`, `TestGrammar`, and `TestExpr` contain typed-true methods without inline
@@ -252,27 +255,27 @@ counter yield:
    collation backend still has an intentionally dynamic callable/pointer table, which
    `rush-435.7` must retain in the measured native ledger.
 
-The explicit source ledger currently contains 112 `T.untyped` declaration lines across production
-and project RBIs (38 production files and four RBI files), plus three `T.unsafe` lines. These are
-review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
+The explicit source ledger currently contains 116 `T.untyped` declaration lines across production
+and project RBIs (39 production files and five RBI files), plus three `T.unsafe` and seven `T.cast`
+lines. These are review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
 remain honestly open after the ordinary roots are removed.
 
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After `rush-tk6`, at the normal denominator:
+escape only for measured native/Racc/variant residue. After `rush-435.8`, at the normal denominator:
 
-- `ceil(12,942 × 0.95) = 12,295` typed sends;
-- this needs 636 additional typed sends;
-- no more than 647 sends may remain untyped;
-- that removes 49.6% of the current 1,283-send gap.
+- `ceil(13,095 × 0.95) = 12,441` typed sends;
+- this needs 625 additional typed sends;
+- no more than 654 sends may remain untyped;
+- that removes 48.9% of the current 1,279-send gap.
 
 Raising the remaining false/no-sigil bodies changes the denominator, so the fixed calculation is not
 the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 11,701 / 13,106 typed sends (89.28%, gap 1,405). At that denominator
-95% is 12,451 typed sends: +750, leaving at most 655 untyped, a 53.4% gap reduction. The current
-location probe finds 889 concrete send-shaped diagnostics (888 outside generated parser), with 496
-concentrated in 26 files having at least ten each. These diagnostics still do not map one-for-one to
+conservative scope envelope of 11,833 / 13,216 typed sends (89.54%, gap 1,383). At that denominator
+95% is 12,556 typed sends: +723, leaving at most 660 untyped, a 52.3% gap reduction. The current
+location probe finds 874 concrete send-shaped diagnostics (873 outside generated parser), with 481
+concentrated in 25 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, false-body, registry and bounded-variant roots above.
 
@@ -292,8 +295,8 @@ Work order:
 4. **`rush-435.5`** — type ProcessControl's 35 sites and its wait/fork/tty/ioctl shapes.
 5. **`rush-435.6`** — type the remaining SystemCalls body's 18 sites and complete its caller-facing
    RBI without global option/stream widening.
-6. **`rush-435.8`** — probe the generated parser adapter and keep ParserSupport false if a true sigil
-   would merely wrap semantic-stack `T.untyped`.
+6. **`rush-435.8`** — adjudicated: ParserSupport is checked end to end; the generated parser remains
+   no-sigil, with one explicit semantic-stack result cast and one unused error-stack parameter.
 7. **`rush-435.7`** — remeasure, then sweep shared typed-true roots in this order: missing method and
    ivar declarations; `Data`/bounded variants; loose project RBIs; registries; native residue.
 8. **`rush-435.9`** — publish the final numerator/denominator and either demonstrate 95% or justify

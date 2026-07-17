@@ -10,7 +10,7 @@ matcher:
   subjects:
     - Rush*
   ignore:
-    - Rush::Parser*
+    - Rush::Parser
     # Process-boundary wrappers (the same ones SimpleCov marks :nocov:):
     # their bodies replace or split the process (fork / exit! / real signal
     # dispositions / kill delivery) or need a real terminal (Reline), so no

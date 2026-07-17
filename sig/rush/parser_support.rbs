@@ -3,6 +3,16 @@ module Rush
   # `include`s this), kept in a normal linted/covered file. Rule actions call
   # these factories; none contain node logic.
   module ParserSupport
+    extend T::Sig
+
+    # Runtime Sorbet aliases mirrored below by Steep-native lowercase aliases.
+    ListEntry: untyped
+    CommandPart: untyped
+    TokenKind: untyped
+    TokenValue: untyped
+    ErrorValue: untyped
+    Token: untyped
+
     # The list-accumulation pair: an and_or plus its trailing separator,
     # rewritten in place once the grammar sees which separator follows.
     type list_entry = [AST::Node, String]
@@ -15,18 +25,21 @@ module Rush
 
     def initialize: (Lexer lexer) -> void
 
-    # --- the racc surface (no rbs for racc): parse/do_parse return the
-    # semantic stack's untyped result, and on_error's _stack stays untyped.
+    # --- the racc surface: do_parse carries the generated semantic stack, while
+    # parse narrows the grammar's start-symbol result to AST::List. on_error's
+    # unused _stack stays untyped.
     # The token seam itself is typed — next_token yields Lexer::token pairs,
     # and on_error's lookahead value is a Lexer::token_value (racc hands back
     # the pair's value slot, `false` at end of input).
-    def parse: () -> untyped
+    def parse: () -> AST::List
 
     def next_token: () -> (Lexer::token | [ false, false ])
 
     def on_error: (Integer token_id, Lexer::token_value | false value, untyped _stack) -> bot
 
     private
+
+    def error_value: (Lexer::token_value | false value) -> (AST::Assignment | HereDoc | String | Integer | false)
 
     def do_parse: () -> untyped
 
