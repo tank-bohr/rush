@@ -3512,3 +3512,34 @@ literal/wildcard/bracket simplifications rather than the new reader contracts. I
 confirmed the private visibility, mutable-object identity, stdlib contracts and measurements, and
 corrected the live-corpus row count; re-review is clean. The final full gate is green with 3005
 examples (99.89% line / 98.77% branch).
+
+### Lexer state contracts cross the normal 95% target (rush-435.7)
+Lexer now routes its seven state fields through exact private readers and, for the scanner, pending
+here-doc marker and holder queue, private writers. Initialization remains direct Ruby assignment:
+there are no per-lexer or per-token `T.let` calls. Scanner replacement, alias nesting, command-state
+classification, source-line handling and here-document draining therefore share one typed consumer
+boundary without changing object identity or cursor ownership. Two narrow delimiter helpers isolate
+the segment collection operations so the reader-based orchestration remains under both Flog and
+Reek limits without suppressions. Five forced-strong diagnostics remain only at generated reader
+definition sites (`scanner`, `aliases`, `state`, `lines` and `heredocs`); Lexer has no remaining
+send-shaped diagnostic.
+
+The ratchet moves from 12,596 / 13,277 to 12,688 / 13,348 (95.06%): typed sends rise by 92 on 71
+new total sends, so the gap falls to 660 (-21) and usages to 872 (-36). At this denominator 95%
+requires 12,681 typed sends and allows 667 untyped, so the normal target is demonstrated with a
+seven-send margin. The explicit ledger is unchanged at 73 untyped lines (27 production files, four
+project RBIs), two unsafe lines and six casts. Steep advances to 12,257 / 12,285 with its same
+28-call residue. The forced-true planning envelope is 12,705 / 13,469 (94.33%, gap 764); its 95%
+threshold is 12,796 (+91, at most 673 untyped). The send-shaped strong probe falls exactly by the
+21 typed consumers, from 499 to 478 sites (one generated), and its at-least-ten concentration falls
+from 167 / 12 files to 146 / 11.
+
+Focused lexer, alias, here-document and lexer-sublanguage specs cover 103 examples, and 35 live
+programs spanning aliases, operators, continuations, quoting, command position and here-documents
+match dash on stdout and status. Runtime wrappers accept the same combined lexer paths. The
+allocation gate passes at final medians 1,262,151 / 1,311,625 / 2,671,034 / 2,659,028. Direct Lexer
+mutation kills 555 / 559 (99.28%, 17 timeout kills); its four survivors remove only pre-existing
+`T.must`, explicit-nil or ternary-nil forms. A broader Lexer namespace run kills 4,979 / 5,127
+(97.11%, 161 timeout kills). Independent review reproduced the contracts, visibility, state identity,
+measurements and full gate with no findings. The final gate is green with 3005 examples (99.89%
+line / 98.77% branch).

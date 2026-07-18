@@ -104,8 +104,8 @@ so it is outside this baseline. A later scope change must record a side-by-side 
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 12,193 /
-12,221 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
+not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 12,257 /
+12,285 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
@@ -117,8 +117,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after the fourteenth `rush-435.7` root slice, at
-  most 681 untyped sends and an exact rational minimum ratio of 12,596 / 13,277. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after the fifteenth `rush-435.7` root slice, at
+  most 660 untyped sends and an exact rational minimum ratio of 12,688 / 13,348. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -170,6 +170,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19ae | AST reader, redirect-target and `CommandText` dispatch contracts | 12,419 / 13,194 | 94.13% | 775 | 1,073 |
 | 19af | `test` callable-body and grammar-state roots | 12,464 / 13,195 | 94.46% | 731 | 986 |
 | 19ag | pattern-scanner reader/table/stdlib roots | 12,596 / 13,277 | 94.87% | 681 | 908 |
+| 19ah | lexer state-reader root | 12,688 / 13,348 | 95.06% | 660 | 872 |
 
 ## Material usage clusters
 
@@ -295,27 +296,27 @@ remain honestly open after the ordinary roots are removed.
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After the fourteenth `rush-435.7` root slice, at
-the normal denominator:
+escape only for measured native/Racc/variant residue. The fifteenth `rush-435.7` root slice
+demonstrates that target at the normal denominator:
 
-- `ceil(13,277 × 0.95) = 12,614` typed sends;
-- this needs 18 additional typed sends;
-- no more than 663 sends may remain untyped;
-- that removes 2.6% of the current 681-send gap.
+- `ceil(13,348 × 0.95) = 12,681` typed sends;
+- the measured 12,688 typed sends exceed that threshold by seven;
+- 660 sends remain untyped, seven fewer than the 667-send maximum at this denominator;
+- the baseline 1,316-send gap has fallen by 656, or 49.8%.
 
-Forcing the remaining no-sigil generated parser changes the denominator, so the fixed calculation
-is not the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 12,613 / 13,398 typed sends (94.14%, gap 785). At that denominator
-95% is 12,729 typed sends: +116, leaving at most 669 untyped, a 14.8% gap reduction. The current
-location probe finds 499 concrete send-shaped diagnostics (498 outside generated parser), with 167
-concentrated in 12 files having at least ten each. These diagnostics still do not map one-for-one to
-the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
-to the ordinary declaration, registry and bounded-variant roots above.
+Forcing the remaining no-sigil generated parser changes the denominator, so the fixed result is not
+a claim about every possible future scope. Forcing every current input to `typed: true` without
+changing source produces a conservative scope envelope of 12,705 / 13,469 typed sends (94.33%, gap
+764). At that denominator 95% is 12,796 typed sends: +91, leaving at most 673 untyped, an 11.9% gap
+reduction. The current location probe finds 478 concrete send-shaped diagnostics (477 outside the
+generated parser), with 146 concentrated in 11 files having at least ten each. These diagnostics
+still do not map one-for-one to the counter, but they identify the ordinary declaration, registry
+and bounded-variant roots that remain after the normal target.
 
-That makes 95% a defensible **target**, not a demonstrated ceiling: it requires resolving most of
-the measured send-shaped surface, while the known hard native/Racc subset must remain narrow. If
-precise boundaries leave more than 669 sends untyped at the expanded scope, `rush-435.9` must publish
-the lower honest ceiling and residual arithmetic rather than add escapes.
+The normal-gate 95% target is therefore demonstrated without an escape or widened boundary. The
+forced-scope envelope remains useful sensitivity analysis rather than a second acceptance metric;
+`rush-435.9` must publish both results and the named native/Racc residue instead of implying that the
+normal result eliminates every honest untyped boundary.
 
 Work order:
 

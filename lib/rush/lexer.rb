@@ -67,13 +67,13 @@ module Rush
 
     sig { returns(Integer) }
     def location
-      @scanner.charpos
+      scanner.charpos
     end
 
     sig { returns(NextToken) }
     def next_token
       drain
-      return [false, false] if @scanner.eos?
+      return [false, false] if scanner.eos?
 
       token = scan_token
       token ? emit(token) : next_token
@@ -81,10 +81,31 @@ module Rush
 
     private
 
+    sig { returns(StringScanner) }
+    attr_accessor :scanner
+
+    sig { returns(AliasExpander) }
+    attr_reader :aliases
+
+    sig { returns(T::Boolean) }
+    attr_reader :interactive
+
+    sig { returns(LexState) }
+    attr_reader :state
+
+    sig { returns(SourceLines) }
+    attr_reader :lines
+
+    sig { returns(T.nilable(Symbol)) }
+    attr_accessor :awaiting
+
+    sig { returns(T::Array[HereDoc]) }
+    attr_accessor :heredocs
+
     sig { params(token: Token).returns(Token) }
     def emit(token)
-      @state.advance(token.first)
-      @aliases.spend
+      state.advance(token.first)
+      aliases.spend
       token
     end
 
@@ -93,33 +114,33 @@ module Rush
     sig { void }
     def drain
       skip_insignificant
-      return unless @scanner.eos? && @aliases.nested?
+      return unless scanner.eos? && aliases.nested?
 
-      @scanner = T.must(@aliases.pop)
+      self.scanner = T.must(aliases.pop)
       drain
     end
 
     sig { void }
     def skip_insignificant
-      @scanner.skip(INSIGNIFICANT)
+      scanner.skip(INSIGNIFICANT)
     end
 
     sig { returns(T.nilable(Token)) }
     def scan_token
-      return heredoc_newline if @scanner.scan("\n")
+      return heredoc_newline if scanner.scan("\n")
 
       io_number || operator || word
     end
 
     sig { returns(T.nilable(Token)) }
     def io_number
-      digits = @scanner.scan(IO_NUMBER)
+      digits = scanner.scan(IO_NUMBER)
       digits ? [:IO_NUMBER, Integer(digits, 10)] : nil
     end
 
     sig { returns(T.nilable(Token)) }
     def operator
-      matched = @scanner.scan(OperatorTable::PATTERN)
+      matched = scanner.scan(OperatorTable::PATTERN)
       matched ? operator_token(matched) : nil
     end
 
@@ -129,7 +150,7 @@ module Rush
     def operator_token(matched)
       operator = matched.gsub(OperatorTable::CONTINUATION, '')
       symbol = OperatorTable::OPERATORS.fetch(operator)
-      @awaiting = HEREDOC_OPS.fetch(symbol, nil)
+      self.awaiting = HEREDOC_OPS.fetch(symbol, nil)
       [symbol, operator]
     end
 
@@ -139,46 +160,55 @@ module Rush
     # nil so next_token re-reads from the new frame.
     sig { returns(T.nilable(Token)) }
     def word
-      scanned = @lines.word { WordScanner.next_word(@scanner, interactive: @interactive) }
-      return delimiter(scanned) if @awaiting
+      scanned = lines.word { WordScanner.next_word(scanner, interactive: interactive) }
+      return delimiter(scanned) if awaiting
 
-      token = TokenClassifier.new(scanned, @state).call
+      token = TokenClassifier.new(scanned, state).call
       replacement = alias_for(token, scanned)
       replacement ? splice(replacement) : token
     end
 
     sig { params(token: Token, word: AST::Word).returns(T.nilable(AliasExpander::Replacement)) }
     def alias_for(token, word)
-      return if !word_token?(token) || !@state.command_mode?
+      return if !word_token?(token) || !state.command_mode?
 
-      @aliases.expand(word, @state.expects_command?)
+      aliases.expand(word, state.expects_command?)
     end
 
     sig { params(replacement: AliasExpander::Replacement).returns(NilClass) }
     def splice(replacement)
-      @aliases.push(replacement, @scanner)
-      @scanner = StringScanner.new(replacement.value)
+      aliases.push(replacement, scanner)
+      self.scanner = StringScanner.new(replacement.value)
       nil
     end
 
     sig { params(word: AST::Word).returns(Token) }
     def delimiter(word)
-      holder = HereDoc.new(delimiter: word.segments.map(&:value).join,
-                           quoted: word.segments.any?(&:quoted), strip: @awaiting == :strip,
-                           source_line: word.source_line)
-      @awaiting = nil
-      @heredocs << holder
+      holder = HereDoc.new(delimiter: delimiter_text(word), quoted: delimiter_quoted?(word),
+                           strip: awaiting == :strip, source_line: word.source_line)
+      self.awaiting = nil
+      heredocs << holder
       [:WORD, holder]
+    end
+
+    sig { params(word: AST::Word).returns(String) }
+    def delimiter_text(word)
+      word.segments.map(&:value).join
+    end
+
+    sig { params(word: AST::Word).returns(T::Boolean) }
+    def delimiter_quoted?(word)
+      word.segments.any?(&:quoted)
     end
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
     sig { returns(Token) }
     def heredoc_newline
-      start = @scanner.pos
-      HeredocReader.new(@scanner, interactive: @interactive).fill(@heredocs)
-      @heredocs = []
-      @lines.heredoc_newline(start)
+      start = scanner.pos
+      HeredocReader.new(scanner, interactive: interactive).fill(heredocs)
+      self.heredocs = []
+      lines.heredoc_newline(start)
       [:NEWLINE, "\n"]
     end
   end

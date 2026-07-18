@@ -59,6 +59,14 @@ module Rush
 
     private
 
+    attr_accessor scanner: StringScanner
+    attr_reader aliases: AliasExpander
+    attr_reader interactive: bool
+    attr_reader state: LexState
+    attr_reader lines: SourceLines
+    attr_accessor awaiting: Symbol?
+    attr_accessor heredocs: Array[HereDoc]
+
     def emit: (token token) -> token
 
     # Skip blanks and comments; when the current frame is an exhausted alias
@@ -85,6 +93,10 @@ module Rush
     def splice: (AliasExpander::Replacement replacement) -> nil
 
     def delimiter: (AST::Word word) -> token
+
+    def delimiter_text: (AST::Word word) -> String
+
+    def delimiter_quoted?: (AST::Word word) -> bool
 
     # On the newline that ends the command line, drain the pending here-docs:
     # read each body from the lines that follow, in the order the `<<`s appeared.
