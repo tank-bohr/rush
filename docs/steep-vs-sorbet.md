@@ -40,8 +40,8 @@ production default.
 
 Both checkers run in the default gate over the same implementation, but their measured scopes are
 not identical. Steep checks `lib/`. Sorbet's config names `lib/`, `exe/`, and its RBI shims; its
-current file table contains the 204 Ruby files under `lib/` plus four shims, but not the extensionless
-`exe/rush`. The exact current scope and typed-send ledger live in
+final file table contains the 204 Ruby files under `lib/` plus seven shims, but not the extensionless
+`exe/rush`: 211 inputs in all. The exact current scope and typed-send ledger live in
 [`docs/sorbet-coverage.md`](sorbet-coverage.md):
 
 ```text
@@ -55,9 +55,10 @@ Steep reads external declarations under [`sig/`](../sig) through
 wrapper auto-loaded a self-inconsistent RBI shipped by another gem before rush's source was even
 read.
 
-Mutant is intentionally absent from that diagram: it is a slow, on-demand 95% subject/full-project
-ratchet, whereas flay and flog run in the default gate. Flog was part of the veto surface throughout
-this study but produced no distinct type-system episode worth manufacturing into one.
+Mutant is intentionally absent from that diagram: it is a slow, separate-CI/on-demand 96%
+full-project ratchet with stronger per-slice subject evidence, whereas flay and flog run in the
+default gate. Flog was part of the veto surface throughout this study but produced no distinct
+type-system episode worth manufacturing into one.
 
 The two signature sets are deliberately independent. They are not generated from one another.
 That matters: generating one from the other would produce two parsers for one assertion, not two
@@ -124,7 +125,7 @@ methods on module singleton self, and incorrect standard-library RBI return type
 signatures were then rolled out by cluster.
 
 The two tools do not publish comparable coverage metrics. Steep counts a call as untyped when its
-**receiver** is untyped. Sorbet's `--track-untyped --counters` reports typed and untyped **sends**
+**receiver** is untyped. Sorbet's `--track-untyped=everywhere --counters` reports typed and untyped **sends**
 over a different input set, including configured RBI files. Comparing the percentages as a race
 would be false precision.
 
@@ -136,7 +137,7 @@ Sorbet/Sorbet Runtime 0.6.13320) contained:
 - 202 RBS files, 7,801 lines in total;
 - 1,504 inline `sig` declarations in production Ruby;
 - one Steep ignore, the Racc-generated parser;
-- Steep: 10,812 / 10,830 typed calls (99.83%); the 18 current untyped calls are contained in the
+- Steep: 10,812 / 10,830 typed calls (99.83%); the 18 then-untyped calls are contained in the
   parameter-form lambda registry and the Fiddle collation boundary;
 - Sorbet: 10,598 / 11,891 typed sends (89.13%) in its counter scope, with 1,618 signatures including
   configured RBI declarations.
@@ -151,6 +152,28 @@ rollout's person-hours and comparative static-gate runtime were not instrumented
 The historic 100% milestone is therefore a milestone, not a timeless badge. Later features added a
 native Fiddle boundary and richer quote-aware parameter parts. The current ledger names them rather
 than preserving 100% by hiding new code.
+
+### Final Phase 8 ratchet
+
+At implementation revision `03dabff`, Sorbet reports 12,688 / 13,348 typed sends (95.06%), 660
+untyped sends and 872 broader untyped usages over 211 pinned inputs. Those inputs are 203 handwritten
+`typed: true` library files, the no-sigil generated Racc parser and seven project RBIs; no handwritten
+`typed: false` body remains, and the extensionless executable is still outside the observed scope.
+The normal gap fell from the 2026-07-16 inventory's 1,316 to 660, a 49.8% reduction. Both the exact
+ratio and absolute gap are enforced, so denominator growth cannot disguise a regression.
+
+Steep independently reports 12,257 / 12,285 receiver-typed calls (99.77%) across the 203 handwritten
+library implementations, with 28 calls in eight native, logical-IO, callable-registry and
+control-flow files. Its stats command still exits successfully while emitting the known internal
+`Rush::Status` compatibility diagnostic. These percentages remain deliberately incomparable:
+receiver calls and sends differ, and so do the input sets.
+
+Forcing every Sorbet input to `typed: true` gives 12,705 / 13,469 (94.33%, gap 764), while forcing
+strong diagnostics finds 478 send-shaped call diagnostics, one in the generated parser. Those are
+sensitivity and prioritization probes, not alternate coverage numerators. The explicit final source
+ledger remains visible: 73 explicit `T.untyped` lines (65 production and seven RBI signature lines,
+plus one load-time annotation), two narrow native `T.unsafe` receivers and six bounded casts. The achieved normal target
+does not claim that generated, Fiddle, logical-IO or variant boundaries disappeared.
 
 ## What Steep caught — and what it cost
 
@@ -210,8 +233,9 @@ Steep 2.0.0 also imposed costs that were not code findings:
 - `Data.define` blocks with methods could crash or attribute instance methods to the enclosing
   module when the prototype RBS declared the constant as `untyped`.
 - It did not propagate a frozen hash's expected callable type into lambda parameters. Operator
-  registries needed a `#:` annotation on each lambda even though the constant had a precise RBS
-  value type.
+  registries needed a scoped `#:` annotation on each direct lambda even though the constant had a
+  precise RBS value type; a Sorbet `T.let` on the same expression supplied the independent model.
+  Keeping one direct strict lambda avoided an adapter that would have weakened runtime arity.
 - narrowing worked for a local variable but not for two calls to the same nilable method;
 - RBS core placed `spawn`, `exec`, `fork`, and `exit!` on `Kernel`, not the `Process` singleton used
   by the source, requiring an augmentation;
@@ -219,8 +243,8 @@ Steep 2.0.0 also imposed costs that were not code findings:
   boundary declaration.
 
 External RBS kept the Ruby implementation visually cleaner than inline signatures, but it created a
-second tree large enough to drift. The 7,801 current RBS lines are not free documentation; they are
-another maintained program.
+second tree large enough to drift. The 7,801 RBS lines in the 2026-07-12 snapshot grew to 8,213 in
+208 final files; they are not free documentation but another maintained program.
 
 ## What Sorbet caught — and what it cost
 
@@ -264,9 +288,13 @@ bad `Status.new("x")` therefore fails at runtime under Sorbet.
 
 That nominal checking also rejected RSpec verifying doubles which implemented the required
 `Process::Status` interface but were not instances of the declared class. The suite keeps static
-checking and installs a call-validation error handler for those doubles. A closed-file-descriptor
-sentinel similarly forced a Sorbet return signature to remain looser than Steep's structural `IO`
-model.
+checking and installs a call-validation error handler for those doubles. RBS describes rush's broad
+IoTable/builtin stream slots with the structural `_IoStream` protocol and admits `StringIO` test
+ports; rush's acceptable Sorbet model leaves those logical values open rather than falsely narrowing
+them to classes such as `IO | Tempfile`. The separate close-only redirect parameter remains open in
+both models because `_IoStream` would overpromise methods. This is a boundary choice in rush, not a
+claim that Sorbet cannot model protocols in general. A closed-file-descriptor sentinel creates the
+same nominal pressure.
 
 Runtime validation was thus both stronger and more coupled to concrete runtime classes. Whether that
 is a benefit depends on the boundary.
@@ -290,9 +318,9 @@ failures were unlikely to line up.
 
 ### 5. Inline signatures have source and runtime weight
 
-At the first full rollout, roughly 690 `sig` blocks covered 110 classes. The current source has 1,504
-production declarations. That ceremony affected tools which were never designed to distinguish
-annotations from executable logic:
+At the first full rollout, roughly 690 `sig` blocks covered 110 classes. The 2026-07-12 snapshot had
+1,504 production declarations; the same line-based inventory finds 1,767 at the final ratchet. That
+ceremony affected tools which were never designed to distinguish annotations from executable logic:
 
 - class-length metrics counted signature lines;
 - named block parameters were required because signatures refer to them, conflicting with
@@ -327,6 +355,34 @@ runtime validation; both static gates remain unchanged.
 
 That policy is specific to an interpreter's very hot dispatch path, but the general lesson is not:
 **measure runtime signatures as runtime code**.
+
+### 6. Coverage pressure needed an honesty ledger
+
+Sorbet exposes several numbers which answer different questions. The final 660 / 13,348 gap is the
+enforced send metric; 872 is a broader normal untyped-flow count; 478 is the send-shaped subset of a
+forced-strong diagnostic probe. A source location may emit several diagnostics, and the probe checks
+bodies outside the normal sigil mode. Treating any of these as bugs found, or substituting one for
+the typed-send numerator, would be metric gaming.
+
+The useful gains came from shared contracts: exact `Data` readers, named AST and token unions,
+checked callable registries, and private state readers for scanners and Lexer. The last pattern left
+eight scanner and five Lexer diagnostics at generated reader definition sites while making every
+consumer exact. Adding per-object `T.let` solely to erase those diagnostics would have made the
+ledger prettier at runtime cost. The contemporaneous Slice-19ac gate recorded roughly 70,000 extra
+parse allocations from a per-object Lexer/TokenClassifier/Word experiment and reverted it; raw
+samples for that rejected variant were not retained, while the final allocation ratchet remains
+reproducible. Load-time table annotations stayed.
+
+The generated Racc parser likewise remains no-sigil and ignored for diagnostics. Its handwritten
+Lexer/ParserSupport sides carry the terminal/value contract, with one grammar-proven parse-result
+cast and one unused error-stack parameter left explicit. The final result is stronger because this
+adapter is bounded, not because generated code was relabeled.
+
+This is why the project ratchets both the ratio and the absolute gap, pins the observed input set,
+and inventories explicit escapes. Five handwritten unchecked bodies became checked, while
+explicit `T.untyped` lines fell from 111 to 73 and `T.unsafe` uses from three to two. The six
+remaining casts are individually justified. Those changes are evidence of more checked
+implementation; the 95.06% figure alone is not.
 
 ## What the other gates did to the type-driven design
 
@@ -407,8 +463,8 @@ would overstate both tools.
 | Major ecosystem failure | Duplicate stdlib extension silently poisoned a whole class to `untyped`; `Data.define` attribution/crashes | Incorrect/loose stdlib RBIs; wrapper loaded unrelated broken gem RBI |
 | Dynamic Ruby friction | Frozen callable registries, repeated-call narrowing, Racc/generated code | Non-static splats, literal narrowing, generated superclass visibility |
 | Runtime effect | None | Optional validation; approximately 2× interpreter-workload cost here |
-| Main maintenance cost | 7,801-line parallel signature tree and boundary augmentations | 1,504 inline declarations, RBI shims, runtime dependency, metric noise |
-| Current residual ledger | Generated Racc parser; 23 untyped calls in five files | Generated parser ignored; five production files remain `typed: false` |
+| Main maintenance cost | 8,213-line / 208-file parallel signature tree and boundary augmentations | 1,767 inline declarations, seven RBI shims, runtime dependency and metric noise |
+| Final residual ledger | Generated Racc parser; 28 receiver-untyped calls in eight files | No handwritten false body; no-sigil generated parser, 660 untyped sends, 73 explicit untyped lines (65 production and seven RBI signature lines, one load-time annotation), two unsafe receivers and six casts |
 
 Steep was the better primary static checker for rush by the criteria this project needed: a detailed
 external domain model, an explicit receiver-based boundary ledger, and no runtime tax. Sorbet was
@@ -479,13 +535,14 @@ Sorbet's counter scope can be inspected with the same raw binary used by the rak
 ```sh
 bin=$(bundle exec ruby -e \
   's=Gem::Specification.find_by_name("sorbet-static"); print File.join(s.full_gem_path,"libexec","sorbet")')
-"$bin" --track-untyped --counters
+"$bin" --track-untyped=everywhere --counters
 ```
 
-The refreshed numerator/denominator, observed input scope, forced-strong location probe and
-anti-gaming rules are recorded in the current
+The final 12,688 / 13,348 numerator/denominator, 211-input scope, forced probes and exhaustive escape
+ledger are recorded in the current
 [`Sorbet typed-send coverage ledger`](sorbet-coverage.md). The 2026-07-12 figures above remain the
-historical experiment snapshot, not the ratchet baseline.
+historical experiment snapshot; the 2026-07-16 inventory is the comparison baseline, while the
+committed baseline JSON separately pins scope and tool version.
 
 The detailed chronological lab notes and individual design conflicts remain in
 [`docs/journal.md`](journal.md). Relevant historical milestones are

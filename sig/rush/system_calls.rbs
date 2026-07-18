@@ -80,8 +80,8 @@ module Rush
 
     # Flush and release a file a redirection opened, so a later command in the
     # same shell sees the data and the fd does not leak.
-    # Kept open in both checker surfaces: Sorbet has no structural protocol
-    # equivalent to `_IoStream`, and runtime-check parity must accept test ports.
+    # Kept open in both checker surfaces: the broad `_IoStream` overpromises
+    # methods, while a narrow nominal port would reject valid test streams.
     def close_redirect: (untyped io) -> void
 
     def read_file: (String path) -> String

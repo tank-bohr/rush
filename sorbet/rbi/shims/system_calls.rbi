@@ -70,7 +70,7 @@ module Rush
     sig { params(path: String, mode: T.any(String, Integer)).returns(File) }
     def open_file(path, mode); end
 
-    # Sorbet cannot express the close-only structural stream protocol used by Steep.
+    # Kept open in both checker models: no narrow close-only port admits every test stream.
     sig { params(io: T.untyped).void }
     def close_redirect(io); end
 

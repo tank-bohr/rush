@@ -181,7 +181,7 @@ module Rush
 
     # Flush and release a file a redirection opened, so a later command in the
     # same shell sees the data and the fd does not leak.
-    # Sorbet has no structural protocol equivalent to RBS `_IoStream`; keep this one parameter open.
+    # No shared narrow close-only port models every test stream; keep this parameter open in both checkers.
     sig { params(io: T.untyped).void }
     def close_redirect(io)
       io.close

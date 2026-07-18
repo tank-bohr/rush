@@ -3543,3 +3543,48 @@ mutation kills 555 / 559 (99.28%, 17 timeout kills); its four survivors remove o
 (97.11%, 161 timeout kills). Independent review reproduced the contracts, visibility, state identity,
 measurements and full gate with no findings. The final gate is green with 3005 examples (99.89%
 line / 98.77% branch).
+
+### The final ledger separates achieved coverage from honest residue (rush-435.9)
+The completed sweep reports three attributable snapshots rather than one rising percentage. The
+historical parent was 10,598 / 11,891 typed sends (89.1262%, gap 1,293); the inventory baseline was
+11,085 / 12,401 (89.3880%, gap 1,316); the final implementation is 12,688 / 13,348 (95.0554%, gap
+660, 872 broader usages). Inventory to final adds 1,603 typed sends on 947 total and removes 656
+untyped sends, 49.8% of the gap. Historical to final adds 2,090 typed on 1,457 total and removes 633,
+49.0%. At the final denominator the 95% threshold is 12,681, so the normal gate clears it by seven
+without a ceiling exception.
+
+The pinned Sorbet scope is 211 inputs: 203 handwritten typed-true library files, seven typed-true
+project RBIs and the no-sigil generated parser. All five handwritten false bodies are now checked;
+the extensionless executable remains outside the observed file table. The scope last changed in
+Slice 19w; a legacy per-slice practice refreshed observations through 19ac. No later path, sigil or
+Sorbet version moved, so those observations remain attribution evidence rather than being
+overwritten with policy. The exact
+ratio and 660-send cap in the separate budget own the final result.
+
+The exhaustive source audit reconciles 73 `T.untyped` lines — 65 production signature lines plus one
+load-time function-table annotation across 27 production files, and seven signature lines in four
+RBI files — plus the two receiver-only `T.unsafe` calls for Process spawn/exec and six bounded casts.
+It names every file and line in the canonical ledger. Native Fiddle/Process,
+logical IO and terminal/process protocols, universal equality and generated Racc glue remain honest
+open boundaries. Cache, redirection-registry, callback and three small lexer declarations are
+ordinary future candidates; reaching the target does not relabel them irreducible. From inventory,
+untyped lines fall 111→73 and unsafe lines 3→2; casts move 5→6, with every final proof explicit.
+
+The checker comparison is equally scoped. Steep finishes at 12,257 / 12,285 receiver-typed calls
+(99.7721%) across 203 handwritten implementations, with 28 residual calls in eight named native,
+logical-IO, callable-registry and control-flow files; its successful stats run still emits the known
+internal Status compatibility diagnostic. Sorbet's forced-true sensitivity is 12,705 / 13,469
+(94.3277%, gap 764), and forced strong finds 874 diagnostics containing 478 send-shaped calls, one
+in generated parser code. Neither is the normal numerator. The research note now records the shared
+Data shape, structural-IO/nominal disagreement, dual-annotated strict lambdas, bounded Racc host,
+named AST unions and allocation-preserving private-reader pattern without turning checker friction
+into a bug count.
+
+Canonical remeasurement reproduces every figure: the normal and forced Sorbet runs, the expected-100
+strong probe, the Steep aggregate and the explicit-source census. Two independent reviews reproduced
+the metrics, scope, historical revisions and every residual location; their wording findings exposed
+the one load-time annotation, the close-only stream's open-in-both contract, legacy baseline refresh
+history and diagnostic/location distinction. All corrections received a clean focused recheck. The
+fresh native and Docker gates each pass 3005 examples at 99.89% line / 98.77% branch; Docker also
+passes the glibc regex-ABI, ulimit, Reline and full job-control PTY smokes. With every dependency bead
+closed, this final ledger resolves `rush-435.9` and the parent `rush-435` epic.

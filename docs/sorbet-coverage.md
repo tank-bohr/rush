@@ -6,9 +6,14 @@ normal gate remains `bundle exec rake sorbet`, and RBS/Steep remains an independ
 
 ## Baseline provenance and reproduction
 
-The baseline was recorded at `2026-07-16T19:38:12Z` from source revision
+The inventory baseline was recorded at `2026-07-16T19:38:12Z` from source revision
 `051c547cee7b6c24307b9bbe7ed23b2a4f0893a5`. The source tree matched that revision; the only staged
-change was the tracker claim for `rush-435.1`, which is outside both checkers' inputs.
+change was the tracker claim for `rush-435.1`, which is outside both checkers' inputs. The committed
+`coverage_baseline.json` is now scope/version provenance: it was last refreshed at Slice 19ac
+(`9ffb443`) and pins the final 211 inputs. During the campaign, a legacy per-slice practice refreshed
+its observations through 19ac even though the last scope addition landed in 19w; final consolidation
+ends that practice. The `observed` counters remain an attribution snapshot, not current policy; the
+live result and ratchet are recorded below and in `coverage_budgets.json`.
 
 - Ruby: `ruby 4.0.5 (2026-05-20 revision 64336ffd0e) +PRISM [x86_64-linux]`
 - Sorbet: `0.6.13320`, git `48f0881afa809e9b6239de89ae73c5ce5257a2fb`
@@ -95,12 +100,13 @@ prioritization surface, not a one-to-one reconciliation with Sorbet's 1,316-send
 | **Total** | **208** |
 
 The aggregate counter calls this 202 true and 6 false; the latter folds the no-sigil parser into the
-false bucket. That is the inventory snapshot: the four implementation-typing slices raised their
-owned sigils and the later slices added narrow Reline, builtin-Data and shell-Data shims, so the current ratchet
-scope is 211 inputs (210 true plus the no-sigil generated parser). The parser remains in input
+false bucket. That is the inventory snapshot: four implementation-typing slices plus the checked
+ParserSupport host raised all five handwritten sigils, and later slices added narrow Reline,
+builtin-Data and shell-Data shims. The current ratchet scope is 211 inputs (210 true plus the
+no-sigil generated parser). The parser remains in input
 accounting even though its diagnostics are ignored.
 The extensionless `exe/rush` is configured through `--dir ./exe` but is absent from the file table,
-so it is outside this baseline. A later scope change must record a side-by-side baseline rather than
+so it is outside the observed scope. A later scope change must record a side-by-side baseline rather than
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
@@ -129,9 +135,11 @@ bundle exec rake sorbet:coverage:record # updates scope/observations only; never
 ```
 
 After a real improvement, lower `maximum_untyped_sends` and raise the rational ratio in the budget
-file in the same reviewed slice. Run `record` only when a sigil/path or Sorbet version deliberately
-changes; for a Sorbet upgrade, retain old/new results side by side in the journal before accepting
-the new baseline. Never loosen a budget merely because `record` observed a regression.
+file in the same reviewed slice. Earlier campaign slices also refreshed baseline observations after
+each gain; that legacy practice ended at 19ac. Going forward, run `record` only when a sigil/path or
+Sorbet version deliberately changes; for a Sorbet upgrade, retain old/new results side by side in
+the journal before accepting the new baseline. Never loosen a budget merely because `record`
+observed a regression.
 
 Default-gate cost is negligible. Eight interleaved local process cohorts measured the old raw type
 check at 63.3 ms median and the version + metrics/file-table run at 70.5 ms: +7.2 ms before the
@@ -249,9 +257,10 @@ counter yield:
    completed every ordinary AST node reader feeding execution and rendering; their existing exact
    RBS contracts now have matching Sorbet signatures. Slice 19ag does the same for the shared shell/
    POSIX/bracket pattern scanners through private reader/accessor contracts, typed dispatch/delimiter
-   tables and the missing StringScanner `string`/`pos=` shim. Eight forced-strong reader-definition
-   diagnostics remain visible to avoid hot per-object `T.let`; all scanner consumers are exact and
-   the allocation ratchet is unchanged. Remaining classes should follow that consumer-first rule.
+   tables and the missing StringScanner `string`/`pos=` shim. Slice 19ah applies that consumer-first
+   pattern to Lexer's seven state fields and removes all 21 of its send-shaped diagnostics. Eight
+   scanner and five Lexer reader-definition diagnostics remain visible to avoid hot per-object
+   `T.let`; all of their consumers are exact and the allocation ratchet is green.
 
 4. **Untyped value readers and bounded variants.** Slice 19t gave the three `ulimit` values exact
    Data-reader/constructor shims and replaced its heterogeneous mutable hash with a typed state
@@ -279,75 +288,131 @@ counter yield:
    and replace reflection only when an actual residual root remains.
 
 6. **System and native ports.** Resource, job-control, signal, redirect ownership and interactive
-   contracts are now explicit in the implementation/RBS/Sorbet surfaces; the close-only logical
-   stream parameter remains mirrored and open because Sorbet lacks RBS structural protocols.
+   contracts are now explicit in the implementation/RBS/Sorbet surfaces; the close-only redirect
+   stream parameter remains mirrored and open in both checker surfaces. The broader RBS `_IoStream`
+   protocol would overstate that parameter, while nominal IO classes would reject valid test ports.
    Process.spawn and exec retain exactly two narrow receiver escapes because Sorbet rejects Ruby's dynamically sized
    non-terminal argv splat; their option keys and return contracts remain checked. Their flat option
    values are the same logical-stream seam, not a separate tractable collection, so wrapping the hash
    merely to hide its stream values is not a typing gain. The Fiddle collation backend still has an
-   intentionally dynamic callable/pointer table, which
-   `rush-435.7` must retain in the measured native ledger.
+   intentionally dynamic callable/pointer table, retained in the measured native ledger.
 
-The explicit source ledger currently contains 73 `T.untyped` declaration lines across production
-and project RBIs (27 production files and four RBI files), plus two `T.unsafe` and six `T.cast`
-lines. These are review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
-remain honestly open after the ordinary roots are removed.
+### Explicit final escape ledger
 
-## Target and prioritized plan
+The final audit finds 73 source lines containing `T.untyped`: 65 signature lines plus one load-time
+`T.let` annotation in 27 production files, and seven signature lines in four project RBI files.
+No ordinary data-flow expression returns or casts to `T.untyped`; the sole non-signature occurrence
+is the load-time Fiddle function-table annotation. Line counts, not token counts, are used where one
+signature contains the token more than once.
 
-The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. The fifteenth `rush-435.7` root slice
-demonstrates that target at the normal denominator:
+| Files and lines | Count | Boundary and disposition |
+|---|---:|---|
+| `system_calls/collation.rb:37,103,113,119,124,133-134` | 7 | Fiddle handles, functions, pointers and variadic native results; retained native ABI boundary |
+| `system_calls/regex_abi.rb:21,35` | 2 | Fiddle handle passed through ABI probes; retained native boundary |
+| `system_calls.rb:37,57,86,185` | 4 | Process option values, trap callback/result and close-only redirect stream; retained OS/logical-IO boundary |
+| `builtins/exec.rb:48`; `external.rb:54` | 2 | Process option values assembled by callers; same retained spawn/exec seam |
+| `sorbet/rbi/shims/system_calls.rbi:12,24,39,74` | 4 | Exact mirror of the four SystemCalls native/open declarations |
+| `sorbet/rbi/shims/reline.rbi:9`; `strscan.rbi:9` | 2 | External variadic/option surfaces whose rush result contracts are otherwise narrowed |
+| `builtins/base.rb:58,63` | 2 | Builtin stdout/stderr logical streams; structural in RBS, intentionally open in nominal Sorbet |
+| `builtins/read.rb:81`; `builtins/read_input.rb:24,60,67,84` | 5 | Read ports, raw input and callback plumbing across IO/StringIO test seams |
+| `expansion/command_substitution.rb:27,53,67,74` | 4 | Pipe endpoints and child-process callback/result plumbing |
+| `fd_entry.rb:12,17,27,43,50`; `io_table.rb:11,23,33,38,82,89` | 11 | Borrowed/owned/closed descriptor variants, logical streams and process-option values |
+| `job_control.rb:39,84,94,128,148,170,177`; `job_table.rb:143`; `job_table/job.rb:134` | 9 | Fork callbacks, process-group results and reporting streams |
+| `terminal.rb:35,47,55,77,80` | 5 | Platform tty handle and ioctl state |
+| `redirect_scope.rb:11`; `signal_report.rb:21` | 2 | Executor protocol and OS error payload |
+| `builtins/dot.rb:30`; `builtins/jobs.rb:46` | 2 | Repeated-call narrowing and callback return; ordinary future contract candidates, not native residue |
+| `command_lookup.rb:37,122` | 2 | Generic cache hook; future named-cache candidate |
+| `redirection/registry.rb:18,23,47` | 3 | Applier registry and heterogeneous file-redirection spec; future bounded registry candidate |
+| `lexer/dollar_scanner.rb:23`; `lexer/double_quote_scanner.rb:65`; `lexer/word_scanner.rb:128` | 3 | Small heterogeneous scanner values; ordinary future union candidates |
+| `ast/word_segment.rb:77`; `positional.rb:17` | 2 | Ruby equality accepts an arbitrary peer; deliberately universal input |
+| `parser_support.rb:35`; `sorbet/rbi/shims/rush.rbi:26` | 2 | Generated Racc error stack and `do_parse` result |
+| **Total** | **73** | **Every production and project-RBI `T.untyped` line** |
 
-- `ceil(13,348 × 0.95) = 12,681` typed sends;
-- the measured 12,688 typed sends exceed that threshold by seven;
-- 660 sends remain untyped, seven fewer than the 667-send maximum at this denominator;
-- the baseline 1,316-send gap has fallen by 656, or 49.8%.
+The two `T.unsafe` uses are only `system_calls.rb:41,62`, where the receiver of Ruby's dynamically
+sized non-terminal `Process.spawn`/`Process.exec` splat crosses Sorbet's limitation; arguments,
+options and results remain checked. The six casts are individually bounded:
 
-Forcing the remaining no-sigil generated parser changes the denominator, so the fixed result is not
-a claim about every possible future scope. Forcing every current input to `typed: true` without
-changing source produces a conservative scope envelope of 12,705 / 13,469 typed sends (94.33%, gap
-764). At that denominator 95% is 12,796 typed sends: +91, leaving at most 673 untyped, an 11.9% gap
-reduction. The current location probe finds 478 concrete send-shaped diagnostics (477 outside the
-generated parser), with 146 concentrated in 11 files having at least ten each. These diagnostics
-still do not map one-for-one to the counter, but they identify the ordinary declaration, registry
-and bounded-variant roots that remain after the normal target.
+| File and line | Narrowing proof |
+|---|---|
+| `environment.rb:122` | `Boolean | Symbol` snapshot after the `:keep` branch; candidate for a literal-state type |
+| `parser_support.rb:27` | generated `do_parse` result to the grammar's `AST::List` start symbol |
+| `program_session.rb:57` | `AST::List | Symbol` after excluding `:eof` and `:error` |
+| `source_runner.rb:37` | `AST::List | Symbol` after excluding `:eof` |
+| `subshell_runner.rb:50` | shell control-flow error after policy selects the return-code variant |
+| `system_calls/process_control.rb:99` | mixin receiver to its concrete `SystemCalls` host at fork |
 
-The normal-gate 95% target is therefore demonstrated without an escape or widened boundary. The
-forced-scope envelope remains useful sensitivity analysis rather than a second acceptance metric;
-`rush-435.9` must publish both results and the named native/Racc residue instead of implying that the
-normal result eliminates every honest untyped boundary.
+These are review targets, not claims that every residual is irreducible. Native/Fiddle, generated
+Racc and logical-IO protocol seams are intentionally retained; the cache, registry and small lexer
+values remain named future candidates rather than being wrapped or cast merely to move a counter.
 
-Work order:
+## Final adjudication (`rush-435.9`)
 
-1. **`rush-435.2`** — ratchet the fixed normal scope, typed-send ratio, and absolute untyped-send
-   count; a Sorbet or scope change requires an explicit side-by-side baseline reset.
-2. **`rush-435.3`** — type PrintfFormatter's 40 forced-strong sites without weakening scanner and
-   numeric-error behavior.
-3. **`rush-435.4`** — type ResourceLimits and the public resource API feeding the 90-usage ulimit
-   destination cluster.
-4. **`rush-435.5`** — type ProcessControl's 35 sites and its wait/fork/tty/ioctl shapes.
-5. **`rush-435.6`** — type the remaining SystemCalls body's 18 sites and complete its caller-facing
-   RBI without global option/stream widening.
-6. **`rush-435.8`** — adjudicated: ParserSupport is checked end to end; the generated parser remains
-   no-sigil, with one explicit semantic-stack result cast and one unused error-stack parameter.
-7. **`rush-435.7`** — remeasure, then sweep shared typed-true roots in this order: missing method and
-   ivar declarations; `Data`/bounded variants; loose project RBIs; registries; native residue.
-8. **`rush-435.9`** — publish the final numerator/denominator and either demonstrate 95% or justify
-   the measured ceiling.
+The result below is pinned to implementation revision `03dabff`, Sorbet 0.6.13320 and Steep 2.0.0 /
+RBS 4.0.3. Sorbet observes 211 inputs: 203 handwritten `lib/**/*.rb` files at `typed: true`, the
+no-sigil generated `lib/rush/parser.rb`, and seven `typed: true` project RBIs. No handwritten
+`typed: false` body remains. The extensionless `exe/rush` is named by the config but absent from the
+observed file table. Steep independently checks the same 203 handwritten library implementations,
+not the generated parser, RBIs or executable.
 
-Anti-gaming rules for every slice:
+| Measurement | Result | Gap / qualification |
+|---|---:|---|
+| Normal Sorbet gate | 12,688 / 13,348 (95.0554%) | 660 untyped sends; 872 broader untyped usages |
+| Forced-true sensitivity | 12,705 / 13,469 (94.3277%) | 764; hypothetical scope, not the acceptance metric |
+| Forced-strong 7018 probe | 874 diagnostics | 478 send-shaped calls, 477 outside generated parser; 146 in 11 files with at least ten |
+| Steep receiver ledger | 12,257 / 12,285 (99.7721%) | 28 untyped calls over a different scope and metric |
 
-- track both the ratio and absolute untyped-send gap;
-- keep Sorbet version and observed inputs fixed, or reset with old/new results side by side;
-- do not exclude parser/source or add trivial typed inputs to alter the denominator;
-- do not count `T.unsafe`, broad `T.untyped`, loose RBIs, or casts as precision gains;
-- require raised sigils to check implementation bodies;
-- keep Steep, behavioral, mutation/allocation where relevant, and the full quality gate green.
+`steep stats` exits successfully while still writing its known internal `Rush::Status` compatibility
+`ERROR`; the aggregate is reproducible, not warning-free. Its 28-call residue is also explicit:
 
-## Historical comparison
+| Steep source | Untyped calls | Boundary |
+|---|---:|---|
+| `system_calls.rb` | 3 | Process/signal/native options |
+| `builtins/read_input.rb` | 1 | logical stream protocol |
+| `system_calls/process_control.rb` | 1 | process-control native call |
+| `system_calls/regex_abi.rb` | 3 | Fiddle ABI probe |
+| `expansion/parameter_forms.rb` | 12 | heterogeneous callable registry |
+| `system_calls/collation.rb` | 6 | Fiddle callable/pointer table |
+| `subshell_runner.rb` | 1 | shell control-flow variant |
+| `system_calls/resource_limits.rb` | 1 | resource-limit native result |
 
-The 2026-07-12 snapshot at parent revision `327c081` recorded 10,598 / 11,891 typed sends
-(89.13%), leaving 1,293 untyped sends. The refreshed baseline has 487 more typed sends but 510 more
-total sends, so the absolute gap is **23 sends larger** despite the ratio rising by about 0.26
-percentage points. No implementation-typing improvement is inferred from that movement.
+### Historical and inventory deltas
+
+| Snapshot | Typed / total sends | Ratio | Gap |
+|---|---:|---:|---:|
+| Historical parent `327c081` (2026-07-12) | 10,598 / 11,891 | 89.1262% | 1,293 |
+| Inventory `051c547` (2026-07-16) | 11,085 / 12,401 | 89.3880% | 1,316 |
+| Final implementation `03dabff` | 12,688 / 13,348 | 95.0554% | 660 |
+
+Historical to inventory added 487 typed sends but 510 total, increasing the gap by 23; no typing
+improvement is inferred from that ratio movement. Inventory to final adds 1,603 typed sends on 947
+new total sends and removes 656 untyped sends (49.8% of the inventory gap), a 5.67 percentage-point
+increase. Historical to final adds 2,090 typed on 1,457 total and removes 633 untyped sends (49.0%),
+a 5.93-point increase.
+
+At the final denominator, `ceil(13,348 × 0.95) = 12,681`: the normal result clears the stretch target
+by seven typed sends and leaves seven fewer than the allowed 667 untyped. This is not “95% of Ruby”
+or a bug count; it is Sorbet's send metric over the pinned inputs. Forcing every input true changes
+the experiment: 95% would require 12,796 typed sends, +91, leaving at most 673 untyped. That envelope
+and the forced-strong locations are prioritization surfaces, not alternate numerators.
+
+### Final anti-gaming audit
+
+The result combines a ratio ratchet with the absolute 660-send cap. All five handwritten false
+bodies became checked; the generated parser stayed visible in scope rather than being excluded; and
+scope changes from four to seven narrow RBIs were recorded explicitly. From inventory to final, the
+source ledger moved from 111 to 73 `T.untyped` lines and from three to two `T.unsafe` lines; casts
+moved from five to six, all individually justified above. No broad cast, loose wrapper or trivial
+input was added to manufacture the percentage.
+
+`coverage_baseline.json` therefore remains the current scope/version provenance with its historical
+Slice-19ac observations. Running `sorbet:coverage:record` merely to copy final counters would replace
+that attribution and is not warranted under the finalized scope-only recording policy; the current
+result is owned by the exact rational and absolute budgets.
+
+The implementation slices kept focused `dash` comparisons, runtime checks, mutation and allocation
+gates proportional to each changed boundary. Docker ABI/ulimit/Reline/PTY coverage ran on the
+resource, job-control and SystemCalls slices where those platform seams changed; later root slices
+did not alter them. A fresh final Docker gate passes all 3,005 examples at 99.89% line / 98.77%
+branch plus the glibc regex-ABI, ulimit, Reline and full job-control PTY smokes. The native final gate
+reports the same suite and coverage. These gates establish behavior and architecture; the counters
+only identify where the type models remain open.
