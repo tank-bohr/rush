@@ -3447,3 +3447,37 @@ caught two contract details: Data#with's RBI now uses type-correct defaults to d
 keywords from explicitly nil kind/target, and Dispatcher helper visibility is private in RBS too.
 It also added a supported-node subclass regression for the exact-class policy; re-review is clean.
 The final full gate is green with 3005 examples (99.89% line / 98.77% branch).
+
+### `test` callable bodies and grammar state stop erasing their operands (rush-435.7)
+TestOperators' outer `T.let` tables constrained the Proc values handed to callers but could not
+propagate expected types backward through a hash literal into the 26 lambda bodies. The three
+operator shapes now have named UnaryOp/StringOp/IntegerOp aliases, and every strict lambda gets a
+load-time Sorbet `T.let` plus an inline RBS alias scoped directly to its expression. Both checkers
+therefore see exact `SystemCalls`/String/Integer parameters before the frozen tables collect the
+callables, while runtime keeps the original single lambda, strict arity and direct invocation — no
+adapter or per-call assertion. TestGrammar's four constructor
+fields (`args`, context, token classifier and cursor) are now explicit `T.let` roots matching its
+already-exact RBS. Its final forced-strong residue came from Sorbet's untyped lowering of Ruby
+pattern-matching `in` arms; equivalent Symbol `case/when` branches retain the dash grammar while
+remaining checked.
+
+The ratchet moves from 12,419 / 13,194 to 12,464 / 13,195 (94.46%): typed sends rise by 45 on one
+new total send, so the gap falls to 731 (-44) and usages to 986 (-87). Because these were implicit
+lambda/ivar roots, the explicit ledger stays at 73 untyped lines (27 production files, four project
+RBIs), two unsafe lines and six casts. TestOperators and TestGrammar both now have zero forced-strong
+7018 diagnostics. Steep advances to 12,110 / 12,138 typed calls with its same 28-call residue. The
+forced-true planning envelope is 12,481 / 13,316 (93.73%, gap 835), and the send-shaped probe falls
+from 590 to 548 sites (one generated); its at-least-ten concentration falls from 244 / 16 files to
+202 / 14.
+
+Focused operator/token/full-test specs cover 56 examples, runtime method wrappers accept unary,
+numeric and file primaries, and 44 unary/binary/recursive-grammar probes match dash on stdout and
+status. The allocation ratchet is unchanged despite four constructor declarations and 26 load-time
+callable annotations. Mutation of the two changed Grammar methods kills 86 / 87 (98.85%); the sole
+survivor changes only a disabled-runtime `T::Array[String]` annotation to `T::Array[nil]` (constant
+lambda bodies are not Mutant method subjects and are pinned by the behavior corpus). Independent
+review caught an intermediate block-factory design weakening lambda arity; the final direct-lambda
+form preserves strict arity with no wrapper, and re-review is clean. The parallel lane twice finished
+all 3005 examples without failures but lost SimpleCov shard result files at coordinator exit (the
+reported shard reran 420 / 420 green); the documented deterministic serial fallback is fully green
+with 3005 examples (99.89% line / 98.77% branch).

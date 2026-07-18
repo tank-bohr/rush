@@ -104,8 +104,8 @@ so it is outside this baseline. A later scope change must record a side-by-side 
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 12,070 /
-12,098 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
+not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 12,110 /
+12,138 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
@@ -117,8 +117,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after the twelfth `rush-435.7` root slice, at
-  most 775 untyped sends and an exact rational minimum ratio of 12,419 / 13,194. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after the thirteenth `rush-435.7` root slice, at
+  most 731 untyped sends and an exact rational minimum ratio of 12,464 / 13,195. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -168,6 +168,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19ac | lexer token/value boundary and word readers | 12,269 / 13,127 | 93.46% | 858 | 1,162 |
 | 19ad | `WordSegment` closed payload union | 12,233 / 13,087 | 93.47% | 854 | 1,160 |
 | 19ae | AST reader, redirect-target and `CommandText` dispatch contracts | 12,419 / 13,194 | 94.13% | 775 | 1,073 |
+| 19af | `test` callable-body and grammar-state roots | 12,464 / 13,195 | 94.46% | 731 | 986 |
 
 ## Material usage clusters
 
@@ -240,9 +241,10 @@ counter yield:
    adapter, not permission to type or patch generated code by hand.
 
 3. **Missing ordinary declarations.** Slice 19u typed every method in `TestOperators`,
-   `TestGrammar`, and `TestExpr`; their normal 7018 diagnostics are now zero without replacing the
-   operator tables. Slice 19x then made Environment's four storage ivars and two block-return
-   contracts exact. Slice 19ae completed every ordinary AST node reader feeding execution and
+   `TestGrammar`, and `TestExpr`; Slice 19af then declared TestGrammar's four storage ivars and
+   replaced its checker-internal pattern-match residue, taking its forced-strong diagnostics to zero.
+   Slice 19x made Environment's four storage ivars and two block-return contracts exact. Slice 19ae
+   completed every ordinary AST node reader feeding execution and
    rendering; their existing exact RBS contracts now have matching Sorbet signatures. Many remaining
    typed-true classes still expose ordinary open roots, so `rush-435.7` should continue with shared
    declarations and remeasure before changing dispatch architecture.
@@ -266,8 +268,11 @@ counter yield:
    its reflective dispatch remains, but the file now has zero strong 7018 diagnostics. Slice 19ae
    first typed the complete AST reader surface, then replaced `CommandText`'s residual
    `Method#call` erasure with a small exact-class dispatcher; `CommandText` now likewise has zero
-   strong 7018 diagnostics without casts. Other registries should follow that order: sign values
-   first, and replace reflection only when an actual residual root remains.
+   strong 7018 diagnostics without casts. Slice 19af gives TestOperators' three callable kinds named
+   proc contracts and annotates each strict lambda at construction for both checkers, so all 26
+   bodies are checked with no runtime adapter and that file also reaches zero. Other registries
+   should follow that order: sign values first,
+   and replace reflection only when an actual residual root remains.
 
 6. **System and native ports.** Resource, job-control, signal, redirect ownership and interactive
    contracts are now explicit in the implementation/RBS/Sorbet surfaces; the close-only logical
@@ -287,20 +292,20 @@ remain honestly open after the ordinary roots are removed.
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After the twelfth `rush-435.7` root slice, at
+escape only for measured native/Racc/variant residue. After the thirteenth `rush-435.7` root slice, at
 the normal denominator:
 
-- `ceil(13,194 × 0.95) = 12,535` typed sends;
-- this needs 116 additional typed sends;
+- `ceil(13,195 × 0.95) = 12,536` typed sends;
+- this needs 72 additional typed sends;
 - no more than 659 sends may remain untyped;
-- that removes 15.0% of the current 775-send gap.
+- that removes 9.8% of the current 731-send gap.
 
 Forcing the remaining no-sigil generated parser changes the denominator, so the fixed calculation
 is not the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 12,436 / 13,315 typed sends (93.40%, gap 879). At that denominator
-95% is 12,650 typed sends: +214, leaving at most 665 untyped, a 24.3% gap reduction. The current
-location probe finds 590 concrete send-shaped diagnostics (589 outside generated parser), with 244
-concentrated in 16 files having at least ten each. These diagnostics still do not map one-for-one to
+conservative scope envelope of 12,481 / 13,316 typed sends (93.73%, gap 835). At that denominator
+95% is 12,651 typed sends: +170, leaving at most 665 untyped, a 20.4% gap reduction. The current
+location probe finds 548 concrete send-shaped diagnostics (547 outside generated parser), with 202
+concentrated in 14 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, registry and bounded-variant roots above.
 

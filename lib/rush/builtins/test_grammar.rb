@@ -23,10 +23,10 @@ module Rush
 
       sig { params(args: T::Array[String], context: TestContext).void }
       def initialize(args, context)
-        @args = args
-        @context = context
-        @tokens = TestTokens.new(args)
-        @pos = 0
+        @args = T.let(args, T::Array[String])
+        @context = T.let(context, TestContext)
+        @tokens = T.let(TestTokens.new(args), TestTokens)
+        @pos = T.let(0, Integer)
       end
 
       sig { returns(T::Boolean) }
@@ -81,8 +81,8 @@ module Rush
       sig { params(kind: Symbol).returns(T::Boolean) }
       def primary(kind)
         case kind
-        in :eoi then false
-        in :lparen then group
+        when :eoi then false
+        when :lparen then group
         else kind == :unop ? unary : word
         end
       end

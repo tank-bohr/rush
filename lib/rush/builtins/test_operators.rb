@@ -6,45 +6,182 @@ module Rush
     # The operator vocabulary of `test`/`[`, shared by the argument-count
     # front end (TestExpr) and the recursive-descent grammar (TestGrammar).
     # The tables map to lambdas, not method symbols, so each primary carries
-    # its operand types past both checkers (the #: types each lambda for
-    # Steep, the T.let the table for Sorbet). File primaries ask the
-    # SystemCalls port; -t parses its operand as a file-descriptor number
+    # its operand types past both checkers. Each lambda gets its exact type at
+    # construction — an outer table annotation cannot propagate inward to its
+    # parameters. File primaries ask the SystemCalls port; -t parses its operand
+    # as a file-descriptor number
     # first, rejecting non-numbers like dash's "Illegal number" (exit 2).
     module TestOperators
       extend T::Sig
 
+      UnaryOp = T.type_alias do
+        T.proc.params(files: SystemCalls, value: String).returns(T::Boolean)
+      end
+      StringOp = T.type_alias { T.proc.params(left: String, right: String).returns(T::Boolean) }
+      IntegerOp = T.type_alias { T.proc.params(left: Integer, right: Integer).returns(T::Boolean) }
+
       UNARY = T.let({
-        '-n' => ->(_files, val) { !val.empty? },                          #: ^(SystemCalls, String) -> bool
-        '-z' => ->(_files, val) { val.empty? },                           #: ^(SystemCalls, String) -> bool
-        '-t' => ->(files, val) { files.tty_fd?(fd_number(val)) },         #: ^(SystemCalls, String) -> bool
-        '-e' => ->(files, val) { files.exist?(val) },                     #: ^(SystemCalls, String) -> bool
-        '-f' => ->(files, val) { files.file?(val) },                      #: ^(SystemCalls, String) -> bool
-        '-d' => ->(files, val) { files.directory?(val) },                 #: ^(SystemCalls, String) -> bool
-        '-r' => ->(files, val) { files.readable?(val) },                  #: ^(SystemCalls, String) -> bool
-        '-w' => ->(files, val) { files.writable?(val) },                  #: ^(SystemCalls, String) -> bool
-        '-x' => ->(files, val) { files.executable?(val) },                #: ^(SystemCalls, String) -> bool
-        '-s' => ->(files, val) { files.file_nonempty?(val) },             #: ^(SystemCalls, String) -> bool
-        '-h' => ->(files, val) { files.symlink?(val) },                   #: ^(SystemCalls, String) -> bool
-        '-L' => ->(files, val) { files.symlink?(val) },                   #: ^(SystemCalls, String) -> bool
-        '-p' => ->(files, val) { files.pipe?(val) },                      #: ^(SystemCalls, String) -> bool
-        '-b' => ->(files, val) { files.blockdev?(val) },                  #: ^(SystemCalls, String) -> bool
-        '-c' => ->(files, val) { files.chardev?(val) },                   #: ^(SystemCalls, String) -> bool
-        '-S' => ->(files, val) { files.socket?(val) },                    #: ^(SystemCalls, String) -> bool
-        '-g' => ->(files, val) { files.setgid?(val) },                    #: ^(SystemCalls, String) -> bool
-        '-u' => ->(files, val) { files.setuid?(val) }                     #: ^(SystemCalls, String) -> bool
-      }.freeze, T::Hash[String, T.proc.params(files: SystemCalls, val: String).returns(T::Boolean)])
+        '-n' => T.let(
+          begin
+            ->(_files, value) { !value.empty? } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-z' => T.let(
+          begin
+            ->(_files, value) { value.empty? } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-t' => T.let(
+          begin
+            ->(files, value) { files.tty_fd?(fd_number(value)) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-e' => T.let(
+          begin
+            ->(files, value) { files.exist?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-f' => T.let(
+          begin
+            ->(files, value) { files.file?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-d' => T.let(
+          begin
+            ->(files, value) { files.directory?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-r' => T.let(
+          begin
+            ->(files, value) { files.readable?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-w' => T.let(
+          begin
+            ->(files, value) { files.writable?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-x' => T.let(
+          begin
+            ->(files, value) { files.executable?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-s' => T.let(
+          begin
+            ->(files, value) { files.file_nonempty?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-h' => T.let(
+          begin
+            ->(files, value) { files.symlink?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-L' => T.let(
+          begin
+            ->(files, value) { files.symlink?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-p' => T.let(
+          begin
+            ->(files, value) { files.pipe?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-b' => T.let(
+          begin
+            ->(files, value) { files.blockdev?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-c' => T.let(
+          begin
+            ->(files, value) { files.chardev?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-S' => T.let(
+          begin
+            ->(files, value) { files.socket?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-g' => T.let(
+          begin
+            ->(files, value) { files.setgid?(value) } #: unary_op
+          end,
+          UnaryOp
+        ),
+        '-u' => T.let(
+          begin
+            ->(files, value) { files.setuid?(value) } #: unary_op
+          end,
+          UnaryOp
+        )
+      }.freeze, T::Hash[String, UnaryOp])
       STRING = T.let({
-        '=' => ->(lhs, rhs) { lhs == rhs },  #: ^(String, String) -> bool
-        '!=' => ->(lhs, rhs) { lhs != rhs }  #: ^(String, String) -> bool
-      }.freeze, T::Hash[String, T.proc.params(lhs: String, rhs: String).returns(T::Boolean)])
+        '=' => T.let(
+          begin
+            ->(left, right) { left == right } #: string_op
+          end,
+          StringOp
+        ),
+        '!=' => T.let(
+          begin
+            ->(left, right) { left != right } #: string_op
+          end,
+          StringOp
+        )
+      }.freeze, T::Hash[String, StringOp])
       INTEGER = T.let({
-        '-eq' => ->(lhs, rhs) { lhs == rhs },  #: ^(Integer, Integer) -> bool
-        '-ne' => ->(lhs, rhs) { lhs != rhs },  #: ^(Integer, Integer) -> bool
-        '-gt' => ->(lhs, rhs) { lhs > rhs },   #: ^(Integer, Integer) -> bool
-        '-ge' => ->(lhs, rhs) { lhs >= rhs },  #: ^(Integer, Integer) -> bool
-        '-lt' => ->(lhs, rhs) { lhs < rhs },   #: ^(Integer, Integer) -> bool
-        '-le' => ->(lhs, rhs) { lhs <= rhs }   #: ^(Integer, Integer) -> bool
-      }.freeze, T::Hash[String, T.proc.params(lhs: Integer, rhs: Integer).returns(T::Boolean)])
+        '-eq' => T.let(
+          begin
+            ->(left, right) { left == right } #: integer_op
+          end,
+          IntegerOp
+        ),
+        '-ne' => T.let(
+          begin
+            ->(left, right) { left != right } #: integer_op
+          end,
+          IntegerOp
+        ),
+        '-gt' => T.let(
+          begin
+            ->(left, right) { left > right } #: integer_op
+          end,
+          IntegerOp
+        ),
+        '-ge' => T.let(
+          begin
+            ->(left, right) { left >= right } #: integer_op
+          end,
+          IntegerOp
+        ),
+        '-lt' => T.let(
+          begin
+            ->(left, right) { left < right } #: integer_op
+          end,
+          IntegerOp
+        ),
+        '-le' => T.let(
+          begin
+            ->(left, right) { left <= right } #: integer_op
+          end,
+          IntegerOp
+        )
+      }.freeze, T::Hash[String, IntegerOp])
 
       # A string that may name an integer for the numeric primaries: #value is its
       # integer when it is a valid (optionally signed, blank-padded) decimal, else

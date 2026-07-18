@@ -3,18 +3,27 @@ module Rush
     # The operator vocabulary of `test`/`[`, shared by the argument-count
     # front end (TestExpr) and the recursive-descent grammar (TestGrammar).
     # The tables map to lambdas, not method symbols, so each primary carries
-    # its operand types past both checkers (the #: types each lambda for
-    # Steep, the T.let the table for Sorbet). File primaries ask the
-    # SystemCalls port; -t parses its operand as a file-descriptor number
+    # its operand types past both checkers. Each lambda gets its exact type at
+    # construction — an outer table annotation cannot propagate inward to its
+    # parameters. File primaries ask the SystemCalls port; -t parses its operand
+    # as a file-descriptor number
     # first, rejecting non-numbers like dash's "Illegal number" (exit 2).
     module TestOperators
       extend T::Sig
 
-      UNARY: ::Hash[String, ^(SystemCalls, String) -> bool]
+      type unary_op = ^(SystemCalls, String) -> bool
+      type string_op = ^(String, String) -> bool
+      type integer_op = ^(Integer, Integer) -> bool
 
-      STRING: ::Hash[String, ^(String, String) -> bool]
+      UnaryOp: untyped
+      StringOp: untyped
+      IntegerOp: untyped
 
-      INTEGER: ::Hash[String, ^(Integer, Integer) -> bool]
+      UNARY: ::Hash[String, unary_op]
+
+      STRING: ::Hash[String, string_op]
+
+      INTEGER: ::Hash[String, integer_op]
 
       # A string that may name an integer for the numeric primaries: #value is its
       # integer when it is a valid (optionally signed, blank-padded) decimal, else
