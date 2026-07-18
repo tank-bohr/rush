@@ -66,7 +66,7 @@ module Rush
 
       private
 
-      sig { params(segment: AST::WordSegment[T.untyped]).returns(String) }
+      sig { params(segment: AST::AnySegment).returns(String) }
       def expanded_pattern(segment)
         escape_if_quoted(segment, segment.expand(@executor))
       end
@@ -77,12 +77,12 @@ module Rush
         FieldSplitter.new(ifs).split(parts).each { |field| @glob_expander.append(field, expanded) }
       end
 
-      sig { params(segments: T::Array[AST::WordSegment[T.untyped]], mode: Symbol).returns(T::Array[AST::WordSegment[T.untyped]]) }
+      sig { params(segments: T::Array[AST::AnySegment], mode: Symbol).returns(T::Array[AST::AnySegment]) }
       def tilde_expand(segments, mode)
         TILDE_EXPANDERS.fetch(mode).new(@executor, segments).expand
       end
 
-      sig { params(segment: AST::WordSegment[T.untyped], expanded: T::Array[FieldPart]).void }
+      sig { params(segment: AST::AnySegment, expanded: T::Array[FieldPart]).void }
       def append_field_parts(segment, expanded)
         return append_splat_parts(segment, expanded) if segment.splat?
 
@@ -91,7 +91,7 @@ module Rush
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
-      sig { params(segment: AST::WordSegment[T.untyped], text: String).returns(String) }
+      sig { params(segment: AST::AnySegment, text: String).returns(String) }
       def escape_if_quoted(segment, text)
         segment.quoted ? escape(text) : text
       end
@@ -101,7 +101,7 @@ module Rush
         text.gsub(/[\\*?\[\]\-!^]/) { |meta| "\\#{meta}" }
       end
 
-      sig { params(segment: AST::WordSegment[T.untyped], expanded: T::Array[FieldPart]).void }
+      sig { params(segment: AST::AnySegment, expanded: T::Array[FieldPart]).void }
       def append_splat_parts(segment, expanded)
         quoted = segment.quoted
         @executor.state.positional.to_a.each_with_index do |element, index|

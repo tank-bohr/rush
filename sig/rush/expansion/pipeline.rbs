@@ -7,11 +7,11 @@ module Rush
     # forced field break between them ($* always joins to a scalar). Field
     # splitting carries quote provenance into the pathname-expansion boundary.
     interface _TildeExpansion
-      def expand: () -> Array[AST::WordSegment[untyped]]
+      def expand: () -> Array[AST::any_word_segment]
     end
 
     interface _TildeExpanderClass
-      def new: (Executor executor, Array[AST::WordSegment[untyped]] segments) -> _TildeExpansion
+      def new: (Executor executor, Array[AST::any_word_segment] segments) -> _TildeExpansion
     end
 
     class Pipeline
@@ -45,21 +45,21 @@ module Rush
 
       private
 
-      def expanded_pattern: (AST::WordSegment[untyped] segment) -> String
+      def expanded_pattern: (AST::any_word_segment segment) -> String
 
       def append_word: (AST::Word word, Array[String] expanded) -> void
 
-      def tilde_expand: (Array[AST::WordSegment[untyped]] segments, Symbol mode) -> Array[AST::WordSegment[untyped]]
+      def tilde_expand: (Array[AST::any_word_segment] segments, Symbol mode) -> Array[AST::any_word_segment]
 
-      def append_field_parts: (AST::WordSegment[untyped] segment, Array[[String, bool, bool, bool]] expanded) -> void
+      def append_field_parts: (AST::any_word_segment segment, Array[[String, bool, bool, bool]] expanded) -> void
 
       # Glob metacharacters in quoted text are escaped so they match literally;
       # unquoted text keeps them active.
-      def escape_if_quoted: (AST::WordSegment[untyped] segment, String text) -> String
+      def escape_if_quoted: (AST::any_word_segment segment, String text) -> String
 
       def escape: (String text) -> String
 
-      def append_splat_parts: (AST::WordSegment[untyped] segment, Array[[String, bool, bool, bool]] expanded) -> void
+      def append_splat_parts: (AST::any_word_segment segment, Array[[String, bool, bool, bool]] expanded) -> void
 
       def field_separator: () -> String
 

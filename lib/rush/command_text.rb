@@ -131,7 +131,7 @@ module Rush
       runs.map { |run| run_text(run) }.join
     end
 
-    sig { params(run: T::Array[AST::WordSegment[T.untyped]]).returns(String) }
+    sig { params(run: T::Array[AST::AnySegment]).returns(String) }
     def self.run_text(run)
       body = run.map(&:canon).join
       T.must(run.fetch(0)).quoted ? "\"#{body}\"" : body

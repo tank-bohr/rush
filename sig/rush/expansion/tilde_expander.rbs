@@ -10,15 +10,15 @@ module Rush
 
       @executor: Executor
 
-      @segments: Array[AST::WordSegment[untyped]]
+      @segments: Array[AST::any_word_segment]
 
-      def initialize: (Executor executor, Array[AST::WordSegment[untyped]] segments) -> void
+      def initialize: (Executor executor, Array[AST::any_word_segment] segments) -> void
 
-      def expand: () -> Array[AST::WordSegment[untyped]]
+      def expand: () -> Array[AST::any_word_segment]
 
       private
 
-      def replace_head: (AST::WordSegment[untyped] head, String text) -> Array[AST::WordSegment[untyped]]
+      def replace_head: (AST::LiteralSegment head, String text) -> Array[AST::any_word_segment]
 
       def rewrite: (String text) -> String
 
@@ -45,11 +45,11 @@ module Rush
     class NoTilde
       extend T::Sig
 
-      @segments: Array[AST::WordSegment[untyped]]
+      @segments: Array[AST::any_word_segment]
 
-      def initialize: (Executor _executor, Array[AST::WordSegment[untyped]] segments) -> void
+      def initialize: (Executor _executor, Array[AST::any_word_segment] segments) -> void
 
-      def expand: () -> Array[AST::WordSegment[untyped]]
+      def expand: () -> Array[AST::any_word_segment]
     end
   end
 end

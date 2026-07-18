@@ -9,13 +9,13 @@ module Rush
     class Word < Node
       extend T::Sig
 
-      sig { returns(T::Array[WordSegment[T.untyped]]) }
+      sig { returns(T::Array[AnySegment]) }
       attr_reader :segments
 
       sig { returns(Integer) }
       attr_reader :source_line
 
-      sig { params(segments: T::Array[WordSegment[T.untyped]], source_line: Integer).void }
+      sig { params(segments: T::Array[AnySegment], source_line: Integer).void }
       def initialize(segments, source_line: 1)
         @segments = segments
         @source_line = source_line

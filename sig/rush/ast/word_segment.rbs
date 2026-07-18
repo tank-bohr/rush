@@ -11,6 +11,10 @@ module Rush
       extend T::Sig
       extend T::Generic
 
+      # The kind-specific payload domain: literal/substitution source text or a
+      # parsed ParamRef (Sorbet bounds Value with it; RBS keeps V < Object).
+      Payload: untyped
+
       Value: untyped
 
       def self.[]: (untyped arg) -> untyped
@@ -49,7 +53,7 @@ module Rush
 
       def hash: () -> Integer
 
-      def equality_value: () -> Object
+      def equality_value: () -> V
     end
 
     # Literal text. It expands to itself, can act as a bare name when unquoted,
@@ -68,6 +72,9 @@ module Rush
       def initialize: (String value, bool quoted) -> void
 
       def literal_value: () -> String?
+
+      # A rewritten literal stays literal (the tilde rewriter relies on it).
+      def with_value: (String new_value) -> self
     end
 
     # A segment substituted at expansion time (param / command / arithmetic): its
@@ -121,5 +128,11 @@ module Rush
 
       def initialize: (String value, bool quoted) -> void
     end
+    # The concrete segment kinds: a word's segment list holds only these four
+    # (literal text, a ParamRef, or substitution/arithmetic source); the raising
+    # bases share behavior but never sit in a list, so consumers take this union.
+    type any_word_segment = LiteralSegment | ParamSegment | CommandSegment | ArithSegment
+
+    AnySegment: untyped
   end
 end

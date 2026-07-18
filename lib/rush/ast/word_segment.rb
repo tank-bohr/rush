@@ -14,7 +14,11 @@ module Rush
       extend T::Sig
       extend T::Generic
 
-      Value = type_member
+      # The kind-specific payload domain: literal/substitution source text or a
+      # parsed ParamRef. The bound keeps value readers callable on the base.
+      Payload = T.type_alias { T.any(String, ParamRef) }
+
+      Value = type_member { { upper: Payload } }
 
       sig { returns(Value) }
       attr_reader :value
@@ -65,7 +69,7 @@ module Rush
       end
 
       # A copy with a rewritten value (e.g. after tilde expansion).
-      sig { params(new_value: Value).returns(WordSegment[Value]) }
+      sig { params(new_value: Value).returns(T.self_type) }
       def with_value(new_value)
         self.class.new(new_value, quoted)
       end
@@ -81,7 +85,7 @@ module Rush
 
       alias eql? ==
 
-      sig { returns(T.untyped) }
+      sig { returns(Value) }
       def equality_value
         value
       end
@@ -125,7 +129,7 @@ module Rush
       extend T::Sig
       extend T::Generic
 
-      Value = type_member
+      Value = type_member { { upper: Payload } }
 
       sig { returns(T::Boolean) }
       def splittable?
@@ -199,5 +203,10 @@ module Rush
         "$((#{value}))"
       end
     end
+
+    # The concrete segment kinds: a word's segment list holds only these four
+    # (literal text, a ParamRef, or substitution/arithmetic source); the raising
+    # bases share behavior but never sit in a list, so consumers take this union.
+    AnySegment = T.type_alias { T.any(LiteralSegment, ParamSegment, CommandSegment, ArithSegment) }
   end
 end

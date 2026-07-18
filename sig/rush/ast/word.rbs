@@ -6,15 +6,15 @@ module Rush
     class Word < Node
       extend T::Sig
 
-      @segments: Array[WordSegment[untyped]]
+      @segments: Array[any_word_segment]
 
       @source_line: Integer
 
-      attr_reader segments: Array[WordSegment[untyped]]
+      attr_reader segments: Array[any_word_segment]
 
       attr_reader source_line: Integer
 
-      def initialize: (Array[WordSegment[untyped]] segments, ?source_line: Integer) -> void
+      def initialize: (Array[any_word_segment] segments, ?source_line: Integer) -> void
 
       def self.literal: (String text, ?source_line: Integer) -> Word
 

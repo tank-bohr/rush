@@ -3364,3 +3364,41 @@ pre-existing classifier/Word behavior gaps rather than this slice's token contra
 review caught the native StringScanner positional/keyword distinction and two ledger off-by-ones;
 the honest Sorbet boundary and corrected arithmetic passed re-review. The final full gate is green
 with 3001 examples (99.89% line / 98.68% branch).
+
+### Word segments close their payload domain (rush-435.7)
+`AST::WordSegment` no longer erases its payload: the four concrete kinds (Literal, Param, Command,
+Arith) form the named `AST::AnySegment` union that every word, scanner buffer, here-doc, tilde,
+pipeline, classifier and job-text surface now takes instead of `WordSegment[T.untyped]`. The raising
+bases stay instantiable scaffolding (the codebase has no `abstract!` convention), but only the four
+leaves ever sit in a segment list; the one spec that placed a bare `WordSegment` into a word now
+uses a `LiteralSegment`. The base type member carries an honest `Payload = String | ParamRef` upper
+bound, so `value` readers and `equality_value` stay callable without casts, and `with_value` returns
+`T.self_type` — a rewritten literal stays a `LiteralSegment`, which is what the tilde rewriter
+relies on. The one control-flow adjustment is `TildeExpander#expand` narrowing the head segment with
+`is_a?(LiteralSegment)`: only literal segments ever answer a non-nil `literal_value`, so for every
+existing class the guard coincides with the old nil check while naming the real contract — a tilde
+prefix is rewritable only in literal text (a dynamic segment that claimed a literal value would take
+a `with_value` rewrite of its substitution source, which word-level tilde must not touch). RBS mirrors the union as `AST::any_word_segment`, keeps the weaker
+`WordSegment[V]` return on the base `with_value` (Steep cannot prove `self.class.new` returns
+`self`), and narrows it to `self` on `LiteralSegment` for the rewriter. Sorbet's alias constants are
+declared to Steep as untyped constants, matching the established `Part`/`FieldPart` pattern.
+
+The ratchet moves from 12,269 / 13,127 to 12,233 / 13,087 (93.47%): the counters shed 40 sends
+formerly erased through open segment receivers, 36 of them typed, so the gap falls to 854 (-4) and
+usages to 1,160 (-2). The explicit source ledger drops from 96 to 77 untyped lines and from
+34 to 28 production files; unsafe and cast counts are unchanged. Steep moves to 11,962 / 11,990
+typed calls with the same 28-call residue. The forced-true planning envelope is now 12,250 / 13,208
+(92.75%, gap 958), and the forced-strong send-shaped probe falls to 616 sites, one in generated
+Racc.
+
+Focused word/segment/tilde/pipeline/here-doc/classifier/job-text tests cover 149 examples.
+Runtime-checked tilde, quoted-segment, `$@`/`$*` splat, assignment-colon, case-pattern, command
+substitution and here-doc probes match dash on stdout and status (36 cases plus a multiline
+here-doc script). Targeted mutation across the six touched subjects kills 1,361 / 1,404 (96.94%);
+survivors are equivalent forms — `is_a?`/`instance_of?` with no LiteralSegment subclass, the
+allocation-only head-rewrite fast path, and `partition` without a separator returning the same pair —
+not contract gaps in the new union. Independent review confirmed the metrics and guard equivalence
+for every existing class, caught the one spec that still placed a bare `WordSegment` into a word
+(now a `LiteralSegment`) and two doc numbers; the instantiable raising bases stay, matching the
+codebase's no-`abstract!` convention. The final full gate is green with 3001 examples (99.89% line /
+98.68% branch).

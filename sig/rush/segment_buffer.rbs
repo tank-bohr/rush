@@ -7,7 +7,7 @@ module Rush
   class SegmentBuffer
     extend T::Sig
 
-    @segments: Array[AST::WordSegment[untyped]]
+    @segments: Array[AST::any_word_segment]
 
     @literal: String
 
@@ -15,7 +15,7 @@ module Rush
 
     def <<: (String text) -> self
 
-    def push: (AST::WordSegment[untyped] segment) -> void
+    def push: (AST::any_word_segment segment) -> void
 
     def word: () -> AST::Word
 

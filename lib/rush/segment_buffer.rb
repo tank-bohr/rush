@@ -12,7 +12,7 @@ module Rush
 
     sig { void }
     def initialize
-      @segments = T.let([], T::Array[AST::WordSegment[T.untyped]])
+      @segments = T.let([], T::Array[AST::AnySegment])
       @literal = +''
     end
 
@@ -22,7 +22,7 @@ module Rush
       self
     end
 
-    sig { params(segment: AST::WordSegment[T.untyped]).void }
+    sig { params(segment: AST::AnySegment).void }
     def push(segment)
       flush
       @segments << segment

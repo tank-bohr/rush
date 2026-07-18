@@ -11,16 +11,16 @@ module Rush
     class TildeExpander
       extend T::Sig
 
-      sig { params(executor: Executor, segments: T::Array[AST::WordSegment[T.untyped]]).void }
+      sig { params(executor: Executor, segments: T::Array[AST::AnySegment]).void }
       def initialize(executor, segments)
         @executor = executor
         @segments = segments
       end
 
-      sig { returns(T::Array[AST::WordSegment[T.untyped]]) }
+      sig { returns(T::Array[AST::AnySegment]) }
       def expand
         head = @segments.first
-        return @segments unless head
+        return @segments unless head.is_a?(AST::LiteralSegment)
 
         text = head.literal_value
         text ? replace_head(head, text) : @segments
@@ -28,7 +28,9 @@ module Rush
 
       private
 
-      sig { params(head: AST::WordSegment[T.untyped], text: String).returns(T::Array[AST::WordSegment[T.untyped]]) }
+      # Only a literal head carries a rewritable tilde prefix (literal_value is
+      # nil for every dynamic segment), so the head is already narrowed above.
+      sig { params(head: AST::LiteralSegment, text: String).returns(T::Array[AST::AnySegment]) }
       def replace_head(head, text)
         rewritten = rewrite(text)
         return @segments if rewritten == text
@@ -88,12 +90,12 @@ module Rush
     class NoTilde
       extend T::Sig
 
-      sig { params(_executor: Executor, segments: T::Array[AST::WordSegment[T.untyped]]).void }
+      sig { params(_executor: Executor, segments: T::Array[AST::AnySegment]).void }
       def initialize(_executor, segments)
         @segments = segments
       end
 
-      sig { returns(T::Array[AST::WordSegment[T.untyped]]) }
+      sig { returns(T::Array[AST::AnySegment]) }
       def expand
         @segments
       end

@@ -20,7 +20,7 @@ RSpec.describe Rush::HereDoc do
   end
 
   it 'quacks like the filled word once the lexer hands the body over' do
-    word = Rush::AST::Word.new([Rush::AST::WordSegment.new('line', false)], source_line: 4)
+    word = Rush::AST::Word.new([Rush::AST::LiteralSegment.new('line', false)], source_line: 4)
     heredoc.fill(word)
 
     expect(heredoc.body).to be(word)

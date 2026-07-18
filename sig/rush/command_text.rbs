@@ -47,9 +47,9 @@ module Rush
 
     def self.word: (AST::Word word) -> String
 
-    def self.run_text: (Array[AST::WordSegment[untyped]] run) -> String
+    def self.run_text: (Array[AST::any_word_segment] run) -> String
 
-    def self.segment: (AST::WordSegment[untyped] segment) -> String
+    def self.segment: (AST::any_word_segment segment) -> String
 
     def self.literal: (String text, bool quoted) -> String
 

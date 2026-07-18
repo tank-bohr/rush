@@ -20,11 +20,11 @@ module Rush
 
         def initialize: (String name, String literal, Integer source_line) -> void
 
-        def assignment: (Array[AST::WordSegment[untyped]] tail) -> AST::Assignment
+        def assignment: (Array[AST::any_word_segment] tail) -> AST::Assignment
 
         private
 
-        def word: (Array[AST::WordSegment[untyped]] tail) -> AST::Word
+        def word: (Array[AST::any_word_segment] tail) -> AST::Word
       end
 
       @word: AST::Word

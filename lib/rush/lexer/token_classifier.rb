@@ -27,14 +27,14 @@ module Rush
           @source_line = source_line
         end
 
-        sig { params(tail: T::Array[AST::WordSegment[T.untyped]]).returns(AST::Assignment) }
+        sig { params(tail: T::Array[AST::AnySegment]).returns(AST::Assignment) }
         def assignment(tail)
           AST::Assignment.new(name: name, value: word(tail))
         end
 
         private
 
-        sig { params(tail: T::Array[AST::WordSegment[T.untyped]]).returns(AST::Word) }
+        sig { params(tail: T::Array[AST::AnySegment]).returns(AST::Word) }
         def word(tail)
           remainder = AST::LiteralSegment.new(literal.delete_prefix("#{name}="), false)
           AST::Word.new([remainder] + tail, source_line: @source_line)
