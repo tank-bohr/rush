@@ -16,17 +16,9 @@ module Rush
   module CommandText
     extend T::Sig
 
-    TABLE = T.let({
-      AST::List => :list, AST::AndOr => :and_or, AST::Pipeline => :pipeline,
-      AST::SimpleCommand => :simple, AST::Subshell => :subshell, AST::BraceGroup => :group,
-      AST::If => :if_node, AST::While => :while_node, AST::Until => :until_node,
-      AST::For => :for_node, AST::Case => :case_node, AST::FunctionDef => :function_def,
-      AST::Redirected => :redirected
-    }.freeze, T::Hash[T.untyped, Symbol])
-
     sig { params(node: AST::Node).returns(String) }
     def self.render(node)
-      method(TABLE.fetch(node.class)).call(node)
+      Dispatcher.call(node)
     end
 
     sig { params(node: AST::List).returns(String) }
@@ -113,8 +105,11 @@ module Rush
     def self.redirect(redirect)
       return '<<...' if redirect.kind == :heredoc
 
+      target = redirect.target
+      raise TypeError, 'non-heredoc redirect target must be a Word' unless target.is_a?(AST::Word)
+
       op, fd = T.must(OPERATORS[redirect.kind])
-      "#{redirect.io_number || fd}#{op}#{word(T.cast(redirect.target, AST::Word))}"
+      "#{redirect.io_number || fd}#{op}#{word(target)}"
     end
 
     OPERATORS = T.let({
@@ -135,6 +130,55 @@ module Rush
     def self.run_text(run)
       body = run.map(&:canon).join
       T.must(run.fetch(0)).quoted ? "\"#{body}\"" : body
+    end
+  end
+
+  # Correlates each concrete AST node class with CommandText's exact renderer
+  # parameter without Method#call's erased return or a broad cast.
+  module CommandText
+    # Exact-class checks preserve the old TABLE.fetch(node.class) contract.
+    class Dispatcher
+      extend T::Sig
+
+      sig { params(node: AST::Node).returns(String) }
+      def self.call(node)
+        sequence_text(node) || compound_text(node) || control_text(node) || case_text(node) ||
+          raise(KeyError, "unsupported command-text node: #{node.class}")
+      end
+
+      sig { params(node: AST::Node).returns(T.nilable(String)) }
+      def self.sequence_text(node)
+        return CommandText.list(node) if node.instance_of?(AST::List)
+        return CommandText.and_or(node) if node.instance_of?(AST::AndOr)
+
+        CommandText.pipeline(node) if node.instance_of?(AST::Pipeline)
+      end
+
+      sig { params(node: AST::Node).returns(T.nilable(String)) }
+      def self.compound_text(node)
+        return CommandText.simple(node) if node.instance_of?(AST::SimpleCommand)
+        return CommandText.subshell(node) if node.instance_of?(AST::Subshell)
+        return CommandText.group(node) if node.instance_of?(AST::BraceGroup)
+        return CommandText.redirected(node) if node.instance_of?(AST::Redirected)
+
+        CommandText.function_def(node) if node.instance_of?(AST::FunctionDef)
+      end
+
+      sig { params(node: AST::Node).returns(T.nilable(String)) }
+      def self.control_text(node)
+        return CommandText.if_node(node) if node.instance_of?(AST::If)
+        return CommandText.while_node(node) if node.instance_of?(AST::While)
+        return CommandText.until_node(node) if node.instance_of?(AST::Until)
+
+        CommandText.for_node(node) if node.instance_of?(AST::For)
+      end
+
+      sig { params(node: AST::Node).returns(T.nilable(String)) }
+      def self.case_text(node)
+        CommandText.case_node(node) if node.instance_of?(AST::Case)
+      end
+
+      private_class_method :sequence_text, :compound_text, :control_text, :case_text
     end
   end
 end

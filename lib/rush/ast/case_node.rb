@@ -12,7 +12,11 @@ module Rush
     class Case < Node
       extend T::Sig
 
-      attr_reader :word, :items
+      sig { returns(Word) }
+      attr_reader :word
+
+      sig { returns(T::Array[CaseItem]) }
+      attr_reader :items
 
       sig { params(word: Word, items: T::Array[CaseItem]).void }
       def initialize(word, items)

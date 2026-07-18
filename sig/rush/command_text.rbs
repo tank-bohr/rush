@@ -4,17 +4,11 @@ module Rush
   module CommandText
     extend T::Sig
 
-    TABLE: Hash[untyped, Symbol]
-
-    QUOTED_ESCAPES: Regexp
-
     OPERATORS: Hash[Symbol, [String, Integer]]
 
     def self.render: (AST::Node node) -> String
 
     def self.list: (AST::List node) -> String
-
-    def self.entry_text: (AST::ListEntry entry) -> String
 
     def self.and_or: (AST::AndOr node) -> String
 
@@ -49,10 +43,19 @@ module Rush
 
     def self.run_text: (Array[AST::any_word_segment] run) -> String
 
-    def self.segment: (AST::any_word_segment segment) -> String
+    # Correlates concrete node classes with exact renderer parameters.
+    class Dispatcher
+      extend T::Sig
 
-    def self.literal: (String text, bool quoted) -> String
+      def self.call: (AST::Node node) -> String
 
-    def self.param: (AST::ParamRef ref) -> String
+      private def self.sequence_text: (AST::Node node) -> String?
+
+      private def self.compound_text: (AST::Node node) -> String?
+
+      private def self.control_text: (AST::Node node) -> String?
+
+      private def self.case_text: (AST::Node node) -> String?
+    end
   end
 end

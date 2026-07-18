@@ -3402,3 +3402,48 @@ for every existing class, caught the one spec that still placed a bare `WordSegm
 (now a `LiteralSegment`) and two doc numbers; the instantiable raising bases stay, matching the
 codebase's no-`abstract!` convention. The final full gate is green with 3001 examples (99.89% line /
 98.68% branch).
+
+### AST readers and command-text dispatch become exact (rush-435.7)
+The planned spawn-options pass stopped at its real boundary: `Integer` fd values are the same
+logical IO streams intentionally open in `IoTable`/`FdEntry`, not a separate option-value variant.
+Sorbet cannot express Steep's `_IoStream` protocol without rejecting `StringIO` test ports under
+runtime checks; a wrapper would merely move that stream `T.untyped` behind another object. The
+trigger-gated Ruby-IO seam therefore stays visible. The next tractable shared root was the AST
+reader surface: List, AndOr, Pipeline, SimpleCommand, Subshell, BraceGroup, If/ConditionLoop,
+For, Case, FunctionDef and Redirected now expose exact Sorbet readers matching their existing RBS.
+`Redirect#target` additionally becomes the named `RedirectTarget = Word | HereDoc` variant in both
+checker surfaces and the Data shim; `RedirectScope` consequently receives an exact expansion value
+and CommandText drops its target cast.
+
+Once those readers were exact, `CommandText`'s only root was real reflection: the open class-keyed
+TABLE fed `Method#call`, erasing both the renderer argument correlation and String result. A nested
+Dispatcher now uses exact-class checks, preserving `TABLE.fetch(node.class)` semantics (including
+KeyError for an unsupported base/subclass) while each arm calls a renderer with its concrete node.
+The renderer remains one cohesive module and the dispatch policy is separately typed. Its RBS also
+drops six stale contracts (`TABLE`, `QUOTED_ESCAPES`, and four long-removed methods) instead of
+keeping a looser public fiction. Non-heredoc redirects defensively require a Word just as the old
+runtime cast did; a HereDoc with a non-heredoc kind is pinned as TypeError. The first quality run
+caught structurally identical four-arm dispatch helpers and For#values feature envy; unique
+3/5/4/1 dispatch groups and the checker-required `T.must` restore the exact flay/reek ratchets
+without exemptions or per-call casts.
+
+The ratchet moves from 12,233 / 13,087 to 12,419 / 13,194 (94.13%): typed sends rise by 186 on 107
+new total sends, so the gap falls to 775 (-79) and usages to 1,073 (-87). The explicit source ledger
+drops from 77 to 73 untyped lines, 28 to 27 production files and five to four project RBI files;
+unsafe stays at two and casts fall from seven to six. Steep advances to 12,070 / 12,098 typed calls
+with the same 28-call residue. The forced-true planning envelope is 12,436 / 13,315 (93.40%, gap
+879), and the forced-strong send-shaped probe falls from 616 to 590 sites (one generated); its
+at-least-ten concentration falls from 258 / 17 files to 244 / 16. CommandText itself now has zero
+strong 7018 diagnostics.
+
+Focused AST/renderer/redirection tests cover 78 examples. The live job-control differential covers
+77 jobs/fg/bg command-text shapes against dash, and an additional monitor-mode probe pins an `if`
+without `else`; all match on canonical text and status. Targeted CommandText/If/For/Redirect
+mutation kills 1,026 / 1,038 (98.84%). The twelve survivors are annotation or behavioral
+equivalents: invariant `T.must` removals, nil versus empty interpolation, `is_a?` versus
+`instance_of?` with no Word subclass, `[]` versus `fetch` for the closed operator table, and
+pre-existing quoted-run predicate equivalents. Independent review reproduced every metric and
+caught two contract details: Data#with's RBI now uses type-correct defaults to distinguish omitted
+keywords from explicitly nil kind/target, and Dispatcher helper visibility is private in RBS too.
+It also added a supported-node subclass regression for the exact-class policy; re-review is clean.
+The final full gate is green with 3005 examples (99.89% line / 98.77% branch).

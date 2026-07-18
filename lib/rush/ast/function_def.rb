@@ -8,7 +8,11 @@ module Rush
     class FunctionDef < Node
       extend T::Sig
 
-      attr_reader :name, :body
+      sig { returns(String) }
+      attr_reader :name
+
+      sig { returns(Node) }
+      attr_reader :body
 
       sig { params(name: String, body: Node).void }
       def initialize(name, body)

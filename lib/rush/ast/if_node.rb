@@ -9,7 +9,11 @@ module Rush
     class If < Node
       extend T::Sig
 
-      attr_reader :condition, :consequent, :alternative
+      sig { returns(Node) }
+      attr_reader :condition, :consequent
+
+      sig { returns(T.nilable(Node)) }
+      attr_reader :alternative
 
       sig { params(condition: Node, consequent: Node, alternative: T.nilable(Node)).void }
       def initialize(condition, consequent, alternative)
@@ -22,7 +26,8 @@ module Rush
       def execute(executor)
         return executor.run(consequent) if executor.succeeds?(condition)
 
-        alternative ? executor.run(alternative) : Status.success
+        branch = alternative
+        branch ? executor.run(branch) : Status.success
       end
     end
   end

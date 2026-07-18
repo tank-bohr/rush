@@ -9,6 +9,7 @@ module Rush
     class ConditionLoop < Node
       extend T::Sig
 
+      sig { returns(Node) }
       attr_reader :condition, :body
 
       sig { params(condition: Node, body: Node).void }

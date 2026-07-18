@@ -9,6 +9,7 @@ module Rush
     class BraceGroup < Node
       extend T::Sig
 
+      sig { returns(Node) }
       attr_reader :body
 
       sig { params(body: Node).void }

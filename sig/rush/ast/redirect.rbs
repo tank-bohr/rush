@@ -1,5 +1,9 @@
 module Rush
   module AST
+    type redirect_target = Word | HereDoc
+
+    RedirectTarget: untyped
+
     # A redirection: a kind (:in/:out/:append/:dup_in/:dup_out/:readwrite/
     # :clobber), an unexpanded target Word, and an optional explicit fd parsed
     # from a leading IO_NUMBER (nil means the kind's default fd).
@@ -10,16 +14,16 @@ module Rush
 
       # A Word, or the HereDoc holder for <<-style redirects (it quacks like
       # a Word: both expand via Pipeline#expand_value and carry source_line).
-      attr_reader target: Word | HereDoc
+      attr_reader target: redirect_target
 
       attr_reader io_number: Integer?
 
       def source_line: () -> Integer
 
-      def self.new: (kind: Symbol, target: Word | HereDoc, io_number: Integer?) -> Redirect
-                  | (Symbol kind, Word | HereDoc target, Integer? io_number) -> Redirect
+      def self.new: (kind: Symbol, target: redirect_target, io_number: Integer?) -> Redirect
+                  | (Symbol kind, redirect_target target, Integer? io_number) -> Redirect
 
-      def with: (?kind: Symbol, ?target: Word | HereDoc, ?io_number: Integer?) -> Redirect
+      def with: (?kind: Symbol, ?target: redirect_target, ?io_number: Integer?) -> Redirect
     end
   end
 end

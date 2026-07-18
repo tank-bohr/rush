@@ -10,7 +10,11 @@ module Rush
 
       Part = T.type_alias { T.any(Assignment, Word, Redirect) }
 
-      attr_reader :parts, :source_line
+      sig { returns(T::Array[Part]) }
+      attr_reader :parts
+
+      sig { returns(Integer) }
+      attr_reader :source_line
 
       sig do
         params(assignments: T::Array[Assignment], words: T::Array[Word], redirects: T::Array[Redirect],

@@ -19,20 +19,21 @@ module Rush
       sig { returns(Symbol) }
       attr_reader :kind
 
-      sig { returns(T.untyped) }
+      sig { returns(RedirectTarget) }
       attr_reader :target
 
       sig { returns(T.nilable(Integer)) }
       attr_reader :io_number
 
-      sig { params(kind: Symbol, target: T.untyped, io_number: T.nilable(Integer)).returns(Redirect) }
+      sig { params(kind: Symbol, target: RedirectTarget, io_number: T.nilable(Integer)).returns(Redirect) }
       def self.new(kind:, target:, io_number:); end
 
+      # Data#with retains omitted fields. Type-correct RBI defaults model that
+      # keyword optionality without also permitting explicit nil kind/target.
       sig do
-        params(kind: T.nilable(Symbol), target: T.untyped, io_number: T.nilable(Integer))
-          .returns(Redirect)
+        params(kind: Symbol, target: RedirectTarget, io_number: T.nilable(Integer)).returns(Redirect)
       end
-      def with(kind: nil, target: nil, io_number: nil); end
+      def with(kind: :out, target: Word.allocate, io_number: nil); end
     end
 
     class ParamRef < Data

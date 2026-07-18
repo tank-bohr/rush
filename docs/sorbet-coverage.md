@@ -104,8 +104,8 @@ so it is outside this baseline. A later scope change must record a side-by-side 
 silently moving the denominator.
 
 Steep checks 203 implementation files under `lib` (all 204 Ruby files except the generated parser),
-not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 11,962 /
-11,990 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
+not Sorbet's current seven RBI inputs or the executable. Its current receiver-based ledger is 12,070 /
+12,098 typed calls (99.77%). That percentage is not comparable to Sorbet's send metric; even their input
 sets differ. `steep stats` also emits the already-known internal `Rush::Status` compatibility
 message while exiting successfully, so its diagnostic stream must be retained with the aggregate.
 
@@ -117,8 +117,8 @@ then checks two separately reviewed files:
 
 - `sorbet/coverage_baseline.json` records the exact Sorbet version, every input path plus sigil, and
   the observed counters. Version or path/sigil drift fails and therefore requires explicit review.
-- `sorbet/coverage_budgets.json` owns pass/fail policy: after the eleventh `rush-435.7` root slice, at
-  most 854 untyped sends and an exact rational minimum ratio of 12,233 / 13,087. Both checks apply, so codebase growth cannot hide a
+- `sorbet/coverage_budgets.json` owns pass/fail policy: after the twelfth `rush-435.7` root slice, at
+  most 775 untyped sends and an exact rational minimum ratio of 12,419 / 13,194. Both checks apply, so codebase growth cannot hide a
   larger absolute gap and deleting typed sends cannot preserve the gap while lowering the ratio.
 
 The baseline observations are evidence, not a second implicit budget. The explicit workflow is:
@@ -167,6 +167,7 @@ samples were 59.9, 62.5, 62.8, 67.0, 68.2, 61.9, 63.9, 65.5 ms; new samples were
 | 19ab | `Positional` Forwardable surface | 12,240 / 13,152 | 93.07% | 912 | 1,229 |
 | 19ac | lexer token/value boundary and word readers | 12,269 / 13,127 | 93.46% | 858 | 1,162 |
 | 19ad | `WordSegment` closed payload union | 12,233 / 13,087 | 93.47% | 854 | 1,160 |
+| 19ae | AST reader, redirect-target and `CommandText` dispatch contracts | 12,419 / 13,194 | 94.13% | 775 | 1,073 |
 
 ## Material usage clusters
 
@@ -241,8 +242,9 @@ counter yield:
 3. **Missing ordinary declarations.** Slice 19u typed every method in `TestOperators`,
    `TestGrammar`, and `TestExpr`; their normal 7018 diagnostics are now zero without replacing the
    operator tables. Slice 19x then made Environment's four storage ivars and two block-return
-   contracts exact. Many remaining typed-true classes assign ivars without `T.let`, so Sorbet still
-   propagates untyped through otherwise ordinary calls. `rush-435.7` should continue with shared root
+   contracts exact. Slice 19ae completed every ordinary AST node reader feeding execution and
+   rendering; their existing exact RBS contracts now have matching Sorbet signatures. Many remaining
+   typed-true classes still expose ordinary open roots, so `rush-435.7` should continue with shared
    declarations and remeasure before changing dispatch architecture.
 
 4. **Untyped value readers and bounded variants.** Slice 19t gave the three `ulimit` values exact
@@ -254,54 +256,57 @@ counter yield:
    diagnostics remain, not open consumers. Slice 19ac closes the lexer token kind/value pair and the
    `AST::Word` reader boundary; Slice 19ad then closed the `AST::WordSegment` payload domain: the
    four concrete segments form a named union, and the payload type member carries an honest
-   `String | ParamRef` bound. The remaining explicit opens are domain variants: redirect targets,
-   logical IO streams, and generic block returns.
-   These should become named unions or value contracts where consumers discriminate them;
+   `String | ParamRef` bound. Slice 19ae closes `Redirect#target` as the named `Word | HereDoc`
+   variant and removes its renderer cast. The remaining explicit opens include logical IO streams
+   and generic block returns. These should become named unions or value contracts where consumers discriminate them;
    broad casts would only move the counter.
 
 5. **Dynamic registries.** `CommandText`, parameter forms, redirection, and test operators use
    reflective or callable tables. Slice 19v made `UmaskMode`'s registries and mutable bit field exact;
-   its reflective dispatch remains, but the file now has zero strong 7018 diagnostics. Some lambdas
-   are already precisely `T.let`-typed, so the first move is to sign their module methods and values.
-   Replace reflection only when a residual root remains; do not turn a registry into a case statement
-   solely for the metric.
+   its reflective dispatch remains, but the file now has zero strong 7018 diagnostics. Slice 19ae
+   first typed the complete AST reader surface, then replaced `CommandText`'s residual
+   `Method#call` erasure with a small exact-class dispatcher; `CommandText` now likewise has zero
+   strong 7018 diagnostics without casts. Other registries should follow that order: sign values
+   first, and replace reflection only when an actual residual root remains.
 
 6. **System and native ports.** Resource, job-control, signal, redirect ownership and interactive
    contracts are now explicit in the implementation/RBS/Sorbet surfaces; the close-only logical
    stream parameter remains mirrored and open because Sorbet lacks RBS structural protocols.
    Process.spawn and exec retain exactly two narrow receiver escapes because Sorbet rejects Ruby's dynamically sized
-   non-terminal argv splat; their option keys and return contracts remain checked. The Fiddle
-   collation backend still has an intentionally dynamic callable/pointer table, which
+   non-terminal argv splat; their option keys and return contracts remain checked. Their flat option
+   values are the same logical-stream seam, not a separate tractable collection, so wrapping the hash
+   merely to hide its stream values is not a typing gain. The Fiddle collation backend still has an
+   intentionally dynamic callable/pointer table, which
    `rush-435.7` must retain in the measured native ledger.
 
-The explicit source ledger currently contains 77 `T.untyped` declaration lines across production
-and project RBIs (28 production files and five RBI files), plus two `T.unsafe` and seven `T.cast`
+The explicit source ledger currently contains 73 `T.untyped` declaration lines across production
+and project RBIs (27 production files and four RBI files), plus two `T.unsafe` and six `T.cast`
 lines. These are review targets, not automatically defects: Fiddle pointers and logical IO streams, for example, may
 remain honestly open after the ordinary roots are removed.
 
 ## Target and prioritized plan
 
 The epic target is a **stretch target of at least 95% typed sends**, with an explicit final-ceiling
-escape only for measured native/Racc/variant residue. After the eleventh `rush-435.7` root slice, at
+escape only for measured native/Racc/variant residue. After the twelfth `rush-435.7` root slice, at
 the normal denominator:
 
-- `ceil(13,087 × 0.95) = 12,433` typed sends;
-- this needs 200 additional typed sends;
-- no more than 654 sends may remain untyped;
-- that removes 23.4% of the current 854-send gap.
+- `ceil(13,194 × 0.95) = 12,535` typed sends;
+- this needs 116 additional typed sends;
+- no more than 659 sends may remain untyped;
+- that removes 15.0% of the current 775-send gap.
 
 Forcing the remaining no-sigil generated parser changes the denominator, so the fixed calculation
 is not the whole plan. Forcing every current input to `typed: true` without changing source produces a
-conservative scope envelope of 12,250 / 13,208 typed sends (92.75%, gap 958). At that denominator
-95% is 12,548 typed sends: +298, leaving at most 660 untyped, a 31.1% gap reduction. The current
-location probe finds 616 concrete send-shaped diagnostics (615 outside generated parser), with 258
-concentrated in 17 files having at least ten each. These diagnostics still do not map one-for-one to
+conservative scope envelope of 12,436 / 13,315 typed sends (93.40%, gap 879). At that denominator
+95% is 12,650 typed sends: +214, leaving at most 665 untyped, a 24.3% gap reduction. The current
+location probe finds 590 concrete send-shaped diagnostics (589 outside generated parser), with 244
+concentrated in 16 files having at least ten each. These diagnostics still do not map one-for-one to
 the counter, but they demonstrate a candidate send surface larger than the required gain and tie it
 to the ordinary declaration, registry and bounded-variant roots above.
 
 That makes 95% a defensible **target**, not a demonstrated ceiling: it requires resolving most of
 the measured send-shaped surface, while the known hard native/Racc subset must remain narrow. If
-precise boundaries leave more than 660 sends untyped at the expanded scope, `rush-435.9` must publish
+precise boundaries leave more than 665 sends untyped at the expanded scope, `rush-435.9` must publish
 the lower honest ceiling and residual arithmetic rather than add escapes.
 
 Work order:

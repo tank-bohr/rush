@@ -30,6 +30,7 @@ RSpec.describe Rush::CommandText do
     'X=1' => 'set',
     'if true; then sleep 1; elif false; then :; else :; fi' =>
       'if true; then sleep 1; else if false; then :; else :; fi; fi',
+    'if true; then sleep 1; fi' => 'if true; then sleep 1; fi',
     'while true; do sleep 1; done' => 'while true; do sleep 1; done',
     'until false; do sleep 1; done' => 'until false; do sleep 1; done',
     'for i in 1 2; do sleep 3; done' => 'for i in 1 2; do sleep 3; done',
@@ -52,5 +53,24 @@ RSpec.describe Rush::CommandText do
 
   it 'renders a compound wrapped in redirects with explicit fds' do
     expect(render('{ sleep 5; } >log')).to eq('sleep 5 1>log')
+  end
+
+  it 'rejects an unsupported AST class like the former exact-class table' do
+    expect { described_class.render(Rush::AST::Node.new) }
+      .to raise_error(KeyError, 'unsupported command-text node: Rush::AST::Node')
+  end
+
+  it 'rejects a subclass of a supported node because dispatch stays exact-class' do
+    stub_const('Rush::AST::DerivedSimpleCommand', Class.new(Rush::AST::SimpleCommand))
+    node = Rush::AST::DerivedSimpleCommand.new([Rush::AST::Word.literal('echo')])
+    expect { described_class.render(node) }
+      .to raise_error(KeyError, 'unsupported command-text node: Rush::AST::DerivedSimpleCommand')
+  end
+
+  it 'rejects a non-heredoc here-doc target instead of treating it as a word' do
+    target = Rush::HereDoc.new(delimiter: 'X', quoted: false, strip: false)
+    redirect = Rush::AST::Redirect.new(kind: :out, target: target, io_number: nil)
+    expect { described_class.redirect(redirect) }
+      .to raise_error(TypeError, 'non-heredoc redirect target must be a Word')
   end
 end

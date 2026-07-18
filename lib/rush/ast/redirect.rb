@@ -3,6 +3,10 @@
 
 module Rush
   module AST
+    # A redirection target is either an ordinary unexpanded word or the here-doc
+    # holder the lexer fills after collecting its body.
+    RedirectTarget = T.type_alias { T.any(Word, HereDoc) }
+
     # A redirection: a kind (:in/:out/:append/:dup_in/:dup_out/:readwrite/
     # :clobber), an unexpanded target Word, and an optional explicit fd parsed
     # from a leading IO_NUMBER (nil means the kind's default fd).

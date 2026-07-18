@@ -8,7 +8,11 @@ module Rush
     class AndOr < Node
       extend T::Sig
 
-      attr_reader :left, :op, :right
+      sig { returns(Node) }
+      attr_reader :left, :right
+
+      sig { returns(Symbol) }
+      attr_reader :op
 
       sig { params(left: Node, op: Symbol, right: Node).void }
       def initialize(left, op, right)

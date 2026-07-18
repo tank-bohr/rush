@@ -9,7 +9,11 @@ module Rush
     class Pipeline < Node
       extend T::Sig
 
-      attr_reader :commands, :negate
+      sig { returns(T::Array[Node]) }
+      attr_reader :commands
+
+      sig { returns(T::Boolean) }
+      attr_reader :negate
 
       sig { params(commands: T::Array[Node], negate: T::Boolean).void }
       def initialize(commands, negate)

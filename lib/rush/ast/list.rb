@@ -14,6 +14,7 @@ module Rush
     class List < Node
       extend T::Sig
 
+      sig { returns(T::Array[ListEntry]) }
       attr_reader :entries
 
       sig { params(entries: T::Array[ListEntry]).void }

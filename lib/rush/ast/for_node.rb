@@ -9,7 +9,14 @@ module Rush
     class For < Node
       extend T::Sig
 
-      attr_reader :name, :words, :body
+      sig { returns(String) }
+      attr_reader :name
+
+      sig { returns(T.nilable(T::Array[Word])) }
+      attr_reader :words
+
+      sig { returns(Node) }
+      attr_reader :body
 
       sig { params(name: String, words: T.nilable(T::Array[Word]), body: Node).void }
       def initialize(name, words, body)
@@ -27,7 +34,7 @@ module Rush
 
       sig { params(executor: Executor).returns(T::Array[String]) }
       def values(executor)
-        words ? executor.expander.expand(words) : executor.state.positional.to_a
+        words ? executor.expander.expand(T.must(words)) : executor.state.positional.to_a
       end
     end
   end

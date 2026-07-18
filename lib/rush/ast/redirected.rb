@@ -9,7 +9,11 @@ module Rush
     class Redirected < Node
       extend T::Sig
 
-      attr_reader :command, :redirects
+      sig { returns(Node) }
+      attr_reader :command
+
+      sig { returns(T::Array[Redirect]) }
+      attr_reader :redirects
 
       sig { params(command: Node, redirects: T::Array[Redirect]).void }
       def initialize(command, redirects)
