@@ -10,6 +10,8 @@ module Rush
 
     private
 
+    attr_reader scanner: StringScanner
+
     def scan: () -> void
     def step: () -> void
   end

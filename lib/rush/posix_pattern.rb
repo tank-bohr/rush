@@ -5,7 +5,6 @@ module Rush
   # Translates one shell pattern into a POSIX extended regular expression. The
   # libc regex engine then supplies LC_COLLATE equivalence classes, collating
   # symbols and locale ranges that Ruby's regexp/fnmatch APIs do not expose.
-  # :reek:InstanceVariableAssumption -- @scanner is initialized by PatternScanner#initialize
   class PosixPattern < PatternScanner
     extend T::Sig
 
@@ -20,34 +19,34 @@ module Rush
       @source = +'^'
       @glob_source = +''
       super
-      @source << '$'
+      source << '$'
     end
 
     private
 
     sig { void }
     def append_escape
-      @scanner.getch
-      escaped = @scanner.getch || '\\'
-      @glob_source << '\\' << escaped
+      scanner.getch
+      escaped = scanner.getch || '\\'
+      glob_source << '\\' << escaped
       append_ere_literal(escaped)
     end
 
     sig { void }
     def append_wildcard
-      char = @scanner.getch.to_s
+      char = scanner.getch.to_s
       append_discovery(char)
-      @source << (char == '*' ? '.*' : '.')
+      source << (char == '*' ? '.*' : '.')
     end
 
     sig { void }
     def append_bracket
-      bracket = BracketExpression.parse(@scanner.string, @scanner.pos)
+      bracket = BracketExpression.parse(scanner.string, scanner.pos)
       return append_literal unless bracket
 
-      @source << bracket_source(bracket)
+      source << bracket_source(bracket)
       append_discovery('*')
-      @scanner.pos = bracket.finish
+      scanner.pos = bracket.finish
     end
 
     sig { params(bracket: BracketExpression).returns(String) }
@@ -58,21 +57,21 @@ module Rush
 
     sig { void }
     def append_literal
-      char = @scanner.getch.to_s
+      char = scanner.getch.to_s
       append_discovery(char)
       append_ere_literal(char)
     end
 
     sig { params(char: String).void }
     def append_discovery(char)
-      return if char == '*' && @glob_source.end_with?('*')
+      return if char == '*' && glob_source.end_with?('*')
 
-      @glob_source << (RUBY_GLOB_SPECIAL.include?(char) ? "\\#{char}" : char)
+      glob_source << (RUBY_GLOB_SPECIAL.include?(char) ? "\\#{char}" : char)
     end
 
     sig { params(char: String).void }
     def append_ere_literal(char)
-      @source << (char.match?(ERE_SPECIAL) ? "\\#{char}" : char)
+      source << (char.match?(ERE_SPECIAL) ? "\\#{char}" : char)
     end
   end
 end

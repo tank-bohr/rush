@@ -10,8 +10,9 @@ module Rush
   class PatternScanner
     extend T::Sig
 
-    HANDLERS = { '\\' => :append_escape, '*' => :append_wildcard,
-                 '?' => :append_wildcard, '[' => :append_bracket }.freeze
+    HANDLERS = T.let({ '\\' => :append_escape, '*' => :append_wildcard,
+                       '?' => :append_wildcard, '[' => :append_bracket }.freeze,
+                     T::Hash[String, Symbol])
 
     sig { params(pattern: String).void }
     def initialize(pattern)
@@ -21,14 +22,17 @@ module Rush
 
     private
 
+    sig { returns(StringScanner) }
+    attr_reader :scanner
+
     sig { void }
     def scan
-      step until @scanner.eos?
+      step until scanner.eos?
     end
 
     sig { void }
     def step
-      handler = HANDLERS.fetch(@scanner.peek(1), :append_literal)
+      handler = HANDLERS.fetch(scanner.peek(1), :append_literal)
       send(handler)
     end
   end

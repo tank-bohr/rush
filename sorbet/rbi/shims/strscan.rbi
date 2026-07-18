@@ -40,6 +40,12 @@ class StringScanner
   sig { returns(Integer) }
   def pos; end
 
+  sig { params(position: Integer).returns(Integer) }
+  def pos=(position); end
+
+  sig { returns(String) }
+  def string; end
+
   sig { returns(T.nilable(T::Array[T.nilable(String)])) }
   def captures; end
 end

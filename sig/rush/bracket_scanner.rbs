@@ -15,11 +15,16 @@ module Rush
 
     private
 
+    attr_reader pattern: String
+    attr_accessor index: Integer
+    attr_accessor special: bool
+
     def first_index: (Integer start) -> Integer
     def complete?: () -> bool
     def advance: () -> void
     def escaped_finish: () -> Integer?
     def nested_finish: () -> Integer?
+    def nested_ending: (Integer cursor) -> String?
     def finish: () -> Integer?
   end
 end

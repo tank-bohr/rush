@@ -3481,3 +3481,34 @@ form preserves strict arity with no wrapper, and re-review is clean. The paralle
 all 3005 examples without failures but lost SimpleCov shard result files at coordinator exit (the
 reported shard reran 420 / 420 green); the documented deterministic serial fallback is fully green
 with 3005 examples (99.89% line / 98.77% branch).
+
+### Pattern scanners expose typed state without hot-path declarations (rush-435.7)
+The shell/ERE/bracket scanners no longer read untyped implementation ivars. PatternScanner exposes
+its StringScanner through a private exact reader; ShellPattern does the same for its regexp and
+mutable extended flag while reusing its existing typed glob-source reader; PosixPattern reuses its
+source/glob readers; BracketScanner exposes private pattern/index/special readers and writers.
+Internal code now goes through those contracts instead of adding per-pattern `T.let` calls — the
+same allocation-sensitive lesson the lexer slice established. The two dispatch/delimiter tables get
+exact load-time hash types, and rush's existing StringScanner shim gains the real String `string`
+reader and Integer `pos=` writer. The old subclass InstanceVariableAssumption suppressions disappear.
+Eight forced-strong diagnostics remain only at generated reader definition sites; every consumer is
+exact, and erasing those last declarations with hot per-object validation would be a regression, not
+a gain.
+
+The ratchet moves from 12,464 / 13,195 to 12,596 / 13,277 (94.87%): typed sends rise by 132 on 82
+new total sends, so the gap falls to 681 (-50) and usages to 908 (-78). These were implicit ivar and
+stdlib/table roots, so the explicit ledger stays at 73 untyped lines (27 production files, four
+project RBIs), two unsafe lines and six casts. Steep advances to 12,193 / 12,221 typed calls with its
+same 28-call residue. The forced-true planning envelope is 12,613 / 13,398 (94.14%, gap 785), and
+the send-shaped probe falls from 548 to 499 sites (one generated); its at-least-ten concentration
+falls from 202 / 14 files to 167 / 12.
+
+Focused bracket/scanner/shell/POSIX-pattern specs cover 37 examples; runtime wrappers accept bracket
+classes, pathname discovery, case matching and parameter removal. The live pathname differential
+covers 26 glob rows plus the escaped-closing-bracket row against dash. The allocation ratchet is
+bit-for-bit back at the pre-slice medians. Targeted scanner mutation kills 896 / 944 (94.92%),
+including 66 timeout kills from deliberately broken cursor progress; survivors are pre-existing
+literal/wildcard/bracket simplifications rather than the new reader contracts. Independent review
+confirmed the private visibility, mutable-object identity, stdlib contracts and measurements, and
+corrected the live-corpus row count; re-review is clean. The final full gate is green with 3005
+examples (99.89% line / 98.77% branch).

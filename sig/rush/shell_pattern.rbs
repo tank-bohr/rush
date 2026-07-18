@@ -19,6 +19,9 @@ module Rush
 
     private
 
+    attr_reader regexp: String
+    attr_accessor extended: bool
+
     def append_escape: () -> void
     def append_wildcard: () -> void
     def append_bracket: () -> void
